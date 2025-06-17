@@ -1,6 +1,6 @@
-# Nuxt Minimal Starter
+# Nuxt Starter
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+This is a custom starter package for new Nuxt projects. 
 
 ## Setup
 
