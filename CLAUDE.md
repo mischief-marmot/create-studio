@@ -19,8 +19,14 @@ npm run generate     # Generate static site
 npm run preview      # Preview production build
 
 # Testing
-npm test             # Run Vitest tests
-npm run test:ui      # Run tests with UI
+npm test             # Run all tests with Vitest
+npm run test:ui      # Run tests with Vitest UI
+npm run test:e2e     # Run E2E tests with Vitest
+npm run test:unit     # Run Unit tests with Vitest
+npm run test:components     # Run Component tests with Vitest
+
+# Run specific test files
+npm test tests/unit/utils.test.ts
 ```
 
 ## Architecture
@@ -40,6 +46,7 @@ npm run test:ui      # Run tests with UI
 - `server/` - Server-side API routes and middleware
 - `assets/` - Processed assets (CSS, images)
 - `public/` - Static assets served as-is
+- `tests/` - Directory for keeping tests
 
 ### Configuration Files
 - `nuxt.config.ts` - Main Nuxt configuration
@@ -109,4 +116,85 @@ export default defineEventHandler(() => {
 3. Server-only variables don't need prefix
 
 ### Testing
-Tests use Vitest with Happy DOM. Place test files adjacent to source files with `.test.ts` or `.spec.ts` extension.
+
+The project uses a comprehensive testing strategy:
+
+#### Test Organization
+- `tests/unit/` - Unit tests for utilities and functions
+- `tests/components/` - Component tests using Vue Test Utils
+- `tests/e2e/` - End-to-end tests using Playwright or Nuxt test utils
+- `pages/*.test.ts` - Page-specific tests can live alongside pages
+
+#### Writing Tests
+
+**Unit Tests** (Pure functions, utilities):
+```typescript
+import { describe, it, expect } from 'vitest'
+
+describe('myFunction', () => {
+  it('should return expected value', () => {
+    expect(myFunction(input)).toBe(expectedOutput)
+  })
+})
+```
+
+**Component Tests** (Vue components):
+```typescript
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import MyComponent from '~/components/MyComponent.vue'
+
+describe('MyComponent', () => {
+  it('renders correctly', async () => {
+    const wrapper = await mountSuspended(MyComponent, {
+      props: { /* props */ }
+    })
+    expect(wrapper.text()).toContain('expected text')
+  })
+})
+```
+
+**E2E Tests with Nuxt Test Utils**:
+```typescript
+import { describe, test, expect } from 'vitest'
+import { createPage, setup, url } from '@nuxt/test-utils/e2e'
+
+describe('App E2E', async () => {
+  await setup()
+  
+  test('loads home page', async () => {
+    const page = await createPage(url('/'))
+    const heading = page.locator('h1')
+    const headingText = await heading.textContent()
+    expect(headingText).toBe('Welcome')
+  })
+})
+```
+
+**E2E Tests with Playwright**:
+```typescript
+import { test, expect } from '@playwright/test'
+
+test('home page loads', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.locator('h1')).toHaveText('Welcome')
+})
+```
+
+#### Test Utilities
+- `mountSuspended()` - Mount components in Nuxt environment
+- `mockNuxtImport()` - Mock auto-imported composables
+- `mockComponent()` - Mock child components
+- `$fetch` - Test API endpoints
+- `createPage()` - Create browser page for E2E testing
+
+#### E2E Testing Setup
+First time setup for Playwright:
+```bash
+npx playwright install  # Install browsers for E2E testing
+```
+
+The project supports two E2E testing approaches:
+1. **Nuxt Test Utils** (`@nuxt/test-utils/playwright`) - Integrated with Nuxt, auto-handles build/server
+2. **Native Playwright** (`@playwright/test`) - Direct Playwright API, more control
+
+Both approaches are configured and examples are provided in `tests/e2e/`.

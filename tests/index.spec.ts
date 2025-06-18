@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import Index from './index.vue'
+import Index from '../pages/index.vue'
 
 describe('Welcome Page', () => {
   it('should render the welcome heading', () => {
