@@ -68,6 +68,8 @@ This project follows Test-Driven Development principles:
 3. **Write minimal code to make tests pass** - Implement only what's necessary
 4. **Refactor if needed** - Improve code quality while keeping tests green
 
+**CRITICAL**: Always start new features by writing tests first. This is non-negotiable.
+
 Example workflow:
 ```bash
 # 1. Write test first
@@ -77,6 +79,12 @@ npm test
 # 4. Run test to see it pass
 npm test
 ```
+
+#### Current Test Coverage
+- ✅ Schema type definitions with comprehensive validation
+- ✅ JSON-LD generator utilities with edge cases
+- ✅ Authentication components and flows
+- ✅ Database operations and edge cases
 
 ## Development Notes
 
