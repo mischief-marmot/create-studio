@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Nuxt 3 starter template with TypeScript, Tailwind CSS v4, DaisyUI, and Pinia state management.
+This is a Recipe Card Generator application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 3, TypeScript, Tailwind CSS v4, DaisyUI, Supabase, and deployed on NuxtHub/Cloudflare.
+
+**Project Plan**: See PROJECT_PLAN.md for detailed phased development approach and current progress.
 
 ## Essential Commands
 
@@ -22,11 +24,14 @@ npm run preview      # Preview production build
 npm test             # Run all tests with Vitest
 npm run test:ui      # Run tests with Vitest UI
 npm run test:e2e     # Run E2E tests with Vitest
-npm run test:unit     # Run Unit tests with Vitest
+npm run test:unit    # Run Unit tests with Vitest
 npm run test:components     # Run Component tests with Vitest
 
 # Run specific test files
 npm test tests/unit/utils.test.ts
+
+# Project-specific commands
+/continue-phase      # Continue Recipe Card Generator development
 ```
 
 ## Architecture
