@@ -1,42 +1,42 @@
 import { describe, it, expect } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
 import Index from '../pages/index.vue'
 
-describe('Welcome Page', () => {
-  it('should render the welcome heading', () => {
-    const wrapper = mount(Index)
+describe('Landing Page', () => {
+  it('should render the recipe cards heading', async () => {
+    const wrapper = await mountSuspended(Index)
     const heading = wrapper.find('h1')
     expect(heading.exists()).toBe(true)
-    expect(heading.text()).toBe('Welcome to the Nuxt Starter')
+    expect(heading.text()).toContain('Recipe Cards')
   })
 
-  it('should have a description paragraph', () => {
-    const wrapper = mount(Index)
+  it('should have a description about structured data', async () => {
+    const wrapper = await mountSuspended(Index)
     const description = wrapper.find('p')
     expect(description.exists()).toBe(true)
-    expect(description.text()).toContain('modern web applications')
+    expect(description.text()).toContain('JSON-LD')
   })
 
-  it('should have a get started button', () => {
-    const wrapper = mount(Index)
-    const button = wrapper.find('button')
-    expect(button.exists()).toBe(true)
-    expect(button.text()).toBe('Get Started')
-    expect(button.classes()).toContain('btn')
-    expect(button.classes()).toContain('btn-primary')
+  it('should have navigation with auth buttons', async () => {
+    const wrapper = await mountSuspended(Index)
+    const navbar = wrapper.find('.navbar')
+    expect(navbar.exists()).toBe(true)
+    // Should show Sign In and Sign Up when not authenticated
+    expect(wrapper.text()).toContain('Sign In')
+    expect(wrapper.text()).toContain('Sign Up')
   })
 
-  it('should use DaisyUI hero component', () => {
-    const wrapper = mount(Index)
+  it('should use DaisyUI hero component', async () => {
+    const wrapper = await mountSuspended(Index)
     const hero = wrapper.find('.hero')
     expect(hero.exists()).toBe(true)
     expect(hero.find('.hero-content').exists()).toBe(true)
   })
 
-  it('should have proper styling classes', () => {
-    const wrapper = mount(Index)
-    const hero = wrapper.find('.hero')
-    expect(hero.classes()).toContain('min-h-screen')
-    expect(hero.classes()).toContain('bg-base-200')
+  it('should have features section', async () => {
+    const wrapper = await mountSuspended(Index)
+    const featuresSection = wrapper.find('#features')
+    expect(featuresSection.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Everything You Need')
   })
 })
