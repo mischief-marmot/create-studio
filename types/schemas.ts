@@ -272,3 +272,52 @@ export interface ListFormData {
 }
 
 export type FormData = RecipeFormData | HowToFormData | FAQFormData | ListFormData
+
+// Generic card form data interface used in card creation/editing
+export interface CardFormData {
+  type: string
+  title: string
+  description?: string
+  image?: File | string | null
+  // Recipe fields
+  ingredients?: Array<{ name: string; amount?: string; unit?: string }>
+  instructions?: Array<{ name?: string; text: string }>
+  prepTime?: number
+  cookTime?: number
+  totalTime?: number
+  servings?: number
+  // HowTo fields
+  supplies?: Array<{ name: string; quantity?: number }>
+  tools?: Array<{ name: string; requiredQuantity?: number }>
+  // FAQ fields
+  questions?: Array<{ question: string; answer: string }>
+  // ItemList fields
+  items?: Array<{ name: string; description?: string }>
+}
+
+// Database card interface
+export interface Card {
+  id: string
+  user_id: string
+  type: string
+  status: 'draft' | 'published' | 'archived'
+  title: string
+  slug: string
+  description?: string
+  image_url?: string
+  structured_data: any
+  prep_time?: number
+  cook_time?: number
+  total_time?: number
+  servings?: number
+  created_at: string
+  updated_at: string
+  published_at?: string
+  // Related data
+  card_ingredients?: any[]
+  instructions?: any[]
+  supplies?: any[]
+  tools?: any[]
+  questions?: any[]
+  items?: any[]
+}

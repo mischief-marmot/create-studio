@@ -452,3 +452,96 @@ function isValidDuration(duration: string): boolean {
   const durationRegex = /^PT(\d+H)?(\d+M)?(\d+S)?$/
   return durationRegex.test(duration)
 }
+
+/**
+ * Main export: Generate JSON-LD from generic form data
+ */
+export function generateJsonLd(formData: any): StructuredDataSchema {
+  if (!formData || !formData.type) {
+    throw new Error('Form data and type are required')
+  }
+
+  // Determine the type and call the appropriate generator
+  switch (formData.type.toLowerCase()) {
+    case 'recipe': {
+      // Convert generic form data to RecipeFormData format
+      const recipeData: RecipeFormData = {
+        name: formData.title || formData.name || 'Untitled Recipe',
+        description: formData.description || '',
+        author: formData.author || 'Unknown',
+        authorType: formData.authorType || 'Person',
+        ingredients: formData.ingredients?.filter((ing: any) => ing.name?.trim())
+          .map((ing: any) => {
+            const parts = []
+            if (ing.amount?.trim()) parts.push(ing.amount.trim())
+            if (ing.unit?.trim()) parts.push(ing.unit.trim())
+            if (ing.name?.trim()) parts.push(ing.name.trim())
+            return parts.join(' ')
+          }) || [],
+        instructions: formData.instructions?.filter((inst: any) => inst.text?.trim())
+          .map((inst: any) => ({
+            name: inst.name?.trim() || '',
+            step: inst.text?.trim() || ''
+          })) || [],
+        prepTime: formData.prepTime,
+        cookTime: formData.cookTime,
+        yield: formData.servings?.toString(),
+        image: formData.image
+      }
+      return generateRecipeJsonLd(recipeData)
+    }
+    
+    case 'howto': {
+      // Convert generic form data to HowToFormData format
+      const howToData: HowToFormData = {
+        name: formData.title || formData.name || 'Untitled Guide',
+        description: formData.description || '',
+        steps: formData.instructions?.filter((inst: any) => inst.text?.trim())
+          .map((inst: any) => ({
+            name: inst.name?.trim() || '',
+            instruction: inst.text?.trim() || ''
+          })) || [],
+        totalTime: formData.totalTime,
+        supplies: formData.supplies?.filter((s: any) => s.name?.trim()) || [],
+        tools: formData.tools?.filter((t: any) => t.name?.trim())
+          .map((t: any) => ({
+            name: t.name.trim(),
+            quantity: t.requiredQuantity || t.quantity
+          })) || [],
+        image: formData.image
+      }
+      return generateHowToJsonLd(howToData)
+    }
+    
+    case 'faq': {
+      // Convert generic form data to FAQFormData format
+      const faqData: FAQFormData = {
+        name: formData.title || formData.name || 'Untitled FAQ',
+        description: formData.description,
+        questions: formData.questions?.filter((q: any) => q.question?.trim() && q.answer?.trim()) || []
+      }
+      return generateFAQJsonLd(faqData)
+    }
+    
+    case 'article': {
+      // For now, treat article as ItemList - could be extended to proper Article schema
+      const listData: ListFormData = {
+        name: formData.title || formData.name || 'Untitled Article',
+        description: formData.description,
+        items: formData.items?.filter((item: any) => item.name?.trim()) || []
+      }
+      return generateListJsonLd(listData)
+    }
+    
+    default:
+      console.warn(`Unsupported schema type: ${formData.type}, falling back to basic structured data`)
+      // Fallback for unsupported types - create a basic structured data object
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'Thing',
+        name: formData.title || formData.name || 'Untitled',
+        description: formData.description || '',
+        ...(formData.image && { image: formData.image })
+      }
+  }
+}

@@ -211,3 +211,15 @@ The project supports two E2E testing approaches:
 2. **Native Playwright** (`@playwright/test`) - Direct Playwright API, more control
 
 Both approaches are configured and examples are provided in `tests/e2e/`.
+```
+
+## Feature Development Guidelines
+
+### Approach to Feature Development
+- When developing new features in this Nuxt app, start with test-driven development.
+- When actually implementing the features, focus on seeing features added piece by piece.
+- If a feature belongs on a page (e.g., CRUD operations pages like new, edit, view, delete):
+  - Start by scaffolding the page first
+  - Develop pages to ensure they exist and are navigable
+  - Continue developing functionality incrementally
+  - Build UI piece by piece to watch progress visually
