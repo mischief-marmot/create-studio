@@ -37,6 +37,10 @@ export default defineNuxtConfig({
     },
   },
 
+  runtimeConfig: {
+    apiNinjasKey: process.env.API_NINJAS_KEY,
+  },
+
   supabase: {
     url: process.env.SUPABASE_URL || "http://127.0.0.1:54321",
     key:
