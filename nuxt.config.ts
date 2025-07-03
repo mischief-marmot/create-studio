@@ -37,6 +37,11 @@ export default defineNuxtConfig({
       ],
     },
   },
+  nitro: {
+    experimental: {
+      openAPI: true,
+    },
+  },
 
   runtimeConfig: {
     apiNinjasKey: process.env.API_NINJAS_KEY,
