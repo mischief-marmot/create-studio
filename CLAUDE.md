@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Recipe Card Generator application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 3, TypeScript, Tailwind CSS v4, DaisyUI, Supabase, and deployed on NuxtHub/Cloudflare.
+This is a Recipe Card Generator application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 3, TypeScript, Tailwind CSS v4, DaisyUI, Clerk Auth, and deployed on NuxtHub/Cloudflare.
 
 **Project Plan**: See PROJECT_PLAN.md for detailed phased development approach and current progress.
 
@@ -28,10 +28,7 @@ npm run test:unit    # Run Unit tests with Vitest
 npm run test:components     # Run Component tests with Vitest
 
 # Run specific test files
-npm test tests/unit/utils.test.ts
-
-# Project-specific commands
-/continue-phase      # Continue Recipe Card Generator development
+npm test tests/unit/nutrition-api.test.ts
 ```
 
 ## Architecture
@@ -81,10 +78,6 @@ npm test
 ```
 
 #### Current Test Coverage
-- ✅ Schema type definitions with comprehensive validation
-- ✅ JSON-LD generator utilities with edge cases
-- ✅ Authentication components and flows
-- ✅ Database operations and edge cases
 
 ## Development Notes
 
@@ -183,16 +176,6 @@ describe('App E2E', async () => {
 })
 ```
 
-**E2E Tests with Playwright**:
-```typescript
-import { test, expect } from '@playwright/test'
-
-test('home page loads', async ({ page }) => {
-  await page.goto('/')
-  await expect(page.locator('h1')).toHaveText('Welcome')
-})
-```
-
 #### Test Utilities
 - `mountSuspended()` - Mount components in Nuxt environment
 - `mockNuxtImport()` - Mock auto-imported composables
@@ -201,16 +184,8 @@ test('home page loads', async ({ page }) => {
 - `createPage()` - Create browser page for E2E testing
 
 #### E2E Testing Setup
-First time setup for Playwright:
-```bash
-npx playwright install  # Install browsers for E2E testing
 ```
-
-The project supports two E2E testing approaches:
 1. **Nuxt Test Utils** (`@nuxt/test-utils/playwright`) - Integrated with Nuxt, auto-handles build/server
-2. **Native Playwright** (`@playwright/test`) - Direct Playwright API, more control
-
-Both approaches are configured and examples are provided in `tests/e2e/`.
 ```
 
 ## Feature Development Guidelines
