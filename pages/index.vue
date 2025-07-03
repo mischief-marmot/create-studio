@@ -3,7 +3,7 @@
     <!-- Navigation -->
     <div class="shadow-sm navbar bg-base-100">
       <div class="navbar-start">
-        <div class="text-xl font-bold">Recipe Cards</div>
+        <div class="text-xl font-bold">Halogen Cards</div>
       </div>
       <div class="navbar-end"></div>
     </div>
