@@ -1,0 +1,182 @@
+{
+  "id": 1,
+  "@context": "http://schema.org",
+  "@type": "Recipe",
+  "name": "Pumpkin Spice Pecan Bread",
+  "author": {
+    "@type": "Person",
+    "name": "Samantha Seeley"
+  },
+  "datePublished": "2019-02-07",
+  "recipeYield": 1,
+  "description": "This recipe is made with whole wheat flour and coconut oil. It is dairy-free and whole grain! If you want to make your own pumpkin puree you can do that instead of buying it.",
+  "image": [
+    "https://www.samanthaseeley.com/wp-content/uploads/2016/02/pumpkin-pecan-bread-2-480x480.jpg",
+    "https://www.samanthaseeley.com/wp-content/uploads/2016/02/pumpkin-pecan-bread-2-480x360.jpg",
+    "https://www.samanthaseeley.com/wp-content/uploads/2016/02/pumpkin-pecan-bread-2-540x720.jpg",
+    "https://www.samanthaseeley.com/wp-content/uploads/2016/02/pumpkin-pecan-bread-2-480x270.jpg",
+    "https://www.samanthaseeley.com/wp-content/uploads/2016/02/pumpkin-pecan-bread-2.jpg"
+  ],
+  "recipeCategory": "Bread",
+  "prepTime": "PT15M",
+  "cookTime": "PT1H",
+  "performTime": "PT1H",
+  "totalTime": "PT1H15M",
+  "recipeIngredient": [
+    "3/4 cups coconut or unrefined sugar",
+    "1 cup coconut oil, melted",
+    "2 large eggs",
+    "1 cup pumpkin",
+    "1 tablespoon almond milk",
+    "1 tablespoon pumpkin pie spice",
+    "1 3/4 cup white whole wheat flour",
+    "1 teaspoon baking powder",
+    "1 teaspoon baking soda",
+    "1 teaspoon salt",
+    "1 1/2 cups pecans"
+  ],
+  "recipeInstructions": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "url": "https://www.samanthaseeley.com/pumpkin-spice-pecan-bread-recipe/#mv_create_1_1",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Preheat the oven to 325 degrees F. Grease a 9 x 5 x 3 inch loaf pan with coconut oil using wax or parchment paper.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1 cup coconut oil, melted"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "url": "https://www.samanthaseeley.com/pumpkin-spice-pecan-bread-recipe/#mv_create_1_2",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Cream the sugar and coconut oil together in a large mixing bowl until light and fluffy. Add the eggs one at a time, beating well after each addition.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "3/4 cups coconut or unrefined sugar"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 cup coconut oil, melted"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "2 large eggs"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "url": "https://www.samanthaseeley.com/pumpkin-spice-pecan-bread-recipe/#mv_create_1_3",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Mix in the pumpkin puree, almond milk and pumpkin pie spice. In another bowl mix together the spelt flour, baking powder, baking soda and salt.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1 cup pumpkin"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 tablespoon almond milk"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 tablespoon pumpkin pie spice"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 3/4 cup white whole wheat flour"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 teaspoon baking powder"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 teaspoon baking soda"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 teaspoon salt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "url": "https://www.samanthaseeley.com/pumpkin-spice-pecan-bread-recipe/#mv_create_1_4",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Add the pumpkin mixture to the wet mixture and stir until combined. Add dry ingredients and mix until combined. Add pecans to batter &amp; mix",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1 cup pumpkin"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 1/2 cups pecans"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "url": "https://www.samanthaseeley.com/pumpkin-spice-pecan-bread-recipe/#mv_create_1_5",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Pour batter into prepared pan and bake 45 minutes to an hour or until a toothpick inserted in the center comes out clean. Set aside to cool on a rack for 15 minutes. Remove bread from pan by inverting onto rack and cool completely before slicing."
+        }
+      ]
+    }
+  ],
+  "keywords": " coconut oil, pecans, pumpkin, pumpkin pie spice, pumpkin puree, white whole wheat flour, whole wheat flour,",
+  "nutrition": {
+    "@type": "NutritionInformation",
+    "calories": "426 calories",
+    "carbohydrateContent": "23 grams carbohydrates",
+    "cholesterolContent": "37 milligrams cholesterol",
+    "fatContent": "36 grams fat",
+    "fiberContent": "5 grams fiber",
+    "proteinContent": "6 grams protein",
+    "saturatedFatContent": "21 grams saturated fat",
+    "servingSize": "1",
+    "sodiumContent": "419 milligrams sodium",
+    "sugarContent": "4 grams sugar",
+    "transFatContent": "0 grams trans fat",
+    "unsaturatedFatContent": "12 grams unsaturated fat"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "reviewCount": 1
+  },
+  "url": "https://www.samanthaseeley.com/pumpkin-spice-pecan-bread-recipe/"
+}

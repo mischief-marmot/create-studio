@@ -1,0 +1,326 @@
+[
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#article",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/"
+        },
+        "author": {
+          "name": "Sam",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "headline": "Baked Macaroni and Cheese",
+        "datePublished": "2011-11-01T12:54:58+00:00",
+        "dateModified": "2023-12-23T04:37:51+00:00",
+        "mainEntityOfPage": {
+          "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/"
+        },
+        "wordCount": 652,
+        "commentCount": 8,
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4.jpg",
+        "keywords": [
+          "cheese",
+          "macaroni"
+        ],
+        "articleSection": [
+          "Entree",
+          "Vegetarian"
+        ],
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "CommentAction",
+            "name": "Comment",
+            "target": [
+              "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#respond"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/",
+        "name": "Macaroni and Cheese that you can Baked or eat right off the Stove Top!",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/#website"
+        },
+        "primaryImageOfPage": {
+          "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#primaryimage"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4.jpg",
+        "datePublished": "2011-11-01T12:54:58+00:00",
+        "dateModified": "2023-12-23T04:37:51+00:00",
+        "description": "Macaroni and cheese that is so creamy that you might not be able to wait to eat it. You can bake this recipe or eat it right off the stovetop!",
+        "breadcrumb": {
+          "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#breadcrumb"
+        },
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "ReadAction",
+            "target": [
+              "https://www.samanthaseeley.com/baked-macaroni-and-cheese/"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "ImageObject",
+        "inLanguage": "en-US",
+        "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#primaryimage",
+        "url": "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4.jpg",
+        "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4.jpg",
+        "width": 600,
+        "height": 900
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.samanthaseeley.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Recipes",
+            "item": "https://www.samanthaseeley.com/recipes/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Entree",
+            "item": "https://www.samanthaseeley.com/recipes/main-dish/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "name": "Baked Macaroni and Cheese"
+          }
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.samanthaseeley.com/#website",
+        "url": "https://www.samanthaseeley.com/",
+        "name": "Samantha Seeley",
+        "description": "Food Photography &amp; Education",
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "potentialAction": [
+          {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.samanthaseeley.com/?s={search_term_string}"
+            },
+            "query-input": {
+              "@type": "PropertyValueSpecification",
+              "valueRequired": true,
+              "valueName": "search_term_string"
+            }
+          }
+        ],
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": [
+          "Person",
+          "Organization"
+        ],
+        "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3",
+        "name": "Sam",
+        "image": {
+          "@type": "ImageObject",
+          "inLanguage": "en-US",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/",
+          "url": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "width": 550,
+          "height": 254,
+          "caption": "Sam"
+        },
+        "logo": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/"
+        },
+        "description": "I’m a food photographer, blogger, and educator. I teach food bloggers &amp; photographers how-to level up their food photography skills.",
+        "sameAs": [
+          "https://samanthaseeley.com",
+          "https://facebook.com/thesamseeley",
+          "https://instagram.com/thesamseeley",
+          "https://pinterest.com/thesamseeley",
+          "https://x.com/thesamseeley"
+        ]
+      }
+    ]
+  },
+  {
+    "@context": "http://schema.org",
+    "@type": "Recipe",
+    "name": "Baked Macaroni and Cheese",
+    "author": {
+      "@type": "Person",
+      "name": "Samantha Seeley"
+    },
+    "datePublished": "2019-02-08",
+    "recipeYield": 8,
+    "description": "This macaroni and cheese recipe will forever reign as the best macaroni and cheese recipe. I promise you won&#x27;t regret giving this one a try. I use different cheese every single time I make this recipe. \n\nMixtures gouda, goat, cheddar, mozzarella, colby-jack, and others are all great choices. \n\nDon&#x27;t forget the dry mustard, you won&#x27;t believe how good it makes this recipe!",
+    "image": [
+      "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4-480x480.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4-480x360.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4-540x720.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4-480x270.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2011/11/mac-and-cheese-4.jpg"
+    ],
+    "recipeCategory": "Entree",
+    "recipeCuisine": "American",
+    "prepTime": "PT15M",
+    "cookTime": "PT25M",
+    "performTime": "PT25M",
+    "totalTime": "PT40M",
+    "recipeIngredient": [
+      "4 cups dried macaroni",
+      "1 whole egg, beaten",
+      "4 tablespoons butter, unsalted",
+      "1/4 cup all-purpose flour",
+      "2-1/2 cups whole milk",
+      "2 teaspoons dry mustard",
+      "1 pound cheese, grated",
+      "1/2 teaspoon salt",
+      "1/2 teaspoon ground black pepper",
+      "1/2 cup breadcrumbs (optional)"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "Cook macaroni until very firm. Macaroni should be too firm to eat right out of the pot. Drain.",
+        "position": 1,
+        "name": "Cook macaroni until very firm. Macaroni should be...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_1"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "In a small bowl, beat the egg.",
+        "position": 2,
+        "name": "In a small bowl, beat the egg.",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_2"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "In a large pot, melt butter and sprinkle in the flour.",
+        "position": 3,
+        "name": "In a large pot, melt butter and sprinkle...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_3"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Whisk together over medium-low heat.",
+        "position": 4,
+        "name": "Whisk together over medium-low heat.",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_4"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Cook mixture for five minutes, whisking continually. This step is super important - don’t let it burn.",
+        "position": 5,
+        "name": "Cook mixture for five minutes, whisking continually. This...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_5"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Pour in milk, add mustard, and whisk until smooth.",
+        "position": 6,
+        "name": "Pour in milk, add mustard, and whisk until...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_6"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Cook for five minutes until very thick. Reduce heat to low.",
+        "position": 7,
+        "name": "Cook for five minutes until very thick. Reduce...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_7"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Take 1/4 cup of the sauce and slowly pour it into a beaten egg, whisking constantly to avoid cooking eggs. Whisk together till smooth.",
+        "position": 8,
+        "name": "Take 1/4 cup of the sauce and slowly...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_8"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Pour egg mixture into sauce, whisking constantly. Stir until smooth.",
+        "position": 9,
+        "name": "Pour egg mixture into sauce, whisking constantly. Stir...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_9"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Add in cheese and stir to melt.",
+        "position": 10,
+        "name": "Add in cheese and stir to melt.",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_10"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Add salt and pepper. Taste sauce and add more salt and seasoned salt as needed!",
+        "position": 11,
+        "name": "Add salt and pepper. Taste sauce and add...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_11"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Pour in drained, cooked macaroni, and stir until the macaroni is fully coated with the melted cheese.",
+        "position": 12,
+        "name": "Pour in drained, cooked macaroni, and stir until...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_12"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Serve immediately as stovetop mac and cheese or pour into a buttered baking dish, top with extra cheese, breadcrumbs (if you'd like), and bake for 20 to 25 minutes or until bubbly and golden on top.",
+        "position": 13,
+        "name": "Serve immediately as stovetop mac and cheese or...",
+        "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/#mv_create_2_13"
+      }
+    ],
+    "keywords": " cheese, macaroni",
+    "nutrition": {
+      "@type": "NutritionInformation",
+      "calories": "476 calories",
+      "carbohydrateContent": "32 grams carbohydrates",
+      "cholesterolContent": "102 milligrams cholesterol",
+      "fatContent": "29 grams fat",
+      "fiberContent": "2 grams fiber",
+      "proteinContent": "21 grams protein",
+      "saturatedFatContent": "16 grams saturated fat",
+      "servingSize": "1",
+      "sodiumContent": "595 milligrams sodium",
+      "sugarContent": "5 grams sugar",
+      "transFatContent": "1 grams trans fat",
+      "unsaturatedFatContent": "10 grams unsaturated fat"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "reviewCount": 1
+    },
+    "url": "https://www.samanthaseeley.com/baked-macaroni-and-cheese/"
+  }
+]

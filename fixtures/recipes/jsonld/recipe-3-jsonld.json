@@ -1,0 +1,299 @@
+[
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "https://www.samanthaseeley.com/marys-maine-bars/#article",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/marys-maine-bars/"
+        },
+        "author": {
+          "name": "Sam",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "headline": "Mary&#8217;s Maine Bars",
+        "datePublished": "2016-09-19T23:51:39+00:00",
+        "dateModified": "2022-06-13T15:36:58+00:00",
+        "mainEntityOfPage": {
+          "@id": "https://www.samanthaseeley.com/marys-maine-bars/"
+        },
+        "wordCount": 573,
+        "commentCount": 2,
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/marys-maine-bars/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2016/09/marys-maine-bars-3.jpg",
+        "keywords": [
+          "buttermilk",
+          "cinnamon",
+          "cloves",
+          "molasses",
+          "sugar"
+        ],
+        "articleSection": [
+          "Cookies",
+          "Desserts",
+          "Sponsored"
+        ],
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "CommentAction",
+            "name": "Comment",
+            "target": [
+              "https://www.samanthaseeley.com/marys-maine-bars/#respond"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.samanthaseeley.com/marys-maine-bars/",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/",
+        "name": "Mary's Maine Bars &#187; Samantha Seeley",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/#website"
+        },
+        "primaryImageOfPage": {
+          "@id": "https://www.samanthaseeley.com/marys-maine-bars/#primaryimage"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/marys-maine-bars/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2016/09/marys-maine-bars-3.jpg",
+        "datePublished": "2016-09-19T23:51:39+00:00",
+        "dateModified": "2022-06-13T15:36:58+00:00",
+        "breadcrumb": {
+          "@id": "https://www.samanthaseeley.com/marys-maine-bars/#breadcrumb"
+        },
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "ReadAction",
+            "target": [
+              "https://www.samanthaseeley.com/marys-maine-bars/"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "ImageObject",
+        "inLanguage": "en-US",
+        "@id": "https://www.samanthaseeley.com/marys-maine-bars/#primaryimage",
+        "url": "https://www.samanthaseeley.com/wp-content/uploads/2016/09/marys-maine-bars-3.jpg",
+        "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2016/09/marys-maine-bars-3.jpg",
+        "width": 600,
+        "height": 900,
+        "caption": "Marys Maine Bars"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.samanthaseeley.com/marys-maine-bars/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.samanthaseeley.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Recipes",
+            "item": "https://www.samanthaseeley.com/recipes/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Desserts",
+            "item": "https://www.samanthaseeley.com/recipes/desserts/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "name": "Mary&#8217;s Maine Bars"
+          }
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.samanthaseeley.com/#website",
+        "url": "https://www.samanthaseeley.com/",
+        "name": "Samantha Seeley",
+        "description": "Food Photography &amp; Education",
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "potentialAction": [
+          {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.samanthaseeley.com/?s={search_term_string}"
+            },
+            "query-input": {
+              "@type": "PropertyValueSpecification",
+              "valueRequired": true,
+              "valueName": "search_term_string"
+            }
+          }
+        ],
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": [
+          "Person",
+          "Organization"
+        ],
+        "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3",
+        "name": "Sam",
+        "image": {
+          "@type": "ImageObject",
+          "inLanguage": "en-US",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/",
+          "url": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "width": 550,
+          "height": 254,
+          "caption": "Sam"
+        },
+        "logo": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/"
+        },
+        "description": "I’m a food photographer, blogger, and educator. I teach food bloggers &amp; photographers how-to level up their food photography skills.",
+        "sameAs": [
+          "https://samanthaseeley.com",
+          "https://facebook.com/thesamseeley",
+          "https://instagram.com/thesamseeley",
+          "https://pinterest.com/thesamseeley",
+          "https://x.com/thesamseeley"
+        ]
+      }
+    ]
+  },
+  {
+    "@context": "http://schema.org",
+    "@type": "Recipe",
+    "name": "Mary’s Maine Bars",
+    "author": {
+      "@type": "Person",
+      "name": "Samantha Seeley"
+    },
+    "datePublished": "2019-02-09",
+    "recipeYield": 20,
+    "description": "Recipe from Dorie’s Cookies by Dorie Greenspan",
+    "image": [
+      "https://www.samanthaseeley.com/wp-content/uploads/2016/09/marys-maine-bars-3.jpg"
+    ],
+    "prepTime": "PT15M",
+    "cookTime": "PT30M",
+    "performTime": "PT30M",
+    "totalTime": "PT45M",
+    "recipeIngredient": [
+      "1½ cups (204 grams) all-purpose flour",
+      "1½ cups (204 grams) whole wheat flour",
+      "1 teaspoon baking soda",
+      "1 teaspoon fine sea salt",
+      "1 teaspoon ground cinnamon",
+      "1 teaspoon freshly grated nutmeg",
+      "¾ teaspoon ground cloves",
+      "1 cup (200 grams) sugar",
+      "¾ cup (180 ml) unsulfured molasses",
+      "½ cup (120 ml) flavorless oil, such as canola",
+      "1 large egg, at room temperature",
+      "¼ cup (60 ml) buttermilk, at room temperature",
+      "Sanding or granulated sugar, for sprinkling"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "Center a rack in the oven and preheat it to 350 degrees F. Generously butter a 9-x-13-inch baking pan or coat it with baking spray. Line it with a piece of parchment paper.",
+        "position": 1,
+        "name": "Center a rack in the oven and preheat...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_1"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Whisk both flours, the baking soda, salt and spices together.",
+        "position": 2,
+        "name": "Whisk both flours, the baking soda, salt and...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_2"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Working with a stand mixer fitted with the paddle attachment, or in a large bowl with a hand mixer, beat the sugar, molasses, oil and egg together until smooth.",
+        "position": 3,
+        "name": "Working with a stand mixer fitted with the...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_3"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Add half of the dry ingredients and pulse the mixer to start blending them in, then beat on low speed only until the flour disappears into the dough.",
+        "position": 4,
+        "name": "Add half of the dry ingredients and pulse...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_4"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Pour in the buttermilk and mix to combine.",
+        "position": 5,
+        "name": "Pour in the buttermilk and mix to combine.",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_5"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Add the remainder of the dry ingredients and, still working on low, beat until incorporated. You’ll have a smooth, heavy, sticky dough.",
+        "position": 6,
+        "name": "Add the remainder of the dry ingredients and,...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_6"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Scrape the dough into the pan, using a knife or offset spatula to get it into the corners and to even the top as best you can. Sprinkle with sugar.",
+        "position": 7,
+        "name": "Scrape the dough into the pan, using a...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_7"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Bake for 26 to 30 minutes, rotating the pan after 15 minutes, or until the top is dry and a tester inserted into the center comes out clean. Transfer the pan to a rack.",
+        "position": 8,
+        "name": "Bake for 26 to 30 minutes, rotating the...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_8"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "After 10 minutes, run a blunt table knife around the edges of the pan, invert the Maine bars onto a rack, peel away the paper, turn it over onto another rack and let cool. When you’re ready, cut it into 20 bars (about 1¾ x 3¼ inches).",
+        "position": 9,
+        "name": "After 10 minutes, run a blunt table knife...",
+        "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_9"
+      }
+    ],
+    "keywords": " buttermilk, cinnamon, cloves, molasses, sugar",
+    "nutrition": {
+      "@type": "NutritionInformation",
+      "calories": "258 calories",
+      "carbohydrateContent": "37 grams carbohydrates",
+      "cholesterolContent": "9 milligrams cholesterol",
+      "fatContent": "12 grams fat",
+      "fiberContent": "1 grams fiber",
+      "proteinContent": "3 grams protein",
+      "saturatedFatContent": "1 grams saturated fat",
+      "servingSize": "1",
+      "sodiumContent": "185 milligrams sodium",
+      "sugarContent": "23 grams sugar",
+      "transFatContent": "0 grams trans fat",
+      "unsaturatedFatContent": "10 grams unsaturated fat"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": 5,
+      "reviewCount": "1"
+    },
+    "url": "https://www.samanthaseeley.com/marys-maine-bars/"
+  }
+]

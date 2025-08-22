@@ -1,0 +1,267 @@
+[
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#article",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/"
+        },
+        "author": {
+          "name": "Sam",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "headline": "Pumpkin Malted Milkshake",
+        "datePublished": "2010-11-05T22:28:24+00:00",
+        "dateModified": "2020-09-07T12:42:05+00:00",
+        "mainEntityOfPage": {
+          "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/"
+        },
+        "wordCount": 324,
+        "commentCount": 0,
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-2.jpg",
+        "keywords": [
+          "malted milk",
+          "pumpkin",
+          "vanilla",
+          "whipped cream"
+        ],
+        "articleSection": [
+          "Desserts",
+          "Drinks"
+        ],
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "CommentAction",
+            "name": "Comment",
+            "target": [
+              "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#respond"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/",
+        "url": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/",
+        "name": "Pumpkin Malted Milkshake Recipe to End All Pumpkin Milkshake Recipes",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/#website"
+        },
+        "primaryImageOfPage": {
+          "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#primaryimage"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-2.jpg",
+        "datePublished": "2010-11-05T22:28:24+00:00",
+        "dateModified": "2020-09-07T12:42:05+00:00",
+        "description": "This pumpkin malted milkshake was made with the pumpkin lover in mind. It has pumpkin puree and pumpkin pie spice in it. If that isn't enough pumpkin for you, you could always add in pumpkin spice extract or pumpkin spice coffee creamer for a little more pumpkin spice flavor.",
+        "breadcrumb": {
+          "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#breadcrumb"
+        },
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "ReadAction",
+            "target": [
+              "https://www.samanthaseeley.com/pumpkin-malted-milkshake/"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "ImageObject",
+        "inLanguage": "en-US",
+        "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#primaryimage",
+        "url": "https://www.samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-2.jpg",
+        "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-2.jpg",
+        "width": 1400,
+        "height": 2100
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.samanthaseeley.com/pumpkin-malted-milkshake/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.samanthaseeley.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Recipes",
+            "item": "https://www.samanthaseeley.com/recipes/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Desserts",
+            "item": "https://www.samanthaseeley.com/recipes/desserts/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "name": "Pumpkin Malted Milkshake"
+          }
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.samanthaseeley.com/#website",
+        "url": "https://www.samanthaseeley.com/",
+        "name": "Samantha Seeley",
+        "description": "Food Photography &amp; Education",
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "potentialAction": [
+          {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.samanthaseeley.com/?s={search_term_string}"
+            },
+            "query-input": {
+              "@type": "PropertyValueSpecification",
+              "valueRequired": true,
+              "valueName": "search_term_string"
+            }
+          }
+        ],
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": [
+          "Person",
+          "Organization"
+        ],
+        "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3",
+        "name": "Sam",
+        "image": {
+          "@type": "ImageObject",
+          "inLanguage": "en-US",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/",
+          "url": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "width": 550,
+          "height": 254,
+          "caption": "Sam"
+        },
+        "logo": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/"
+        },
+        "description": "I’m a food photographer, blogger, and educator. I teach food bloggers &amp; photographers how-to level up their food photography skills.",
+        "sameAs": [
+          "https://samanthaseeley.com",
+          "https://facebook.com/thesamseeley",
+          "https://instagram.com/thesamseeley",
+          "https://pinterest.com/thesamseeley",
+          "https://x.com/thesamseeley"
+        ]
+      }
+    ]
+  },
+  {
+    "@context": "http://schema.org",
+    "@type": "Recipe",
+    "name": "Pumpkin Malted Milkshakes",
+    "author": {
+      "@type": "Person",
+      "name": "Samantha Seeley"
+    },
+    "datePublished": "2019-02-10",
+    "recipeYield": 4,
+    "description": "This malted pumpkin milk shake is thebomb.com!",
+    "image": [
+      "https://samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-6-720x720.jpg",
+      "https://samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-6-720x540.jpg",
+      "https://samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-6.jpg",
+      "https://samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-6-720x405.jpg",
+      "https://samanthaseeley.com/wp-content/uploads/2019/04/pumpkin-milkshake-6-735x1103.jpg"
+    ],
+    "recipeCategory": "Desserts",
+    "prepTime": "PT10M",
+    "cookTime": "PT0S",
+    "totalTime": "PT10M",
+    "recipeIngredient": [
+      "1 cup half-and-half",
+      "4 cups vanilla ice cream",
+      "1/4 cup canned pumpkin",
+      "1/4 tsp pumpkin pie spice",
+      "3 Tbsps malted milk",
+      "Homemade whipped cream",
+      "Pinch of ground nutmeg"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "In a blender, combine half &amp; half, ice cream, pumpkin, pumpkin pie spice, and malted milk.",
+        "position": 1,
+        "name": "In a blender, combine half &amp; half, ice...",
+        "url": "https://samanthaseeley.com/pumpkin-malted-milkshake/#mv_create_12_1"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Cover and process until smooth.",
+        "position": 2,
+        "name": "Cover and process until smooth.",
+        "url": "https://samanthaseeley.com/pumpkin-malted-milkshake/#mv_create_12_2"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Pour into four small glasses.",
+        "position": 3,
+        "name": "Pour into four small glasses.",
+        "url": "https://samanthaseeley.com/pumpkin-malted-milkshake/#mv_create_12_3"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Top with homemade whipped cream and nutmeg.",
+        "position": 4,
+        "name": "Top with homemade whipped cream and nutmeg.",
+        "url": "https://samanthaseeley.com/pumpkin-malted-milkshake/#mv_create_12_4"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Serve immediately. ",
+        "position": 5,
+        "name": "Serve immediately. ",
+        "url": "https://samanthaseeley.com/pumpkin-malted-milkshake/#mv_create_12_5"
+      }
+    ],
+    "keywords": " malted milk, pumpkin, vanilla, whipped cream",
+    "nutrition": {
+      "@type": "NutritionInformation",
+      "calories": "391 calories",
+      "carbohydrateContent": "39 grams carbohydrates",
+      "cholesterolContent": "85 milligrams cholesterol",
+      "fatContent": "23 grams fat",
+      "fiberContent": "1 grams fiber",
+      "proteinContent": "9 grams protein",
+      "saturatedFatContent": "14 grams saturated fat",
+      "servingSize": "1",
+      "sodiumContent": "175 grams sodium",
+      "sugarContent": "31 grams sugar",
+      "transFatContent": "0 grams trans fat",
+      "unsaturatedFatContent": "7 grams unsaturated fat"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "reviewCount": 1
+    },
+    "url": "https://samanthaseeley.com/pumpkin-malted-milkshake/"
+  }
+]

@@ -1,0 +1,211 @@
+{
+  "id": 3,
+  "@context": "http://schema.org",
+  "@type": "Recipe",
+  "name": "Mary’s Maine Bars",
+  "author": {
+    "@type": "Person",
+    "name": "Samantha Seeley"
+  },
+  "datePublished": "2019-02-09",
+  "recipeYield": 20,
+  "description": "Recipe from Dorie’s Cookies by Dorie Greenspan",
+  "image": [
+    "https://www.samanthaseeley.com/wp-content/uploads/2016/09/marys-maine-bars-3.jpg"
+  ],
+  "prepTime": "PT15M",
+  "cookTime": "PT30M",
+  "performTime": "PT30M",
+  "totalTime": "PT45M",
+  "recipeIngredient": [
+    "1½ cups (204 grams) all-purpose flour",
+    "1½ cups (204 grams) whole wheat flour",
+    "1 teaspoon baking soda",
+    "1 teaspoon fine sea salt",
+    "1 teaspoon ground cinnamon",
+    "1 teaspoon freshly grated nutmeg",
+    "¾ teaspoon ground cloves",
+    "1 cup (200 grams) sugar",
+    "¾ cup (180 ml) unsulfured molasses",
+    "½ cup (120 ml) flavorless oil, such as canola",
+    "1 large egg, at room temperature",
+    "¼ cup (60 ml) buttermilk, at room temperature",
+    "Sanding or granulated sugar, for sprinkling"
+  ],
+  "recipeInstructions": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_1",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Center a rack in the oven and preheat it to 350 degrees F. Generously butter a 9-x-13-inch baking pan or coat it with baking spray. Line it with a piece of parchment paper.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "¼ cup (60 ml) buttermilk, at room temperature"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_2",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Whisk both flours, the baking soda, salt and spices together.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1½ cups (204 grams) all-purpose flour"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 teaspoon baking soda"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1 teaspoon fine sea salt"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_3",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Working with a stand mixer fitted with the paddle attachment, or in a large bowl with a hand mixer, beat the sugar, molasses, oil and egg together until smooth.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "Sanding or granulated sugar, for sprinkling"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_4",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Add half of the dry ingredients and pulse the mixer to start blending them in, then beat on low speed only until the flour disappears into the dough.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1½ cups (204 grams) all-purpose flour"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_5",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Pour in the buttermilk and mix to combine.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "¼ cup (60 ml) buttermilk, at room temperature"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_6",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Add the remainder of the dry ingredients and, still working on low, beat until incorporated. You’ll have a smooth, heavy, sticky dough."
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 7,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_7",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Scrape the dough into the pan, using a knife or offset spatula to get it into the corners and to even the top as best you can. Sprinkle with sugar.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "Sanding or granulated sugar, for sprinkling"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 8,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_8",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Bake for 26 to 30 minutes, rotating the pan after 15 minutes, or until the top is dry and a tester inserted into the center comes out clean. Transfer the pan to a rack."
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 9,
+      "url": "https://www.samanthaseeley.com/marys-maine-bars/#mv_create_4_9",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "After 10 minutes, run a blunt table knife around the edges of the pan, invert the Maine bars onto a rack, peel away the paper, turn it over onto another rack and let cool. When you’re ready, cut it into 20 bars (about 1¾ x 3¼ inches)."
+        }
+      ]
+    }
+  ],
+  "keywords": " buttermilk, cinnamon, cloves, molasses, sugar",
+  "nutrition": {
+    "@type": "NutritionInformation",
+    "calories": "258 calories",
+    "carbohydrateContent": "37 grams carbohydrates",
+    "cholesterolContent": "9 milligrams cholesterol",
+    "fatContent": "12 grams fat",
+    "fiberContent": "1 grams fiber",
+    "proteinContent": "3 grams protein",
+    "saturatedFatContent": "1 grams saturated fat",
+    "servingSize": "1",
+    "sodiumContent": "185 milligrams sodium",
+    "sugarContent": "23 grams sugar",
+    "transFatContent": "0 grams trans fat",
+    "unsaturatedFatContent": "10 grams unsaturated fat"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": 5,
+    "reviewCount": "1"
+  },
+  "url": "https://www.samanthaseeley.com/marys-maine-bars/"
+}

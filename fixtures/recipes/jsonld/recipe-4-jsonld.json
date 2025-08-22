@@ -1,0 +1,300 @@
+[
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Article",
+        "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#article",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/"
+        },
+        "author": {
+          "name": "Sam",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "headline": "Sweet Potato Custard (Gluten Free!)",
+        "datePublished": "2016-02-01T12:00:39+00:00",
+        "dateModified": "2021-04-16T22:41:41+00:00",
+        "mainEntityOfPage": {
+          "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/"
+        },
+        "wordCount": 118,
+        "commentCount": 1,
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1.jpg",
+        "keywords": [
+          "cinnamon",
+          "egg",
+          "half and half",
+          "heavy cream",
+          "nutmeg",
+          "sweet potato"
+        ],
+        "articleSection": [
+          "Desserts",
+          "Gluten Free"
+        ],
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "CommentAction",
+            "name": "Comment",
+            "target": [
+              "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#respond"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/",
+        "name": "Sweet Potato Custard (Gluten Free!) &#187; Samantha Seeley",
+        "isPartOf": {
+          "@id": "https://www.samanthaseeley.com/#website"
+        },
+        "primaryImageOfPage": {
+          "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#primaryimage"
+        },
+        "image": {
+          "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#primaryimage"
+        },
+        "thumbnailUrl": "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1.jpg",
+        "datePublished": "2016-02-01T12:00:39+00:00",
+        "dateModified": "2021-04-16T22:41:41+00:00",
+        "description": "This Sweet Potato Custard recipe is naturally gluten free because it is crustless. It is a nice alternative to pumpkin pie. Perfect for your dessert table!",
+        "breadcrumb": {
+          "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#breadcrumb"
+        },
+        "inLanguage": "en-US",
+        "potentialAction": [
+          {
+            "@type": "ReadAction",
+            "target": [
+              "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "ImageObject",
+        "inLanguage": "en-US",
+        "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#primaryimage",
+        "url": "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1.jpg",
+        "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1.jpg",
+        "width": 600,
+        "height": 840,
+        "caption": "Sweet Potato Custard"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.samanthaseeley.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Recipes",
+            "item": "https://www.samanthaseeley.com/recipes/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Desserts",
+            "item": "https://www.samanthaseeley.com/recipes/desserts/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 4,
+            "name": "Sweet Potato Custard (Gluten Free!)"
+          }
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.samanthaseeley.com/#website",
+        "url": "https://www.samanthaseeley.com/",
+        "name": "Samantha Seeley",
+        "description": "Food Photography &amp; Education",
+        "publisher": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3"
+        },
+        "potentialAction": [
+          {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.samanthaseeley.com/?s={search_term_string}"
+            },
+            "query-input": {
+              "@type": "PropertyValueSpecification",
+              "valueRequired": true,
+              "valueName": "search_term_string"
+            }
+          }
+        ],
+        "inLanguage": "en-US"
+      },
+      {
+        "@type": [
+          "Person",
+          "Organization"
+        ],
+        "@id": "https://www.samanthaseeley.com/#/schema/person/662f2ebd140e3fcf642a904da81be7f3",
+        "name": "Sam",
+        "image": {
+          "@type": "ImageObject",
+          "inLanguage": "en-US",
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/",
+          "url": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "contentUrl": "https://www.samanthaseeley.com/wp-content/uploads/2019/03/logo@2x.png",
+          "width": 550,
+          "height": 254,
+          "caption": "Sam"
+        },
+        "logo": {
+          "@id": "https://www.samanthaseeley.com/#/schema/person/image/"
+        },
+        "description": "I’m a food photographer, blogger, and educator. I teach food bloggers &amp; photographers how-to level up their food photography skills.",
+        "sameAs": [
+          "https://samanthaseeley.com",
+          "https://facebook.com/thesamseeley",
+          "https://instagram.com/thesamseeley",
+          "https://pinterest.com/thesamseeley",
+          "https://x.com/thesamseeley"
+        ]
+      }
+    ]
+  },
+  {
+    "@context": "http://schema.org",
+    "@type": "Recipe",
+    "name": "Sweet Potato Custard",
+    "author": {
+      "@type": "Person",
+      "name": "Samantha Seeley"
+    },
+    "datePublished": "2019-02-09",
+    "recipeYield": 2,
+    "description": "This recipe makes 2-4 individual servings depending on the size of your ramekins or baking dishes. Use larger dishes for 2 servings and smaller ramekins for 4 servings.",
+    "image": [
+      "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1-480x480.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1-480x360.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1-540x720.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1-480x270.jpg",
+      "https://www.samanthaseeley.com/wp-content/uploads/2016/02/sweet-potato-custard-1.jpg"
+    ],
+    "recipeCategory": "Desserts",
+    "prepTime": "PT1H",
+    "cookTime": "PT1H",
+    "performTime": "PT1H",
+    "totalTime": "PT2H",
+    "recipeIngredient": [
+      "2 sweet potatoes, cooked",
+      "1 cup half and half",
+      "2 eggs",
+      "1⁄2 teaspoon salt",
+      "1 1⁄2 tablespoons cinnamon",
+      "1 tsp nutmeg",
+      "prepared homemade whipped cream",
+      "pinch of cinnamon + nutmeg (optional)"
+    ],
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "Preheat the oven to 350°F.",
+        "position": 1,
+        "name": "Preheat the oven to 350°F.",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_1"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Mix together the sweet potato puree and the half and half. Whisk in the eggs, salt, cinnamon, and nutmeg.",
+        "position": 2,
+        "name": "Mix together the sweet potato puree and the half...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_2"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Fill 2 small baking dishes with the sweet potato mixture and place in a deeper baking dish.",
+        "position": 3,
+        "name": "Fill 2 small baking dishes with the sweet...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_3"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Put hot water in the deep baking dish so that it surrounds the smaller baking dishes. Bake for 20-­25 minutes.",
+        "position": 4,
+        "name": "Put hot water in the deep baking dish so...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_4"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "While baking, fit a plastic piping bags with your choice of frosting tips. Or cut a hole in the corner of a plastic ziplock bag.",
+        "position": 5,
+        "name": "While baking, fit a plastic piping bags with your...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_5"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Fill the bag with the homemade whipped cream and set aside in the fridge until ready to use.",
+        "position": 6,
+        "name": "Fill the bag with the homemade whipped cream and...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_6"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Remove the sweet potato custard from the oven and let cool completely.",
+        "position": 7,
+        "name": "Remove the sweet potato custard from the oven and...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_7"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Top with the homemade whipped cream. Sprinkle cinnamon and nutmeg on top of the whipped cream.",
+        "position": 8,
+        "name": "Top with the homemade whipped cream. Sprinkle cinnamon...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_8"
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Serve immediately or place in the refrigerator until ready to serve.",
+        "position": 9,
+        "name": "Serve immediately or place in the refrigerator until ready...",
+        "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/#mv_create_5_9"
+      }
+    ],
+    "keywords": " cinnamon, egg, half and half, heavy cream, nutmeg, sweet potato",
+    "nutrition": {
+      "@type": "NutritionInformation",
+      "calories": "185 calories",
+      "carbohydrateContent": "20 grams carbohydrates",
+      "cholesterolContent": "115 milligrams cholesterol",
+      "fatContent": "10 grams fat",
+      "fiberContent": "4 grams fiber",
+      "proteinContent": "6 grams protein",
+      "saturatedFatContent": "6 grams saturated fat",
+      "servingSize": "1",
+      "sodiumContent": "358 milligrams sodium",
+      "sugarContent": "7 grams sugar",
+      "transFatContent": "0 grams trans fat",
+      "unsaturatedFatContent": "4 grams unsaturated fat"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": 4.2,
+      "reviewCount": "5"
+    },
+    "url": "https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/"
+  }
+]

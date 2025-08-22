@@ -42,8 +42,10 @@ export type VideoObject = {
 export type HowToDirection = {
     '@type': 'HowToDirection';
     text: string;
+    supply: HowToSupply[];
     image?: ImageObject | ImageObject[];
     video?: VideoObject;
+    totalTime?: string; // ISO 8601 duration format
 };
 
 export type HowToTip = {
@@ -55,17 +57,19 @@ export type HowToStep = {
     '@type': 'HowToStep';
     name?: string;
     text?: string;
+    position?: number;
     image?: ImageObject | ImageObject[];
     video?: VideoObject;
     url?: string;
-    supply?: HowToSupply[];
     tool?: HowToTool[];
+    supply?: HowToSupply[]; // Allow supply list for steps with specific ingredients
     // Custom extensions for interactive features
     timer?: {
         duration: number; // seconds
         label: string;
         autoStart?: boolean;
     };
+    totalTime?: string; // ISO 8601 duration format
     notes?: {
         type: 'tip' | 'warning' | 'info';
         text: string;

@@ -1,0 +1,259 @@
+{
+  "id": 5,
+  "@context": "http://schema.org",
+  "@type": "Recipe",
+  "name": "Buffalo Chicken Hummus Dip",
+  "author": {
+    "@type": "Person",
+    "name": "Samantha Seeley"
+  },
+  "datePublished": "2019-02-09",
+  "recipeYield": 12,
+  "description": "This dip has a great kick of flavor with the hummus as a secret (and totally delicious!) ingredient. It's perfect for your game day snack-age.",
+  "image": [
+    "https://www.samanthaseeley.com/wp-content/uploads/2016/01/buffalo-chicken-hummus-dip-1.jpg"
+  ],
+  "recipeCategory": "Appetizers",
+  "prepTime": "PT30M",
+  "cookTime": "PT1H",
+  "performTime": "PT1H",
+  "totalTime": "PT1H30M",
+  "recipeIngredient": [
+    "1 tablespoon olive oil",
+    "1 lb boneless, skinless chicken breast, cut into chunks",
+    "6 oz buffalo sauce",
+    "1/2 cup of hummus",
+    "12 oz cream cheese (1 1/2 blocks), divided",
+    "4 stalks of celery, diced and divided",
+    "1/2 cup blue cheese crumbles + 2 tablespoons, divided",
+    "16 oz mozzarella cheese"
+  ],
+  "recipeInstructions": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_1",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Preheat oven to 350 ° F."
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_2",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "In a large skillet heat the olive oil on low-medium heat."
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_3",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Once oil is hot, add chicken and cook until fully cooked, about 6-8 minutes.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1 lb boneless, skinless chicken breast, cut into chunks"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_4",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Add the buffalo sauce and 4 oz of cream cheese to the skillet and mix to combine the chicken and buffalo sauce mixture.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1 lb boneless, skinless chicken breast, cut into chunks"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "6 oz buffalo sauce"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1/2 cup blue cheese crumbles + 2 tablespoons, divided"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "12 oz cream cheese (1 1/2 blocks), divided"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_5",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Once mixed add half of the diced celery."
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_6",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "In a small bowl, mix together the hummus and 8 oz of cream cheese.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1/2 cup of hummus"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1/2 cup blue cheese crumbles + 2 tablespoons, divided"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "12 oz cream cheese (1 1/2 blocks), divided"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 7,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_7",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Layer the mixture in two 8\" round dish with the back of a spoon, set aside."
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 8,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_8",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Once the buffalo chicken mixture has cooled, mix in 1/2 cup of blue cheese crumbles and add it on top of the cream cheese and hummus mixture.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1 lb boneless, skinless chicken breast, cut into chunks"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "6 oz buffalo sauce"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1/2 cup of hummus"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1/2 cup blue cheese crumbles + 2 tablespoons, divided"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "12 oz cream cheese (1 1/2 blocks), divided"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 9,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_9",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Top the buffalo chicken with mozzarella cheese and bake for approximately 30 minute or until the mozzarella cheese has melted.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "1 lb boneless, skinless chicken breast, cut into chunks"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "6 oz buffalo sauce"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1/2 cup blue cheese crumbles + 2 tablespoons, divided"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "@type": "HowToStep",
+      "position": 10,
+      "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/#mv_create_6_10",
+      "itemListElement": [
+        {
+          "@type": "HowToDirection",
+          "position": 1,
+          "text": "Remove from oven and top with remaining blue cheese crumbles and diced celery. Drizzle buffalo sauce on top and serve with chips and celery sticks.",
+          "supply": [
+            {
+              "@type": "HowToSupply",
+              "name": "6 oz buffalo sauce"
+            },
+            {
+              "@type": "HowToSupply",
+              "name": "1/2 cup blue cheese crumbles + 2 tablespoons, divided"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "keywords": " blue cheese, buffalo sauce, celery, chicken, hummus, mozzarella cheese",
+  "nutrition": {
+    "@type": "NutritionInformation",
+    "calories": "325 calories",
+    "carbohydrateContent": "5 grams carbohydrates",
+    "cholesterolContent": "95 milligrams cholesterol",
+    "fatContent": "23 grams fat",
+    "fiberContent": "1 grams fiber",
+    "proteinContent": "24 grams protein",
+    "saturatedFatContent": "12 grams saturated fat",
+    "servingSize": "1",
+    "sodiumContent": "843 milligrams sodium",
+    "sugarContent": "2 grams sugar",
+    "transFatContent": "0 grams trans fat",
+    "unsaturatedFatContent": "9 grams unsaturated fat"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": 5,
+    "reviewCount": "1"
+  },
+  "url": "https://www.samanthaseeley.com/buffalo-chicken-hummus-dip/"
+}
