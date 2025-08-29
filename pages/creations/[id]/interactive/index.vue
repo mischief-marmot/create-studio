@@ -5,15 +5,8 @@
             <!-- Fullscreen toggle button -->
             <button @click="toggleFullscreen"
                 class="absolute top-4 right-4 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors">
-                <svg v-if="!isFullscreen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4">
-                    </path>
-                </svg>
-                <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 9l6 6m0-6l-6 6m12-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+                    <ArrowsPointingOutIcon v-if="!isFullscreen" class="w-5 h-5" />
+                    <ArrowsPointingInIcon v-else class="w-5 h-5" />
             </button>
             <!-- Top Figure Section - Collapsible Height -->
             <figure
@@ -103,7 +96,12 @@
                             <!-- Step-specific supplies/ingredients -->
                             <div v-if="step.supply && step.supply.length > 0"
                                 class="box-gray">
-                                <ul class="space-y-1">
+                                <div class="flex justify-between">
+                                    <span class="font-medium ">Step Ingredients</span>
+                                    <PlusIcon v-if="!showStepIngredients" class="w-5 h-5" @click="toggleStepIngredients"/>
+                                    <MinusIcon v-if="showStepIngredients" class="w-5 h-5" @click="toggleStepIngredients"/>
+                                </div>
+                                <ul v-show="showStepIngredients" class="space-y-1 mt-2">
                                     <li v-for="supply in step.supply" :key="supply.name">
                                         <label class="flex items-start space-x-3">
                                             <input type="checkbox" class="checkbox checkbox-lg bg-white border-[1px]" />
@@ -114,7 +112,7 @@
                             </div>
 
                             <!-- Timer -->
-                            <RecipeTimer v-if="step.timer" :timer="step.timer" />
+                            <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index}-timer`" />
 
                             <!-- Notes -->
                             <div v-if="step.notes && step.notes.length > 0" class="mt-3 space-y-2">
@@ -167,6 +165,9 @@
 
             <!-- Bottom Navigation Controls - Fixed -->
             <div class="flex-shrink-0 bg-white border-t border-gray-200 relative">
+                <!-- Active Timers Panel -->
+                <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
+                
                 <!-- Ingredients Dropdown Panel (only shows after slide 0) -->
                 <div v-if="showIngredients && currentSlide > 0"
                     class="absolute bottom-[120%] left-0 right-0 mx-auto bg-white border-[0.25px] border-gray-300/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl">
@@ -174,10 +175,7 @@
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="font-semibold text-base">Ingredients</h3>
                             <button @click="showIngredients = false" class="p-1 cursor-pointer">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
+                                 <XMarkIcon class="w-5 h-5" />
                             </button>
                         </div>
                         <ul>
@@ -201,20 +199,14 @@
                         <button @click="nextSlide"
                             class="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 flex items-center space-x-2 cursor-pointer">
                             <span>Begin</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                                </path>
-                            </svg>
+                            <ChevronDoubleRightIcon class="w-5 h-5" />
                         </button>
                     </div>
                     <div v-else class="flex items-center justify-between">
                         <!-- After slide 0 - with ingredients button -->
                         <!-- Previous Button -->
                         <button @click="previousSlide" class="flex items-center space-x-2 text-gray-600 cursor-pointer">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 19l-7-7 7-7"></path>
-                            </svg>
+                            <ChevronDoubleLeftIcon class="w-5 h-5" />
                             <span class="text-sm">Back</span>
                         </button>
 
@@ -222,18 +214,7 @@
                         <button @click="showIngredients = !showIngredients"
                             class="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
                             <!-- Ingredients Icon SVG -->
-                            <svg width="20" height="15" viewBox="0 0 20 15" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <line x1="2.40002" y1="1.01245" x2="20" y2="1.01245" stroke="currentColor"
-                                    stroke-width="2" />
-                                <line x1="2.40002" y1="7.41321" x2="20" y2="7.41321" stroke="currentColor"
-                                    stroke-width="2" />
-                                <line x1="2.40002" y1="13.814" x2="20" y2="13.814" stroke="currentColor"
-                                    stroke-width="2" />
-                                <line y1="1" x2="1.6" y2="1" stroke="currentColor" stroke-width="2" />
-                                <line y1="7.40076" x2="1.6" y2="7.40076" stroke="currentColor" stroke-width="2" />
-                                <line y1="13.8015" x2="1.6" y2="13.8015" stroke="currentColor" stroke-width="2" />
-                            </svg>
+                            <QueueListIcon class="w-5 h-5" />
                             <span class="text-sm font-medium">Ingredients</span>
                         </button>
 
@@ -241,10 +222,7 @@
                         <button v-if="currentSlide < totalSlides - 1" @click="nextSlide"
                             class="flex items-center space-x-2 text-gray-600 cursor-pointer">
                             <span class="text-sm">Next</span>
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
-                                </path>
-                            </svg>
+                            <ChevronDoubleRightIcon class="w-5 h-5" />
                         </button>
                         <div v-else class="w-16"></div>
                     </div>
@@ -262,10 +240,16 @@
 <script setup lang="ts">
 import type { HowTo, HowToStep } from '~/types/schema-org';
 import { recipesById } from '~/fixtures/recipes/clean';
+import { QueueListIcon } from '@heroicons/vue/24/outline';
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 
 const route = useRoute();
 const id = route.params.id as string;
 const { getImageUrl, getVideoUrl, formatDuration } = useRecipeUtils();
+
+// Provide timer manager at the page level so it persists across slides
+const timerManager = useTimerManager();
+provide('timerManager', timerManager);
 
 // Get recipe from fixtures
 const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
@@ -279,6 +263,8 @@ const totalSlides = steps.length + 2; // intro + steps + completion
 const currentSlide = ref(0);
 const carouselRef = ref<HTMLElement>();
 const showIngredients = ref(false);
+const showActiveTimers = ref(false);
+const showStepIngredients = ref(false);
 
 // Image collapse state
 const imageHeight = ref(25); // Default 25% height (h-1/4)
@@ -319,6 +305,16 @@ watch(currentMediaSource, (newSource, oldSource) => {
         isImageCollapsed.value = false;
     }
 });
+
+// Auto-show active timers panel when timers become active
+watch(() => timerManager.hasActiveTimers.value, (hasActive) => {
+    if (hasActive) {
+        showActiveTimers.value = true;
+        showIngredients.value = false; // Close ingredients panel if open
+    }
+});
+
+const toggleStepIngredients = async () => showStepIngredients.value = !showStepIngredients.value;
 
 // Full-screen functionality
 const isFullscreen = ref(false);
