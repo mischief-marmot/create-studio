@@ -37,7 +37,7 @@
         {
           "@type": "HowToDirection",
           "position": 1,
-          "text": "Preheat oven to 350 ° F."
+          "text": "Preheat oven to 350° F for about 2 hours and 10 minutes."
         }
       ]
     },
@@ -193,7 +193,7 @@
         {
           "@type": "HowToDirection",
           "position": 1,
-          "text": "Top the buffalo chicken with mozzarella cheese and bake for approximately 30 minute or until the mozzarella cheese has melted.",
+          "text": "Top the buffalo chicken with mozzarella cheese and bake for approximately 30-45 minutes or until the mozzarella cheese has melted.",
           "supply": [
             {
               "@type": "HowToSupply",

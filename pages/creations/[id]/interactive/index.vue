@@ -33,27 +33,18 @@
                         <div class="text-6xl opacity-20">🍽️</div>
                     </div>
                 </template>
-                <template v-else-if="currentSlide === 1">
-                    <!-- Ingredients Image -->
-                    <img v-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
-                        class="h-full w-full object-cover" />
-                    <div v-else
-                        class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                        <div class="text-6xl opacity-20">📋</div>
-                    </div>
-                </template>
                 <template v-else-if="currentSlide <= steps.length + 1">
                     <!-- Step Media -->
-                    <div v-if="steps[currentSlide - 2].video" class="w-full h-full">
-                        <video :key="`video-${currentSlide}`" :src="getVideoUrl(steps[currentSlide - 2].video)"
-                            :poster="getVideoThumbnail(steps[currentSlide - 2].video)"
+                    <div v-if="steps[currentSlide - 1].video" class="w-full h-full">
+                        <video :key="`video-${currentSlide}`" :src="getVideoUrl(steps[currentSlide - 1].video)"
+                            :poster="getVideoThumbnail(steps[currentSlide - 1].video)"
                             class="w-full h-full object-cover" controls preload="metadata">
-                            <source :src="getVideoUrl(steps[currentSlide - 2].video)" type="video/mp4">
+                            <source :src="getVideoUrl(steps[currentSlide - 1].video)" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
                     </div>
-                    <img v-else-if="steps[currentSlide - 2].image" :src="getImageUrl(steps[currentSlide - 2].image)"
-                        :alt="steps[currentSlide - 2].name || `Step ${currentSlide - 1}`"
+                    <img v-else-if="steps[currentSlide - 1].image" :src="getImageUrl(steps[currentSlide - 1].image)"
+                        :alt="steps[currentSlide - 1].name || `Step ${currentSlide - 1}`"
                         class="w-full h-full object-cover" />
                     <!-- Fallback to main image if step has no media -->
                     <img v-else-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
@@ -339,6 +330,36 @@ const MIN_HEIGHT = 10; // Minimum 10% height when collapsed
 const MAX_HEIGHT = 33; // Maximum 33% height when expanded
 const COLLAPSED_THRESHOLD = 15; // Below 15% is considered collapsed
 
+// Track current media source
+const currentMediaSource = computed(() => {
+    if (currentSlide.value === 0 || currentSlide.value === 1) {
+        // Intro and ingredients slides use main image
+        return creation.image ? getImageUrl(creation.image) : 'default-intro';
+    } else if (currentSlide.value <= steps.length + 1) {
+        // Step slides - check for step-specific media
+        const step = steps[currentSlide.value - 2];
+        if (step.video) {
+            return getVideoUrl(step.video);
+        } else if (step.image) {
+            return getImageUrl(step.image);
+        } else {
+            // Falls back to main image
+            return creation.image ? getImageUrl(creation.image) : 'default-step';
+        }
+    } else {
+        // Completion slide uses main image
+        return creation.image ? getImageUrl(creation.image) : 'default-completion';
+    }
+});
+
+// Watch for media changes and reset height
+watch(currentMediaSource, (newSource, oldSource) => {
+    if (newSource !== oldSource) {
+        imageHeight.value = 25;
+        isImageCollapsed.value = false;
+    }
+});
+
 // Full-screen functionality
 const isFullscreen = ref(false);
 
@@ -600,11 +621,47 @@ function transformJsonLdToHowTo(data: any): HowTo {
 
             // Add sample timer for baking steps
             const text = stepText.toLowerCase();
-            if (text.includes('bake') && text.match(/(\d+)\s*minutes?/)) {
+            if (text.match(/(\d+)\s*minutes?/) || text.match(/(\d+)\s*hours?/)) {
                 const minutes = parseInt(text.match(/(\d+)\s*minutes?/)?.[1] || '0');
+                const hours = parseInt(text.match(/(\d+)\s*hours?/)?.[1] || '0');
+                let totalMinutes = minutes + hours * 60;
+                let totalSeconds = totalMinutes * 60;
+
+                let label;
+                switch (true) {
+                    case text.includes('bake'):
+                        label = 'Bake';
+                        break;
+                    case text.includes('cook'):
+                        label = 'Cook';
+                        break;
+                    case text.includes('prepare'):
+                        label = 'Prepare';
+                        break;
+                    case text.includes('chill'):
+                        label = 'Chill';
+                        break;
+                    case text.includes('rest'):
+                        label = 'Rest';
+                        break;
+                    case text.includes('marinate'):
+                        label = 'Marinate';
+                        break;
+                    case text.includes('simmer'):
+                        label = 'Simmer';
+                        break;
+                    case text.includes('blend'):
+                        label = 'Blend';
+                        break;
+                    case text.includes('boil'):
+                        label = 'Boil';
+                        break;
+                    default:
+                        label = 'Cook';
+                }
                 step.timer = {
-                    duration: minutes * 60,
-                    label: `Bake ${minutes}m`,
+                    duration: totalSeconds,
+                    label: `${label} ${formatDuration(totalSeconds)}`,
                     autoStart: false
                 };
             }
@@ -647,13 +704,17 @@ function formatDuration(duration: string | number | undefined): string {
         const hours = Math.floor(duration / 3600);
         const minutes = Math.floor((duration % 3600) / 60);
         const seconds = duration % 60;
+        let timeString = '';
         if (hours > 0) {
-            return minutes > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${hours}h`;
+            timeString = `${hours}h`;
         }
         if (minutes > 0) {
-            return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+            timeString += ` ${minutes}m`;
         }
-        return `${seconds}s`;
+        if (seconds > 0) {
+            timeString += ` ${seconds}s`;
+        }
+        return timeString.trim();
     }
 
     const match = duration.match(/PT(\d+)M/) || duration.match(/PT(\d+)S/);
