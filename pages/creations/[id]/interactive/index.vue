@@ -26,53 +26,40 @@
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
-                    <img v-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
-                        class="h-full w-full object-cover" />
-                    <div v-else
-                        class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                        <div class="text-6xl opacity-20">🍽️</div>
-                    </div>
+                    <RecipeMedia
+                        :image="creation.image"
+                        :alt="creation.name"
+                        placeholder-class="from-primary/20 to-secondary/20 flex items-center justify-center"
+                        placeholder-emoji="🍽️"
+                    />
                 </template>
                 <template v-else-if="currentSlide <= steps.length + 1">
                     <!-- Step Media -->
-                    <div v-if="steps[currentSlide - 1].video" class="w-full h-full">
-                        <video :key="`video-${currentSlide}`" :src="getVideoUrl(steps[currentSlide - 1].video)"
-                            :poster="getVideoThumbnail(steps[currentSlide - 1].video)"
-                            class="w-full h-full object-cover" controls preload="metadata">
-                            <source :src="getVideoUrl(steps[currentSlide - 1].video)" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    <img v-else-if="steps[currentSlide - 1].image" :src="getImageUrl(steps[currentSlide - 1].image)"
+                    <RecipeMedia
+                        :video="steps[currentSlide - 1].video"
+                        :image="steps[currentSlide - 1].image || creation.image"
                         :alt="steps[currentSlide - 1].name || `Step ${currentSlide - 1}`"
-                        class="w-full h-full object-cover" />
-                    <!-- Fallback to main image if step has no media -->
-                    <img v-else-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
-                        class="h-full w-full object-cover" />
-                    <div v-else
-                        class="w-full h-full bg-gradient-to-br from-base-200 to-base-300 flex items-center justify-center">
-                        <div class="text-6xl opacity-20">👩‍🍳</div>
-                    </div>
+                        :video-key="currentSlide"
+                        placeholder-class="from-base-200 to-base-300 flex items-center justify-center"
+                        placeholder-emoji="👩‍🍳"
+                    />
                 </template>
                 <template v-else>
                     <!-- Completion Image -->
-                    <img v-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
-                        class="h-full w-full object-cover" />
-                    <div v-else
-                        class="w-full h-full bg-gradient-to-br from-success/20 to-success/30 flex items-center justify-center">
-                        <div class="text-6xl opacity-20">🎉</div>
-                    </div>
+                    <RecipeMedia
+                        :image="creation.image"
+                        :alt="creation.name"
+                        placeholder-class="from-success/20 to-success/30 flex items-center justify-center"
+                        placeholder-emoji="🎉"
+                    />
                 </template>
                 
                 <!-- Draggable Handle -->
-                <div 
-                    @mousedown.prevent="startDrag"
-                    @touchstart.prevent="startDrag"
-                    @touchmove.prevent="onDrag"
-                    @touchend.prevent="endDrag"
-                    class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black/20 to-transparent flex items-end justify-center pb-2 cursor-ns-resize touch-none">
-                    <div class="w-12 h-1 bg-white/80 rounded-full shadow-md"></div>
-                </div>
+                <DraggableHandle
+                    @start-drag="startDrag"
+                    @drag="onDrag"
+                    @end-drag="endDrag"
+                />
             </figure>
 
             <!-- Middle Content Section - Scrollable -->
@@ -127,35 +114,7 @@
                             </div>
 
                             <!-- Timer -->
-                            <div v-if="step.timer" 
-                                class="box-gray flex justify-between">
-                                <div class="flex items-center space-x-2">
-                                    <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    <div class="flex flex-col leading-3 justify-center">
-                                        <span class="font-medium italic">{{ step.timer.label }}</span>
-                                        <span class="text-sm text-gray-500">{{ formatDuration(step.timer.duration) }}</span>
-                                    </div>
-                                </div>
-                                <button
-                                    class="btn btn-md h-auto py-3 shadow-none rounded-full font-normal uppercase text-black bg-gray-200 border-[0.5px] border-gray-400/60 flex justify-center items-center">
-                                    <span class="leading-0">start</span>
-                                    <span>
-                                        <!-- play svg -->
-                                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 330 330" height="16" width="16"
-                                            fill="currentColor">
-                                            <path d="M37.728,328.12c2.266,1.256,4.77,1.88,7.272,1.88c2.763,0,5.522-0.763,7.95-2.28l240-149.999
-	c4.386-2.741,7.05-7.548,7.05-12.72c0-5.172-2.664-9.979-7.05-12.72L52.95,2.28c-4.625-2.891-10.453-3.043-15.222-0.4
-	C32.959,4.524,30,9.547,30,15v300C30,320.453,32.959,325.476,37.728,328.12z" />
-                                        </svg>
-                                    </span>
-                                </button>
-
-                            </div>
+                            <RecipeTimer v-if="step.timer" :timer="step.timer" />
 
                             <!-- Notes -->
                             <div v-if="step.notes && step.notes.length > 0" class="mt-3 space-y-2">
@@ -306,6 +265,7 @@ import { recipesById } from '~/fixtures/recipes/clean';
 
 const route = useRoute();
 const id = route.params.id as string;
+const { getImageUrl, getVideoUrl, formatDuration } = useRecipeUtils();
 
 // Get recipe from fixtures
 const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
@@ -673,64 +633,4 @@ function transformJsonLdToHowTo(data: any): HowTo {
     return recipe;
 }
 
-// Helper functions for image/video handling
-function getImageUrl(image: any): string {
-    if (typeof image === 'string') return image;
-    if (image && typeof image === 'object') {
-        return image.url || image.contentUrl || '';
-    }
-    return '';
-}
-
-function getVideoUrl(video: any): string {
-    if (typeof video === 'string') return video;
-    if (video && typeof video === 'object') {
-        return video.contentUrl || video.url || '';
-    }
-    return '';
-}
-
-function getVideoThumbnail(video: any): string {
-    if (video && typeof video === 'object') {
-        return video.thumbnailUrl || '';
-    }
-    return '';
-}
-
-// Helper function to format ISO 8601 duration to human-readable
-function formatDuration(duration: string | number | undefined): string {
-    if (!duration) return '';
-    if (typeof duration === 'number') {
-        const hours = Math.floor(duration / 3600);
-        const minutes = Math.floor((duration % 3600) / 60);
-        const seconds = duration % 60;
-        let timeString = '';
-        if (hours > 0) {
-            timeString = `${hours}h`;
-        }
-        if (minutes > 0) {
-            timeString += ` ${minutes}m`;
-        }
-        if (seconds > 0) {
-            timeString += ` ${seconds}s`;
-        }
-        return timeString.trim();
-    }
-
-    const match = duration.match(/PT(\d+)M/) || duration.match(/PT(\d+)S/);
-    if (match) {
-        const value = parseInt(match[1]);
-        if (duration.includes('M')) {
-            return `${value}m`;
-        } else {
-            const minutes = Math.floor(value / 60);
-            const secs = value % 60;
-            if (minutes > 0) {
-                return secs > 0 ? `${minutes}m ${secs}s` : `${minutes}m`;
-            }
-            return `${secs}s`;
-        }
-    }
-    return duration;
-}
 </script>
