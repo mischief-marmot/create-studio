@@ -118,3 +118,7 @@ html {
   background-clip: text;
   color: transparent;
 }
+
+.box-gray {
+  @apply bg-gray-100 rounded-xl p-3 border-[0.5px] border-gray-300/60;
+}

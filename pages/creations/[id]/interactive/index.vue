@@ -1,267 +1,293 @@
 <template>
-    <div class="h-dvh w-full flex items-center justify-center bg-white">
-        <!-- Single Card Container -->
-        <div class="card lg:card-side w-full max-w-7xl h-full lg:h-5/6 bg-white shadow-xl relative">
+    <div class="h-dvh w-full flex items-center justify-center bg-gray-100">
+        <!-- Mobile-optimized Card Container -->
+        <div class="w-full max-w-md h-full bg-white shadow-xl flex flex-col">
             <!-- Fullscreen toggle button -->
-            <button 
-                @click="toggleFullscreen"
+            <button @click="toggleFullscreen"
                 class="absolute top-4 right-4 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors">
                 <svg v-if="!isFullscreen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4">
+                    </path>
                 </svg>
                 <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9l6 6m0-6l-6 6m12-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 9l6 6m0-6l-6 6m12-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </button>
-            
-            <!-- Stationary Figure Section -->
-            <figure class="h-1/4 md:h-1/3 lg:h-full lg:w-2/5 relative rounded-b-3xl shadow-xl overflow-hidden">
+            <!-- Top Figure Section - Fixed Height -->
+            <figure
+                class="h-1/4 md:h-1/3 lg:h-full lg:w-2/5 relative rounded-b-3xl shadow-xl overflow-hidden flex-shrink-0">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
-                    <img v-if="creation.image" 
-                         :src="getImageUrl(creation.image)" 
-                         :alt="creation.name"
-                         class="h-full w-full object-cover" />
-                    <div v-else class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                    <img v-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
+                        class="h-full w-full object-cover" />
+                    <div v-else
+                        class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                         <div class="text-6xl opacity-20">🍽️</div>
                     </div>
                 </template>
                 <template v-else-if="currentSlide === 1">
                     <!-- Ingredients Image -->
-                    <img v-if="creation.image" 
-                         :src="getImageUrl(creation.image)" 
-                         :alt="creation.name"
-                         class="h-full w-full object-cover" />
-                    <div v-else class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                    <img v-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
+                        class="h-full w-full object-cover" />
+                    <div v-else
+                        class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                         <div class="text-6xl opacity-20">📋</div>
                     </div>
                 </template>
                 <template v-else-if="currentSlide <= steps.length + 1">
                     <!-- Step Media -->
                     <div v-if="steps[currentSlide - 2].video" class="w-full h-full">
-                        <video :key="`video-${currentSlide}`"
-                               :src="getVideoUrl(steps[currentSlide - 2].video)" 
-                               :poster="getVideoThumbnail(steps[currentSlide - 2].video)"
-                               class="w-full h-full object-cover" 
-                               controls 
-                               preload="metadata">
+                        <video :key="`video-${currentSlide}`" :src="getVideoUrl(steps[currentSlide - 2].video)"
+                            :poster="getVideoThumbnail(steps[currentSlide - 2].video)"
+                            class="w-full h-full object-cover" controls preload="metadata">
                             <source :src="getVideoUrl(steps[currentSlide - 2].video)" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
                     </div>
-                    <img v-else-if="steps[currentSlide - 2].image" 
-                         :src="getImageUrl(steps[currentSlide - 2].image)" 
-                         :alt="steps[currentSlide - 2].name || `Step ${currentSlide - 1}`"
-                         class="w-full h-full object-cover" />
+                    <img v-else-if="steps[currentSlide - 2].image" :src="getImageUrl(steps[currentSlide - 2].image)"
+                        :alt="steps[currentSlide - 2].name || `Step ${currentSlide - 1}`"
+                        class="w-full h-full object-cover" />
                     <!-- Fallback to main image if step has no media -->
-                    <img v-else-if="creation.image" 
-                         :src="getImageUrl(creation.image)" 
-                         :alt="creation.name"
-                         class="h-full w-full object-cover" />
-                    <div v-else class="w-full h-full bg-gradient-to-br from-base-200 to-base-300 flex items-center justify-center">
+                    <img v-else-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
+                        class="h-full w-full object-cover" />
+                    <div v-else
+                        class="w-full h-full bg-gradient-to-br from-base-200 to-base-300 flex items-center justify-center">
                         <div class="text-6xl opacity-20">👩‍🍳</div>
                     </div>
                 </template>
                 <template v-else>
                     <!-- Completion Image -->
-                    <img v-if="creation.image" 
-                         :src="getImageUrl(creation.image)" 
-                         :alt="creation.name"
-                         class="h-full w-full object-cover" />
-                    <div v-else class="w-full h-full bg-gradient-to-br from-success/20 to-success/30 flex items-center justify-center">
+                    <img v-if="creation.image" :src="getImageUrl(creation.image)" :alt="creation.name"
+                        class="h-full w-full object-cover" />
+                    <div v-else
+                        class="w-full h-full bg-gradient-to-br from-success/20 to-success/30 flex items-center justify-center">
                         <div class="text-6xl opacity-20">🎉</div>
                     </div>
                 </template>
-                
-                <!-- Navigation Controls Overlay -->
-                <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
-                    <div class="flex justify-between items-center">
-                        <button 
-                            @click="previousSlide" 
-                            :class="currentSlide === 0 ? 'bg-white/50 pointer-events-none cursor-not-allowed' : 'bg-white/90 hover:bg-white'"
-                            class="btn mask mask-squircle border-0 transition-none">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                            </svg>
-                        </button>
-                        
-                        <!-- Progress Dots -->
-                        <div class="flex space-x-2">
-                            <div v-for="index in totalSlides" :key="index - 1" :class="[
-                                'w-2 h-2 rounded-full transition-all duration-300',
-                                currentSlide === index - 1 ? 'bg-white w-6' : 'bg-white/50'
-                            ]"></div>
-                        </div>
-                        
-                        <button 
-                            @click="nextSlide" 
-                            :class="currentSlide === totalSlides - 1 ? 'bg-white/50 pointer-events-none cursor-not-allowed' : 'bg-white/90 hover:bg-white'"
-                            class="btn mask mask-squircle border-0 transition-none">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
             </figure>
-            
-            <!-- Carousel Body Section -->
-            <div class="flex-1 h-3/4 lg:h-full relative overflow-hidden flex flex-col">
+
+            <!-- Middle Content Section - Scrollable -->
+            <div class="flex-1 overflow-hidden flex flex-col">
                 <div class="carousel w-full flex-1" ref="carouselRef">
                     <!-- Intro Slide - Title, Description, Stats -->
                     <div id="slide0" class="carousel-item w-full">
-                        <div class="card-body space-y-2">
-                            <div class="">
-                                <h2 class="card-title text-3xl lg:text-4xl">{{ creation.name }}</h2>
-                                <p v-if="creation.description" v-html="creation.description" class="text-base-content"></p>
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <h1 class="text-2xl font-bold mb-3">{{ creation.name }}</h1>
+                                <p v-if="creation.description" v-html="creation.description"
+                                    class="text-gray-700 text-sm leading-relaxed"></p>
                             </div>
-                            
-                            <!-- Recipe Info -->
-                            <div v-if="creation.prepTime || creation.cookTime || creation.yield" class="stats shadow max-w-md mx-auto">
-                                <div v-if="creation.prepTime" class="stat">
-                                    <div class="stat-title">Prep Time</div>
-                                    <div class="stat-value text-2xl">{{ formatDuration(creation.prepTime) }}</div>
-                                </div>
-                                <div v-if="creation.cookTime" class="stat">
-                                    <div class="stat-title">Cook Time</div>
-                                    <div class="stat-value text-2xl">{{ formatDuration(creation.cookTime) }}</div>
-                                </div>
-                                <div v-if="creation.yield" class="stat">
-                                    <div class="stat-title">Serves</div>
-                                    <div class="stat-value text-2xl">{{ creation.yield }}</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Call to Action -->
-                            <div class="text-center mt-8">
-                                <p class="text-sm text-gray-700">Swipe to see ingredients →</p>
-                            </div>
-                        </div>
-                    </div>
+                            <div>
+                                <h2 class="text-xl font-bold mb-4">Ingredients</h2>
 
-                    <!-- Ingredients Slide -->
-                    <div id="slide1" class="carousel-item w-full">
-                        <div class="card-body space-y-2 overflow-y-auto">
-                            <h2 class="card-title text-2xl lg:text-3xl">Ingredients</h2>
-                            
-                            <div class="max-w-lg">
                                 <ul class="space-y-1">
                                     <li v-for="ingredient in creation.recipeIngredient" :key="ingredient"
                                         class="flex items-start space-x-2">
-                                        <span class="w-2 h-2 bg-base-content rounded-full mt-2 flex-shrink-0"></span>
-                                        <span class="text-sm ">{{ ingredient }}</span>
+                                        <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></span>
+                                        <span class="text-sm text-gray-700">{{ ingredient }}</span>
                                     </li>
                                 </ul>
-                            </div>
-                            
-                            <!-- Call to Action -->
-                            <div class="text-center mt-6">
-                                <p class="text-sm opacity-60 animate-pulse">Ready to cook? Swipe to start →</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recipe Steps -->
-                    <div v-for="(step, index) in steps" :key="`step-${index}`" :id="`slide${index + 2}`"
+                    <div v-for="(step, index) in steps" :key="`step-${index}`" :id="`slide${index + 1}`"
                         class="carousel-item w-full">
-                        <div class="card-body space-y-2 overflow-y-auto">
-                            <h2 class="card-title text-xl lg:text-2xl">{{ step.name || `Step ${step.position || index + 1}` }}</h2>
-                            <div class="prose prose-sm max-w-none" v-html="step.text"></div>
+                        <div class="px-4 py-8 flex flex-col space-y-8 overflow-y-auto">
+                            <div class="flex space-x-3 justify-start w-full items-center">
+                                <div
+                                    class="flex justify-center items-center grow-0 shrink-0 h-12 w-12 bg-gray-900 text-gray-50 rounded-md">
+                                    <span class="text-3xl font-mono">{{ index + 1 }}</span>
+                                </div>
 
-                            <!-- Step-specific supplies/ingredients -->
-                            <div v-if="step.supply && step.supply.length > 0" class="bg-blue-50 rounded-lg p-3 border-l-4 border-blue-300">
-                                <h4 class="font-semibold text-sm mb-2 text-blue-700">Ingredients for this step:</h4>
-                                <ul class="space-y-1">
-                                    <li v-for="supply in step.supply" :key="supply.name"
-                                        class="flex items-start space-x-2">
-                                        <span class="w-1 h-1 bg-blue-500 rounded-full mt-1.5 flex-shrink-0"></span>
-                                        <span class="text-xs text-blue-700">{{ supply.name }}</span>
-                                    </li>
-                                </ul>
+                                <div class="text-lg text-gray-700 leading-tight" v-html="step.text"></div>
                             </div>
 
-                            <!-- All ingredients fallback (if no step-specific supplies) -->
-                            <div v-else-if="creation.recipeIngredient && creation.recipeIngredient.length > 0" class="bg-gray-50 rounded-lg p-3">
-                                <h4 class="font-semibold text-sm mb-2">All Ingredients:</h4>
+                            <!-- Step-specific supplies/ingredients -->
+                            <div v-if="step.supply && step.supply.length > 0"
+                                class="box-gray">
                                 <ul class="space-y-1">
-                                    <li v-for="ingredient in creation.recipeIngredient" :key="ingredient"
-                                        class="flex items-start space-x-2">
-                                        <span class="w-1 h-1 bg-primary rounded-full mt-1.5 flex-shrink-0"></span>
-                                        <span class="text-xs">{{ ingredient }}</span>
+                                    <li v-for="supply in step.supply" :key="supply.name">
+                                        <label class="flex items-start space-x-3">
+                                            <input type="checkbox" class="checkbox checkbox-lg bg-white border-[1px]" />
+                                            <span>{{ supply.name }}</span>
+                                        </label>
                                     </li>
                                 </ul>
                             </div>
 
                             <!-- Timer -->
-                            <div v-if="step.timer" class="alert alert-warning">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <span>{{ step.timer.label }}</span>
+                            <div v-if="step.timer" 
+                                class="box-gray flex justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-5 h-5 text-gray-800" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div class="flex flex-col leading-3 justify-center">
+                                        <span class="font-medium italic">{{ step.timer.label }}</span>
+                                        <span class="text-sm text-gray-500">{{ formatDuration(step.timer.duration) }}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    class="btn btn-md h-auto py-3 shadow-none rounded-full font-normal uppercase text-black bg-gray-200 border-[0.5px] border-gray-400/60 flex justify-center items-center">
+                                    <span class="leading-0">start</span>
+                                    <span>
+                                        <!-- play svg -->
+                                        <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 330 330" height="16" width="16"
+                                            fill="currentColor">
+                                            <path d="M37.728,328.12c2.266,1.256,4.77,1.88,7.272,1.88c2.763,0,5.522-0.763,7.95-2.28l240-149.999
+	c4.386-2.741,7.05-7.548,7.05-12.72c0-5.172-2.664-9.979-7.05-12.72L52.95,2.28c-4.625-2.891-10.453-3.043-15.222-0.4
+	C32.959,4.524,30,9.547,30,15v300C30,320.453,32.959,325.476,37.728,328.12z" />
+                                        </svg>
+                                    </span>
+                                </button>
+
                             </div>
 
                             <!-- Notes -->
-                            <div v-if="step.notes && step.notes.length > 0" class="space-y-2">
-                                <div v-for="note in step.notes" :key="note.text" class="alert alert-info">
-                                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path v-if="note.type === 'tip'" stroke-linecap="round" stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
-                                        </path>
-                                        <path v-else-if="note.type === 'warning'" stroke-linecap="round"
-                                            stroke-linejoin="round" stroke-width="2"
-                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z">
-                                        </path>
-                                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            <div v-if="step.notes && step.notes.length > 0" class="mt-3 space-y-2">
+                                <div v-for="note in step.notes" :key="note.text"
+                                    class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start space-x-2">
+                                    <svg class="w-5 h-5 flex-shrink-0 text-blue-600 mt-0.5" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                    <span class="text-sm">{{ note.text }}</span>
+                                    <span class="text-sm text-blue-700">{{ note.text }}</span>
                                 </div>
                             </div>
-                            
                         </div>
                     </div>
 
                     <!-- Completion Slide -->
                     <div :id="`slide${totalSlides - 1}`" class="carousel-item w-full">
-                        <div class="card-body flex flex-col justify-center items-center text-center">
+                        <div class="p-6 flex flex-col justify-center items-center text-center h-full">
                             <!-- Success Icon -->
-                            <div class="w-20 h-20 mb-4 bg-success/20 rounded-full flex items-center justify-center">
-                                <svg class="w-10 h-10 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="w-20 h-20 mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M5 13l4 4L19 7"></path>
                                 </svg>
                             </div>
 
-                            <h2 class="text-2xl lg:text-3xl font-bold text-success mb-2">Congratulations!</h2>
-                            <p class="text-lg mb-4">You've completed making</p>
-                            <p class="text-xl font-semibold mb-6">{{ creation.name }}</p>
+                            <h2 class="text-2xl font-bold text-green-600 mb-2">Congratulations!</h2>
+                            <p class="text-base mb-2">You've completed making</p>
+                            <p class="text-lg font-semibold mb-6">{{ creation.name }}</p>
 
                             <div class="space-y-2 mb-6">
-                                <p class="text-base">Time to enjoy your delicious creation! 🎉</p>
-                                <p class="text-sm opacity-70">Don't forget to share a photo of your finished dish!</p>
+                                <p class="text-sm">Time to enjoy your delicious creation! 🎉</p>
+                                <p class="text-xs text-gray-500">Don't forget to share a photo of your finished dish!
+                                </p>
                             </div>
 
-                            <div class="card-actions flex-col sm:flex-row gap-2">
-                                <button @click="goToSlide(0)" class="btn btn-primary btn-sm">Start Over</button>
-                                <a href="/" class="btn btn-outline btn-sm">Browse More Recipes</a>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <button @click="goToSlide(0)"
+                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Start
+                                    Over</button>
+                                <a href="/" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Browse
+                                    More Recipes</a>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Stationary Banner Ad Section -->
-                <div class="w-full bg-base-300 border-t border-base-300 p-3">
-                    <div class="max-w-sm mx-auto">
-                        <!-- Sample Ad Content - Replace with your ad network code -->
-                        <div class="bg-base-100 rounded-lg p-3 text-center border-2 border-dashed border-base-300">
-                            <div class="text-xs text-base-content/60 mb-1">Advertisement</div>
-                            <div class="text-sm font-medium text-base-content/80">Your Ad Here</div>
-                            <div class="text-xs text-base-content/50 mt-1">728×90 Banner Space</div>
+            </div>
+
+            <!-- Bottom Navigation Controls - Fixed -->
+            <div class="flex-shrink-0 bg-white border-t border-gray-200 relative">
+                <!-- Ingredients Dropdown Panel (only shows after slide 0) -->
+                <div v-if="showIngredients && currentSlide > 0"
+                    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-white border-[0.25px] border-gray-300/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-semibold text-base">Ingredients</h3>
+                            <button @click="showIngredients = false" class="p-1 cursor-pointer">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
                         </div>
+                        <ul>
+                            <li v-for="ingredient in creation.recipeIngredient" :key="ingredient">{{ ingredient }}</li>
+                        </ul>
                     </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="p-4">
+                    <div v-if="currentSlide === 0" class="flex items-center justify-between">
+                        <!-- First slide - original layout -->
+                        <div class="w-16"></div>
+
+                        <!-- Progress Indicator -->
+                        <div class="flex-1 flex justify-center items-center">
+                            <div class="text-xs text-gray-500">Or swipe to start cooking! →</div>
+                        </div>
+
+                        <!-- Begin Button -->
+                        <button @click="nextSlide"
+                            class="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 flex items-center space-x-2 cursor-pointer">
+                            <span>Begin</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div v-else class="flex items-center justify-between">
+                        <!-- After slide 0 - with ingredients button -->
+                        <!-- Previous Button -->
+                        <button @click="previousSlide" class="flex items-center space-x-2 text-gray-600 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7"></path>
+                            </svg>
+                            <span class="text-sm">Back</span>
+                        </button>
+
+                        <!-- Ingredients Button -->
+                        <button @click="showIngredients = !showIngredients"
+                            class="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+                            <!-- Ingredients Icon SVG -->
+                            <svg width="20" height="15" viewBox="0 0 20 15" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <line x1="2.40002" y1="1.01245" x2="20" y2="1.01245" stroke="currentColor"
+                                    stroke-width="2" />
+                                <line x1="2.40002" y1="7.41321" x2="20" y2="7.41321" stroke="currentColor"
+                                    stroke-width="2" />
+                                <line x1="2.40002" y1="13.814" x2="20" y2="13.814" stroke="currentColor"
+                                    stroke-width="2" />
+                                <line y1="1" x2="1.6" y2="1" stroke="currentColor" stroke-width="2" />
+                                <line y1="7.40076" x2="1.6" y2="7.40076" stroke="currentColor" stroke-width="2" />
+                                <line y1="13.8015" x2="1.6" y2="13.8015" stroke="currentColor" stroke-width="2" />
+                            </svg>
+                            <span class="text-sm font-medium">Ingredients</span>
+                        </button>
+
+                        <!-- Next Button -->
+                        <button v-if="currentSlide < totalSlides - 1" @click="nextSlide"
+                            class="flex items-center space-x-2 text-gray-600 cursor-pointer">
+                            <span class="text-sm">Next</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
+                                </path>
+                            </svg>
+                        </button>
+                        <div v-else class="w-16"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex-shrink-0 bg-gray-300 h-20 2-full p-2">
+                <div class="border-dashed border-2 border-gray-400 rounded-md h-full flex items-center justify-center">
+                    <span>Advertisement</span>
                 </div>
             </div>
         </div>
@@ -281,11 +307,12 @@ const creation: HowTo = transformJsonLdToHowTo(recipeData);
 
 // Get steps as HowToStep array for template usage
 const steps = creation.step as HowToStep[];
-const totalSlides = steps.length + 3; // intro + ingredients + steps + completion
+const totalSlides = steps.length + 2; // intro + steps + completion
 
 // Reactive state for current slide
 const currentSlide = ref(0);
 const carouselRef = ref<HTMLElement>();
+const showIngredients = ref(false);
 
 // Full-screen functionality
 const isFullscreen = ref(false);
@@ -373,9 +400,6 @@ onMounted(() => {
         } else if (event.key === 'ArrowLeft') {
             event.preventDefault();
             previousSlide();
-        } else if (event.key === 'f' || event.key === 'F') {
-            event.preventDefault();
-            toggleFullscreen();
         }
     };
     
@@ -383,7 +407,6 @@ onMounted(() => {
     const handleScroll = () => {
         updateCurrentSlideFromScroll();
     };
-    
     // Fullscreen change detection
     const handleFullscreenChange = () => {
         isFullscreen.value = !!(document.fullscreenElement || 
@@ -493,7 +516,7 @@ function transformJsonLdToHowTo(data: any): HowTo {
                 const minutes = parseInt(text.match(/(\d+)\s*minutes?/)?.[1] || '0');
                 step.timer = {
                     duration: minutes * 60,
-                    label: `Timer for ${minutes} minutes`,
+                    label: `Bake ${minutes}m`,
                     autoStart: false
                 };
             }
@@ -530,8 +553,20 @@ function getVideoThumbnail(video: any): string {
 }
 
 // Helper function to format ISO 8601 duration to human-readable
-function formatDuration(duration: string | undefined): string {
+function formatDuration(duration: string | number | undefined): string {
     if (!duration) return '';
+    if (typeof duration === 'number') {
+        const hours = Math.floor(duration / 3600);
+        const minutes = Math.floor((duration % 3600) / 60);
+        const seconds = duration % 60;
+        if (hours > 0) {
+            return minutes > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${hours}h`;
+        }
+        if (minutes > 0) {
+            return seconds > 0 ? `${minutes}m ${seconds}s` : `${minutes}m`;
+        }
+        return `${seconds}s`;
+    }
 
     const match = duration.match(/PT(\d+)M/) || duration.match(/PT(\d+)S/);
     if (match) {
