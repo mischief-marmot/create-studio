@@ -283,7 +283,7 @@ const currentMediaSource = computed(() => {
         return creation.image ? getImageUrl(creation.image) : 'default-intro';
     } else if (currentSlide.value <= steps.length + 1) {
         // Step slides - check for step-specific media
-        const step = steps[currentSlide.value - 2];
+        const step = steps[currentSlide.value - 1];
         if (step.video) {
             return getVideoUrl(step.video);
         } else if (step.image) {
