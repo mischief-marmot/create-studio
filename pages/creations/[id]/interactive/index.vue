@@ -15,9 +15,14 @@
                         d="M9 9l6 6m0-6l-6 6m12-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </button>
-            <!-- Top Figure Section - Fixed Height -->
+            <!-- Top Figure Section - Collapsible Height -->
             <figure
-                class="h-1/4 md:h-1/3 lg:h-full lg:w-2/5 relative rounded-b-3xl shadow-xl overflow-hidden flex-shrink-0">
+                :class="[
+                    'relative rounded-b-3xl shadow-xl overflow-hidden flex-shrink-0',
+                    isDragging ? '' : 'transition-all duration-300',
+                    isImageCollapsed ? 'h-12' : ''
+                ]"
+                :style="{ height: `${imageHeight}%` }">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
@@ -67,6 +72,16 @@
                         <div class="text-6xl opacity-20">🎉</div>
                     </div>
                 </template>
+                
+                <!-- Draggable Handle -->
+                <div 
+                    @mousedown.prevent="startDrag"
+                    @touchstart.prevent="startDrag"
+                    @touchmove.prevent="onDrag"
+                    @touchend.prevent="endDrag"
+                    class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black/20 to-transparent flex items-end justify-center pb-2 cursor-ns-resize touch-none">
+                    <div class="w-12 h-1 bg-white/80 rounded-full shadow-md"></div>
+                </div>
             </figure>
 
             <!-- Middle Content Section - Scrollable -->
@@ -314,6 +329,16 @@ const currentSlide = ref(0);
 const carouselRef = ref<HTMLElement>();
 const showIngredients = ref(false);
 
+// Image collapse state
+const imageHeight = ref(25); // Default 25% height (h-1/4)
+const isImageCollapsed = ref(false);
+const isDragging = ref(false);
+const dragStartY = ref(0);
+const dragStartHeight = ref(0);
+const MIN_HEIGHT = 10; // Minimum 10% height when collapsed
+const MAX_HEIGHT = 33; // Maximum 33% height when expanded
+const COLLAPSED_THRESHOLD = 15; // Below 15% is considered collapsed
+
 // Full-screen functionality
 const isFullscreen = ref(false);
 
@@ -413,9 +438,20 @@ onMounted(() => {
                                 (document as any).webkitFullscreenElement);
     };
     
+    // Drag event handlers
+    const handleMouseMove = (event: MouseEvent) => onDrag(event);
+    const handleTouchMove = (event: TouchEvent) => onDrag(event);
+    const handleDragEnd = () => endDrag();
+    
     document.addEventListener('keydown', handleKeydown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    
+    // Add drag event listeners
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchend', handleDragEnd);
     
     if (carouselRef.value) {
         carouselRef.value.addEventListener('scroll', handleScroll, { passive: true });
@@ -425,11 +461,63 @@ onMounted(() => {
         document.removeEventListener('keydown', handleKeydown);
         document.removeEventListener('fullscreenchange', handleFullscreenChange);
         document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+        
+        // Remove drag event listeners
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('mouseup', handleDragEnd);
+        document.removeEventListener('touchend', handleDragEnd);
+        
         if (carouselRef.value) {
             carouselRef.value.removeEventListener('scroll', handleScroll);
         }
     });
 });
+
+// Drag handlers for collapsible image
+const startDrag = (event: MouseEvent | TouchEvent) => {
+    isDragging.value = true;
+    dragStartY.value = event.type.includes('touch') 
+        ? (event as TouchEvent).touches[0].clientY 
+        : (event as MouseEvent).clientY;
+    dragStartHeight.value = imageHeight.value;
+};
+
+const onDrag = (event: MouseEvent | TouchEvent) => {
+    if (!isDragging.value) return;
+    
+    requestAnimationFrame(() => {
+        const currentY = event.type.includes('touch') 
+            ? (event as TouchEvent).touches[0].clientY 
+            : (event as MouseEvent).clientY;
+        
+        const deltaY = currentY - dragStartY.value; // Positive deltaY = swipe down = expand
+        const viewportHeight = window.innerHeight;
+        const deltaPercent = (deltaY / viewportHeight) * 100;
+        
+        let newHeight = dragStartHeight.value + deltaPercent;
+        newHeight = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, newHeight));
+        
+        imageHeight.value = newHeight;
+        isImageCollapsed.value = newHeight <= COLLAPSED_THRESHOLD;
+    });
+};
+
+const endDrag = () => {
+    if (!isDragging.value) return;
+    
+    isDragging.value = false;
+    
+    // Snap to collapsed or expanded state
+    if (imageHeight.value <= COLLAPSED_THRESHOLD) {
+        imageHeight.value = MIN_HEIGHT;
+        isImageCollapsed.value = true;
+    } else if (imageHeight.value < 20) {
+        // Snap to default if between collapsed and default
+        imageHeight.value = 25;
+        isImageCollapsed.value = false;
+    }
+};
 
 // Transform JSON-LD Recipe data to our HowTo format
 function transformJsonLdToHowTo(data: any): HowTo {
