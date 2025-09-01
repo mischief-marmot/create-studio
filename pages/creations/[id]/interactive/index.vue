@@ -96,10 +96,10 @@
                             <!-- Step-specific supplies/ingredients -->
                             <div v-if="step.supply && step.supply.length > 0"
                                 class="box-gray">
-                                <div class="flex justify-between">
+                                <div class="flex justify-between cursor-pointer" @click="toggleStepIngredients">
                                     <span class="font-medium ">Step Ingredients</span>
-                                    <PlusIcon v-if="!showStepIngredients" class="w-5 h-5" @click="toggleStepIngredients"/>
-                                    <MinusIcon v-if="showStepIngredients" class="w-5 h-5" @click="toggleStepIngredients"/>
+                                    <PlusIcon v-if="!showStepIngredients" class="w-5 h-5" />
+                                    <MinusIcon v-if="showStepIngredients" class="w-5 h-5" />
                                 </div>
                                 <ul v-show="showStepIngredients" class="space-y-1 mt-2">
                                     <li v-for="supply in step.supply" :key="supply.name">
@@ -567,7 +567,8 @@ function transformJsonLdToHowTo(data: any): HowTo {
                 '@type': 'HowToStep',
                 name: instruction.name, // Keep name if it exists, otherwise undefined
                 text: stepText,
-                position: instruction.position || index + 1
+                position: instruction.position || index + 1,
+                image: instruction?.image || howToDirection?.image
             };
 
             // If the HowToDirection has a supply list, add it to the step
@@ -577,9 +578,13 @@ function transformJsonLdToHowTo(data: any): HowTo {
 
             // Add sample timer for baking steps
             const text = stepText.toLowerCase();
-            if (text.match(/(\d+)\s*minutes?/) || text.match(/(\d+)\s*hours?/)) {
-                const minutes = parseInt(text.match(/(\d+)\s*minutes?/)?.[1] || '0');
-                const hours = parseInt(text.match(/(\d+)\s*hours?/)?.[1] || '0');
+            // Updated regex to handle ranges (e.g., "30-45 minutes" or "2 to 3 minutes") - takes first number
+            const minuteMatch = text.match(/(\d+)(?:(?:-|(?:\s+to\s+))\d+)?\s*minutes?/);
+            const hourMatch = text.match(/(\d+)(?:(?:-|(?:\s+to\s+))\d+)?\s*hours?/);
+            
+            if (minuteMatch || hourMatch) {
+                const minutes = parseInt(minuteMatch?.[1] || '0');
+                const hours = parseInt(hourMatch?.[1] || '0');
                 let totalMinutes = minutes + hours * 60;
                 let totalSeconds = totalMinutes * 60;
 
@@ -590,6 +595,9 @@ function transformJsonLdToHowTo(data: any): HowTo {
                         break;
                     case text.includes('cook'):
                         label = 'Cook';
+                        break;
+                    case text.includes('cool'):
+                        label = 'Cool';
                         break;
                     case text.includes('prepare'):
                         label = 'Prepare';
@@ -611,6 +619,9 @@ function transformJsonLdToHowTo(data: any): HowTo {
                         break;
                     case text.includes('boil'):
                         label = 'Boil';
+                        break;
+                    case text.includes('set'):
+                        label = 'Set';
                         break;
                     default:
                         label = 'Cook';
