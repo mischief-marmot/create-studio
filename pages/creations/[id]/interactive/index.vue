@@ -15,7 +15,8 @@
                     isDragging ? '' : 'transition-all duration-300',
                     isImageCollapsed ? 'h-12' : ''
                 ]"
-                :style="{ height: `${imageHeight}%` }">
+                :style="{ height: `${imageHeight}%` }"
+                @dblclick="toggleImageCollapse">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
@@ -463,6 +464,20 @@ const endDrag = () => {
         // Snap to default if between collapsed and default
         imageHeight.value = 25;
         isImageCollapsed.value = false;
+    }
+};
+
+// Toggle image collapse state (for double-click/double-tap)
+const toggleImageCollapse = () => {
+    isDragging.value = false; // Prevent conflict with drag state
+    if (isImageCollapsed.value) {
+        // Expand to default height
+        imageHeight.value = 25;
+        isImageCollapsed.value = false;
+    } else {
+        // Collapse to minimum height
+        imageHeight.value = MIN_HEIGHT;
+        isImageCollapsed.value = true;
     }
 };
 
