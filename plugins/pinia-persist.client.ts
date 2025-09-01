@@ -8,14 +8,12 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     
     // If in iframe, request storage access first
     if (isInIframe()) {
-      console.log('App running in iframe, requesting storage access...')
       await requestStorageAccess()
     }
     
     // Test if localStorage is available
     const storageAvailable = testLocalStorage()
     if (!storageAvailable) {
-      console.warn('localStorage not available - recipe progress will not persist')
       return
     }
     
@@ -27,10 +25,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     if (storedData) {
       try {
         const parsed = JSON.parse(storedData)
-        console.log('Loading persisted data:', parsed) // Debug log
         recipeStore.loadProgresses(parsed)
       } catch (error) {
-        console.error('Failed to load recipe interaction data:', error)
       }
     }
     
@@ -38,7 +34,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     recipeStore.$subscribe((mutation, state) => {
       if (testLocalStorage()) {
         const dataToStore = recipeStore.getAllProgresses()
-        console.log('Saving to localStorage:', dataToStore) // Debug log
         localStorage.setItem('recipe-interaction', JSON.stringify(dataToStore))
       }
     })

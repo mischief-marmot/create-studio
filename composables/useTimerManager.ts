@@ -106,7 +106,6 @@ export const useTimerManager = () => {
     if (import.meta.client && recipeStore.currentProgress) {
       const existingStoreTimer = recipeStore.currentProgress.activeTimers.find(t => t.id === id);
       if (!existingStoreTimer) {
-        console.log('Adding timer to store:', { id, label, duration, stepIndex }); // Debug log
         const newTimer = recipeStore.addTimer({
           id,
           label,
@@ -115,14 +114,7 @@ export const useTimerManager = () => {
           isActive: false,
           stepIndex
         });
-        console.log('Timer added to store:', newTimer); // Debug log
-      } else {
-        console.log('Timer already exists in store:', existingStoreTimer); // Debug log
       }
-    } else if (!import.meta.client) {
-      console.log('SSR: Skipping timer store sync'); // Debug log
-    } else {
-      console.log('No current progress to add timer to'); // Debug log
     }
     
     return timer;
@@ -142,12 +134,9 @@ export const useTimerManager = () => {
     
     // Update store (ensure timer exists first)
     if (recipeStore.currentProgress) {
-      console.log('Updating timer in store to active:', id); // Debug log
-      
       // Make sure timer exists in store first
       const existingTimer = recipeStore.currentProgress.activeTimers.find(t => t.id === id);
       if (!existingTimer) {
-        console.log('Timer not found in store, adding it first:', id); // Debug log
         recipeStore.addTimer({
           id,
           label: timer.label,
@@ -157,16 +146,11 @@ export const useTimerManager = () => {
           stepIndex: timer.stepIndex
         });
       } else {
-        console.log('Timer found in store, updating it:', existingTimer); // Debug log
         recipeStore.updateTimer(id, {
           remaining: timer.remaining,
           isActive: true
         });
       }
-      
-      console.log('Store activeTimers after update:', recipeStore.currentProgress.activeTimers); // Debug log
-    } else {
-      console.log('No current progress to update timer in'); // Debug log
     }
     
     // Start the interval synced to second boundaries for visual consistency
@@ -357,14 +341,11 @@ export const useTimerManager = () => {
 
   // Restore timers from store
   const restoreTimersFromStore = () => {
-    console.log('Attempting to restore timers from store...') // Debug log
     if (!recipeStore.currentProgress) {
-      console.log('No current progress found') // Debug log
       return;
     }
     
     const storeTimers = recipeStore.currentProgress.activeTimers;
-    console.log('Store timers found:', storeTimers) // Debug log
     
     storeTimers.forEach(storeTimer => {
       const timer: Timer = {
@@ -378,12 +359,10 @@ export const useTimerManager = () => {
         stepIndex: storeTimer.stepIndex
       };
       
-      console.log('Restoring timer:', timer) // Debug log
       timers.value.set(storeTimer.id, timer);
       
       // If timer was active, restart it without going through startTimer to avoid double-updating store
       if (storeTimer.isActive && storeTimer.remaining > 0) {
-        console.log('Restarting active timer:', storeTimer.id) // Debug log
         timer.status = 'running';
         
         // Start the interval immediately on next tick to sync with second boundaries
@@ -433,7 +412,6 @@ export const useTimerManager = () => {
     });
     
     updateActiveTimersStatus();
-    console.log('Timer restoration complete') // Debug log
   };
 
   // Save all timer states before page unload/refresh

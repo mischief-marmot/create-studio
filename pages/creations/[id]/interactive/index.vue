@@ -46,9 +46,9 @@
 
             <!-- Middle Content Section - Scrollable -->
             <div class="flex-1 overflow-hidden flex flex-col">
-                <div class="carousel w-full flex-1" ref="carouselRef">
+                <div class="carousel carousel-center w-full flex-1 overflow-x-auto snap-x snap-mandatory flex flex-row" ref="carouselRef">
                     <!-- Intro Slide - Title, Description, Stats -->
-                    <div id="slide0" class="carousel-item w-full">
+                    <div id="slide0" class="carousel-item w-full snap-center flex-shrink-0">
                         <div class="p-6 space-y-4">
                             <div>
                                 <h1 class="text-2xl font-bold mb-3">{{ creation.name }}</h1>
@@ -71,7 +71,7 @@
 
                     <!-- Recipe Steps -->
                     <div v-for="(step, index) in steps" :key="`step-${index}`" :id="`slide${index + 1}`"
-                        class="carousel-item w-full">
+                        class="carousel-item w-full snap-center flex-shrink-0">
                         <div class="px-4 py-8 flex flex-col space-y-8 overflow-y-auto">
                             <div class="flex space-x-3 justify-start w-full items-center">
                                 <div
@@ -84,15 +84,15 @@
 
                             <!-- Step-specific supplies/ingredients -->
                             <div v-if="step.supply && step.supply.length > 0" class="box-gray">
-                                <div class="flex justify-between cursor-pointer" @click="toggleStepIngredients">
-                                    <span class="font-medium text-neutral-content">Step Ingredients</span>
-                                    <PlusIcon v-if="!showStepIngredients" class="w-5 h-5" />
-                                    <MinusIcon v-if="showStepIngredients" class="w-5 h-5" />
+                                <div class="flex justify-between cursor-pointer" @click="recipeStore.toggleStepIngredientsVisibility()">
+                                    <span class="font-medium text-base-content">Step Ingredients</span>
+                                    <PlusIcon v-if="!recipeStore.currentProgress?.showStepIngredients" class="w-5 h-5" />
+                                    <MinusIcon v-if="recipeStore.currentProgress?.showStepIngredients" class="w-5 h-5" />
                                 </div>
-                                <ul v-show="showStepIngredients" class="space-y-1 mt-2">
+                                <ul v-show="recipeStore.currentProgress?.showStepIngredients" class="space-y-1 mt-2">
                                     <li v-for="(supply, supplyIdx) in step.supply"
                                         :key="`step-${index}-supply-${supplyIdx}`">
-                                        <label class="flex items-start space-x-3 text-neutral-content">
+                                        <label class="flex items-start space-x-3 text-base-content">
                                             <input type="checkbox" class="checkbox checkbox-lg"
                                                 :checked="recipeStore.currentProgress?.checkedStepIngredients?.get(index)?.has(`${supply.name}`) || false"
                                                 @change="recipeStore.toggleStepIngredient(index, `${supply.name}`)" />
@@ -122,7 +122,7 @@
                     </div>
 
                     <!-- Completion Slide -->
-                    <div :id="`slide${totalSlides - 1}`" class="carousel-item w-full">
+                    <div :id="`slide${totalSlides - 1}`" class="carousel-item w-full snap-center flex-shrink-0">
                         <div class="p-6 flex flex-col justify-center items-center text-center h-full">
                             <!-- Success Icon -->
                             <div class="w-20 h-20 mb-4 bg-green-100 rounded-full flex items-center justify-center">
@@ -241,7 +241,7 @@ import { useRecipeInteractionStore } from '~/stores/recipeInteraction';
 
 const route = useRoute();
 const id = route.params.id as string;
-const { getImageUrl, getVideoUrl, formatDuration } = useRecipeUtils();
+const { formatDuration } = useRecipeUtils();
 
 // Initialize recipe interaction store
 const recipeStore = useRecipeInteractionStore();
@@ -263,7 +263,7 @@ const currentSlide = ref(0);
 const carouselRef = ref<HTMLElement>();
 const showIngredients = ref(false);
 const showActiveTimers = ref(false);
-const showStepIngredients = ref(false);
+
 
 // Loading and ready state - start loading only on client side
 const isLoadingPersistence = ref(false);
@@ -281,8 +281,6 @@ const COLLAPSED_THRESHOLD = 15; // Below 15% is considered collapsed
 
 // Client-side only: Initialize loading and persistence
 onMounted(async () => {
-  console.log('Component mounted, starting loading state for recipe:', id); // Debug log
-  
   // Set hydrated and show loading state
   isHydrated.value = true;
   isLoadingPersistence.value = true;
@@ -291,13 +289,11 @@ onMounted(async () => {
   await new Promise(resolve => setTimeout(resolve, 100));
   
   const recipeProgress = recipeStore.initializeRecipe(id);
-  console.log('Recipe progress:', recipeProgress); // Debug log
   
   // Restore persisted state
   currentSlide.value = recipeProgress.currentStep;
   imageHeight.value = recipeProgress.imageHeight;
   isImageCollapsed.value = recipeProgress.isImageCollapsed;
-  console.log('Restored state - slide:', currentSlide.value, 'imageHeight:', imageHeight.value); // Debug log
   
   // Clear any duplicate timers first
   recipeStore.clearDuplicateTimers();
@@ -307,7 +303,6 @@ onMounted(async () => {
   
   // Set up watchers after initial load
   watch(currentSlide, (newSlide) => {
-    console.log('Slide changed to:', newSlide); // Debug log
     recipeStore.setCurrentStep(newSlide);
   });
   
@@ -325,7 +320,6 @@ onMounted(async () => {
   // Wait for DOM to be ready, then navigate to persisted slide if not on intro
   await nextTick();
   if (currentSlide.value > 0) {
-    console.log('Navigating to persisted slide:', currentSlide.value); // Debug log
     goToSlide(currentSlide.value, true); // Use immediate navigation to avoid scrolling through slides
   }
 });
@@ -338,7 +332,6 @@ watch(() => timerManager.hasActiveTimers.value, (hasActive) => {
     }
 });
 
-const toggleStepIngredients = async () => showStepIngredients.value = !showStepIngredients.value;
 
 // Full-screen functionality
 const isFullscreen = ref(false);
@@ -380,6 +373,7 @@ const toggleFullscreen = () => {
 // Navigation functions
 const goToSlide = (index: number, immediate = false) => {
     if (index >= 0 && index < totalSlides) {
+        isScrolling = true;
         currentSlide.value = index;
         if (carouselRef.value) {
             const targetSlide = carouselRef.value.querySelector(`#slide${index}`) as HTMLElement;
@@ -389,7 +383,15 @@ const goToSlide = (index: number, immediate = false) => {
                     block: 'nearest', 
                     inline: 'start' 
                 });
+                // Reset scrolling flag after animation completes
+                setTimeout(() => {
+                    isScrolling = false;
+                }, immediate ? 50 : 500);
+            } else {
+                isScrolling = false;
             }
+        } else {
+            isScrolling = false;
         }
     }
 };
@@ -407,17 +409,35 @@ const previousSlide = () => {
 };
 
 // Detect scroll position to update current slide for touch navigation
+let scrollTimeout: NodeJS.Timeout | null = null;
+let isScrolling = false;
 const updateCurrentSlideFromScroll = () => {
-    if (!carouselRef.value) return;
+    if (!carouselRef.value || isScrolling) return;
     
     const carousel = carouselRef.value;
     const scrollLeft = carousel.scrollLeft;
     const slideWidth = carousel.clientWidth;
+    
+    // Calculate which slide we're on based on scroll position
     const newIndex = Math.round(scrollLeft / slideWidth);
     
     if (newIndex !== currentSlide.value && newIndex >= 0 && newIndex < totalSlides) {
         currentSlide.value = newIndex;
     }
+};
+
+// Scroll detection for touch navigation
+const handleScroll = () => {
+    // Debounce scroll updates to avoid too many updates
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        updateCurrentSlideFromScroll();
+    }, 100);
+};
+
+// Handle scrollend event for more accurate detection with snap scrolling
+const handleScrollEnd = () => {
+    updateCurrentSlideFromScroll();
 };
 
 // Setup event listeners
@@ -431,11 +451,6 @@ onMounted(() => {
             event.preventDefault();
             previousSlide();
         }
-    };
-    
-    // Scroll detection for touch navigation
-    const handleScroll = () => {
-        updateCurrentSlideFromScroll();
     };
     // Fullscreen change detection
     const handleFullscreenChange = () => {
@@ -458,9 +473,7 @@ onMounted(() => {
     document.addEventListener('mouseup', handleDragEnd);
     document.addEventListener('touchend', handleDragEnd);
     
-    if (carouselRef.value) {
-        carouselRef.value.addEventListener('scroll', handleScroll, { passive: true });
-    }
+    // We'll set up carousel listeners in a separate watcher
     
     onUnmounted(() => {
         document.removeEventListener('keydown', handleKeydown);
@@ -475,9 +488,40 @@ onMounted(() => {
         
         if (carouselRef.value) {
             carouselRef.value.removeEventListener('scroll', handleScroll);
+            if ('onscrollend' in carouselRef.value) {
+                carouselRef.value.removeEventListener('scrollend', handleScrollEnd);
+            }
+        }
+        if (scrollTimeout) {
+            clearTimeout(scrollTimeout);
         }
     });
 });
+
+// Watch for carousel ref to become available and add scroll listeners
+watch(carouselRef, (newRef, oldRef) => {
+    // Remove old listeners if they exist
+    if (oldRef) {
+        oldRef.removeEventListener('scroll', handleScroll);
+        if ('onscrollend' in oldRef) {
+            oldRef.removeEventListener('scrollend', handleScrollEnd);
+        }
+    }
+    
+    // Add new listeners
+    if (newRef) {
+        // Use setTimeout to ensure DOM is fully rendered
+        setTimeout(() => {
+            if (carouselRef.value) {
+                carouselRef.value.addEventListener('scroll', handleScroll, { passive: true });
+                // scrollend is more reliable for snap scrolling
+                if ('onscrollend' in carouselRef.value) {
+                    carouselRef.value.addEventListener('scrollend', handleScrollEnd, { passive: true });
+                }
+            }
+        }, 100);
+    }
+}, { immediate: true });
 
 // Drag handlers for collapsible image
 const startDrag = (event: MouseEvent | TouchEvent) => {

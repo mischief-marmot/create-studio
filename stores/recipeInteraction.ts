@@ -18,6 +18,7 @@ export interface RecipeProgress {
   activeTimers: Timer[]
   imageHeight: number
   isImageCollapsed: boolean
+  showStepIngredients: boolean
   startedAt: string
   lastUpdated: string
 }
@@ -48,6 +49,7 @@ export const useRecipeInteractionStore = defineStore('recipeInteraction', () => 
         activeTimers: [],
         imageHeight: 25, // Default 25% height
         isImageCollapsed: false,
+        showStepIngredients: false,
         startedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString()
       }
@@ -182,6 +184,15 @@ export const useRecipeInteractionStore = defineStore('recipeInteraction', () => 
     progress.lastUpdated = new Date().toISOString()
   }
   
+  // Toggle step ingredients visibility
+  function toggleStepIngredientsVisibility() {
+    if (!currentRecipeId.value || !currentProgress.value) return
+    
+    const progress = recipeProgresses.value.get(currentRecipeId.value)!
+    progress.showStepIngredients = !progress.showStepIngredients
+    progress.lastUpdated = new Date().toISOString()
+  }
+  
   // Reset recipe progress
   function resetRecipe(recipeId?: string | number) {
     const id = recipeId || currentRecipeId.value
@@ -253,6 +264,7 @@ export const useRecipeInteractionStore = defineStore('recipeInteraction', () => 
     clearTimers,
     clearDuplicateTimers,
     setImageState,
+    toggleStepIngredientsVisibility,
     resetRecipe,
     clearAllProgress,
     getAllProgresses,
