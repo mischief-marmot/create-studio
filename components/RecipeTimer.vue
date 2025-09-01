@@ -4,7 +4,7 @@
       <ClockIcon class="w-6 h-6" />
       <div class="flex flex-col leading-tight justify-center">
         <span class="font-medium italic">{{ timer.label }}</span>
-        <span class="text-sm text-gray-500">{{ displayTime }}</span>
+        <span class="text-sm text-base-content/80">{{ displayTime }}</span>
       </div>
     </div>
     
@@ -13,7 +13,7 @@
       <!-- Idle state - Show Start button -->
       <button v-if="timerState.status === 'idle'"
         @click="handleStart"
-        class="btn btn-md h-auto py-3 px-4 shadow-none rounded-full font-normal uppercase text-black bg-gray-200 border-[0.5px] border-gray-400/60 flex justify-center items-center gap-2">
+        class="btn btn-md h-auto py-3 px-4 shadow-none rounded-full font-normal uppercase text-neutral bg-base-100 flex justify-center items-center gap-2">
         <span>start</span>
         <PlayIcon class="w-5 h-5" />
       </button>

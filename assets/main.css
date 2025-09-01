@@ -1,11 +1,12 @@
 @import "tailwindcss";
-@plugin "daisyui";
-
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, cupcake;
+}
+/* 
 @theme {
   --font-sans: Inter, sans-serif;
   --font-serif: "Playfair Display", sans-serif;
-  /* --font-sans--font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; */
-}
+} */
 
 /* @theme {
 
@@ -74,13 +75,6 @@ html {
   color: #000000;
 } */
 
-.bg-base-100 *::selection,
-.bg-base-200 *::selection,
-.bg-base-300 *::selection {
-  background: var(--color-neutral);
-  color: var(--color-neutral-content);
-}
-
 .font-sigmar {
   font-family: "Sigmar One", sans-serif;
   line-height: 1;
@@ -120,5 +114,5 @@ html {
 }
 
 .box-gray {
-  @apply bg-gray-100 rounded-xl p-3 border-[0.5px] border-gray-300/60;
+  @apply bg-base-300 rounded-xl p-3 border-[0.5px] border-base-300/60 text-base-content;
 }

@@ -1,62 +1,47 @@
 <template>
-    <div class="h-dvh w-full flex items-center justify-center bg-gray-100">
+    <div class="h-dvh w-full flex items-center justify-center bg-base-100 text-base-content">
         <!-- Show skeleton loader during SSR or while persistence is loading -->
-        <RecipeSkeletonLoader v-if="!isHydrated || isLoadingPersistence" />
-        
+        <!-- <RecipeSkeletonLoader v-if="!isHydrated || isLoadingPersistence" /> -->
+        <RecipeSkeletonLoader v-if="false" />
+
         <!-- Mobile-optimized Card Container -->
-        <div v-else class="w-full max-w-md h-full bg-white shadow-xl flex flex-col">
+        <div v-else class="w-full max-w-md h-full bg-base-100 shadow-xl flex flex-col">
             <!-- Fullscreen toggle button -->
             <button @click="toggleFullscreen"
-                class="absolute top-4 right-4 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors">
-                    <ArrowsPointingOutIcon v-if="!isFullscreen" class="w-5 h-5" />
-                    <ArrowsPointingInIcon v-else class="w-5 h-5" />
+                class="absolute top-4 right-4 z-20 w-10 h-10 bg-base-200/80 text-base-content backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-base-100/80 transition-colors">
+                <ArrowsPointingOutIcon v-if="!isFullscreen" class="w-5 h-5" />
+                <ArrowsPointingInIcon v-else class="w-5 h-5" />
             </button>
             <!-- Top Figure Section - Collapsible Height -->
-            <figure
-                :class="[
+            <figure :class="[
                     'relative rounded-b-3xl shadow-xl overflow-hidden flex-shrink-0',
                     isDragging ? '' : 'transition-all duration-300',
                     isImageCollapsed ? 'h-12' : ''
-                ]"
-                :style="{ height: `${imageHeight}%` }"
-                @dblclick="toggleImageCollapse">
+                ]" :style="{ height: `${imageHeight}%` }" @dblclick="toggleImageCollapse">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
-                    <RecipeMedia
-                        :image="creation.image"
-                        :alt="creation.name"
+                    <RecipeMedia :image="creation.image" :alt="creation.name"
                         placeholder-class="from-primary/20 to-secondary/20 flex items-center justify-center"
-                        placeholder-emoji="🍽️"
-                    />
+                        placeholder-emoji="🍽️" />
                 </template>
                 <template v-else-if="currentSlide <= steps.length">
                     <!-- Step Media -->
-                    <RecipeMedia
-                        :video="steps[currentSlide - 1]?.video"
+                    <RecipeMedia :video="steps[currentSlide - 1]?.video"
                         :image="steps[currentSlide - 1]?.image || creation?.image"
-                        :alt="steps[currentSlide - 1].name || `Step ${currentSlide - 1}`"
-                        :video-key="currentSlide"
+                        :alt="steps[currentSlide - 1].name || `Step ${currentSlide - 1}`" :video-key="currentSlide"
                         placeholder-class="from-base-200 to-base-300 flex items-center justify-center"
-                        placeholder-emoji="👩‍🍳"
-                    />
+                        placeholder-emoji="👩‍🍳" />
                 </template>
                 <template v-else>
                     <!-- Completion Image -->
-                    <RecipeMedia
-                        :image="creation.image"
-                        :alt="creation.name"
+                    <RecipeMedia :image="creation.image" :alt="creation.name"
                         placeholder-class="from-success/20 to-success/30 flex items-center justify-center"
-                        placeholder-emoji="🎉"
-                    />
+                        placeholder-emoji="🎉" />
                 </template>
-                
+
                 <!-- Draggable Handle -->
-                <DraggableHandle
-                    @start-drag="startDrag"
-                    @drag="onDrag"
-                    @end-drag="endDrag"
-                />
+                <DraggableHandle @start-drag="startDrag" @drag="onDrag" @end-drag="endDrag" />
             </figure>
 
             <!-- Middle Content Section - Scrollable -->
@@ -68,7 +53,7 @@
                             <div>
                                 <h1 class="text-2xl font-bold mb-3">{{ creation.name }}</h1>
                                 <p v-if="creation.description" v-html="creation.description"
-                                    class="text-gray-700 text-sm leading-relaxed"></p>
+                                    class="text-base-content text-sm leading-relaxed"></p>
                             </div>
                             <div>
                                 <h2 class="text-xl font-bold mb-4">Ingredients</h2>
@@ -77,7 +62,7 @@
                                     <li v-for="ingredient in creation.recipeIngredient" :key="ingredient"
                                         class="flex items-start space-x-2">
                                         <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></span>
-                                        <span class="text-sm text-gray-700">{{ ingredient }}</span>
+                                        <span class="text-sm text-base-content">{{ ingredient }}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -90,30 +75,27 @@
                         <div class="px-4 py-8 flex flex-col space-y-8 overflow-y-auto">
                             <div class="flex space-x-3 justify-start w-full items-center">
                                 <div
-                                    class="flex justify-center items-center grow-0 shrink-0 h-12 w-12 bg-gray-900 text-gray-50 rounded-md">
+                                    class="flex justify-center items-center grow-0 shrink-0 h-12 w-12 bg-primary text-primary-content rounded-md">
                                     <span class="text-3xl font-mono">{{ index + 1 }}</span>
                                 </div>
 
-                                <div class="text-lg text-gray-700 leading-tight" v-html="step.text"></div>
+                                <div class="text-lg text-base-content leading-tight" v-html="step.text"></div>
                             </div>
 
                             <!-- Step-specific supplies/ingredients -->
-                            <div v-if="step.supply && step.supply.length > 0"
-                                class="box-gray">
+                            <div v-if="step.supply && step.supply.length > 0" class="box-gray">
                                 <div class="flex justify-between cursor-pointer" @click="toggleStepIngredients">
-                                    <span class="font-medium ">Step Ingredients</span>
+                                    <span class="font-medium text-neutral-content">Step Ingredients</span>
                                     <PlusIcon v-if="!showStepIngredients" class="w-5 h-5" />
                                     <MinusIcon v-if="showStepIngredients" class="w-5 h-5" />
                                 </div>
                                 <ul v-show="showStepIngredients" class="space-y-1 mt-2">
-                                    <li v-for="(supply, supplyIdx) in step.supply" :key="`step-${index}-supply-${supplyIdx}`">
-                                        <label class="flex items-start space-x-3">
-                                            <input 
-                                                type="checkbox" 
-                                                class="checkbox checkbox-lg bg-white border-[1px]"
+                                    <li v-for="(supply, supplyIdx) in step.supply"
+                                        :key="`step-${index}-supply-${supplyIdx}`">
+                                        <label class="flex items-start space-x-3 text-neutral-content">
+                                            <input type="checkbox" class="checkbox checkbox-lg"
                                                 :checked="recipeStore.currentProgress?.checkedStepIngredients?.get(index)?.has(`${supply.name}`) || false"
-                                                @change="recipeStore.toggleStepIngredient(index, `${supply.name}`)"
-                                            />
+                                                @change="recipeStore.toggleStepIngredient(index, `${supply.name}`)" />
                                             <span>{{ supply.name }}</span>
                                         </label>
                                     </li>
@@ -121,7 +103,8 @@
                             </div>
 
                             <!-- Timer -->
-                            <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index}-timer`" :step-index="index" />
+                            <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index}-timer`"
+                                :step-index="index" />
 
                             <!-- Notes -->
                             <div v-if="step.notes && step.notes.length > 0" class="mt-3 space-y-2">
@@ -173,31 +156,23 @@
             </div>
 
             <!-- Bottom Navigation Controls - Fixed -->
-            <div class="flex-shrink-0 bg-white border-t border-gray-200 relative">
+            <div class="flex-shrink-0 bg-base-200 border-t border-base-300 relative">
                 <!-- Active Timers Panel -->
                 <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
-                
+
                 <!-- Ingredients Dropdown Panel (only shows after slide 0) -->
                 <div v-if="showIngredients && currentSlide > 0"
-                    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-white border-[0.25px] border-gray-300/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl">
+                    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 border-[0.25px] border-base-100/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl">
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="font-semibold text-base">Ingredients</h3>
                             <button @click="showIngredients = false" class="p-1 cursor-pointer">
-                                 <XMarkIcon class="w-5 h-5" />
+                                <XMarkIcon class="w-5 h-5" />
                             </button>
                         </div>
                         <ul class="space-y-1">
                             <li v-for="(ingredient, idx) in creation.recipeIngredient" :key="`ing-${idx}`">
-                                <label class="flex items-start space-x-3">
-                                    <input 
-                                        type="checkbox" 
-                                        class="checkbox checkbox-lg bg-white border-[1px]"
-                                        :checked="recipeStore.currentProgress?.checkedIngredients?.has(`ing-${idx}`) || false"
-                                        @change="recipeStore.toggleIngredient(`ing-${idx}`)"
-                                    />
-                                    <span>{{ ingredient }}</span>
-                                </label>
+                                {{ ingredient }}
                             </li>
                         </ul>
                     </div>
@@ -211,12 +186,12 @@
 
                         <!-- Progress Indicator -->
                         <div class="flex-1 flex justify-center items-center">
-                            <div class="text-xs text-gray-500">Or swipe to start cooking! →</div>
+                            <div class="text-xs text-base-content">Or swipe to start cooking! →</div>
                         </div>
 
                         <!-- Begin Button -->
                         <button @click="nextSlide"
-                            class="px-6 py-2 bg-gray-900 text-white rounded-full text-sm font-medium hover:bg-gray-800 flex items-center space-x-2 cursor-pointer">
+                            class="px-6 py-2 bg-primary text-primary-content rounded-full text-sm font-medium hover:bg-gray-800 flex items-center space-x-2 cursor-pointer">
                             <span>Begin</span>
                             <ChevronDoubleRightIcon class="w-5 h-5" />
                         </button>
@@ -224,14 +199,15 @@
                     <div v-else class="flex items-center justify-between">
                         <!-- After slide 0 - with ingredients button -->
                         <!-- Previous Button -->
-                        <button @click="previousSlide" class="flex items-center space-x-2 text-gray-600 cursor-pointer">
+                        <button @click="previousSlide"
+                            class="flex items-center space-x-2 text-base-content cursor-pointer">
                             <ChevronDoubleLeftIcon class="w-5 h-5" />
                             <span class="text-sm">Back</span>
                         </button>
 
                         <!-- Ingredients Button -->
                         <button @click="showIngredients = !showIngredients"
-                            class="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+                            class="flex items-center space-x-2 px-4 py-2 text-base-content hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
                             <!-- Ingredients Icon SVG -->
                             <QueueListIcon class="w-5 h-5" />
                             <span class="text-sm font-medium">Ingredients</span>
@@ -239,7 +215,7 @@
 
                         <!-- Next Button -->
                         <button v-if="currentSlide < totalSlides - 1" @click="nextSlide"
-                            class="flex items-center space-x-2 text-gray-600 cursor-pointer">
+                            class="flex items-center space-x-2 text-base-content cursor-pointer">
                             <span class="text-sm">Next</span>
                             <ChevronDoubleRightIcon class="w-5 h-5" />
                         </button>

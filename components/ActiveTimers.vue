@@ -1,6 +1,6 @@
 <template>
   <div v-if="activeTimers.length > 0"
-    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-gray-100 rounded-xl border-[0.5px] border-gray-300/60 shadow-xl overflow-y-auto max-w-[90%] max-h-[50vh]">
+    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 rounded-xl border-[0.5px] border-base-300/60 shadow-xl overflow-y-auto max-w-[90%] max-h-[50vh] text-base-content">
     <div>
       <div class="flex items-center justify-end">
         <button v-if="showCloseButton" @click="$emit('close')" class="p-1 cursor-pointer">
@@ -20,7 +20,7 @@
           ]"
           >
           <div class="flex list-col-grow items-center space-x-3">
-            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-base-content" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
@@ -31,10 +31,10 @@
               ]"
               >{{ timer.label }}</div>
               <div
-              :class="
-                timer.remaining < 60 && timer.remaining > 0 ? 'text-2xl font-medium text-red-50 leading-5' : 'text-xs text-gray-500'
-              "
-              >{{ formatDuration(timer.remaining) || 'Complete' }}</div>
+              :class="[
+                timer.remaining < 60 && timer.remaining > 0 ? 'text-2xl font-medium text-red-50 leading-5' : 'text-xs text-base-content/80'
+              ]"
+              >{{ formatDuration(timer.remaining) || 'Complete' }}<span v-show="timer.status === 'paused'" class="italic text-xs"> (paused)</span></div>
             </div>
           </div>
 
@@ -42,7 +42,7 @@
           <div class="flex items-center gap-1">
             <!-- Running - show pause -->
             <button v-if="timer.status === 'running'" @click="pauseTimer(timer.id)"
-              class="cursor-pointer py-1.5 px-3 rounded-full bg-white border border-gray-300 hover:bg-gray-100">
+              class="cursor-pointer py-1.5 px-3 rounded-full bg-base-100 border border-base-300 hover:bg-base-200">
               <PauseIcon class="w-5 h-5" /> 
             </button>
 
@@ -50,11 +50,11 @@
             <template v-else-if="timer.status === 'paused'">
               <div class="join">
               <button @click="resetTimer(timer.id)"
-                class="cursor-pointer join-item py-1.5 px-3 rounded-l-full bg-white border border-gray-300 hover:bg-red-700/70 hover:text-red-50">
+                class="cursor-pointer join-item py-1.5 px-3 rounded-l-full bg-base-100 border border-base-300 hover:bg-red-700/70 hover:text-red-50">
                 <TrashIcon class="w-5 h-5" />
               </button>
               <button @click="resumeTimer(timer.id)"
-                class="cursor-pointer join-item py-1.5 px-3 rounded-r-full bg-white border border-gray-300 hover:bg-gray-100">
+                class="cursor-pointer join-item py-1.5 px-3 rounded-r-full bg-base-100 border border-base-300 hover:bg-base-200">
                 <PlayIcon class="w-5 h-5" />
               </button>
               </div>
@@ -66,7 +66,7 @@
                 <CheckIcon class="w-5 h-5" />
               </span>
               <button @click="resetTimer(timer.id)"
-                class="cursor-pointer py-1.5 px-3 rounded-full bg-white border border-gray-300 hover:bg-red-700/70 hover:text-red-50">
+                class="cursor-pointer py-1.5 px-3 rounded-full bg-base-100 border border-base-300 hover:bg-red-700/70 hover:text-red-50">
                 <TrashIcon class="w-5 h-5" />
               </button>
             </template>
