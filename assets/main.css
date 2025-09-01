@@ -20,7 +20,7 @@
   --color-highlight: var(--color-brand-red);
 } 
   */
-
+/* 
 @plugin "daisyui/theme" {
   name: "create";
   default: true;
@@ -54,7 +54,7 @@
   --border: 2px;
   --depth: 1;
   --noise: ;
-}
+} */
 
 
 /* Smooth Scroll */

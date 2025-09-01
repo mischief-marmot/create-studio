@@ -1,7 +1,10 @@
 <template>
     <div class="h-dvh w-full flex items-center justify-center bg-gray-100">
+        <!-- Show skeleton loader during SSR or while persistence is loading -->
+        <RecipeSkeletonLoader v-if="!isHydrated || isLoadingPersistence" />
+        
         <!-- Mobile-optimized Card Container -->
-        <div class="w-full max-w-md h-full bg-white shadow-xl flex flex-col">
+        <div v-else class="w-full max-w-md h-full bg-white shadow-xl flex flex-col">
             <!-- Fullscreen toggle button -->
             <button @click="toggleFullscreen"
                 class="absolute top-4 right-4 z-20 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors">
@@ -286,6 +289,10 @@ const showIngredients = ref(false);
 const showActiveTimers = ref(false);
 const showStepIngredients = ref(false);
 
+// Loading and ready state - start loading only on client side
+const isLoadingPersistence = ref(false);
+const isHydrated = ref(false);
+
 // Image collapse state with defaults
 const imageHeight = ref(25);
 const isImageCollapsed = ref(false);
@@ -296,9 +303,17 @@ const MIN_HEIGHT = 10; // Minimum 10% height when collapsed
 const MAX_HEIGHT = 33; // Maximum 33% height when expanded
 const COLLAPSED_THRESHOLD = 15; // Below 15% is considered collapsed
 
-// Client-side only: Initialize from persisted state
-onMounted(() => {
-  console.log('Component mounted, initializing recipe:', id); // Debug log
+// Client-side only: Initialize loading and persistence
+onMounted(async () => {
+  console.log('Component mounted, starting loading state for recipe:', id); // Debug log
+  
+  // Set hydrated and show loading state
+  isHydrated.value = true;
+  isLoadingPersistence.value = true;
+  
+  // Delay to ensure skeleton is visible before loading
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
   const recipeProgress = recipeStore.initializeRecipe(id);
   console.log('Recipe progress:', recipeProgress); // Debug log
   
@@ -324,12 +339,18 @@ onMounted(() => {
     recipeStore.setImageState(height, collapsed);
   });
   
-  // Navigate to persisted slide if not on intro
+  // Add minimum loading time to ensure skeleton is visible
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  // Hide loading state after everything is set up
+  await nextTick();
+  isLoadingPersistence.value = false;
+  
+  // Wait for DOM to be ready, then navigate to persisted slide if not on intro
+  await nextTick();
   if (currentSlide.value > 0) {
     console.log('Navigating to persisted slide:', currentSlide.value); // Debug log
-    nextTick(() => {
-      goToSlide(currentSlide.value);
-    });
+    goToSlide(currentSlide.value, true); // Use immediate navigation to avoid scrolling through slides
   }
 });
 
@@ -381,13 +402,17 @@ const toggleFullscreen = () => {
 };
 
 // Navigation functions
-const goToSlide = (index: number) => {
+const goToSlide = (index: number, immediate = false) => {
     if (index >= 0 && index < totalSlides) {
         currentSlide.value = index;
         if (carouselRef.value) {
             const targetSlide = carouselRef.value.querySelector(`#slide${index}`) as HTMLElement;
             if (targetSlide) {
-                targetSlide.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+                targetSlide.scrollIntoView({ 
+                    behavior: immediate ? 'instant' : 'smooth', 
+                    block: 'nearest', 
+                    inline: 'start' 
+                });
             }
         }
     }
