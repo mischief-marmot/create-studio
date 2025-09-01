@@ -103,9 +103,14 @@
                                     <MinusIcon v-if="showStepIngredients" class="w-5 h-5" />
                                 </div>
                                 <ul v-show="showStepIngredients" class="space-y-1 mt-2">
-                                    <li v-for="supply in step.supply" :key="supply.name">
+                                    <li v-for="(supply, supplyIdx) in step.supply" :key="`step-${index}-supply-${supplyIdx}`">
                                         <label class="flex items-start space-x-3">
-                                            <input type="checkbox" class="checkbox checkbox-lg bg-white border-[1px]" />
+                                            <input 
+                                                type="checkbox" 
+                                                class="checkbox checkbox-lg bg-white border-[1px]"
+                                                :checked="recipeStore.currentProgress?.checkedStepIngredients?.get(index)?.has(`${supply.name}`) || false"
+                                                @change="recipeStore.toggleStepIngredient(index, `${supply.name}`)"
+                                            />
                                             <span>{{ supply.name }}</span>
                                         </label>
                                     </li>
@@ -113,7 +118,7 @@
                             </div>
 
                             <!-- Timer -->
-                            <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index}-timer`" />
+                            <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index}-timer`" :step-index="index" />
 
                             <!-- Notes -->
                             <div v-if="step.notes && step.notes.length > 0" class="mt-3 space-y-2">
@@ -179,8 +184,18 @@
                                  <XMarkIcon class="w-5 h-5" />
                             </button>
                         </div>
-                        <ul>
-                            <li v-for="ingredient in creation.recipeIngredient" :key="ingredient">{{ ingredient }}</li>
+                        <ul class="space-y-1">
+                            <li v-for="(ingredient, idx) in creation.recipeIngredient" :key="`ing-${idx}`">
+                                <label class="flex items-start space-x-3">
+                                    <input 
+                                        type="checkbox" 
+                                        class="checkbox checkbox-lg bg-white border-[1px]"
+                                        :checked="recipeStore.currentProgress?.checkedIngredients?.has(`ing-${idx}`) || false"
+                                        @change="recipeStore.toggleIngredient(`ing-${idx}`)"
+                                    />
+                                    <span>{{ ingredient }}</span>
+                                </label>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -243,10 +258,14 @@ import type { HowTo, HowToStep } from '~/types/schema-org';
 import { recipesById } from '~/fixtures/recipes/clean';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ArrowsPointingInIcon, ArrowsPointingOutIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
+import { useRecipeInteractionStore } from '~/stores/recipeInteraction';
 
 const route = useRoute();
 const id = route.params.id as string;
 const { getImageUrl, getVideoUrl, formatDuration } = useRecipeUtils();
+
+// Initialize recipe interaction store
+const recipeStore = useRecipeInteractionStore();
 
 // Provide timer manager at the page level so it persists across slides
 const timerManager = useTimerManager();
@@ -260,15 +279,15 @@ const creation: HowTo = transformJsonLdToHowTo(recipeData);
 const steps = creation.step as HowToStep[];
 const totalSlides = steps.length + 2; // intro + steps + completion
 
-// Reactive state for current slide
+// Reactive state with defaults - will be updated client-side
 const currentSlide = ref(0);
 const carouselRef = ref<HTMLElement>();
 const showIngredients = ref(false);
 const showActiveTimers = ref(false);
 const showStepIngredients = ref(false);
 
-// Image collapse state
-const imageHeight = ref(25); // Default 25% height (h-1/4)
+// Image collapse state with defaults
+const imageHeight = ref(25);
 const isImageCollapsed = ref(false);
 const isDragging = ref(false);
 const dragStartY = ref(0);
@@ -276,6 +295,43 @@ const dragStartHeight = ref(0);
 const MIN_HEIGHT = 10; // Minimum 10% height when collapsed
 const MAX_HEIGHT = 33; // Maximum 33% height when expanded
 const COLLAPSED_THRESHOLD = 15; // Below 15% is considered collapsed
+
+// Client-side only: Initialize from persisted state
+onMounted(() => {
+  console.log('Component mounted, initializing recipe:', id); // Debug log
+  const recipeProgress = recipeStore.initializeRecipe(id);
+  console.log('Recipe progress:', recipeProgress); // Debug log
+  
+  // Restore persisted state
+  currentSlide.value = recipeProgress.currentStep;
+  imageHeight.value = recipeProgress.imageHeight;
+  isImageCollapsed.value = recipeProgress.isImageCollapsed;
+  console.log('Restored state - slide:', currentSlide.value, 'imageHeight:', imageHeight.value); // Debug log
+  
+  // Clear any duplicate timers first
+  recipeStore.clearDuplicateTimers();
+  
+  // Restore timers from store
+  timerManager.restoreTimersFromStore();
+  
+  // Set up watchers after initial load
+  watch(currentSlide, (newSlide) => {
+    console.log('Slide changed to:', newSlide); // Debug log
+    recipeStore.setCurrentStep(newSlide);
+  });
+  
+  watch([imageHeight, isImageCollapsed], ([height, collapsed]) => {
+    recipeStore.setImageState(height, collapsed);
+  });
+  
+  // Navigate to persisted slide if not on intro
+  if (currentSlide.value > 0) {
+    console.log('Navigating to persisted slide:', currentSlide.value); // Debug log
+    nextTick(() => {
+      goToSlide(currentSlide.value);
+    });
+  }
+});
 
 // Auto-show active timers panel when timers become active
 watch(() => timerManager.hasActiveTimers.value, (hasActive) => {

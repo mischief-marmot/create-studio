@@ -1,3 +1,5 @@
+import { useRecipeInteractionStore } from '~/stores/recipeInteraction'
+
 interface Timer {
   id: string;
   duration: number;
@@ -5,17 +7,28 @@ interface Timer {
   remaining: number;
   status: 'idle' | 'running' | 'paused' | 'completed';
   intervalId?: NodeJS.Timeout;
+  stepIndex?: number;
 }
 
 export const useTimerManager = () => {
+  const recipeStore = useRecipeInteractionStore();
   const timers = ref<Map<string, Timer>>(new Map());
   const audioContext = ref<AudioContext | null>(null);
   const hasActiveTimers = ref(false);
 
   // Initialize audio context on first user interaction
-  const initAudio = () => {
+  const initAudio = async () => {
     if (!audioContext.value && typeof window !== 'undefined') {
       audioContext.value = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Resume audio context if it's in suspended state (required by modern browsers)
+      if (audioContext.value.state === 'suspended') {
+        try {
+          await audioContext.value.resume();
+        } catch (error) {
+          console.warn('Failed to resume audio context:', error);
+        }
+      }
     }
   };
 
@@ -73,7 +86,7 @@ export const useTimerManager = () => {
   };
 
   // Create or get a timer
-  const getTimer = (id: string, duration: number, label: string): Timer => {
+  const getTimer = (id: string, duration: number, label: string, stepIndex?: number): Timer => {
     if (timers.value.has(id)) {
       return timers.value.get(id)!;
     }
@@ -83,16 +96,41 @@ export const useTimerManager = () => {
       duration,
       label,
       remaining: duration,
-      status: 'idle'
+      status: 'idle',
+      stepIndex
     };
     
     timers.value.set(id, timer);
+    
+    // Sync with recipe store - only if not already there and we're on client side
+    if (import.meta.client && recipeStore.currentProgress) {
+      const existingStoreTimer = recipeStore.currentProgress.activeTimers.find(t => t.id === id);
+      if (!existingStoreTimer) {
+        console.log('Adding timer to store:', { id, label, duration, stepIndex }); // Debug log
+        const newTimer = recipeStore.addTimer({
+          id,
+          label,
+          duration,
+          remaining: duration,
+          isActive: false,
+          stepIndex
+        });
+        console.log('Timer added to store:', newTimer); // Debug log
+      } else {
+        console.log('Timer already exists in store:', existingStoreTimer); // Debug log
+      }
+    } else if (!import.meta.client) {
+      console.log('SSR: Skipping timer store sync'); // Debug log
+    } else {
+      console.log('No current progress to add timer to'); // Debug log
+    }
+    
     return timer;
   };
 
   // Start a timer
-  const startTimer = (id: string) => {
-    initAudio(); // Initialize audio on user interaction
+  const startTimer = async (id: string) => {
+    await initAudio(); // Initialize audio on user interaction
     const timer = timers.value.get(id);
     if (!timer || timer.status === 'running') return;
     
@@ -102,27 +140,78 @@ export const useTimerManager = () => {
     
     timer.status = 'running';
     
-    timer.intervalId = setInterval(() => {
-      const currentTimer = timers.value.get(id);
-      if (!currentTimer) return;
+    // Update store (ensure timer exists first)
+    if (recipeStore.currentProgress) {
+      console.log('Updating timer in store to active:', id); // Debug log
       
-      currentTimer.remaining--;
-      
-      if (currentTimer.remaining <= 0) {
-        currentTimer.remaining = 0;
-        currentTimer.status = 'completed';
-        clearInterval(currentTimer.intervalId);
-        delete currentTimer.intervalId;
-        playAlarm();
+      // Make sure timer exists in store first
+      const existingTimer = recipeStore.currentProgress.activeTimers.find(t => t.id === id);
+      if (!existingTimer) {
+        console.log('Timer not found in store, adding it first:', id); // Debug log
+        recipeStore.addTimer({
+          id,
+          label: timer.label,
+          duration: timer.duration,
+          remaining: timer.remaining,
+          isActive: true,
+          stepIndex: timer.stepIndex
+        });
+      } else {
+        console.log('Timer found in store, updating it:', existingTimer); // Debug log
+        recipeStore.updateTimer(id, {
+          remaining: timer.remaining,
+          isActive: true
+        });
       }
+      
+      console.log('Store activeTimers after update:', recipeStore.currentProgress.activeTimers); // Debug log
+    } else {
+      console.log('No current progress to update timer in'); // Debug log
+    }
+    
+    // Start the interval synced to second boundaries for visual consistency
+    const now = Date.now();
+    const msToNextSecond = 1000 - (now % 1000);
+    
+    setTimeout(() => {
+      timer.intervalId = setInterval(() => {
+        const currentTimer = timers.value.get(id);
+        if (!currentTimer) return;
+        
+        currentTimer.remaining--;
+        
+        // Update store with remaining time (throttle to every 10 seconds to reduce localStorage writes)
+        if (recipeStore.currentProgress && currentTimer.remaining % 10 === 0) {
+          recipeStore.updateTimer(id, {
+            remaining: currentTimer.remaining
+          });
+        }
+        
+        if (currentTimer.remaining <= 0) {
+          currentTimer.remaining = 0;
+          currentTimer.status = 'completed';
+          clearInterval(currentTimer.intervalId);
+          delete currentTimer.intervalId;
+          
+          // Update store
+          if (recipeStore.currentProgress) {
+            recipeStore.updateTimer(id, {
+              remaining: 0,
+              isActive: false
+            });
+          }
+          
+          playAlarm();
+        }
+        
+        // Force reactivity update
+        timers.value = new Map(timers.value);
+      }, 1000);
       
       // Force reactivity update
       timers.value = new Map(timers.value);
-    }, 1000);
-    
-    // Force reactivity update
-    timers.value = new Map(timers.value);
-    updateActiveTimersStatus();
+      updateActiveTimersStatus();
+    }, msToNextSecond);
   };
 
   // Pause a timer
@@ -134,6 +223,14 @@ export const useTimerManager = () => {
     if (timer.intervalId) {
       clearInterval(timer.intervalId);
       delete timer.intervalId;
+    }
+    
+    // Update store
+    if (recipeStore.currentProgress) {
+      recipeStore.updateTimer(id, {
+        isActive: false,
+        remaining: timer.remaining
+      });
     }
     
     // Force reactivity update
@@ -153,6 +250,14 @@ export const useTimerManager = () => {
     
     timer.remaining = timer.duration;
     timer.status = 'idle';
+    
+    // Update store
+    if (recipeStore.currentProgress) {
+      recipeStore.updateTimer(id, {
+        remaining: timer.duration,
+        isActive: false
+      });
+    }
     
     // Force reactivity update
     timers.value = new Map(timers.value);
@@ -197,8 +302,110 @@ export const useTimerManager = () => {
     timers.value.clear();
   };
 
+  // Restore timers from store
+  const restoreTimersFromStore = () => {
+    console.log('Attempting to restore timers from store...') // Debug log
+    if (!recipeStore.currentProgress) {
+      console.log('No current progress found') // Debug log
+      return;
+    }
+    
+    const storeTimers = recipeStore.currentProgress.activeTimers;
+    console.log('Store timers found:', storeTimers) // Debug log
+    
+    storeTimers.forEach(storeTimer => {
+      const timer: Timer = {
+        id: storeTimer.id,
+        duration: storeTimer.duration,
+        label: storeTimer.label,
+        remaining: storeTimer.remaining,
+        status: storeTimer.isActive ? 'running' : 
+                storeTimer.remaining === 0 ? 'completed' : 
+                storeTimer.remaining < storeTimer.duration ? 'paused' : 'idle',
+        stepIndex: storeTimer.stepIndex
+      };
+      
+      console.log('Restoring timer:', timer) // Debug log
+      timers.value.set(storeTimer.id, timer);
+      
+      // If timer was active, restart it without going through startTimer to avoid double-updating store
+      if (storeTimer.isActive && storeTimer.remaining > 0) {
+        console.log('Restarting active timer:', storeTimer.id) // Debug log
+        timer.status = 'running';
+        
+        // Start the interval immediately on next tick to sync with second boundaries
+        const now = Date.now();
+        const msToNextSecond = 1000 - (now % 1000);
+        
+        setTimeout(() => {
+          timer.intervalId = setInterval(() => {
+            const currentTimer = timers.value.get(storeTimer.id);
+            if (!currentTimer) return;
+            
+            currentTimer.remaining--;
+            
+            // Update store with remaining time (throttle to every 10 seconds to reduce localStorage writes)
+            if (recipeStore.currentProgress && currentTimer.remaining % 10 === 0) {
+              recipeStore.updateTimer(storeTimer.id, {
+                remaining: currentTimer.remaining
+              });
+            }
+            
+            if (currentTimer.remaining <= 0) {
+              currentTimer.remaining = 0;
+              currentTimer.status = 'completed';
+              clearInterval(currentTimer.intervalId);
+              delete currentTimer.intervalId;
+              
+              // Update store
+              if (recipeStore.currentProgress) {
+                recipeStore.updateTimer(storeTimer.id, {
+                  remaining: 0,
+                  isActive: false
+                });
+              }
+              
+              playAlarm();
+            }
+            
+            // Force reactivity update
+            timers.value = new Map(timers.value);
+          }, 1000);
+          
+          // Force reactivity update
+          timers.value = new Map(timers.value);
+          updateActiveTimersStatus();
+        }, msToNextSecond);
+      }
+    });
+    
+    updateActiveTimersStatus();
+    console.log('Timer restoration complete') // Debug log
+  };
+
+  // Save all timer states before page unload/refresh
+  const saveTimersOnUnload = () => {
+    if (!recipeStore.currentProgress) return;
+    
+    timers.value.forEach((timer) => {
+      // Force update all timers to store before unload
+      recipeStore.updateTimer(timer.id, {
+        remaining: timer.remaining,
+        isActive: timer.status === 'running'
+      });
+    });
+  };
+
+  // Set up beforeunload listener on client side
+  if (import.meta.client && typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', saveTimersOnUnload);
+  }
+
   // Clean up on unmount
   onUnmounted(() => {
+    if (import.meta.client && typeof window !== 'undefined') {
+      window.removeEventListener('beforeunload', saveTimersOnUnload);
+    }
     cleanup();
   });
 
@@ -213,6 +420,7 @@ export const useTimerManager = () => {
     getTimerStatus,
     getRemainingTime,
     updateActiveTimersStatus,
-    cleanup
+    cleanup,
+    restoreTimersFromStore
   };
 };

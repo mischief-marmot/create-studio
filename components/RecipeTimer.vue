@@ -35,6 +35,7 @@ interface Timer {
 interface Props {
   timer: Timer;
   timerId: string;
+  stepIndex?: number;
 }
 
 const props = defineProps<Props>();
@@ -49,7 +50,7 @@ const timerState = computed(() => {
   const timer = timers.value.get(props.timerId);
   if (!timer) {
     // Initialize the timer if it doesn't exist
-    return getTimer(props.timerId, props.timer.duration, props.timer.label);
+    return getTimer(props.timerId, props.timer.duration, props.timer.label, props.stepIndex);
   }
   return timer;
 });
@@ -64,7 +65,7 @@ const displayTime = computed(() => {
 
 // Button handlers
 const handleStart = () => {
-  getTimer(props.timerId, props.timer.duration, props.timer.label);
+  getTimer(props.timerId, props.timer.duration, props.timer.label, props.stepIndex);
   startTimer(props.timerId);
 };
 
