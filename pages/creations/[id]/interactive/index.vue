@@ -276,36 +276,6 @@ const MIN_HEIGHT = 10; // Minimum 10% height when collapsed
 const MAX_HEIGHT = 33; // Maximum 33% height when expanded
 const COLLAPSED_THRESHOLD = 15; // Below 15% is considered collapsed
 
-// Track current media source
-const currentMediaSource = computed(() => {
-    if (currentSlide.value === 0 || currentSlide.value === 1) {
-        // Intro and ingredients slides use main image
-        return creation.image ? getImageUrl(creation.image) : 'default-intro';
-    } else if (currentSlide.value <= steps.length + 1) {
-        // Step slides - check for step-specific media
-        const step = steps[currentSlide.value - 1];
-        if (step.video) {
-            return getVideoUrl(step.video);
-        } else if (step.image) {
-            return getImageUrl(step.image);
-        } else {
-            // Falls back to main image
-            return creation.image ? getImageUrl(creation.image) : 'default-step';
-        }
-    } else {
-        // Completion slide uses main image
-        return creation.image ? getImageUrl(creation.image) : 'default-completion';
-    }
-});
-
-// Watch for media changes and reset height
-watch(currentMediaSource, (newSource, oldSource) => {
-    if (newSource !== oldSource) {
-        imageHeight.value = 25;
-        isImageCollapsed.value = false;
-    }
-});
-
 // Auto-show active timers panel when timers become active
 watch(() => timerManager.hasActiveTimers.value, (hasActive) => {
     if (hasActive) {

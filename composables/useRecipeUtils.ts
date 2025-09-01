@@ -40,6 +40,9 @@ export function useRecipeUtils() {
       if (seconds > 0) {
         timeString += ` ${seconds}s`;
       }
+      if (duration < 60) {
+        timeString = `${seconds} seconds`;
+      }
       return timeString.trim();
     }
 
