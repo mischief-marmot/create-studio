@@ -1,8 +1,8 @@
 <template>
     <div class="h-dvh w-full flex items-center justify-center bg-base-100 text-base-content">
         <!-- Show skeleton loader during SSR or while persistence is loading -->
-        <!-- <RecipeSkeletonLoader v-if="!isHydrated || isLoadingPersistence" /> -->
-        <RecipeSkeletonLoader v-if="false" />
+        <RecipeSkeletonLoader v-if="!isHydrated || isLoadingPersistence" />
+        <!-- <RecipeSkeletonLoader v-if="false" /> -->
 
         <!-- Mobile-optimized Card Container -->
         <div v-else class="w-full max-w-md h-full bg-base-100 shadow-xl flex flex-col">

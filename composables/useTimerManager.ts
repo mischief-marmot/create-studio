@@ -265,11 +265,64 @@ export const useTimerManager = () => {
   };
 
   // Resume a paused timer
-  const resumeTimer = (id: string) => {
+  const resumeTimer = async (id: string) => {
     const timer = timers.value.get(id);
     if (!timer || timer.status !== 'paused') return;
     
-    startTimer(id);
+    await initAudio(); // Initialize audio on user interaction
+    timer.status = 'running';
+    
+    // Update store
+    if (recipeStore.currentProgress) {
+      recipeStore.updateTimer(id, {
+        remaining: timer.remaining,
+        isActive: true
+      });
+    }
+    
+    // Start the interval synced to second boundaries for visual consistency
+    const now = Date.now();
+    const msToNextSecond = 1000 - (now % 1000);
+    
+    setTimeout(() => {
+      timer.intervalId = setInterval(() => {
+        const currentTimer = timers.value.get(id);
+        if (!currentTimer) return;
+        
+        currentTimer.remaining--;
+        
+        // Update store with remaining time (throttle to every 10 seconds to reduce localStorage writes)
+        if (recipeStore.currentProgress && currentTimer.remaining % 10 === 0) {
+          recipeStore.updateTimer(id, {
+            remaining: currentTimer.remaining
+          });
+        }
+        
+        if (currentTimer.remaining <= 0) {
+          currentTimer.remaining = 0;
+          currentTimer.status = 'completed';
+          clearInterval(currentTimer.intervalId);
+          delete currentTimer.intervalId;
+          
+          // Update store
+          if (recipeStore.currentProgress) {
+            recipeStore.updateTimer(id, {
+              remaining: 0,
+              isActive: false
+            });
+          }
+          
+          playAlarm();
+        }
+        
+        // Force reactivity update
+        timers.value = new Map(timers.value);
+      }, 1000);
+      
+      // Force reactivity update
+      timers.value = new Map(timers.value);
+      updateActiveTimersStatus();
+    }, msToNextSecond);
   };
 
   // Get timer status

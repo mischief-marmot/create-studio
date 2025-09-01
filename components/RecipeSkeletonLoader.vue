@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-md h-full bg-white shadow-xl flex flex-col">
+  <div class="w-full max-w-md h-full bg-base-100 shadow-xl flex flex-col">
     
     <!-- Image section skeleton -->
     <div class="skeleton flex-shrink-0 rounded-b-3xl" style="height: 25%">
@@ -25,7 +25,7 @@
       </div>
 
       <!-- Bottom navigation skeleton -->
-      <div class="flex-shrink-0 bg-white border-t border-gray-200">
+      <div class="flex-shrink-0 bg-base-200 border-t border-base-300">
 
         <!-- Navigation controls skeleton -->
         <div class="p-4">
