@@ -27,11 +27,11 @@
                         placeholder-emoji="🍽️"
                     />
                 </template>
-                <template v-else-if="currentSlide <= steps.length + 1">
+                <template v-else-if="currentSlide <= steps.length">
                     <!-- Step Media -->
                     <RecipeMedia
-                        :video="steps[currentSlide - 1].video"
-                        :image="steps[currentSlide - 1].image || creation.image"
+                        :video="steps[currentSlide - 1]?.video"
+                        :image="steps[currentSlide - 1]?.image || creation?.image"
                         :alt="steps[currentSlide - 1].name || `Step ${currentSlide - 1}`"
                         :video-key="currentSlide"
                         placeholder-class="from-base-200 to-base-300 flex items-center justify-center"
