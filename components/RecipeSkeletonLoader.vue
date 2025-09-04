@@ -1,12 +1,16 @@
 <template>
-  <div class="w-full max-w-md h-full bg-base-100 shadow-xl flex flex-col">
+  <div class="w-full max-w-md h-full bg-base-100 flex flex-col">
     
     <!-- Image section skeleton -->
-    <div class="skeleton flex-shrink-0 rounded-b-3xl" style="height: 25%">
+    <div class="skeleton flex-shrink-0 -mb-6" style="height: 25%">
     </div>
 
-    <!-- Content section skeleton -->
-    <div class="flex-1 overflow-hidden flex flex-col">
+    <!-- Content section skeleton with rounded top corners overlapping image -->
+    <div class="flex-1 overflow-hidden flex flex-col relative z-10 bg-base-100 rounded-t-3xl">
+      <!-- Draggable Handle skeleton -->
+      <div class="absolute top-0 left-0 right-0 h-8 flex items-start justify-center pt-2 z-20">
+        <div class="w-12 h-1 bg-base-content/20 rounded-full"></div>
+      </div>
       <div class="flex-1 overflow-y-auto">
         <div class="p-6 space-y-6">
           <!-- Step header skeleton -->
@@ -35,7 +39,7 @@
 
             <!-- Progress indicator -->
             <div class="flex-1 flex justify-center items-center space-x-1">
-              <div v-for="i in 7" :key="i" class="skeleton w-2 h-2 rounded-full"></div>
+              <div class="skeleton w-32 h-10 rounded-lg"></div>
             </div>
 
             <!-- Next button -->

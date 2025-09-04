@@ -5,18 +5,19 @@
         <!-- <RecipeSkeletonLoader v-if="false" /> -->
 
         <!-- Mobile-optimized Card Container -->
-        <div v-else class="w-full max-w-md h-full bg-base-100 shadow-xl flex flex-col">
+        <div v-else class="w-full max-w-md h-full bg-base-100 flex flex-col"
+            @mousedown="startDrag"
+            @touchstart="startDrag">
             <!-- Fullscreen toggle button -->
-            <button @click="toggleFullscreen"
+            <!-- <button @click="toggleFullscreen"
                 class="absolute top-4 right-4 z-20 w-10 h-10 bg-base-200/80 text-base-content backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-base-100/80 transition-colors">
                 <ArrowsPointingOutIcon v-if="!isFullscreen" class="w-5 h-5" />
                 <ArrowsPointingInIcon v-else class="w-5 h-5" />
-            </button>
+            </button> -->
             <!-- Top Figure Section - Collapsible Height -->
             <figure :class="[
-                    'relative rounded-b-3xl shadow-xl overflow-hidden flex-shrink-0',
+                    'relative overflow-hidden flex-shrink-0 -mb-6',
                     isDragging ? '' : 'transition-all duration-300',
-                    isImageCollapsed ? 'h-12' : ''
                 ]" :style="{ height: `${imageHeight}%` }" @dblclick="toggleImageCollapse">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
@@ -39,13 +40,12 @@
                         placeholder-class="from-success/20 to-success/30 flex items-center justify-center"
                         placeholder-emoji="🎉" />
                 </template>
-
-                <!-- Draggable Handle -->
-                <DraggableHandle @start-drag="startDrag" @drag="onDrag" @end-drag="endDrag" />
             </figure>
 
-            <!-- Middle Content Section - Scrollable -->
-            <div class="flex-1 overflow-hidden flex flex-col">
+            <!-- Middle Content Section - Scrollable with rounded top corners overlapping image -->
+            <div class="flex-1 overflow-hidden flex flex-col relative z-10 bg-base-100 rounded-t-3xl">
+                <!-- Draggable Handle -->
+                <DraggableHandle @start-drag="startDrag" />
                 <div class="carousel carousel-center w-full flex-1 overflow-x-auto snap-x snap-mandatory flex flex-row" ref="carouselRef">
                     <!-- Intro Slide - Title, Description, Stats -->
                     <div id="slide0" class="carousel-item w-full snap-center flex-shrink-0">
@@ -275,12 +275,20 @@ const isImageCollapsed = ref(false);
 const isDragging = ref(false);
 const dragStartY = ref(0);
 const dragStartHeight = ref(0);
-const MIN_HEIGHT = 10; // Minimum 10% height when collapsed
-const MAX_HEIGHT = 33; // Maximum 33% height when expanded
-const COLLAPSED_THRESHOLD = 15; // Below 15% is considered collapsed
+// Calculate minimum height to offset the -mb-6 (-24px) margin
+const getMinHeightPercent = () => {
+    const viewportHeight = window.innerHeight;
+    return (24 / viewportHeight) * 100; // 24px as percentage of viewport height
+};
+const MIN_HEIGHT = ref(3); // Will be calculated dynamically
+const MAX_HEIGHT = 35; // Maximum 35% height when expanded
+const COLLAPSED_THRESHOLD = 10; // Threshold for collapsed state
 
 // Client-side only: Initialize loading and persistence
 onMounted(async () => {
+  // Calculate minimum height based on viewport
+  MIN_HEIGHT.value = getMinHeightPercent();
+  
   // Set hydrated and show loading state
   isHydrated.value = true;
   isLoadingPersistence.value = true;
@@ -311,7 +319,7 @@ onMounted(async () => {
   });
   
   // Add minimum loading time to ensure skeleton is visible
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  await new Promise(resolve => setTimeout(resolve, 800));
   
   // Hide loading state after everything is set up
   await nextTick();
@@ -456,22 +464,23 @@ onMounted(() => {
     const handleFullscreenChange = () => {
         isFullscreen.value = !!(document.fullscreenElement || 
                                 (document as any).webkitFullscreenElement);
+        
+        // Recalculate MIN_HEIGHT when viewport changes due to fullscreen toggle
+        setTimeout(() => {
+            MIN_HEIGHT.value = getMinHeightPercent();
+        }, 100); // Small delay to ensure viewport has updated
     };
     
-    // Drag event handlers
-    const handleMouseMove = (event: MouseEvent) => onDrag(event);
-    const handleTouchMove = (event: TouchEvent) => onDrag(event);
-    const handleDragEnd = () => endDrag();
+    // Viewport resize detection
+    const handleResize = () => {
+        MIN_HEIGHT.value = getMinHeightPercent();
+    };
+    
     
     document.addEventListener('keydown', handleKeydown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    
-    // Add drag event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('mouseup', handleDragEnd);
-    document.addEventListener('touchend', handleDragEnd);
+    window.addEventListener('resize', handleResize);
     
     // We'll set up carousel listeners in a separate watcher
     
@@ -479,12 +488,7 @@ onMounted(() => {
         document.removeEventListener('keydown', handleKeydown);
         document.removeEventListener('fullscreenchange', handleFullscreenChange);
         document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-        
-        // Remove drag event listeners
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('mouseup', handleDragEnd);
-        document.removeEventListener('touchend', handleDragEnd);
+        window.removeEventListener('resize', handleResize);
         
         if (carouselRef.value) {
             carouselRef.value.removeEventListener('scroll', handleScroll);
@@ -525,11 +529,89 @@ watch(carouselRef, (newRef, oldRef) => {
 
 // Drag handlers for collapsible image
 const startDrag = (event: MouseEvent | TouchEvent) => {
-    isDragging.value = true;
-    dragStartY.value = event.type.includes('touch') 
+    const target = event.target as HTMLElement;
+    const isFromHandle = target.closest('[data-draggable-handle="true"]');
+    
+    // If not in fullscreen and not from handle, ignore (to prevent page refresh conflicts)
+    if (!isFullscreen.value && !isFromHandle) {
+        return;
+    }
+    
+    // In fullscreen: ignore buttons/inputs. Not in fullscreen: only allow handle
+    if (isFullscreen.value) {
+        // In fullscreen: ignore interactive elements but allow drag from anywhere else
+        if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('textarea')) {
+            return;
+        }
+    } else {
+        // Not in fullscreen: only allow handle (already checked above)
+    }
+    
+    // Store initial position and detect vertical drag intent
+    const startY = event.type.includes('touch') 
         ? (event as TouchEvent).touches[0].clientY 
         : (event as MouseEvent).clientY;
-    dragStartHeight.value = imageHeight.value;
+    const startX = event.type.includes('touch')
+        ? (event as TouchEvent).touches[0].clientX
+        : (event as MouseEvent).clientX;
+    
+    let hasMoved = false;
+    let isVerticalDrag = false;
+    
+    const checkDragDirection = (e: MouseEvent | TouchEvent) => {
+        if (hasMoved) return;
+        
+        const currentY = e.type.includes('touch')
+            ? (e as TouchEvent).touches[0].clientY
+            : (e as MouseEvent).clientY;
+        const currentX = e.type.includes('touch')
+            ? (e as TouchEvent).touches[0].clientX
+            : (e as MouseEvent).clientX;
+            
+        const deltaY = Math.abs(currentY - startY);
+        const deltaX = Math.abs(currentX - startX);
+        
+        // Only start drag if vertical movement is dominant
+        if (deltaY > 10 || deltaX > 10) {
+            hasMoved = true;
+            if (deltaY > deltaX * 1.5) {
+                // Vertical drag detected
+                isVerticalDrag = true;
+                isDragging.value = true;
+                dragStartY.value = startY;
+                dragStartHeight.value = imageHeight.value;
+                // Prevent default only for vertical drags
+                e.preventDefault();
+            }
+        }
+    };
+    
+    // Add temporary move listener to detect drag direction
+    const moveHandler = (e: MouseEvent | TouchEvent) => {
+        if (!hasMoved) {
+            checkDragDirection(e);
+        }
+        if (isVerticalDrag) {
+            onDrag(e);
+        }
+    };
+    
+    const endHandler = () => {
+        if (isVerticalDrag) {
+            endDrag();
+        }
+        // Clean up listeners
+        document.removeEventListener('mousemove', moveHandler);
+        document.removeEventListener('touchmove', moveHandler);
+        document.removeEventListener('mouseup', endHandler);
+        document.removeEventListener('touchend', endHandler);
+    };
+    
+    // Add temporary listeners
+    document.addEventListener('mousemove', moveHandler);
+    document.addEventListener('touchmove', moveHandler, { passive: false });
+    document.addEventListener('mouseup', endHandler);
+    document.addEventListener('touchend', endHandler);
 };
 
 const onDrag = (event: MouseEvent | TouchEvent) => {
@@ -545,9 +627,10 @@ const onDrag = (event: MouseEvent | TouchEvent) => {
         const deltaPercent = (deltaY / viewportHeight) * 100;
         
         let newHeight = dragStartHeight.value + deltaPercent;
-        newHeight = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, newHeight));
+        newHeight = Math.max(MIN_HEIGHT.value, Math.min(MAX_HEIGHT, newHeight));
         
         imageHeight.value = newHeight;
+        // Update collapsed state based on current height (for dynamic margin adjustment)
         isImageCollapsed.value = newHeight <= COLLAPSED_THRESHOLD;
     });
 };
@@ -557,15 +640,8 @@ const endDrag = () => {
     
     isDragging.value = false;
     
-    // Snap to collapsed or expanded state
-    if (imageHeight.value <= COLLAPSED_THRESHOLD) {
-        imageHeight.value = MIN_HEIGHT;
-        isImageCollapsed.value = true;
-    } else if (imageHeight.value < 20) {
-        // Snap to default if between collapsed and default
-        imageHeight.value = 25;
-        isImageCollapsed.value = false;
-    }
+    // Update collapsed state based on current position without snapping
+    isImageCollapsed.value = imageHeight.value <= COLLAPSED_THRESHOLD;
 };
 
 // Toggle image collapse state (for double-click/double-tap)
@@ -576,8 +652,8 @@ const toggleImageCollapse = () => {
         imageHeight.value = 25;
         isImageCollapsed.value = false;
     } else {
-        // Collapse to minimum height
-        imageHeight.value = MIN_HEIGHT;
+        // Collapse to minimum height (negative to push image up while keeping rounded corners)
+        imageHeight.value = MIN_HEIGHT.value;
         isImageCollapsed.value = true;
     }
 };
