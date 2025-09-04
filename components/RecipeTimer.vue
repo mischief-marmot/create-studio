@@ -13,7 +13,7 @@
       <!-- Idle state - Show Start button -->
       <button v-if="timerState.status === 'idle'"
         @click="handleStart"
-        class="btn btn-md h-auto py-3 px-4 shadow-none rounded-full font-normal uppercase text-neutral bg-base-100 flex justify-center items-center gap-2">
+        class="btn btn-md h-auto py-3 px-4 shadow-none rounded-full font-normal uppercase text-base-content bg-base-100 flex justify-center items-center gap-2">
         <span>start</span>
         <PlayIcon class="w-5 h-5" />
       </button>

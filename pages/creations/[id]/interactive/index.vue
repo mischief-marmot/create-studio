@@ -11,8 +11,7 @@
         <!-- <RecipeSkeletonLoader v-if="false" /> -->
 
         <!-- Mobile-optimized Card Container -->
-        <div v-else class="w-full max-w-md h-full bg-base-100 flex flex-col"
-            @mousedown="startDrag"
+        <div v-else class="w-full max-w-md h-full bg-base-100 flex flex-col" @mousedown="startDrag"
             @touchstart="startDrag">
             <!-- Fullscreen toggle button -->
             <!-- <button @click="toggleFullscreen"
@@ -22,9 +21,9 @@
             </button> -->
             <!-- Top Figure Section - Collapsible Height -->
             <figure :class="[
-                    'relative overflow-hidden flex-shrink-0 -mb-6',
-                    isDragging ? '' : 'transition-all duration-300',
-                ]" :style="{ height: `${imageHeight}%` }" @dblclick="toggleImageCollapse">
+                'relative overflow-hidden flex-shrink-0 -mb-6',
+                isDragging ? '' : 'transition-all duration-300',
+            ]" :style="{ height: `${imageHeight}%` }" @dblclick="toggleImageCollapse">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
@@ -52,7 +51,8 @@
             <div class="flex-1 overflow-hidden flex flex-col relative z-10 bg-base-100 rounded-t-3xl">
                 <!-- Draggable Handle -->
                 <DraggableHandle @start-drag="startDrag" />
-                <div class="carousel carousel-center w-full flex-1 overflow-x-auto snap-x snap-mandatory flex flex-row" ref="carouselRef">
+                <div class="carousel carousel-center w-full flex-1 overflow-x-auto snap-x snap-mandatory flex flex-row"
+                    ref="carouselRef">
                     <!-- Intro Slide - Title, Description, Stats -->
                     <div id="slide0" class="carousel-item w-full snap-center flex-shrink-0">
                         <div class="p-6 space-y-4">
@@ -90,10 +90,13 @@
 
                             <!-- Step-specific supplies/ingredients -->
                             <div v-if="step.supply && step.supply.length > 0" class="box-gray">
-                                <div class="flex justify-between cursor-pointer" @click="recipeStore.toggleStepIngredientsVisibility()">
+                                <div class="flex justify-between cursor-pointer"
+                                    @click="recipeStore.toggleStepIngredientsVisibility()">
                                     <span class="font-medium text-base-content">Step Ingredients</span>
-                                    <PlusIcon v-if="!recipeStore.currentProgress?.showStepIngredients" class="w-5 h-5" />
-                                    <MinusIcon v-if="recipeStore.currentProgress?.showStepIngredients" class="w-5 h-5" />
+                                    <PlusIcon v-if="!recipeStore.currentProgress?.showStepIngredients"
+                                        class="w-5 h-5" />
+                                    <MinusIcon v-if="recipeStore.currentProgress?.showStepIngredients"
+                                        class="w-5 h-5" />
                                 </div>
                                 <ul v-show="recipeStore.currentProgress?.showStepIngredients" class="space-y-1 mt-2">
                                     <li v-for="(supply, supplyIdx) in step.supply"
@@ -112,50 +115,98 @@
                             <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index}-timer`"
                                 :step-index="index" />
 
-                            <!-- Notes -->
-                            <div v-if="step.notes && step.notes.length > 0" class="mt-3 space-y-2">
-                                <div v-for="note in step.notes" :key="note.text"
-                                    class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start space-x-2">
-                                    <svg class="w-5 h-5 flex-shrink-0 text-blue-600 mt-0.5" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    <span class="text-sm text-blue-700">{{ note.text }}</span>
-                                </div>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Completion Slide -->
+                    <!-- Review Prompt Slide -->
                     <div :id="`slide${totalSlides - 1}`" class="carousel-item w-full snap-center flex-shrink-0">
-                        <div class="p-6 flex flex-col justify-center items-center text-center h-full">
-                            <!-- Success Icon -->
-                            <div class="w-20 h-20 mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
+                        <div class="w-full px-4 py-6 flex flex-col h-full overflow-y-auto space-y-2">
+
+                            <!-- Title and question -->
+                            <div class="text-center">
+                                <h2 class="text-2xl font-bold text-base-content">All done!</h2>
+                                <p class="text-lg text-base-content/80">{{ reviewQuestionText }}</p>
+                            </div>
+
+                            <!-- Star rating -->
+                            <div class="text-center pb-2">
+                                <StarRating v-model="currentRating" @select="handleRatingSelect" />
+                            </div>
+
+                            <!-- Rating submitted message for high ratings -->
+                            <div v-if="showRatingSubmittedMessage" role="alert" class="alert alert-success">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current"
+                                    fill="none" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 13l4 4L19 7"></path>
+                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
+                                <span>Rating submitted! You're a star! 😉<br /> Care to share more?
+                                    (Optional)</span>
                             </div>
 
-                            <h2 class="text-2xl font-bold text-green-600 mb-2">Congratulations!</h2>
-                            <p class="text-base mb-2">You've completed making</p>
-                            <p class="text-lg font-semibold mb-6">{{ creation?.name || 'Recipe' }}</p>
-
-                            <div class="space-y-2 mb-6">
-                                <p class="text-sm">Time to enjoy your delicious creation! 🎉</p>
-                                <p class="text-xs text-gray-500">Don't forget to share a photo of your finished dish!
-                                </p>
+                            <!-- Rating not submitted message for low ratings -->
+                            <div v-if="showLowRatingPrompt" role="alert" class="alert alert-error">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>Before submitting your rating, would you please let us know what could have been
+                                    better?</span>
                             </div>
 
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <button @click="goToSlide(0)"
-                                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Start
-                                    Over</button>
-                                <a href="/" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Browse
-                                    More Recipes</a>
-                            </div>
+                            <!-- Review Form -->
+                            <form v-if="showReviewForm" @submit.prevent="handleFormSubmit"
+                                class="flex-1 space-y-4 max-w-md mx-auto w-full">
+                                <!-- Review Title -->
+                                <div>
+                                    <label for="reviewTitle"
+                                        class="block text-sm font-medium text-base-content/90 mb-1">
+                                        Review Title
+                                    </label>
+                                    <input id="reviewTitle" v-model="form.title" type="text" class="w-full input"
+                                        :placeholder="titlePlaceholder" />
+                                </div>
+
+                                <!-- Review -->
+                                <div>
+                                    <label for="review" class="block text-sm font-medium text-base-content/90 mb-1">
+                                        Review<span v-if="isFormRequired" class="text-red-600">*</span>
+                                    </label>
+                                    <textarea id="review" v-model="form.review" rows="3"
+                                        class="w-full textarea resize-none" :placeholder="reviewPlaceholder"
+                                        :required="isFormRequired" />
+                                </div>
+
+                                <!-- Name -->
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-base-content/90 mb-1">
+                                        Name<span v-if="isFormRequired" class="text-red-600">*</span>
+                                    </label>
+                                    <input id="name" v-model="form.name" type="text" class="w-full input"
+                                        placeholder="Your name" :required="isFormRequired" />
+                                </div>
+
+                                <!-- Email -->
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-base-content/90 mb-1">
+                                        Email<span v-if="isFormRequired" class="text-red-600">*</span>
+                                    </label>
+                                    <input id="email" v-model="form.email" type="email" class="w-full input"
+                                        placeholder="your@email.com" :required="isFormRequired" />
+                                </div>
+
+                                <!-- Submit button -->
+                                <div class="justify-self-end">
+                                    <button type="submit"
+                                        :disabled="reviewSubmission.isSubmitting.value || (!isFormValid && isFormRequired)"
+                                        class="btn btn-primary btn-lg">
+                                        <span v-if="reviewSubmission.isSubmitting.value">Submitting...</span>
+                                        <span v-else-if="existingReview">Update Review</span>
+                                        <span v-else>Submit Review</span>
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -242,7 +293,7 @@
 import type { HowTo, HowToStep } from '~/types/schema-org';
 import { recipesById } from '~/fixtures/recipes/clean';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
-import { ArrowsPointingInIcon, ArrowsPointingOutIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
+import { ArrowsPointingInIcon, ArrowsPointingOutIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, StarIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { useRecipeInteractionStore } from '~/stores/recipeInteraction';
 
 const route = useRoute();
@@ -267,8 +318,8 @@ const creationError = ref<string | null>(null);
 
 // Get steps as HowToStep array for template usage
 const steps = computed(() => {
-  if (!creation.value) return [];
-  return creation.value.step as HowToStep[];
+    if (!creation.value) return [];
+    return creation.value.step as HowToStep[];
 });
 const totalSlides = computed(() => steps.value.length + 2); // intro + steps + completion
 
@@ -301,95 +352,95 @@ const COLLAPSED_THRESHOLD = 10; // Threshold for collapsed state
 
 // Load creation data
 async function loadCreationData() {
-  if (siteUrl) {
-    // Fetch from external API
-    isLoadingCreation.value = true;
-    try {
-      const data = await $fetch<HowTo>('/api/fetch-creation', {
-        method: 'POST',
-        body: {
-          site_url: siteUrl,
-          creation_id: parseInt(id),
-          cache_bust: cacheBust
+    if (siteUrl) {
+        // Fetch from external API
+        isLoadingCreation.value = true;
+        try {
+            const data = await $fetch<HowTo>('/api/fetch-creation', {
+                method: 'POST',
+                body: {
+                    site_url: siteUrl,
+                    creation_id: parseInt(id),
+                    cache_bust: cacheBust
+                }
+            });
+            creation.value = data;
+        } catch (error: any) {
+            console.error('Failed to fetch creation:', error);
+            creationError.value = error?.statusMessage || 'Failed to load creation data';
+            // Fallback to fixtures if available
+            const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
+            if (recipeData) {
+                creation.value = transformJsonLdToHowTo(recipeData);
+            }
+        } finally {
+            isLoadingCreation.value = false;
         }
-      });
-      creation.value = data;
-    } catch (error: any) {
-      console.error('Failed to fetch creation:', error);
-      creationError.value = error?.statusMessage || 'Failed to load creation data';
-      // Fallback to fixtures if available
-      const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
-      if (recipeData) {
-        creation.value = transformJsonLdToHowTo(recipeData);
-      }
-    } finally {
-      isLoadingCreation.value = false;
-    }
-  } else {
-    // Use local fixtures
-    const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
-    if (recipeData) {
-      creation.value = transformJsonLdToHowTo(recipeData);
     } else {
-      creationError.value = 'Recipe not found';
+        // Use local fixtures
+        const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
+        if (recipeData) {
+            creation.value = transformJsonLdToHowTo(recipeData);
+        } else {
+            creationError.value = 'Recipe not found';
+        }
     }
-  }
 }
 
 // Client-side only: Initialize loading and persistence
 onMounted(async () => {
-  // Calculate minimum height based on viewport
-  MIN_HEIGHT.value = getMinHeightPercent();
-  
-  // Set hydrated and show loading state
-  isHydrated.value = true;
-  isLoadingPersistence.value = true;
-  
-  // Load creation data first
-  await loadCreationData();
-  
-  if (!creation.value) {
+    // Calculate minimum height based on viewport
+    MIN_HEIGHT.value = getMinHeightPercent();
+
+    // Set hydrated and show loading state
+    isHydrated.value = true;
+    isLoadingPersistence.value = true;
+
+    // Load creation data first
+    await loadCreationData();
+
+    if (!creation.value) {
+        isLoadingPersistence.value = false;
+        return;
+    }
+
+    // Delay to ensure skeleton is visible before loading
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const recipeProgress = recipeStore.initializeRecipe(id);
+
+    // Restore persisted state
+    currentSlide.value = recipeProgress.currentStep;
+    imageHeight.value = recipeProgress.imageHeight;
+    isImageCollapsed.value = recipeProgress.isImageCollapsed;
+
+    // Clear any duplicate timers first
+    recipeStore.clearDuplicateTimers();
+
+    // Restore timers from store
+    timerManager.restoreTimersFromStore();
+
+    // Set up watchers after initial load
+    watch(currentSlide, (newSlide) => {
+        recipeStore.setCurrentStep(newSlide);
+    });
+
+    watch([imageHeight, isImageCollapsed], ([height, collapsed]) => {
+        recipeStore.setImageState(height, collapsed);
+    });
+
+    // Add minimum loading time to ensure skeleton is visible
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Hide loading state after everything is set up
+    await nextTick();
     isLoadingPersistence.value = false;
-    return;
-  }
-  
-  // Delay to ensure skeleton is visible before loading
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  const recipeProgress = recipeStore.initializeRecipe(id);
-  
-  // Restore persisted state
-  currentSlide.value = recipeProgress.currentStep;
-  imageHeight.value = recipeProgress.imageHeight;
-  isImageCollapsed.value = recipeProgress.isImageCollapsed;
-  
-  // Clear any duplicate timers first
-  recipeStore.clearDuplicateTimers();
-  
-  // Restore timers from store
-  timerManager.restoreTimersFromStore();
-  
-  // Set up watchers after initial load
-  watch(currentSlide, (newSlide) => {
-    recipeStore.setCurrentStep(newSlide);
-  });
-  
-  watch([imageHeight, isImageCollapsed], ([height, collapsed]) => {
-    recipeStore.setImageState(height, collapsed);
-  });
-  
-  // Add minimum loading time to ensure skeleton is visible
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Hide loading state after everything is set up
-  await nextTick();
-  isLoadingPersistence.value = false;
-  
-  // Wait for DOM to be ready, then navigate to persisted slide if not on intro
-  await nextTick();
-  if (currentSlide.value > 0) {
-    goToSlide(currentSlide.value, true); // Use immediate navigation to avoid scrolling through slides
-  }
+
+    // Wait for DOM to be ready, then navigate to persisted slide if not on intro
+    await nextTick();
+    if (currentSlide.value > 0) {
+        goToSlide(currentSlide.value, true); // Use immediate navigation to avoid scrolling through slides
+    }
 });
 
 // Auto-show active timers panel when timers become active
@@ -447,10 +498,10 @@ const goToSlide = (index: number, immediate = false) => {
         if (carouselRef.value) {
             const targetSlide = carouselRef.value.querySelector(`#slide${index}`) as HTMLElement;
             if (targetSlide) {
-                targetSlide.scrollIntoView({ 
-                    behavior: immediate ? 'instant' : 'smooth', 
-                    block: 'nearest', 
-                    inline: 'start' 
+                targetSlide.scrollIntoView({
+                    behavior: immediate ? 'instant' : 'smooth',
+                    block: 'nearest',
+                    inline: 'start'
                 });
                 // Reset scrolling flag after animation completes
                 setTimeout(() => {
@@ -482,14 +533,14 @@ let scrollTimeout: NodeJS.Timeout | null = null;
 let isScrolling = false;
 const updateCurrentSlideFromScroll = () => {
     if (!carouselRef.value || isScrolling) return;
-    
+
     const carousel = carouselRef.value;
     const scrollLeft = carousel.scrollLeft;
     const slideWidth = carousel.clientWidth;
-    
+
     // Calculate which slide we're on based on scroll position
     const newIndex = Math.round(scrollLeft / slideWidth);
-    
+
     if (newIndex !== currentSlide.value && newIndex >= 0 && newIndex < totalSlides.value) {
         currentSlide.value = newIndex;
     }
@@ -513,7 +564,7 @@ const handleScrollEnd = () => {
 onMounted(() => {
     // Keyboard navigation
     const handleKeydown = (event: KeyboardEvent) => {
-        if (event.key === 'ArrowRight' || event.key === ' ') {
+        if (event.key === 'ArrowRight') {
             event.preventDefault();
             nextSlide();
         } else if (event.key === 'ArrowLeft') {
@@ -523,34 +574,34 @@ onMounted(() => {
     };
     // Fullscreen change detection
     const handleFullscreenChange = () => {
-        isFullscreen.value = !!(document.fullscreenElement || 
-                                (document as any).webkitFullscreenElement);
-        
+        isFullscreen.value = !!(document.fullscreenElement ||
+            (document as any).webkitFullscreenElement);
+
         // Recalculate MIN_HEIGHT when viewport changes due to fullscreen toggle
         setTimeout(() => {
             MIN_HEIGHT.value = getMinHeightPercent();
         }, 100); // Small delay to ensure viewport has updated
     };
-    
+
     // Viewport resize detection
     const handleResize = () => {
         MIN_HEIGHT.value = getMinHeightPercent();
     };
-    
-    
+
+
     document.addEventListener('keydown', handleKeydown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     window.addEventListener('resize', handleResize);
-    
+
     // We'll set up carousel listeners in a separate watcher
-    
+
     onUnmounted(() => {
         document.removeEventListener('keydown', handleKeydown);
         document.removeEventListener('fullscreenchange', handleFullscreenChange);
         document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
         window.removeEventListener('resize', handleResize);
-        
+
         if (carouselRef.value) {
             carouselRef.value.removeEventListener('scroll', handleScroll);
             if ('onscrollend' in carouselRef.value) {
@@ -572,7 +623,7 @@ watch(carouselRef, (newRef, oldRef) => {
             oldRef.removeEventListener('scrollend', handleScrollEnd);
         }
     }
-    
+
     // Add new listeners
     if (newRef) {
         // Use setTimeout to ensure DOM is fully rendered
@@ -592,12 +643,12 @@ watch(carouselRef, (newRef, oldRef) => {
 const startDrag = (event: MouseEvent | TouchEvent) => {
     const target = event.target as HTMLElement;
     const isFromHandle = target.closest('[data-draggable-handle="true"]');
-    
+
     // If not in fullscreen and not from handle, ignore (to prevent page refresh conflicts)
     if (!isFullscreen.value && !isFromHandle) {
         return;
     }
-    
+
     // In fullscreen: ignore buttons/inputs. Not in fullscreen: only allow handle
     if (isFullscreen.value) {
         // In fullscreen: ignore interactive elements but allow drag from anywhere else
@@ -607,31 +658,31 @@ const startDrag = (event: MouseEvent | TouchEvent) => {
     } else {
         // Not in fullscreen: only allow handle (already checked above)
     }
-    
+
     // Store initial position and detect vertical drag intent
-    const startY = event.type.includes('touch') 
-        ? (event as TouchEvent).touches[0].clientY 
+    const startY = event.type.includes('touch')
+        ? (event as TouchEvent).touches[0].clientY
         : (event as MouseEvent).clientY;
     const startX = event.type.includes('touch')
         ? (event as TouchEvent).touches[0].clientX
         : (event as MouseEvent).clientX;
-    
+
     let hasMoved = false;
     let isVerticalDrag = false;
-    
+
     const checkDragDirection = (e: MouseEvent | TouchEvent) => {
         if (hasMoved) return;
-        
+
         const currentY = e.type.includes('touch')
             ? (e as TouchEvent).touches[0].clientY
             : (e as MouseEvent).clientY;
         const currentX = e.type.includes('touch')
             ? (e as TouchEvent).touches[0].clientX
             : (e as MouseEvent).clientX;
-            
+
         const deltaY = Math.abs(currentY - startY);
         const deltaX = Math.abs(currentX - startX);
-        
+
         // Only start drag if vertical movement is dominant
         if (deltaY > 10 || deltaX > 10) {
             hasMoved = true;
@@ -646,7 +697,7 @@ const startDrag = (event: MouseEvent | TouchEvent) => {
             }
         }
     };
-    
+
     // Add temporary move listener to detect drag direction
     const moveHandler = (e: MouseEvent | TouchEvent) => {
         if (!hasMoved) {
@@ -656,7 +707,7 @@ const startDrag = (event: MouseEvent | TouchEvent) => {
             onDrag(e);
         }
     };
-    
+
     const endHandler = () => {
         if (isVerticalDrag) {
             endDrag();
@@ -667,7 +718,7 @@ const startDrag = (event: MouseEvent | TouchEvent) => {
         document.removeEventListener('mouseup', endHandler);
         document.removeEventListener('touchend', endHandler);
     };
-    
+
     // Add temporary listeners
     document.addEventListener('mousemove', moveHandler);
     document.addEventListener('touchmove', moveHandler, { passive: false });
@@ -677,19 +728,19 @@ const startDrag = (event: MouseEvent | TouchEvent) => {
 
 const onDrag = (event: MouseEvent | TouchEvent) => {
     if (!isDragging.value) return;
-    
+
     requestAnimationFrame(() => {
-        const currentY = event.type.includes('touch') 
-            ? (event as TouchEvent).touches[0].clientY 
+        const currentY = event.type.includes('touch')
+            ? (event as TouchEvent).touches[0].clientY
             : (event as MouseEvent).clientY;
-        
+
         const deltaY = currentY - dragStartY.value; // Positive deltaY = swipe down = expand
         const viewportHeight = window.innerHeight;
         const deltaPercent = (deltaY / viewportHeight) * 100;
-        
+
         let newHeight = dragStartHeight.value + deltaPercent;
         newHeight = Math.max(MIN_HEIGHT.value, Math.min(MAX_HEIGHT, newHeight));
-        
+
         imageHeight.value = newHeight;
         // Update collapsed state based on current height (for dynamic margin adjustment)
         isImageCollapsed.value = newHeight <= COLLAPSED_THRESHOLD;
@@ -698,9 +749,9 @@ const onDrag = (event: MouseEvent | TouchEvent) => {
 
 const endDrag = () => {
     if (!isDragging.value) return;
-    
+
     isDragging.value = false;
-    
+
     // Update collapsed state based on current position without snapping
     isImageCollapsed.value = imageHeight.value <= COLLAPSED_THRESHOLD;
 };
@@ -771,7 +822,7 @@ function transformJsonLdToHowTo(data: any): HowTo {
     // Use recipeIngredient directly from JSON-LD
     if (data?.recipeIngredient && Array.isArray(data.recipeIngredient)) {
         recipe.recipeIngredient = data.recipeIngredient;
-        
+
         // Transform to supply format as well for compatibility
         recipe.supply = data.recipeIngredient.map((ingredient: string) => ({
             '@type': 'HowToSupply' as const,
@@ -785,7 +836,7 @@ function transformJsonLdToHowTo(data: any): HowTo {
             // Extract the main HowToDirection from itemListElement
             const howToDirection = instruction.itemListElement?.find((item: any) => item['@type'] === 'HowToDirection');
             const stepText = howToDirection?.text || instruction.text || instruction;
-            
+
             const step: HowToStep = {
                 '@type': 'HowToStep',
                 name: instruction.name, // Keep name if it exists, otherwise undefined
@@ -804,7 +855,7 @@ function transformJsonLdToHowTo(data: any): HowTo {
             // Updated regex to handle ranges (e.g., "30-45 minutes" or "2 to 3 minutes") - takes first number
             const minuteMatch = text.match(/(\d+)(?:(?:-|(?:\s+to\s+))\d+)?\s*minutes?/);
             const hourMatch = text.match(/(\d+)(?:(?:-|(?:\s+to\s+))\d+)?\s*hours?/);
-            
+
             if (minuteMatch || hourMatch) {
                 const minutes = parseInt(minuteMatch?.[1] || '0');
                 const hours = parseInt(hourMatch?.[1] || '0');
@@ -861,6 +912,157 @@ function transformJsonLdToHowTo(data: any): HowTo {
     }
 
     return recipe;
+}
+
+// === Review System ===
+const ratingThreshold = 4 // Ratings >= 4 are considered positive
+const currentRating = ref(0)
+const hasSubmittedRating = ref(false)
+const hasSubmittedReview = ref(false)
+const existingReview = ref<any>(null)
+
+// Form data
+const form = reactive({
+    title: '',
+    review: '',
+    name: '',
+    email: ''
+})
+
+// Initialize review system
+const { getInitialState } = useReviewStorage()
+const reviewSubmission = useReviewSubmission()
+
+// Check for existing review on mount and when form appears
+const loadExistingReview = () => {
+    if (siteUrl && id) {
+        const existing = getInitialState(id)
+        if (existing) {
+            existingReview.value = existing
+            currentRating.value = parseInt(existing.rating.toString())
+            hasSubmittedRating.value = true
+            hasSubmittedReview.value = !!(existing.review_content || existing.author_name)
+
+            // Pre-fill form with existing data
+            form.title = existing.review_title || ''
+            form.review = existing.review_content || ''
+            form.name = existing.author_name || ''
+            form.email = existing.author_email || ''
+        }
+    }
+}
+
+// Watch for currentSlide changes to shrink image when on completion slide
+watch(currentSlide, (newSlide) => {
+    if (newSlide === totalSlides.value - 1) {
+        // On completion slide - shrink image
+        imageHeight.value = 10
+        loadExistingReview()
+    } else {
+        // On other slides - restore image size
+        imageHeight.value = recipeStore.currentProgress?.imageHeight || 25
+    }
+})
+
+onMounted(() => {
+    loadExistingReview()
+})
+
+// Computed properties for review UI
+const reviewQuestionText = computed(() => {
+    if (currentRating.value === 0) {
+        return 'How was it?'
+    }
+    return currentRating.value >= ratingThreshold ? 'How was it?' : 'What went wrong?'
+})
+
+const showRatingSubmittedMessage = computed(() => {
+    return currentRating.value >= ratingThreshold && hasSubmittedRating.value && !hasSubmittedReview.value
+})
+
+const showLowRatingPrompt = computed(() => {
+    return currentRating.value > 0 && currentRating.value < ratingThreshold && !hasSubmittedReview.value
+})
+
+const showReviewForm = computed(() => {
+    return currentRating.value > 0 && (
+        (currentRating.value >= ratingThreshold && hasSubmittedRating.value) ||
+        (currentRating.value < ratingThreshold)
+    )
+})
+
+const isFormRequired = computed(() => {
+    return currentRating.value > 0 && currentRating.value < ratingThreshold
+})
+
+const isFormValid = computed(() => {
+    if (!isFormRequired.value) return true
+    // Use regex to check for non-whitespace characters without modifying the values
+    const hasReview = /\S/.test(form.review)
+    const hasName = /\S/.test(form.name)
+    const hasEmail = /\S/.test(form.email)
+    return hasReview && hasName && hasEmail
+})
+
+const titlePlaceholder = computed(() =>
+    currentRating.value >= ratingThreshold ? 'Amazing recipe!' : 'Could be better...'
+)
+
+const reviewPlaceholder = computed(() =>
+    currentRating.value >= ratingThreshold
+        ? 'Tell others what you loved about this recipe...'
+        : 'Help us understand what didn\'t work...'
+)
+
+// Review handling methods
+const handleRatingSelect = async (rating: number) => {
+    currentRating.value = rating
+
+    // For high ratings, auto-submit rating if external site is available
+    if (rating >= ratingThreshold && siteUrl && id && !hasSubmittedRating.value) {
+        const result = await reviewSubmission.submit({
+            creation: id,
+            rating,
+            type: 'review'
+        }, siteUrl)
+
+        if (result.ok) {
+            hasSubmittedRating.value = true
+        }
+    }
+
+    // For low ratings, don't auto-submit - wait for form
+}
+
+const handleFormSubmit = async () => {
+    if (!siteUrl || !id) {
+        console.warn('Cannot submit review: missing site URL or creation ID')
+        return
+    }
+
+    // Build review data using MV state structure
+    const reviewData = {
+        creation: id,
+        rating: currentRating.value,
+        type: 'review',
+        review_title: form.title.trim(),
+        review_content: form.review.trim(),
+        author_name: form.name.trim(),
+        author_email: form.email.trim()
+    }
+
+    const result = await reviewSubmission.submit(reviewData, siteUrl)
+
+    if (result.ok) {
+        hasSubmittedReview.value = true
+        hasSubmittedRating.value = true
+
+        // Update existing review reference
+        loadExistingReview()
+    } else {
+        // Handle error - could show toast notification
+        console.error('Review submission failed:', reviewSubmission.submissionError.value)
+    }
 }
 
 </script>
