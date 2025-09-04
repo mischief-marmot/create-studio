@@ -414,31 +414,31 @@ export const useTimerManager = () => {
     updateActiveTimersStatus();
   };
 
-  // Save all timer states before page unload/refresh
-  const saveTimersOnUnload = () => {
-    if (!recipeStore.currentProgress) return;
+  // // Save all timer states before page unload/refresh
+  // const saveTimersOnUnload = () => {
+  //   if (!recipeStore.currentProgress) return;
     
-    timers.value.forEach((timer) => {
-      // Force update all timers to store before unload
-      recipeStore.updateTimer(timer.id, {
-        remaining: timer.remaining,
-        isActive: timer.status === 'running'
-      });
-    });
-  };
+  //   timers.value.forEach((timer) => {
+  //     // Force update all timers to store before unload
+  //     recipeStore.updateTimer(timer.id, {
+  //       remaining: timer.remaining,
+  //       isActive: timer.status === 'running'
+  //     });
+  //   });
+  // };
 
-  // Set up beforeunload listener on client side
-  if (import.meta.client && typeof window !== 'undefined') {
-    window.addEventListener('beforeunload', saveTimersOnUnload);
-  }
+  // // Set up beforeunload listener on client side
+  // if (import.meta.client && typeof window !== 'undefined') {
+  //   window.addEventListener('beforeunload', saveTimersOnUnload);
+  // }
 
-  // Clean up on unmount
-  onUnmounted(() => {
-    if (import.meta.client && typeof window !== 'undefined') {
-      window.removeEventListener('beforeunload', saveTimersOnUnload);
-    }
-    cleanup();
-  });
+  // // Clean up on unmount
+  // onUnmounted(() => {
+  //   if (import.meta.client && typeof window !== 'undefined') {
+  //     window.removeEventListener('beforeunload', saveTimersOnUnload);
+  //   }
+  //   cleanup();
+  // });
 
   return {
     timers: readonly(timers),

@@ -1,7 +1,13 @@
 <template>
     <div class="h-dvh w-full flex items-center justify-center bg-base-100 text-base-content">
+        <!-- Show error message if loading failed -->
+        <div v-if="creationError && !creation" class="text-center p-8">
+            <h2 class="text-2xl font-bold text-error mb-4">Error Loading Recipe</h2>
+            <p class="text-base-content mb-4">{{ creationError }}</p>
+            <a href="/" class="btn btn-primary">Back to Home</a>
+        </div>
         <!-- Show skeleton loader during SSR or while persistence is loading -->
-        <RecipeSkeletonLoader v-if="!isHydrated || isLoadingPersistence" />
+        <RecipeSkeletonLoader v-else-if="!isHydrated || isLoadingPersistence || isLoadingCreation || !dataReady" />
         <!-- <RecipeSkeletonLoader v-if="false" /> -->
 
         <!-- Mobile-optimized Card Container -->
@@ -22,7 +28,7 @@
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
-                    <RecipeMedia :image="creation.image" :alt="creation.name"
+                    <RecipeMedia :image="creation?.image" :alt="creation?.name || 'Recipe'"
                         placeholder-class="from-primary/20 to-secondary/20 flex items-center justify-center"
                         placeholder-emoji="🍽️" />
                 </template>
@@ -30,13 +36,13 @@
                     <!-- Step Media -->
                     <RecipeMedia :video="steps[currentSlide - 1]?.video"
                         :image="steps[currentSlide - 1]?.image || creation?.image"
-                        :alt="steps[currentSlide - 1].name || `Step ${currentSlide - 1}`" :video-key="currentSlide"
+                        :alt="steps[currentSlide - 1]?.name || `Step ${currentSlide - 1}`" :video-key="currentSlide"
                         placeholder-class="from-base-200 to-base-300 flex items-center justify-center"
                         placeholder-emoji="👩‍🍳" />
                 </template>
                 <template v-else>
                     <!-- Completion Image -->
-                    <RecipeMedia :image="creation.image" :alt="creation.name"
+                    <RecipeMedia :image="creation?.image" :alt="creation?.name || 'Recipe'"
                         placeholder-class="from-success/20 to-success/30 flex items-center justify-center"
                         placeholder-emoji="🎉" />
                 </template>
@@ -51,15 +57,15 @@
                     <div id="slide0" class="carousel-item w-full snap-center flex-shrink-0">
                         <div class="p-6 space-y-4">
                             <div>
-                                <h1 class="text-2xl font-bold mb-3">{{ creation.name }}</h1>
-                                <p v-if="creation.description" v-html="creation.description"
+                                <h1 class="text-2xl font-bold mb-3">{{ creation?.name || 'Recipe' }}</h1>
+                                <p v-if="creation?.description" v-html="creation?.description"
                                     class="text-base-content text-sm leading-relaxed"></p>
                             </div>
                             <div>
                                 <h2 class="text-xl font-bold mb-4">Ingredients</h2>
 
                                 <ul class="space-y-1">
-                                    <li v-for="ingredient in creation.recipeIngredient" :key="ingredient"
+                                    <li v-for="ingredient in (creation?.recipeIngredient || [])" :key="ingredient"
                                         class="flex items-start space-x-2">
                                         <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></span>
                                         <span class="text-sm text-base-content">{{ ingredient }}</span>
@@ -135,7 +141,7 @@
 
                             <h2 class="text-2xl font-bold text-green-600 mb-2">Congratulations!</h2>
                             <p class="text-base mb-2">You've completed making</p>
-                            <p class="text-lg font-semibold mb-6">{{ creation.name }}</p>
+                            <p class="text-lg font-semibold mb-6">{{ creation?.name || 'Recipe' }}</p>
 
                             <div class="space-y-2 mb-6">
                                 <p class="text-sm">Time to enjoy your delicious creation! 🎉</p>
@@ -162,7 +168,7 @@
 
                 <!-- Ingredients Dropdown Panel (only shows after slide 0) -->
                 <div v-if="showIngredients && currentSlide > 0"
-                    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 border-[0.25px] border-base-100/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl">
+                    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 border-[0.25px] border-base-100/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl z-50">
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="font-semibold text-base">Ingredients</h3>
@@ -171,7 +177,7 @@
                             </button>
                         </div>
                         <ul class="space-y-1">
-                            <li v-for="(ingredient, idx) in creation.recipeIngredient" :key="`ing-${idx}`">
+                            <li v-for="(ingredient, idx) in (creation?.recipeIngredient || [])" :key="`ing-${idx}`">
                                 {{ ingredient }}
                             </li>
                         </ul>
@@ -250,13 +256,21 @@ const recipeStore = useRecipeInteractionStore();
 const timerManager = useTimerManager();
 provide('timerManager', timerManager);
 
-// Get recipe from fixtures
-const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
-const creation: HowTo = transformJsonLdToHowTo(recipeData);
+// Check for external site_url parameter
+const siteUrl = route.query.site_url as string | undefined;
+const cacheBust = route.query.cache_bust === 'true';
+
+// Recipe data - will be populated from API or fixtures
+const creation = ref<HowTo | null>(null);
+const isLoadingCreation = ref(false);
+const creationError = ref<string | null>(null);
 
 // Get steps as HowToStep array for template usage
-const steps = creation.step as HowToStep[];
-const totalSlides = steps.length + 2; // intro + steps + completion
+const steps = computed(() => {
+  if (!creation.value) return [];
+  return creation.value.step as HowToStep[];
+});
+const totalSlides = computed(() => steps.value.length + 2); // intro + steps + completion
 
 // Reactive state with defaults - will be updated client-side
 const currentSlide = ref(0);
@@ -268,6 +282,7 @@ const showActiveTimers = ref(false);
 // Loading and ready state - start loading only on client side
 const isLoadingPersistence = ref(false);
 const isHydrated = ref(false);
+const dataReady = computed(() => !isLoadingCreation.value && creation.value !== null);
 
 // Image collapse state with defaults
 const imageHeight = ref(25);
@@ -284,6 +299,43 @@ const MIN_HEIGHT = ref(3); // Will be calculated dynamically
 const MAX_HEIGHT = 35; // Maximum 35% height when expanded
 const COLLAPSED_THRESHOLD = 10; // Threshold for collapsed state
 
+// Load creation data
+async function loadCreationData() {
+  if (siteUrl) {
+    // Fetch from external API
+    isLoadingCreation.value = true;
+    try {
+      const data = await $fetch<HowTo>('/api/fetch-creation', {
+        method: 'POST',
+        body: {
+          site_url: siteUrl,
+          creation_id: parseInt(id),
+          cache_bust: cacheBust
+        }
+      });
+      creation.value = data;
+    } catch (error: any) {
+      console.error('Failed to fetch creation:', error);
+      creationError.value = error?.statusMessage || 'Failed to load creation data';
+      // Fallback to fixtures if available
+      const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
+      if (recipeData) {
+        creation.value = transformJsonLdToHowTo(recipeData);
+      }
+    } finally {
+      isLoadingCreation.value = false;
+    }
+  } else {
+    // Use local fixtures
+    const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
+    if (recipeData) {
+      creation.value = transformJsonLdToHowTo(recipeData);
+    } else {
+      creationError.value = 'Recipe not found';
+    }
+  }
+}
+
 // Client-side only: Initialize loading and persistence
 onMounted(async () => {
   // Calculate minimum height based on viewport
@@ -292,6 +344,14 @@ onMounted(async () => {
   // Set hydrated and show loading state
   isHydrated.value = true;
   isLoadingPersistence.value = true;
+  
+  // Load creation data first
+  await loadCreationData();
+  
+  if (!creation.value) {
+    isLoadingPersistence.value = false;
+    return;
+  }
   
   // Delay to ensure skeleton is visible before loading
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -333,7 +393,8 @@ onMounted(async () => {
 });
 
 // Auto-show active timers panel when timers become active
-watch(() => timerManager.hasActiveTimers.value, (hasActive) => {
+watchEffect(() => {
+    const hasActive = timerManager.hasActiveTimers.value;
     if (hasActive) {
         showActiveTimers.value = true;
         showIngredients.value = false; // Close ingredients panel if open
@@ -380,7 +441,7 @@ const toggleFullscreen = () => {
 
 // Navigation functions
 const goToSlide = (index: number, immediate = false) => {
-    if (index >= 0 && index < totalSlides) {
+    if (index >= 0 && index < totalSlides.value) {
         isScrolling = true;
         currentSlide.value = index;
         if (carouselRef.value) {
@@ -405,7 +466,7 @@ const goToSlide = (index: number, immediate = false) => {
 };
 
 const nextSlide = () => {
-    if (currentSlide.value < totalSlides - 1) {
+    if (currentSlide.value < totalSlides.value - 1) {
         goToSlide(currentSlide.value + 1);
     }
 };
@@ -429,7 +490,7 @@ const updateCurrentSlideFromScroll = () => {
     // Calculate which slide we're on based on scroll position
     const newIndex = Math.round(scrollLeft / slideWidth);
     
-    if (newIndex !== currentSlide.value && newIndex >= 0 && newIndex < totalSlides) {
+    if (newIndex !== currentSlide.value && newIndex >= 0 && newIndex < totalSlides.value) {
         currentSlide.value = newIndex;
     }
 };

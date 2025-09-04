@@ -1,6 +1,6 @@
 <template>
   <div v-if="activeTimers.length > 0"
-    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 rounded-xl border-[0.5px] border-base-300/60 shadow-xl overflow-y-auto max-w-[90%] max-h-[50vh] text-base-content">
+    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-200 rounded-xl border-2 border-primary/20 shadow-xl overflow-y-auto max-w-[90%] max-h-[50vh] text-base-content z-40">
     <div>
       <div class="flex items-center justify-end">
         <button v-if="showCloseButton" @click="$emit('close')" class="p-1 cursor-pointer">
@@ -101,9 +101,10 @@ const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume } = ti
 
 // Computed list of active timers (running, paused, or completed)
 const activeTimers = computed(() => {
-  return Array.from(timers.value.values()).filter(timer => 
+  const active = Array.from(timers.value.values()).filter(timer => 
     timer.status === 'running' || timer.status === 'paused' || timer.status === 'completed'
   );
+  return active;
 });
 
 // Timer control methods
