@@ -5,9 +5,10 @@ import { minify } from 'terser';
 export function embedMinifier() {
   let config;
   let publicDir;
+  let embedSrcDir;
   
   const minifyFile = async (inputFile, outputFile, label) => {
-    const inputPath = join(publicDir, inputFile);
+    const inputPath = join(embedSrcDir, inputFile);
     const outputPath = join(publicDir, outputFile);
     
     if (!existsSync(inputPath)) {
@@ -63,25 +64,31 @@ export function embedMinifier() {
     configResolved(resolvedConfig) {
       config = resolvedConfig;
       publicDir = config.publicDir || 'public';
+      embedSrcDir = join(config.root || process.cwd(), 'embed', 'src');
     },
     
     async buildStart() {
       // Run minification at build start for both dev and production
-      this.addWatchFile(join(publicDir, 'embed.js'));
-      this.addWatchFile(join(publicDir, 'halogen-init.js'));
+      this.addWatchFile(join(embedSrcDir, 'embed.js'));
+      this.addWatchFile(join(embedSrcDir, 'halogen-init.js'));
       await minifyEmbed();
       await minifyInit();
     },
     
     
     // Handle file changes in development
-    async handleHotUpdate({ file, server }) {
-      if (file.endsWith('embed.js')) {
-        console.log('🔄 Embed file changed, re-minifying...');
-        await minifyEmbed();
-      } else if (file.endsWith('halogen-init.js')) {
-        console.log('🔄 Halogen init file changed, re-minifying...');
-        await minifyInit();
+    async handleHotUpdate({ file }) {
+      try {
+        if (file.endsWith('embed.js')) {
+          console.log('🔄 Embed file changed, re-minifying...');
+          await minifyEmbed();
+        } else if (file.endsWith('halogen-init.js')) {
+          console.log('🔄 Halogen init file changed, re-minifying...');
+          await minifyInit();
+        }
+      } catch (error) {
+        console.error('❌ Error in handleHotUpdate:', error.message);
+        // Don't throw - just log the error and continue
       }
     }
   };
