@@ -873,6 +873,9 @@ function transformJsonLdToHowTo(data: any): HowTo {
                     case text.includes('cool'):
                         label = 'Cool';
                         break;
+                    case text.includes('cream'):
+                        label = 'Cream';
+                        break;
                     case text.includes('prepare'):
                         label = 'Prepare';
                         break;

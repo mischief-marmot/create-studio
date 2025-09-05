@@ -49,9 +49,10 @@ export default defineEventHandler(async (event) => {
   const storage = hubKV()
   const cacheKey = `creation:${site_url}:${creation_id}`
   const TTL = 24 * 60 * 60 // 24 hours in seconds
+  const isDev = process.env.NODE_ENV === 'development' || import.meta.dev
   
-  // Check cache if not busting
-  if (!cache_bust) {
+  // Check cache if not busting and not in dev mode
+  if (!cache_bust && !isDev) {
     try {
       const cached = await storage.get<HowTo>(cacheKey)
       if (cached) {
@@ -61,8 +62,10 @@ export default defineEventHandler(async (event) => {
     } catch (error) {
       console.error('Cache read error:', error)
     }
-  } else {
+  } else if (cache_bust) {
     console.log(`Cache bust requested for ${cacheKey}`)
+  } else if (isDev) {
+    console.log(`Skipping cache in development mode`)
   }
   
   // Fetch fresh data from WordPress API
@@ -75,12 +78,14 @@ export default defineEventHandler(async (event) => {
     // Transform the response to HowTo format
     const transformedData = await transformCreationToHowTo(response, site_url)
     
-    // Cache the transformed data
-    try {
-      await storage.set(cacheKey, transformedData, { ttl: TTL })
-      console.log(`Cached data for ${cacheKey} with ${TTL}s TTL`)
-    } catch (error) {
-      console.error('Cache write error:', error)
+    // Cache the transformed data (skip in dev mode)
+    if (!isDev) {
+      try {
+        await storage.set(cacheKey, transformedData, { ttl: TTL })
+        console.log(`Cached data for ${cacheKey} with ${TTL}s TTL`)
+      } catch (error) {
+        console.error('Cache write error:', error)
+      }
     }
     
     return transformedData

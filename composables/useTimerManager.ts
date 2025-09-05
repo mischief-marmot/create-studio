@@ -106,7 +106,7 @@ export const useTimerManager = () => {
     if (import.meta.client && recipeStore.currentProgress) {
       const existingStoreTimer = recipeStore.currentProgress.activeTimers.find(t => t.id === id);
       if (!existingStoreTimer) {
-        const newTimer = recipeStore.addTimer({
+        recipeStore.addTimer({
           id,
           label,
           duration,
@@ -125,6 +125,12 @@ export const useTimerManager = () => {
     await initAudio(); // Initialize audio on user interaction
     const timer = timers.value.get(id);
     if (!timer || timer.status === 'running') return;
+    
+    // Ensure any existing interval is cleared before creating new one
+    if (timer.intervalId) {
+      clearInterval(timer.intervalId);
+      timer.intervalId = undefined;
+    }
     
     if (timer.status === 'completed') {
       timer.remaining = timer.duration;
@@ -204,9 +210,11 @@ export const useTimerManager = () => {
     if (!timer || timer.status !== 'running') return;
     
     timer.status = 'paused';
+    
+    // Ensure all intervals for this timer are cleared
     if (timer.intervalId) {
       clearInterval(timer.intervalId);
-      delete timer.intervalId;
+      timer.intervalId = undefined;
     }
     
     // Update store
@@ -254,6 +262,13 @@ export const useTimerManager = () => {
     if (!timer || timer.status !== 'paused') return;
     
     await initAudio(); // Initialize audio on user interaction
+    
+    // Ensure any existing interval is cleared before creating new one
+    if (timer.intervalId) {
+      clearInterval(timer.intervalId);
+      timer.intervalId = undefined;
+    }
+    
     timer.status = 'running';
     
     // Update store
@@ -363,6 +378,12 @@ export const useTimerManager = () => {
       
       // If timer was active, restart it without going through startTimer to avoid double-updating store
       if (storeTimer.isActive && storeTimer.remaining > 0) {
+        // Ensure no existing interval before creating new one
+        if (timer.intervalId) {
+          clearInterval(timer.intervalId);
+          timer.intervalId = undefined;
+        }
+        
         timer.status = 'running';
         
         // Start the interval immediately on next tick to sync with second boundaries

@@ -1,4 +1,5 @@
 import type { HowTo, HowToStep, ImageObject } from '~/types/schema-org'
+import { parseTimerFromText } from './timerLabels'
 
 interface WPCreationResponse {
   id: number
@@ -166,9 +167,15 @@ function parseInstructions(instructionsHtml: string): {
         position: index + 1
       }
       
-      // Parse timer from text
-      const timer = parseTimer(text)
-      if (timer) step.timer = timer
+      // Parse timer from text using enhanced detection
+      const timerInfo = parseTimerFromText(text)
+      if (timerInfo && timerInfo.duration) {
+        step.timer = {
+          duration: timerInfo.duration,
+          label: `${timerInfo.label} ${formatTimerDuration(timerInfo.duration)}`,
+          autoStart: false
+        }
+      }
       
       steps.push(step)
     })
@@ -191,9 +198,15 @@ function parseInstructions(instructionsHtml: string): {
         position: index + 1
       }
       
-      // Parse timer from text
-      const timer = parseTimer(text)
-      if (timer) step.timer = timer
+      // Parse timer from text using enhanced detection
+      const timerInfo = parseTimerFromText(text)
+      if (timerInfo && timerInfo.duration) {
+        step.timer = {
+          duration: timerInfo.duration,
+          label: `${timerInfo.label} ${formatTimerDuration(timerInfo.duration)}`,
+          autoStart: false
+        }
+      }
       
       steps.push(step)
     })
@@ -268,53 +281,16 @@ function mapImagesToSteps(
   })
 }
 
-function parseTimer(text: string): HowToStep['timer'] | undefined {
-  const lowerText = text.toLowerCase()
+function formatTimerDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = seconds % 60
   
-  // Match patterns like "30 minutes", "1 hour", "30-45 minutes"
-  const minuteMatch = lowerText.match(/(\d+)(?:(?:-|(?:\s+to\s+))\d+)?\s*minutes?/)
-  const hourMatch = lowerText.match(/(\d+)(?:(?:-|(?:\s+to\s+))\d+)?\s*hours?/)
-  
-  if (minuteMatch || hourMatch) {
-    const minutes = parseInt(minuteMatch?.[1] || '0')
-    const hours = parseInt(hourMatch?.[1] || '0')
-    const totalSeconds = (minutes + hours * 60) * 60
-    
-    if (totalSeconds > 0) {
-      // Determine label based on context
-      let label = 'Timer'
-      const timerKeywords = [
-        'bake', 'cook', 'cool', 'chill', 'rest', 'marinate',
-        'simmer', 'boil', 'steam', 'roast', 'grill', 'fry'
-      ]
-      
-      for (const keyword of timerKeywords) {
-        if (lowerText.includes(keyword)) {
-          label = keyword.charAt(0).toUpperCase() + keyword.slice(1)
-          break
-        }
-      }
-      
-      const formatDuration = (seconds: number): string => {
-        const h = Math.floor(seconds / 3600)
-        const m = Math.floor((seconds % 3600) / 60)
-        const s = seconds % 60
-        
-        if (h > 0) return `${h}h ${m}m`
-        if (m > 0) return `${m}m`
-        return `${s}s`
-      }
-      
-      return {
-        duration: totalSeconds,
-        label: `${label} ${formatDuration(totalSeconds)}`,
-        autoStart: false
-      }
-    }
-  }
-  
-  return undefined
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m`
+  return `${s}s`
 }
+
 
 function parseIngredients(creation: WPCreationResponse): string[] {
   const ingredients: string[] = []
