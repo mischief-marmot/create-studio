@@ -1,11 +1,12 @@
 import tailwindcss from "@tailwindcss/vite";
+import { embedMinifier } from "./utils/vite/embed-plugin.js";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: { enabled: false },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [tailwindcss(), embedMinifier()],
   },
   css: ["~/assets/main.css"],
 
