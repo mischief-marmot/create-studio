@@ -10,8 +10,14 @@
   var config = w.Halogen && w.Halogen.config || {};
   var embedUrl = config.embedUrl || 'http://localhost:3001';
   var siteUrl = config.siteUrl;
-  var creationId = config.creationId;
-  var debugMode = config.debug || embedUrl.includes('localhost') || siteUrl.includes('localhost');
+  var creations = config.creations || [];
+  
+  // Support backward compatibility - if creationId exists at root level, add it to creations
+  if (config.creationId && creations.length === 0) {
+    creations = [{ creationId: config.creationId, siteUrl: siteUrl }];
+  }
+  
+  var debugMode = config.debug || embedUrl.includes('localhost') || (siteUrl && siteUrl.includes('localhost'));
   
   // Development-only logger
   var flogger = {
@@ -37,7 +43,7 @@
   };
   
   flogger.log('Embed config received:', config);
-  flogger.log('Final values - siteUrl:', siteUrl, 'creationId:', creationId, 'embedUrl:', embedUrl);
+  flogger.log('Final values - siteUrl:', siteUrl, 'creations:', creations, 'embedUrl:', embedUrl);
   
   // Fetch site configuration
   function fetchSiteConfig(siteUrl, callback) {
@@ -76,7 +82,7 @@
   // Create fullscreen modal
   function createModal(creationId, siteUrl) {
     var modal = d.createElement('div');
-    modal.id = 'halogen-modal';
+    modal.id = 'halogen-modal-' + creationId;
     modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:999999;display:none;';
     
     var closeBtn = d.createElement('button');
@@ -162,7 +168,8 @@
     
     // Create modal when clicked
     button.onclick = function() {
-      var modal = d.getElementById('halogen-modal');
+      var modalId = 'halogen-modal-' + creationId;
+      var modal = d.getElementById(modalId);
       if (!modal) {
         modal = createModal(creationId, siteUrl);
       }
@@ -171,7 +178,7 @@
     
     // Insert button
     flogger.log('Appending button to target element...');
-    targetElement.insertBefore(button, targetElement.firstChild);
+    targetElement.appendChild(button);
 
     flogger.log('Interactive button added to recipe card');
   }
@@ -185,7 +192,10 @@
     
     // Add configuration parameters
     if (siteUrl) params.push('site-url=' + encodeURIComponent(siteUrl));
-    if (creationId) params.push('creation-id=' + encodeURIComponent(creationId));
+    // For fallback embeds, use first creation if available
+    if (creations.length > 0 && creations[0].creationId) {
+      params.push('creation-id=' + encodeURIComponent(creations[0].creationId));
+    }
     
     // Add any additional options
     for (var key in options) {
@@ -209,22 +219,45 @@
     flogger.log('Processing command:', command, 'with data:', data);
     switch (command) {
       case 'embed':
-        // Fetch site configuration and inject interactive button if needed
-        if (siteUrl && creationId) {
-          fetchSiteConfig(siteUrl, function(error, config) {
-            if (error) {
-              flogger.warn('Failed to fetch site config, using fallback embed', error);
-              fallbackEmbed(data);
-            } else {
-              // Try to inject interactive button into existing recipe card
-              injectInteractiveButton(config, creationId, siteUrl);
+        // Process all creations
+        if (creations.length > 0) {
+          // Get unique site URLs to fetch configs
+          var processedSites = {};
+          
+          for (var i = 0; i < creations.length; i++) {
+            (function(creation) {
+              var creationSiteUrl = creation.siteUrl || siteUrl;
               
-              // Also handle [data-halogen] elements as fallback
-              fallbackEmbed(data);
-            }
-          });
+              if (!creationSiteUrl) {
+                flogger.warn('No siteUrl for creation:', creation.creationId);
+                return;
+              }
+              
+              // Fetch config once per unique site
+              if (!processedSites[creationSiteUrl]) {
+                processedSites[creationSiteUrl] = true;
+                
+                fetchSiteConfig(creationSiteUrl, function(error, siteConfig) {
+                  if (error) {
+                    flogger.warn('Failed to fetch site config for', creationSiteUrl, error);
+                  } else {
+                    // Inject buttons for all creations from this site
+                    for (var j = 0; j < creations.length; j++) {
+                      var c = creations[j];
+                      if ((c.siteUrl || siteUrl) === creationSiteUrl) {
+                        injectInteractiveButton(siteConfig, c.creationId, creationSiteUrl);
+                      }
+                    }
+                  }
+                });
+              }
+            })(creations[i]);
+          }
+          
+          // Also handle [data-halogen] elements as fallback
+          fallbackEmbed(data);
         } else {
-          // No site config available, use fallback
+          // No creations available, use fallback
           fallbackEmbed(data);
         }
         break;

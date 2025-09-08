@@ -12,7 +12,11 @@ interface TimerVocabulary {
 export const TIMER_VOCABULARY: TimerVocabulary = {
   // === COOKING METHODS (High Priority) ===
   'Bake': {
-    keywords: ['bake', 'baking', 'baked', 'oven', 'roast', 'roasting', 'roasted'],
+    keywords: ['bake', 'baking', 'baked', 'oven'],
+    priority: 10
+  },
+  'Roast': {
+    keywords: ['roast', 'roasting', 'roasted'],
     priority: 10
   },
   'Boil': {
@@ -24,11 +28,23 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
     priority: 10
   },
   'Fry': {
-    keywords: ['fry', 'frying', 'fried', 'pan fry', 'deep fry', 'sauté', 'sautéing', 'sautéed'],
+    keywords: ['fry', 'frying', 'fried', 'pan fry', 'deep fry'],
+    priority: 10
+  },
+  'Sauté': {
+    keywords: ['sauté', 'saute', 'sautéing', 'sauteing', 'sautéed', 'sauteed'],
     priority: 10
   },
   'Grill': {
-    keywords: ['grill', 'grilling', 'grilled', 'barbecue', 'bbq', 'char'],
+    keywords: ['grill', 'grilling', 'grilled'],
+    priority: 10
+  },
+  'Char': {
+    keywords: ['char', 'charring', 'charred'],
+    priority: 10
+  },
+  'BBQ': {
+    keywords: ['bbq', 'barbecue'],
     priority: 10
   },
   'Steam': {
@@ -36,7 +52,11 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
     priority: 10
   },
   'Braise': {
-    keywords: ['braise', 'braising', 'braised', 'slow cook'],
+    keywords: ['braise', 'braising', 'braised'],
+    priority: 9
+  },
+  'Slow cook': {
+    keywords: ['slow cook', 'slow cooking', 'slow cooked'],
     priority: 9
   },
   'Broil': {
@@ -50,7 +70,19 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
     priority: 9
   },
   'Mix': {
-    keywords: ['mix', 'mixing', 'mixed', 'combine', 'combining', 'stir', 'stirring', 'whisk', 'whisking'],
+    keywords: ['mix', 'mixing', 'mixed'],
+    priority: 8
+  },
+  'Combine': {
+    keywords: ['combine', 'combining'],
+    priority: 8
+  },
+  'Stir': {
+    keywords: ['stir', 'stirring', 'stirred'],
+    priority: 8
+  },
+  'Whisk': {
+    keywords: ['whisk', 'whisking', 'whisked'],
     priority: 8
   },
   'Knead': {
@@ -58,7 +90,11 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
     priority: 9
   },
   'Beat': {
-    keywords: ['beat', 'beating', 'beaten', 'whip', 'whipping', 'whipped'],
+    keywords: ['beat', 'beating', 'beaten'],
+    priority: 8
+  },
+  'Whip': {
+    keywords: ['whip', 'whipping', 'whipped'],
     priority: 8
   },
   'Cream': {
@@ -72,7 +108,7 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
 
   // === TEMPERATURE & RESTING (High Priority) ===
   'Cool': {
-    keywords: ['cool', 'cooling', 'cooled', 'cool down', 'room temperature'],
+    keywords: ['cool', 'cooling', 'cooled'],
     priority: 9
   },
   'Chill': {
@@ -84,7 +120,11 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
     priority: 9
   },
   'Rest': {
-    keywords: ['rest', 'resting', 'rested', 'sit', 'sitting', 'stand', 'standing', 'let stand'],
+    keywords: ['rest', 'resting', 'rested', 'sit', 'sitting'],
+    priority: 8
+  },
+  'Let stand': {
+    keywords: ['let stand', 'stand', 'standing'],
     priority: 8
   },
   'Rise': {
@@ -98,7 +138,11 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
     priority: 7
   },
   'Steep': {
-    keywords: ['steep', 'steeping', 'steeped', 'infuse', 'infusing'],
+    keywords: ['steep', 'steeping', 'steeped'],
+    priority: 7
+  },
+  'Infuse': {
+    keywords: ['infuse', 'infusing', 'infused'],
     priority: 7
   },
   'Bloom': {
@@ -106,7 +150,11 @@ export const TIMER_VOCABULARY: TimerVocabulary = {
     priority: 7
   },
   'Reduce': {
-    keywords: ['reduce', 'reducing', 'reduced', 'thicken', 'concentrate'],
+    keywords: ['reduce', 'reducing', 'reduced'],
+    priority: 7
+  },
+  'Thicken': {
+    keywords: ['thicken', 'thickening', 'thickened'],
     priority: 7
   },
   'Caramelize': {
