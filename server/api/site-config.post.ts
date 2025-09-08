@@ -21,7 +21,6 @@ export default defineEventHandler(async (event) => {
   const defaultConfig = {
     showInteractiveMode: true,
     buttonText: "Try Interactive Mode!",
-    buttonSelector: ".mv-create-instructions > h3",
     // Future config options:
     // license: { valid: false, tier: 'free' },
     // styling: { theme: 'default', position: 'after' },

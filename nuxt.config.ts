@@ -13,6 +13,11 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss(), 
       widgetBuilder()],
+    server: {
+      watch: {
+        ignored: ['**/dist/**']
+      }
+    }
   },
   css: ["~/assets/main.css"],
 

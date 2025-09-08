@@ -92,12 +92,22 @@ window.CreateStudio = {
         continue
       }
 
-      // Find the target element within the section using buttonSelector from config
-      const buttonSelector = siteConfig.buttonSelector || defaultButtonSelector
-      const targetElement = section.querySelector(buttonSelector)
+      // Find the target element within the section
+      let targetElement: Element | null = null
+      let isDefaultSelector = false
+      
+      if (siteConfig.buttonSelector) {
+        // If custom button selector exists, mount directly on it
+        targetElement = section.querySelector(siteConfig.buttonSelector)
+      } else {
+        // For default selector, we'll mount inside the h3 element
+        targetElement = section.querySelector(defaultButtonSelector) || null
+        isDefaultSelector = true
+      }
       
       if (!targetElement) {
-        console.warn('Create Studio: Target element not found:', buttonSelector)
+        const selector = siteConfig.buttonSelector || defaultButtonSelector
+        console.warn('Create Studio: Target element not found:', selector)
         continue
       }
 
@@ -117,7 +127,16 @@ window.CreateStudio = {
         theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {}
       }
 
-      const app = await sdkInstance.mount({ type: 'interactive-mode', selector: targetElement, config })
+      // For default selector (h3), create a container inside the h3 to mount the widget
+      let mountTarget = targetElement
+      if (isDefaultSelector) {
+        const buttonContainer = document.createElement('span')
+        buttonContainer.style.marginLeft = '0.5rem'
+        targetElement.appendChild(buttonContainer)
+        mountTarget = buttonContainer
+      }
+
+      const app = await sdkInstance.mount({ type: 'interactive-mode', selector: mountTarget, config })
       if (app) apps.push(app)
     }
 

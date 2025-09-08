@@ -4,7 +4,6 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "build:widget": "node scripts/build-widget.js",
     "copyEnv": "cp .env.example .env",
     "dev": "nuxt dev",
     "dev:setup": "npm run copyEnv",

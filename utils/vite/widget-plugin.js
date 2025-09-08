@@ -48,7 +48,7 @@ export function widgetBuilder() {
                 formats: ['iife']
               },
               outDir: resolve(process.cwd(), 'dist/embed'),
-              emptyOutDir: false,
+              emptyOutDir: true,
               rollupOptions: {
                 external: [],
                 output: {

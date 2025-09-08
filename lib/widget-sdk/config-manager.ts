@@ -40,7 +40,7 @@ export class ConfigManager {
 
   constructor(options: { apiKey?: string; siteUrl?: string; baseUrl?: string; debug?: boolean }) {
     this.apiKey = options.apiKey || ''
-    this.baseUrl = options.baseUrl || (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : 'https://create.studio')
+    this.baseUrl = options.baseUrl || (process.env.NODE_ENV === 'production' ? 'https://create.studio' : 'http://localhost:3001')
     this.debug = options.debug || false
     this.baseConfig = {
       siteUrl: options.siteUrl
