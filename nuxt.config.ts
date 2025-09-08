@@ -1,12 +1,18 @@
 import tailwindcss from "@tailwindcss/vite";
-import { embedMinifier } from "./utils/vite/embed-plugin.js";
+import { widgetBuilder } from "./utils/vite/widget-plugin.js";
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: { enabled: false },
+  nitro: {
+    experimental: {
+      openAPI: true,
+    },
+  },
   vite: {
-    plugins: [tailwindcss(), embedMinifier()],
+    plugins: [tailwindcss(), 
+      widgetBuilder()],
   },
   css: ["~/assets/main.css"],
 
@@ -36,11 +42,6 @@ export default defineNuxtConfig({
             "Create structured data cards for recipes, how-to guides, and FAQs with automatic JSON-LD generation",
         },
       ],
-    },
-  },
-  nitro: {
-    experimental: {
-      openAPI: true,
     },
   },
 
