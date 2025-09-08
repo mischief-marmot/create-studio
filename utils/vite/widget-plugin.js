@@ -1,6 +1,7 @@
 import { build } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import tailwindcss from '@tailwindcss/vite'
 
 async function uploadWidgetToBlob() {
   try {
@@ -55,19 +56,30 @@ export function widgetBuilder() {
                   format: 'iife',
                   name: 'CreateStudio',
                   globals: {},
-                  assetFileNames: 'create-studio.[ext]'
+                  assetFileNames: 'create-studio.[ext]',
+                  inlineDynamicImports: true
                 }
               },
               minify: false,
-              sourcemap: false // Disable sourcemap for dev to avoid issues
+              sourcemap: false, // Disable sourcemap for dev to avoid issues
+              cssCodeSplit: false, // Keep CSS with JS
             },
-            plugins: [vue({
-              template: {
-                compilerOptions: {
-                  isCustomElement: (tag) => tag.includes('-')
+            plugins: [
+              tailwindcss({
+                content: [
+                  './widget-entry.ts',
+                  './components/widgets/**/*.vue', 
+                  './lib/widget-sdk/**/*.ts'
+                ]
+              }),
+              vue({
+                template: {
+                  compilerOptions: {
+                    isCustomElement: (tag) => tag.includes('-')
+                  }
                 }
-              }
-            })],
+              })
+            ],
             define: {
               'process.env.NODE_ENV': JSON.stringify('development'),
               __VUE_OPTIONS_API__: 'true',

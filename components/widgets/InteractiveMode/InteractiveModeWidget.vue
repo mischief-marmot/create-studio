@@ -1,7 +1,6 @@
 <template>
   <button 
-    :class="buttonClasses"
-    :style="buttonStyles"
+    class="btn btn-primary bg-green-600 btn-sm create-studio-interactive-btn"
     @click="openModal"
   >
     {{ config.buttonText || 'Try Interactive Mode!' }}
@@ -52,20 +51,7 @@ const theme = inject<any>('widgetTheme')
 
 const showModal = ref(false)
 
-const buttonClasses = computed(() => [
-  'create-studio-interactive-btn'
-])
-
-const buttonStyles = computed(() => {
-  const customTheme = props.config.theme || {}
-  const mergedTheme = { ...theme, ...customTheme }
-  
-  return {
-    '--cs-primary': mergedTheme.primary,
-    '--cs-secondary': mergedTheme.secondary,
-    backgroundColor: mergedTheme.primary || '#3b82f6',
-  }
-})
+// Theme support can be added later if needed via CSS custom properties
 
 const iframeSrc = computed(() => {
   console.log('Props', props.config)
@@ -110,65 +96,3 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
-.create-studio-interactive-btn {
-  background: var(--cs-primary, #3b82f6);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  margin: 10px 0;
-  display: inline-block;
-  font-family: inherit;
-  transition: background-color 0.2s ease;
-}
-
-.create-studio-interactive-btn:hover {
-  background: var(--cs-secondary, #2563eb);
-}
-
-.create-studio-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 999999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.create-studio-modal-close {
-  position: absolute;
-  top: 20px;
-  right: 30px;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 40px;
-  cursor: pointer;
-  z-index: 1000000;
-  line-height: 1;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.create-studio-modal-close:hover {
-  opacity: 0.7;
-}
-
-.create-studio-modal-iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-</style>

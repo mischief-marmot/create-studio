@@ -1,4 +1,23 @@
+import './widget.css'
 import { WidgetSDK } from './lib/widget-sdk'
+
+// Function to dynamically load CSS
+function loadWidgetCSS() {
+  // Check if CSS is already loaded
+  if (document.querySelector('link[href*="create-studio.css"]')) {
+    return
+  }
+  
+  // Create and inject CSS link
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.type = 'text/css'
+  // Get the base URL from the script tag or current domain
+  const scriptTag = document.querySelector('script[src*="create-studio.iife.js"]')
+  const baseUrl = scriptTag ? new URL(scriptTag.src).origin : window.location.origin
+  link.href = `${baseUrl}/embed/create-studio.css`
+  document.head.appendChild(link)
+}
 
 declare global {
   interface Window {
@@ -34,6 +53,9 @@ window.CreateStudio = {
     debug?: boolean
     version?: string
   } = {}) {
+    // Load CSS first
+    loadWidgetCSS()
+    
     if (sdkInstance) {
       console.warn('Create Studio already initialized')
       return sdkInstance
@@ -120,7 +142,6 @@ window.CreateStudio = {
 
       const config = {
         creationId,
-        recipeName: section.getAttribute('data-recipe-name') || section.querySelector('h1, h2, h3')?.textContent || 'Recipe',
         buttonText: section.getAttribute('data-button-text') || siteConfig.buttonText || 'Try Interactive Mode!',
         siteUrl: sdkInstance.getSiteUrl(),
         embedUrl: sdkInstance.getEmbedUrl(),
@@ -162,6 +183,9 @@ window.CreateStudio = {
 
 // Auto-initialization from script tag attributes
 document.addEventListener('DOMContentLoaded', () => {
+  // Load CSS first
+  loadWidgetCSS()
+  
   const currentScript = getCurrentScript()
   
   if (currentScript) {

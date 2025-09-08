@@ -17,17 +17,23 @@ export default defineEventHandler(async (event) => {
     })
     console.log('✅ JS file uploaded to blob')
     
-    // Upload CSS file
+    // Upload CSS file (optional - might be inlined in JS)
     const cssPath = resolve(process.cwd(), 'dist/embed/create-studio.css')
-    console.log('Reading CSS file from:', cssPath)
-    const cssContent = readFileSync(cssPath, 'utf-8')  // Read as text
-    console.log('CSS file size:', cssContent.length, 'characters')
+    console.log('Checking CSS file at:', cssPath)
     
-    await hubBlob().put('create-studio.css', cssContent, {
-      addRandomSuffix: false,
-      contentType: 'text/css'
-    })
-    console.log('✅ CSS file uploaded to blob')
+    try {
+      const cssContent = readFileSync(cssPath, 'utf-8')  // Read as text
+      console.log('CSS file size:', cssContent.length, 'characters')
+      
+      await hubBlob().put('create-studio.css', cssContent, {
+        addRandomSuffix: false,
+        contentType: 'text/css'
+      })
+      console.log('✅ CSS file uploaded to blob')
+    } catch (cssError) {
+      console.log('⚠️  CSS file not found (might be inlined in JS):', cssError.message)
+      // This is okay if CSS is inlined in the JavaScript bundle
+    }
     
     return { success: true, message: 'Widget files uploaded to blob storage' }
   } catch (error) {
