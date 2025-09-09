@@ -291,9 +291,8 @@
 
 <script setup lang="ts">
 import type { HowTo, HowToStep } from '~/types/schema-org';
-import { recipesById } from '~/fixtures/recipes/clean';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
-import { ArrowsPointingInIcon, ArrowsPointingOutIcon, ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, StarIcon, XMarkIcon } from '@heroicons/vue/20/solid';
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, StarIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { useRecipeInteractionStore } from '~/stores/recipeInteraction';
 
 const route = useRoute();
@@ -368,11 +367,6 @@ async function loadCreationData() {
         } catch (error: any) {
             console.error('Failed to fetch creation:', error);
             creationError.value = error?.statusMessage || 'Failed to load creation data';
-            // Fallback to fixtures if available
-            const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
-            if (recipeData) {
-                creation.value = transformJsonLdToHowTo(recipeData);
-            }
         } finally {
             isLoadingCreation.value = false;
         }

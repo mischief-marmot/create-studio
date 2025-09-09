@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 
 async function uploadWidgetToBlob() {
   try {
-    // Use fetch to call the server API endpoint for blob upload
     const response = await fetch('http://localhost:3001/api/upload-widget', {
       method: 'POST',
       headers: {
@@ -11,13 +10,17 @@ async function uploadWidgetToBlob() {
     })
     
     if (response.ok) {
-      await response.json()
-      console.log('📦 Widget files uploaded to NuxtHub Blob')
+      const result = await response.json()
+      if (result.success) {
+        console.log('📦 Widget files uploaded to NuxtHub Blob')
+      } else {
+        console.log('⚠️  Widget files not ready yet')
+      }
     } else {
-      console.error('❌ Blob upload failed:', await response.text())
+      console.error('❌ Blob upload failed with status:', response.status)
     }
   } catch (error) {
-    console.error('❌ Blob upload failed:', error)
+    throw error // Re-throw so caller can handle
   }
 }
 
@@ -88,9 +91,6 @@ export default defineNuxtConfig({
         const { buildWidget } = await import('./scripts/build-widget.mjs')
         await buildWidget()
         
-        // Upload to NuxtHub blob storage
-        await uploadWidgetToBlob()
-        
         // Watch for widget file changes
         const chokidar = await import('chokidar')
         const watcher = chokidar.watch([
@@ -110,13 +110,38 @@ export default defineNuxtConfig({
             console.log(`📝 Widget file changed: ${path}`)
             await buildWidget()
             
-            // Upload to blob storage after build
-            await uploadWidgetToBlob()
+            // Upload to blob storage after build (non-blocking)
+            uploadWidgetToBlob().catch(err => 
+              console.log('⚠️  Blob upload failed:', err.message)
+            )
             
             building = false
           }
         })
       }
+    },
+    
+    // Upload widget to blob after server is fully started
+    'listen': async () => {
+      // Wait longer and retry if needed for initial upload
+      const attemptUpload = async (attempt = 1, maxAttempts = 3) => {
+        const delay = attempt * 2000 // 2s, 4s, 6s
+        
+        setTimeout(async () => {
+          try {
+            await uploadWidgetToBlob()
+          } catch (error) {
+            if (attempt < maxAttempts) {
+              console.log(`⏳ Upload attempt ${attempt} failed, retrying...`)
+              attemptUpload(attempt + 1, maxAttempts)
+            } else {
+              console.log('⚠️  All upload attempts failed:', error.message)
+            }
+          }
+        }, delay)
+      }
+      
+      attemptUpload()
     }
   }
 });

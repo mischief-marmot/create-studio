@@ -21,6 +21,7 @@ export default defineEventHandler(async (event) => {
   const defaultConfig = {
     showInteractiveMode: true,
     buttonText: "Try Interactive Mode!",
+    baseUrl: process.env.CREATE_STUDIO_BASE_URL || 'https://create.studio',
     // Future config options:
     // license: { valid: false, tier: 'free' },
     // styling: { theme: 'default', position: 'after' },

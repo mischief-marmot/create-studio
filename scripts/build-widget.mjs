@@ -2,9 +2,13 @@ import { build } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-import postcss from 'rollup-plugin-postcss'
+// import postcss from 'rollup-plugin-postcss' // Removed - using Vite built-in CSS handling
 import tailwindcss from '@tailwindcss/postcss'
 import autoprefixer from 'autoprefixer'
+import { config as loadEnv } from 'dotenv'
+
+// Load environment variables from .env file
+loadEnv()
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -48,26 +52,27 @@ export async function buildWidget() {
             }
           }
         }),
-        postcss({
-          extract: 'create-studio.css',
-          minimize: true,
-          plugins: [
-            tailwindcss('./tailwind.widget.config.js'),
-            autoprefixer()
-          ],
-          inject: false,
-          modules: false
-        })
+// Remove PostCSS plugin - using Vite's built-in CSS handling instead
       ],
       css: {
         postcss: {
-          plugins: []
+          plugins: [
+            tailwindcss('./tailwind.widget.config.js'),
+            autoprefixer()
+          ]
         }
       },
       define: {
         'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-        __VUE_OPTIONS_API__: 'true',
-        __VUE_PROD_DEVTOOLS__: 'false'
+        '__VUE_OPTIONS_API__': 'true',
+        '__VUE_PROD_DEVTOOLS__': 'false',
+        '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
+        '__CREATE_STUDIO_BASE_URL__': JSON.stringify(
+          process.env.CREATE_STUDIO_BASE_URL || 
+          process.env.NUXT_PUBLIC_CREATE_STUDIO_BASE_URL || 
+          'http://localhost:3001'
+        ),
+        '__CREATE_STUDIO_VERSION__': JSON.stringify(process.env.npm_package_version || '1.0.0')
       },
       resolve: {
         alias: {

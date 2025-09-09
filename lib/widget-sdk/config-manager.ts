@@ -40,10 +40,24 @@ export class ConfigManager {
 
   constructor(options: { apiKey?: string; siteUrl?: string; baseUrl?: string; debug?: boolean }) {
     this.apiKey = options.apiKey || ''
-    this.baseUrl = options.baseUrl || (process.env.NODE_ENV === 'production' ? 'https://create.studio' : 'http://localhost:3001')
+    // Use build-time injected base URL, can be overridden by options.baseUrl
+    // @ts-ignore - __CREATE_STUDIO_BASE_URL__ is injected at build time
+    const defaultBaseUrl = typeof __CREATE_STUDIO_BASE_URL__ !== 'undefined' 
+      ? __CREATE_STUDIO_BASE_URL__ 
+      : 'http://localhost:3001'
+    this.baseUrl = options.baseUrl || defaultBaseUrl
     this.debug = options.debug || false
     this.baseConfig = {
       siteUrl: options.siteUrl
+    }
+    
+    if (this.debug) {
+      // @ts-ignore - build-time injected values
+      console.log('🔧 Widget initialized:', {
+        baseUrl: this.baseUrl,
+        buildTime: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'unknown',
+        version: typeof __CREATE_STUDIO_VERSION__ !== 'undefined' ? __CREATE_STUDIO_VERSION__ : 'unknown'
+      })
     }
   }
 

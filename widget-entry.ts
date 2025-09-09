@@ -15,7 +15,9 @@ function loadWidgetCSS() {
   // Get the base URL from the script tag or current domain
   const scriptTag = document.querySelector('script[src*="create-studio.iife.js"]')
   const baseUrl = scriptTag ? new URL(scriptTag.src).origin : window.location.origin
-  link.href = `${baseUrl}/embed/create-studio.css`
+  // Add cache-busting parameter for development
+  const cacheBust = new Date().getTime()
+  link.href = `${baseUrl}/embed/create-studio.css?v=${cacheBust}`
   document.head.appendChild(link)
 }
 
@@ -178,8 +180,18 @@ window.CreateStudio = {
 
   getVersion() {
     return sdkInstance?.getVersion() || 'unknown'
+  },
+
+  getBuildTime() {
+    // @ts-ignore - __BUILD_TIME__ is injected at build time
+    return typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : new Date().toISOString()
+  },
+
+  getWidgetVersion() {
+    // @ts-ignore - __CREATE_STUDIO_VERSION__ is injected at build time
+    return typeof __CREATE_STUDIO_VERSION__ !== 'undefined' ? __CREATE_STUDIO_VERSION__ : '1.0.0'
   }
-}
+} 
 
 // Auto-initialization from script tag attributes
 document.addEventListener('DOMContentLoaded', () => {
@@ -205,6 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       window.CreateStudio.init(initOptions)
         .then(() => {
+          console.log('🔧 Create Studio Widget Loading - Build Time:', window.CreateStudio.getBuildTime())
           // Auto-mount interactive mode widgets on mv-creation elements
           window.CreateStudio.mountInteractiveMode()
         })
