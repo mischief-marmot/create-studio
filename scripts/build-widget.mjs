@@ -2,7 +2,6 @@ import { build } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
-// import postcss from 'rollup-plugin-postcss' // Removed - using Vite built-in CSS handling
 import tailwindcss from '@tailwindcss/postcss'
 import autoprefixer from 'autoprefixer'
 import { config as loadEnv } from 'dotenv'
@@ -60,7 +59,6 @@ export async function buildWidget() {
             }
           }
         }),
-// Remove PostCSS plugin - using Vite's built-in CSS handling instead
       ],
       css: {
         postcss: {

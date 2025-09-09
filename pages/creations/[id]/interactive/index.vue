@@ -1,5 +1,5 @@
 <template>
-    <div class="h-dvh w-full flex items-center justify-center bg-base-100 text-base-content">
+    <div class="max-h-dvh h-full w-full flex items-center justify-center bg-base-300 text-base-content z-[1111]">
         <!-- Show error message if loading failed -->
         <div v-if="creationError && !creation" class="text-center p-8">
             <h2 class="text-2xl font-bold text-error mb-4">Error Loading Recipe</h2>
@@ -10,8 +10,8 @@
         <RecipeSkeletonLoader v-else-if="!isHydrated || isLoadingPersistence || isLoadingCreation || !dataReady" />
         <!-- <RecipeSkeletonLoader v-if="false" /> -->
 
-        <!-- Mobile-optimized Card Container -->
-        <div v-else class="w-full max-w-md h-full bg-base-100 flex flex-col" @mousedown="startDrag"
+        <!-- Responsive Card Container -->
+        <div v-else ref="containerRef" class="md:w-full w-dvw md:max-w-lg md:max-h-256 h-dvh bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl overflow-hidden" @mousedown="startDrag"
             @touchstart="startDrag">
             <!-- Fullscreen toggle button -->
             <!-- <button @click="toggleFullscreen"
@@ -23,7 +23,7 @@
             <figure :class="[
                 'relative overflow-hidden flex-shrink-0 -mb-6',
                 isDragging ? '' : 'transition-all duration-300',
-            ]" :style="{ height: `${imageHeight}%` }" @dblclick="toggleImageCollapse">
+            ]" :style="{ height: `${imageHeightPx}px` }" @dblclick="toggleImageCollapse">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
@@ -280,7 +280,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex-shrink-0 bg-gray-300 h-20 2-full p-2">
+            <div class="flex-shrink-0 bg-base-300 text-base-content h-20 2-full p-2">
                 <div class="border-dashed border-2 border-gray-400 rounded-md h-full flex items-center justify-center">
                     <span>Advertisement</span>
                 </div>
@@ -325,6 +325,7 @@ const totalSlides = computed(() => steps.value.length + 2); // intro + steps + c
 // Reactive state with defaults - will be updated client-side
 const currentSlide = ref(0);
 const carouselRef = ref<HTMLElement>();
+const containerRef = ref<HTMLElement>();
 const showIngredients = ref(false);
 const showActiveTimers = ref(false);
 
@@ -340,6 +341,13 @@ const isImageCollapsed = ref(false);
 const isDragging = ref(false);
 const dragStartY = ref(0);
 const dragStartHeight = ref(0);
+
+// Calculate pixel height based on container height
+const imageHeightPx = computed(() => {
+    if (!containerRef.value) return 150; // Default fallback
+    const containerHeight = containerRef.value.offsetHeight || 600;
+    return Math.round((imageHeight.value / 100) * containerHeight);
+});
 // Calculate minimum height to offset the -mb-6 (-24px) margin
 const getMinHeightPercent = () => {
     const viewportHeight = window.innerHeight;
@@ -420,15 +428,15 @@ onMounted(async () => {
         recipeStore.setImageState(height, collapsed);
     });
 
-    // Hide loading state after everything is set up
-    await nextTick();
-    isLoadingPersistence.value = false;
-
     // Wait for DOM to be ready, then navigate to persisted slide if not on intro
     await nextTick();
     if (currentSlide.value > 0) {
         goToSlide(currentSlide.value, true); // Use immediate navigation to avoid scrolling through slides
     }
+
+    // Hide loading state after everything is set up
+    await nextTick();
+    isLoadingPersistence.value = false; 
 });
 
 // Auto-show active timers panel when timers become active
@@ -723,8 +731,8 @@ const onDrag = (event: MouseEvent | TouchEvent) => {
             : (event as MouseEvent).clientY;
 
         const deltaY = currentY - dragStartY.value; // Positive deltaY = swipe down = expand
-        const viewportHeight = window.innerHeight;
-        const deltaPercent = (deltaY / viewportHeight) * 100;
+        const containerHeight = containerRef.value?.offsetHeight || window.innerHeight;
+        const deltaPercent = (deltaY / containerHeight) * 100;
 
         let newHeight = dragStartHeight.value + deltaPercent;
         newHeight = Math.max(MIN_HEIGHT.value, Math.min(MAX_HEIGHT, newHeight));
@@ -1057,3 +1065,9 @@ const handleFormSubmit = async () => {
 }
 
 </script>
+
+<style setup>
+:root, [data-theme] {
+    background-color: transparent;
+}
+</style>

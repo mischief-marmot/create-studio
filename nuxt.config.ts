@@ -1,5 +1,4 @@
 import tailwindcss from "@tailwindcss/vite";
-import { cache } from "happy-dom/lib/PropertySymbol";
 
 async function uploadWidgetToBlob() {
   try {
@@ -111,7 +110,9 @@ export default defineNuxtConfig({
         const watcher = chokidar.watch([
           'widget-entry.ts',
           'widget.css',
-          'components/widgets/**/*',
+          'components/widgets/**/*.vue',
+          'components/widgets/**/*.ts',
+          'components/widgets/**/*.js',
           'lib/widget-sdk/**/*'
         ], {
           ignored: /node_modules/,

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full max-w-md h-full bg-base-100 flex flex-col">
+  <div class="w-full max-w-lg h-full md:max-h-256 bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl md:overflow-hidden">
     
     <!-- Image section skeleton -->
     <div class="skeleton flex-shrink-0 -mb-6" style="height: 25%">
