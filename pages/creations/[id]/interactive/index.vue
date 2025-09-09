@@ -398,9 +398,6 @@ onMounted(async () => {
         return;
     }
 
-    // Delay to ensure skeleton is visible before loading
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     const recipeProgress = recipeStore.initializeRecipe(id);
 
     // Restore persisted state
@@ -422,9 +419,6 @@ onMounted(async () => {
     watch([imageHeight, isImageCollapsed], ([height, collapsed]) => {
         recipeStore.setImageState(height, collapsed);
     });
-
-    // Add minimum loading time to ensure skeleton is visible
-    await new Promise(resolve => setTimeout(resolve, 800));
 
     // Hide loading state after everything is set up
     await nextTick();

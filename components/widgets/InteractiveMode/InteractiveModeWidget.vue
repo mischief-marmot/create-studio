@@ -1,7 +1,7 @@
 <template>
   <div>
     <button 
-      class="btn btn-primary bg-purple-600 btn-sm create-studio-interactive-btn"
+      class="btn btn-primary btn-sm"
       @click="openModal"
     >
       {{ config.buttonText || 'Try Interactive Mode!' }}

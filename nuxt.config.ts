@@ -1,4 +1,5 @@
 import tailwindcss from "@tailwindcss/vite";
+import { cache } from "happy-dom/lib/PropertySymbol";
 
 async function uploadWidgetToBlob() {
   try {
@@ -31,6 +32,20 @@ export default defineNuxtConfig({
   nitro: {
     experimental: {
       openAPI: true,
+    },
+    routeRules: {
+      '/embed/**': { 
+        cors: true, 
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        
+       },
+      '/creations/{id}/interactive': {
+        cors: true,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        cache: {
+          maxAge: 60 * 60 * 24, // 1 day
+        },
+      },
     },
   },
   vite: {
@@ -103,6 +118,17 @@ export default defineNuxtConfig({
           persistent: true
         })
         
+        // Debug: log watched files
+        watcher.on('ready', () => {
+          console.log('🔍 Widget file watcher is ready and watching:')
+          const watched = watcher.getWatched()
+          Object.keys(watched).forEach(dir => {
+            watched[dir].forEach(file => {
+              console.log(`  - ${dir}/${file}`)
+            })
+          })
+        })
+        
         let building = false
         watcher.on('change', async (path) => {
           if (!building) {
@@ -135,7 +161,7 @@ export default defineNuxtConfig({
               console.log(`⏳ Upload attempt ${attempt} failed, retrying...`)
               attemptUpload(attempt + 1, maxAttempts)
             } else {
-              console.log('⚠️  All upload attempts failed:', error.message)
+              console.log('⚠️  All upload attempts failed:', (error as Error).message)
             }
           }
         }, delay)

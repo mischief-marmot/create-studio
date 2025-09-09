@@ -40,9 +40,17 @@ export async function buildWidget() {
             inlineDynamicImports: true
           }
         },
-        minify: true,
+        minify: 'esbuild', // Use esbuild for better minification
         sourcemap: false,
-        cssCodeSplit: false
+        cssCodeSplit: false,
+        cssMinify: true
+      },
+      esbuild: {
+        drop: ['console', 'debugger'], // Remove console.log and debugger statements
+        minifyIdentifiers: true,
+        minifySyntax: true,
+        minifyWhitespace: true,
+        treeShaking: true
       },
       plugins: [
         vue({

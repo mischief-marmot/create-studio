@@ -155,6 +155,7 @@ window.CreateStudio = {
       if (isDefaultSelector) {
         const buttonContainer = document.createElement('span')
         buttonContainer.style.marginLeft = '0.5rem'
+        buttonContainer.style.display = 'inline-block'
         targetElement.appendChild(buttonContainer)
         mountTarget = buttonContainer
       }
