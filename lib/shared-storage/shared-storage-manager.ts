@@ -18,12 +18,12 @@ export interface Timer {
 export interface CreationState {
   creationKey: string
   currentStep: number
-  checkedIngredients: string[]
-  checkedStepIngredients: Record<number, string[]>
+  checkedSupplies: string[]
+  checkedStepSupplies: Record<number, string[]>
   activeTimers: Timer[]
   imageHeight: number
   isImageCollapsed: boolean
-  showStepIngredients: boolean
+  showStepSupplies: boolean
   startedAt: string
   lastUpdated: string
   hasInteracted: boolean
@@ -74,12 +74,12 @@ export class SharedStorageManager {
       this.storage.state[creationKey] = {
         creationKey,
         currentStep: 0,
-        checkedIngredients: [],
-        checkedStepIngredients: {},
+        checkedSupplies: [],
+        checkedStepSupplies: {},
         activeTimers: [],
         imageHeight: 25,
         isImageCollapsed: false,
-        showStepIngredients: false,
+        showStepSupplies: false,
         startedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         hasInteracted: false
@@ -104,12 +104,12 @@ export class SharedStorageManager {
       this.storage.state[creationKey] = {
         creationKey,
         currentStep: 0,
-        checkedIngredients: [],
-        checkedStepIngredients: {},
+        checkedSupplies: [],
+        checkedStepSupplies: {},
         activeTimers: [],
         imageHeight: 25,
         isImageCollapsed: false,
-        showStepIngredients: false,
+        showStepSupplies: false,
         startedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         hasInteracted: false
@@ -161,54 +161,54 @@ export class SharedStorageManager {
     this.updateCreationState({ currentStep: step })
   }
 
-  toggleIngredient(ingredientId: string): void {
+  toggleSupply(supplyId: string): void {
     const state = this.getCurrentCreationState()
     if (!state) return
 
-    const checked = [...state.checkedIngredients]
-    const index = checked.indexOf(ingredientId)
+    const checked = [...state.checkedSupplies]
+    const index = checked.indexOf(supplyId)
     
     if (index > -1) {
       checked.splice(index, 1)
     } else {
-      checked.push(ingredientId)
+      checked.push(supplyId)
     }
 
-    this.updateCreationState({ checkedIngredients: checked })
+    this.updateCreationState({ checkedSupplies: checked })
   }
 
-  toggleStepIngredient(stepIndex: number, ingredientId: string): void {
+  toggleStepSupply(stepIndex: number, supplyId: string): void {
     const state = this.getCurrentCreationState()
     if (!state) return
 
-    const stepIngredients = { ...state.checkedStepIngredients }
-    if (!stepIngredients[stepIndex]) {
-      stepIngredients[stepIndex] = []
+    const stepSupplies = { ...state.checkedStepSupplies }
+    if (!stepSupplies[stepIndex]) {
+      stepSupplies[stepIndex] = []
     }
 
-    const ingredients = [...stepIngredients[stepIndex]]
-    const index = ingredients.indexOf(ingredientId)
+    const supplies = [...stepSupplies[stepIndex]]
+    const index = supplies.indexOf(supplyId)
     
     if (index > -1) {
-      ingredients.splice(index, 1)
+      supplies.splice(index, 1)
     } else {
-      ingredients.push(ingredientId)
+      supplies.push(supplyId)
     }
 
-    stepIngredients[stepIndex] = ingredients
-    this.updateCreationState({ checkedStepIngredients: stepIngredients })
+    stepSupplies[stepIndex] = supplies
+    this.updateCreationState({ checkedStepSupplies: stepSupplies })
   }
 
-  isIngredientChecked(ingredientId: string): boolean {
+  isSupplyChecked(supplyId: string): boolean {
     const state = this.getCurrentCreationState()
-    return state ? state.checkedIngredients.includes(ingredientId) : false
+    return state ? state.checkedSupplies.includes(supplyId) : false
   }
 
-  isStepIngredientChecked(stepIndex: number, ingredientId: string): boolean {
+  isStepSupplyChecked(stepIndex: number, supplyId: string): boolean {
     const state = this.getCurrentCreationState()
     if (!state) return false
-    const stepIngredients = state.checkedStepIngredients[stepIndex]
-    return stepIngredients ? stepIngredients.includes(ingredientId) : false
+    const stepSupplies = state.checkedStepSupplies[stepIndex]
+    return stepSupplies ? stepSupplies.includes(supplyId) : false
   }
 
   /**
@@ -262,12 +262,12 @@ export class SharedStorageManager {
     })
   }
 
-  toggleStepIngredientsVisibility(): void {
+  toggleStepSuppliesVisibility(): void {
     const state = this.getCurrentCreationState()
     if (!state) return
     
     this.updateCreationState({ 
-      showStepIngredients: !state.showStepIngredients 
+      showStepSupplies: !state.showStepSupplies 
     })
   }
 

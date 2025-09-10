@@ -61,13 +61,13 @@
                                     class="text-base-content text-sm leading-relaxed"></p>
                             </div>
                             <div>
-                                <h2 class="text-xl font-bold mb-4">Ingredients</h2>
+                                <h2 class="text-xl font-bold mb-4">{{ suppliesLabel }}</h2>
 
                                 <ul class="space-y-1">
-                                    <li v-for="ingredient in (creation?.recipeIngredient || [])" :key="ingredient"
+                                    <li v-for="supply in (creation?.recipeIngredient || [])" :key="supply"
                                         class="flex items-start space-x-2">
                                         <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></span>
-                                        <span class="text-sm text-base-content">{{ ingredient }}</span>
+                                        <span class="text-sm text-base-content">{{ supply }}</span>
                                     </li>
                                 </ul>
                             </div>
@@ -87,23 +87,23 @@
                                 <div class="text-lg text-base-content leading-tight" v-html="step.text"></div>
                             </div>
 
-                            <!-- Step-specific supplies/ingredients -->
+                            <!-- Step-specific supplies -->
                             <div v-if="step.supply && step.supply.length > 0" class="box-gray">
                                 <div class="flex justify-between cursor-pointer"
-                                    @click="storageManager.toggleStepIngredientsVisibility()">
-                                    <span class="font-medium text-base-content">Step Ingredients</span>
-                                    <PlusIcon v-if="!currentCreationState?.showStepIngredients"
+                                    @click="storageManager.toggleStepSuppliesVisibility()">
+                                    <span class="font-medium text-base-content">Step Supplies</span>
+                                    <PlusIcon v-if="!currentCreationState?.showStepSupplies"
                                         class="w-5 h-5" />
-                                    <MinusIcon v-if="currentCreationState?.showStepIngredients"
+                                    <MinusIcon v-if="currentCreationState?.showStepSupplies"
                                         class="w-5 h-5" />
                                 </div>
-                                <ul v-show="currentCreationState?.showStepIngredients" class="space-y-1 mt-2">
+                                <ul v-show="currentCreationState?.showStepSupplies" class="space-y-1 mt-2">
                                     <li v-for="(supply, supplyIdx) in step.supply"
                                         :key="`step-${index}-supply-${supplyIdx}`">
                                         <label class="flex items-start space-x-3 text-base-content">
                                             <input type="checkbox" class="checkbox checkbox-lg"
-                                                :checked="storageManager.isStepIngredientChecked(index, `${supply.name}`)"
-                                                @change="storageManager.toggleStepIngredient(index, `${supply.name}`)" />
+                                                :checked="storageManager.isStepSupplyChecked(index, `${supply.name}`)"
+                                                @change="storageManager.toggleStepSupply(index, `${supply.name}`)" />
                                             <span>{{ supply.name }}</span>
                                         </label>
                                     </li>
@@ -216,19 +216,19 @@
                 <!-- Active Timers Panel -->
                 <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
 
-                <!-- Ingredients Dropdown Panel (only shows after slide 0) -->
-                <div v-if="showIngredients && currentSlide > 0"
+                <!-- Supplies Dropdown Panel (only shows after slide 0) -->
+                <div v-if="showSupplies && currentSlide > 0"
                     class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 border-[0.25px] border-base-100/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl z-50">
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-semibold text-base">Ingredients</h3>
-                            <button @click="showIngredients = false" class="p-1 cursor-pointer">
+                            <h3 class="font-semibold text-base">{{ suppliesLabel }}</h3>
+                            <button @click="showSupplies = false" class="p-1 cursor-pointer">
                                 <XMarkIcon class="w-5 h-5" />
                             </button>
                         </div>
                         <ul class="space-y-1">
-                            <li v-for="(ingredient, idx) in (creation?.recipeIngredient || [])" :key="`ing-${idx}`">
-                                {{ ingredient }}
+                            <li v-for="(supply, idx) in (creation?.recipeIngredient || [])" :key="`sup-${idx}`">
+                                {{ supply }}
                             </li>
                         </ul>
                     </div>
@@ -253,7 +253,7 @@
                         </button>
                     </div>
                     <div v-else class="flex items-center justify-between">
-                        <!-- After slide 0 - with ingredients button -->
+                        <!-- After slide 0 - with supplies button -->
                         <!-- Previous Button -->
                         <button @click="previousSlide"
                             class="flex items-center space-x-2 text-base-content cursor-pointer">
@@ -261,12 +261,12 @@
                             <span class="text-sm">Back</span>
                         </button>
 
-                        <!-- Ingredients Button -->
-                        <button @click="showIngredients = !showIngredients"
+                        <!-- Supplies Button -->
+                        <button @click="showSupplies = !showSupplies"
                             class="flex items-center space-x-2 px-4 py-2 text-base-content hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
-                            <!-- Ingredients Icon SVG -->
+                            <!-- Supplies Icon SVG -->
                             <QueueListIcon class="w-5 h-5" />
-                            <span class="text-sm font-medium">Ingredients</span>
+                            <span class="text-sm font-medium">{{ suppliesLabel }}</span>
                         </button>
 
                         <!-- Next Button -->
@@ -328,6 +328,11 @@ const creationError = ref<string | null>(null);
 // Get current creation state from shared storage
 const currentCreationState = computed(() => storageManager.getCurrentCreationState());
 
+// Dynamic label based on creation type
+const suppliesLabel = computed(() => {
+    return creation.value?.['@type'] === 'Recipe' ? 'Ingredients' : 'Supplies';
+});
+
 // Get steps as HowToStep array for template usage
 const steps = computed(() => {
     if (!creation.value) return [];
@@ -339,7 +344,7 @@ const totalSlides = computed(() => steps.value.length + 2); // intro + steps + c
 const currentSlide = ref(0);
 const carouselRef = ref<HTMLElement>();
 const containerRef = ref<HTMLElement>();
-const showIngredients = ref(false);
+const showSupplies = ref(false);
 const showActiveTimers = ref(false);
 
 // Loading and ready state - start loading only on client side
@@ -462,7 +467,7 @@ watchEffect(() => {
     const hasActive = timerManager?.hasActiveTimers.value || false;
     if (hasActive) {
         showActiveTimers.value = true;
-        showIngredients.value = false; // Close ingredients panel if open
+        showSupplies.value = false; // Close supplies panel if open
     }
 });
 
@@ -834,9 +839,9 @@ function transformJsonLdToHowTo(data: any): HowTo {
         recipe.recipeIngredient = data.recipeIngredient;
 
         // Transform to supply format as well for compatibility
-        recipe.supply = data.recipeIngredient.map((ingredient: string) => ({
+        recipe.supply = data.recipeIngredient.map((supply: string) => ({
             '@type': 'HowToSupply' as const,
-            name: ingredient
+            name: supply
         }));
     }
 
