@@ -1,47 +1,47 @@
 import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
-import { createRecipeKey, normalizeDomain } from '~/utils/domain'
+import { createCreationKey, normalizeDomain } from '~/utils/domain'
 
 /**
  * Composable for using shared storage in Nuxt applications
- * Provides reactive access to recipe state and preferences
+ * Provides reactive access to creation state and preferences
  */
 export const useSharedStorage = () => {
   const storageManager = new SharedStorageManager()
 
   /**
-   * Initialize a recipe with domain and creation ID
+   * Initialize a creation with domain and creation ID
    */
-  const initializeRecipe = (domain: string, creationId: string | number) => {
-    return storageManager.initializeRecipe(domain, creationId)
+  const initializeCreation = (domain: string, creationId: string | number) => {
+    return storageManager.initializeCreation(domain, creationId)
   }
 
   /**
-   * Initialize recipe from URL components
+   * Initialize creation from URL components
    */
-  const initializeRecipeFromUrl = (siteUrl: string, creationId: string | number) => {
+  const initializeCreationFromUrl = (siteUrl: string, creationId: string | number) => {
     const domain = normalizeDomain(siteUrl)
-    return storageManager.initializeRecipe(domain, creationId)
+    return storageManager.initializeCreation(domain, creationId)
   }
 
   /**
-   * Create a recipe key from domain and creation ID
+   * Create a creation key from domain and creation ID
    */
-  const getRecipeKey = (domain: string, creationId: string | number) => {
-    return createRecipeKey(domain, creationId)
+  const getCreationKey = (domain: string, creationId: string | number) => {
+    return createCreationKey(domain, creationId)
   }
 
   /**
-   * Get current recipe state (reactive)
+   * Get current creation state (reactive)
    */
-  const getCurrentRecipeState = () => {
-    return computed(() => storageManager.getCurrentRecipeState())
+  const getCurrentCreationState = () => {
+    return computed(() => storageManager.getCurrentCreationState())
   }
 
   /**
-   * Get specific recipe state by key
+   * Get specific creation state by key
    */
-  const getRecipeState = (recipeKey: string) => {
-    return computed(() => storageManager.getRecipeState(recipeKey))
+  const getCreationState = (creationKey: string) => {
+    return computed(() => storageManager.getCreationState(creationKey))
   }
 
   /**
@@ -52,38 +52,30 @@ export const useSharedStorage = () => {
   }
 
   /**
-   * Check if user has interacted with a specific recipe
+   * Check if user has interacted with a specific creation
    */
-  const hasInteracted = (recipeKey: string) => {
+  const hasInteracted = (creationKey: string) => {
     return computed(() => {
-      const state = storageManager.getRecipeState(recipeKey)
+      const state = storageManager.getCreationState(creationKey)
       return state?.hasInteracted || false
     })
   }
 
-  /**
-   * Run migration from legacy storage
-   */
-  const migrate = () => {
-    storageManager.migrateFromLegacyStorage()
-  }
+  // Migration removed - no legacy support needed
 
   return {
     // Storage manager instance
     storageManager,
 
     // Initialization methods
-    initializeRecipe,
-    initializeRecipeFromUrl,
-    getRecipeKey,
+    initializeCreation,
+    initializeCreationFromUrl,
+    getCreationKey,
 
     // Reactive state getters
-    getCurrentRecipeState,
-    getRecipeState,
+    getCurrentCreationState,
+    getCreationState,
     getPreferences,
-    hasInteracted,
-
-    // Utility methods
-    migrate
+    hasInteracted
   }
 }

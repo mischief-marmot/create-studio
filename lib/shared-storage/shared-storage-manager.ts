@@ -13,10 +13,10 @@ export interface Timer {
 }
 
 /**
- * Recipe-specific state stored per recipe key
+ * Creation-specific state stored per creation key
  */
-export interface RecipeState {
-  recipeKey: string
+export interface CreationState {
+  creationKey: string
   currentStep: number
   checkedIngredients: string[]
   checkedStepIngredients: Record<number, string[]>
@@ -47,7 +47,7 @@ export interface UserPreferences {
 export interface CreateStudioStorage {
   id: string
   preferences: UserPreferences
-  state: Record<string, RecipeState>
+  state: Record<string, CreationState>
 }
 
 /**
@@ -57,22 +57,22 @@ export interface CreateStudioStorage {
 export class SharedStorageManager {
   private static readonly STORAGE_KEY = 'create-studio'
   private storage: CreateStudioStorage
-  private currentRecipeKey: string | null = null
+  private currentCreationKey: string | null = null
 
   constructor() {
     this.storage = this.loadStorage()
   }
 
   /**
-   * Initialize storage manager with a specific recipe
+   * Initialize storage manager with a specific creation
    */
-  initializeRecipe(domain: string, creationId: string | number): string {
-    const recipeKey = createCreationKey(domain, creationId)
-    this.currentRecipeKey = recipeKey
+  initializeCreation(domain: string, creationId: string | number): string {
+    const creationKey = createCreationKey(domain, creationId)
+    this.currentCreationKey = creationKey
 
-    if (!this.storage.state[recipeKey]) {
-      this.storage.state[recipeKey] = {
-        recipeKey,
+    if (!this.storage.state[creationKey]) {
+      this.storage.state[creationKey] = {
+        creationKey,
         currentStep: 0,
         checkedIngredients: [],
         checkedStepIngredients: {},
@@ -87,22 +87,22 @@ export class SharedStorageManager {
       this.saveStorage()
     }
 
-    return recipeKey
+    return creationKey
   }
 
   /**
-   * Set the current active recipe by key
+   * Set the current active creation by key
    */
-  setCurrentRecipe(recipeKey: string): boolean {
-    const parsed = parseCreationKey(recipeKey)
+  setCurrentCreation(creationKey: string): boolean {
+    const parsed = parseCreationKey(creationKey)
     if (!parsed) return false
 
-    this.currentRecipeKey = recipeKey
+    this.currentCreationKey = creationKey
     
     // Initialize if doesn't exist
-    if (!this.storage.state[recipeKey]) {
-      this.storage.state[recipeKey] = {
-        recipeKey,
+    if (!this.storage.state[creationKey]) {
+      this.storage.state[creationKey] = {
+        creationKey,
         currentStep: 0,
         checkedIngredients: [],
         checkedStepIngredients: {},
@@ -121,30 +121,30 @@ export class SharedStorageManager {
   }
 
   /**
-   * Get current recipe state
+   * Get current creation state
    */
-  getCurrentRecipeState(): RecipeState | null {
-    if (!this.currentRecipeKey) return null
-    return this.storage.state[this.currentRecipeKey] || null
+  getCurrentCreationState(): CreationState | null {
+    if (!this.currentCreationKey) return null
+    return this.storage.state[this.currentCreationKey] || null
   }
 
   /**
-   * Get recipe state by key
+   * Get creation state by key
    */
-  getRecipeState(recipeKey: string): RecipeState | null {
-    return this.storage.state[recipeKey] || null
+  getCreationState(creationKey: string): CreationState | null {
+    return this.storage.state[creationKey] || null
   }
 
   /**
-   * Update current recipe state
+   * Update current creation state
    */
-  updateRecipeState(updates: Partial<Omit<RecipeState, 'recipeKey' | 'startedAt'>>): void {
-    if (!this.currentRecipeKey) return
+  updateCreationState(updates: Partial<Omit<CreationState, 'creationKey' | 'startedAt'>>): void {
+    if (!this.currentCreationKey) return
 
-    const current = this.storage.state[this.currentRecipeKey]
+    const current = this.storage.state[this.currentCreationKey]
     if (!current) return
 
-    this.storage.state[this.currentRecipeKey] = {
+    this.storage.state[this.currentCreationKey] = {
       ...current,
       ...updates,
       lastUpdated: new Date().toISOString(),
@@ -155,14 +155,14 @@ export class SharedStorageManager {
   }
 
   /**
-   * Recipe interaction methods
+   * Creation interaction methods
    */
   setCurrentStep(step: number): void {
-    this.updateRecipeState({ currentStep: step })
+    this.updateCreationState({ currentStep: step })
   }
 
   toggleIngredient(ingredientId: string): void {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     if (!state) return
 
     const checked = [...state.checkedIngredients]
@@ -174,11 +174,11 @@ export class SharedStorageManager {
       checked.push(ingredientId)
     }
 
-    this.updateRecipeState({ checkedIngredients: checked })
+    this.updateCreationState({ checkedIngredients: checked })
   }
 
   toggleStepIngredient(stepIndex: number, ingredientId: string): void {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     if (!state) return
 
     const stepIngredients = { ...state.checkedStepIngredients }
@@ -196,16 +196,16 @@ export class SharedStorageManager {
     }
 
     stepIngredients[stepIndex] = ingredients
-    this.updateRecipeState({ checkedStepIngredients: stepIngredients })
+    this.updateCreationState({ checkedStepIngredients: stepIngredients })
   }
 
   isIngredientChecked(ingredientId: string): boolean {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     return state ? state.checkedIngredients.includes(ingredientId) : false
   }
 
   isStepIngredientChecked(stepIndex: number, ingredientId: string): boolean {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     if (!state) return false
     const stepIngredients = state.checkedStepIngredients[stepIndex]
     return stepIngredients ? stepIngredients.includes(ingredientId) : false
@@ -215,7 +215,7 @@ export class SharedStorageManager {
    * Timer management
    */
   addTimer(timer: Omit<Timer, 'id'> & { id?: string }): Timer | null {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     if (!state) return null
 
     const newTimer: Timer = {
@@ -224,49 +224,49 @@ export class SharedStorageManager {
     }
 
     const timers = [...state.activeTimers, newTimer]
-    this.updateRecipeState({ activeTimers: timers })
+    this.updateCreationState({ activeTimers: timers })
     
     return newTimer
   }
 
   updateTimer(timerId: string, updates: Partial<Timer>): void {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     if (!state) return
 
     const timers = state.activeTimers.map(timer =>
       timer.id === timerId ? { ...timer, ...updates } : timer
     )
 
-    this.updateRecipeState({ activeTimers: timers })
+    this.updateCreationState({ activeTimers: timers })
   }
 
   removeTimer(timerId: string): void {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     if (!state) return
 
     const timers = state.activeTimers.filter(timer => timer.id !== timerId)
-    this.updateRecipeState({ activeTimers: timers })
+    this.updateCreationState({ activeTimers: timers })
   }
 
   clearTimers(): void {
-    this.updateRecipeState({ activeTimers: [] })
+    this.updateCreationState({ activeTimers: [] })
   }
 
   /**
    * Image state management
    */
   setImageState(height: number, isCollapsed: boolean): void {
-    this.updateRecipeState({ 
+    this.updateCreationState({ 
       imageHeight: height, 
       isImageCollapsed: isCollapsed 
     })
   }
 
   toggleStepIngredientsVisibility(): void {
-    const state = this.getCurrentRecipeState()
+    const state = this.getCurrentCreationState()
     if (!state) return
     
-    this.updateRecipeState({ 
+    this.updateCreationState({ 
       showStepIngredients: !state.showStepIngredients 
     })
   }
@@ -309,24 +309,24 @@ export class SharedStorageManager {
   }
 
   /**
-   * Recipe management
+   * Creation management
    */
-  resetRecipe(recipeKey?: string): void {
-    const key = recipeKey || this.currentRecipeKey
+  resetCreation(creationKey?: string): void {
+    const key = creationKey || this.currentCreationKey
     if (!key) return
 
     delete this.storage.state[key]
     this.saveStorage()
 
-    if (this.currentRecipeKey === key) {
-      this.currentRecipeKey = null
+    if (this.currentCreationKey === key) {
+      this.currentCreationKey = null
     }
   }
 
   clearAllState(): void {
     this.storage.state = {}
     this.saveStorage()
-    this.currentRecipeKey = null
+    this.currentCreationKey = null
   }
 
   clearAll(): void {
@@ -336,7 +336,7 @@ export class SharedStorageManager {
       state: {}
     }
     this.saveStorage()
-    this.currentRecipeKey = null
+    this.currentCreationKey = null
   }
 
 
@@ -408,12 +408,12 @@ export class SharedStorageManager {
   /**
    * Debug and utility methods
    */
-  getAllRecipeStates(): Record<string, RecipeState> {
+  getAllCreationStates(): Record<string, CreationState> {
     return { ...this.storage.state }
   }
 
-  getCurrentRecipeKey(): string | null {
-    return this.currentRecipeKey
+  getCurrentCreationKey(): string | null {
+    return this.currentCreationKey
   }
 
   getStorageId(): string {

@@ -103,7 +103,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
     
     // Sync with shared storage - only if not already there and we're on client side
     if (import.meta.client && storageManager) {
-      const currentState = storageManager.getCurrentRecipeState();
+      const currentState = storageManager.getCurrentCreationState();
       if (currentState) {
         const existingStoreTimer = currentState.activeTimers.find(t => t.id === id);
         if (!existingStoreTimer) {
@@ -142,7 +142,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
     
     // Update storage (ensure timer exists first)
     if (storageManager) {
-      const currentState = storageManager.getCurrentRecipeState();
+      const currentState = storageManager.getCurrentCreationState();
       if (currentState) {
         // Make sure timer exists in storage first
         const existingTimer = currentState.activeTimers.find(t => t.id === id);
@@ -384,7 +384,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
       return;
     }
     
-    const currentState = storageManager.getCurrentRecipeState();
+    const currentState = storageManager.getCurrentCreationState();
     if (!currentState) {
       return;
     }

@@ -92,12 +92,12 @@
                                 <div class="flex justify-between cursor-pointer"
                                     @click="storageManager.toggleStepIngredientsVisibility()">
                                     <span class="font-medium text-base-content">Step Ingredients</span>
-                                    <PlusIcon v-if="!currentRecipeState?.showStepIngredients"
+                                    <PlusIcon v-if="!currentCreationState?.showStepIngredients"
                                         class="w-5 h-5" />
-                                    <MinusIcon v-if="currentRecipeState?.showStepIngredients"
+                                    <MinusIcon v-if="currentCreationState?.showStepIngredients"
                                         class="w-5 h-5" />
                                 </div>
-                                <ul v-show="currentRecipeState?.showStepIngredients" class="space-y-1 mt-2">
+                                <ul v-show="currentCreationState?.showStepIngredients" class="space-y-1 mt-2">
                                     <li v-for="(supply, supplyIdx) in step.supply"
                                         :key="`step-${index}-supply-${supplyIdx}`">
                                         <label class="flex items-start space-x-3 text-base-content">
@@ -325,8 +325,8 @@ const creation = ref<HowTo | null>(null);
 const isLoadingCreation = ref(false);
 const creationError = ref<string | null>(null);
 
-// Get current recipe state from shared storage
-const currentRecipeState = computed(() => storageManager.getCurrentRecipeState());
+// Get current creation state from shared storage
+const currentCreationState = computed(() => storageManager.getCurrentCreationState());
 
 // Get steps as HowToStep array for template usage
 const steps = computed(() => {
@@ -410,16 +410,16 @@ onMounted(async () => {
         return;
     }
 
-    // Initialize recipe in shared storage
-    storageManager.initializeRecipe(domain, creationId);
-    const recipeState = storageManager.getCurrentRecipeState();
+    // Initialize creation in shared storage
+    storageManager.initializeCreation(domain, creationId);
+    const creationState = storageManager.getCurrentCreationState();
 
 
-    if (recipeState) {
+    if (creationState) {
         // Restore persisted state
-        currentSlide.value = recipeState.currentStep;
-        imageHeight.value = recipeState.imageHeight;
-        isImageCollapsed.value = recipeState.isImageCollapsed;
+        currentSlide.value = creationState.currentStep;
+        imageHeight.value = creationState.imageHeight;
+        isImageCollapsed.value = creationState.isImageCollapsed;
     }
 
     // Restore timers from storage
@@ -973,7 +973,7 @@ watch(currentSlide, (newSlide, oldSlide) => {
         loadExistingReview()
     } else if (oldSlide === totalSlides.value - 1) {
         // Coming back from review slide - restore to user's adjusted height
-        const savedHeight = currentRecipeState.value?.imageHeight
+        const savedHeight = currentCreationState.value?.imageHeight
         if (savedHeight && savedHeight !== 10) {
             imageHeight.value = savedHeight
         }

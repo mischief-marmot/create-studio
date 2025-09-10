@@ -89,7 +89,7 @@ const buttonText = computed(() => {
   }
   
   // Check if user has interacted with this creation
-  const creationState = storageManager.getRecipeState(creationKey.value)
+  const creationState = storageManager.getCreationState(creationKey.value)
   const hasInteracted = creationState?.hasInteracted || false
   
   return hasInteracted ? 'Continue' : 'Try Interactive Mode!'
@@ -108,7 +108,7 @@ function openModal() {
   // Initialize creation in shared storage when modal opens
   const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
   const domain = normalizeDomain(siteUrl)
-  storageManager.initializeRecipe(domain, props.config.creationId)
+  storageManager.initializeCreation(domain, props.config.creationId)
   
   // Wait for DOM to update then handle fullscreen for mobile
   nextTick(() => {
