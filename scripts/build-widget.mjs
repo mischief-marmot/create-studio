@@ -83,7 +83,12 @@ export async function buildWidget() {
       resolve: {
         alias: {
           'vue': 'vue/dist/vue.esm-bundler.js',
-          '@': root
+          '@': root,
+          '~': root,
+          '~/lib': resolve(root, 'lib'),
+          '~/utils': resolve(root, 'utils'),
+          '~/composables': resolve(root, 'composables'),
+          '~/components': resolve(root, 'components')
         }
       }
     })

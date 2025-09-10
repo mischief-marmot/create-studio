@@ -41,8 +41,11 @@ interface Props {
 const props = defineProps<Props>();
 const { formatDuration } = useRecipeUtils();
 
-// Use the provided timer manager or create a new one
-const timerManager = inject('timerManager', useTimerManager());
+// Use the provided timer manager (must be provided from parent)
+const timerManager = inject<any>('timerManager');
+if (!timerManager) {
+  throw new Error('Timer manager not provided. Make sure to provide timerManager from parent component.');
+}
 const { getTimer, startTimer, pauseTimer, resetTimer, resumeTimer, timers } = timerManager;
 
 // Initialize timer

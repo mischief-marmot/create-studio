@@ -1,4 +1,4 @@
-import { useRecipeInteractionStore } from '~/stores/recipeInteraction'
+import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
 
 interface Timer {
   id: string;
@@ -10,8 +10,7 @@ interface Timer {
   stepIndex?: number;
 }
 
-export const useTimerManager = () => {
-  const recipeStore = useRecipeInteractionStore();
+export const useSharedTimerManager = (storageManager: SharedStorageManager | null) => {
   const timers = ref<Map<string, Timer>>(new Map());
   const audioContext = ref<AudioContext | null>(null);
   const hasActiveTimers = ref(false);
@@ -102,18 +101,21 @@ export const useTimerManager = () => {
     
     timers.value.set(id, timer);
     
-    // Sync with recipe store - only if not already there and we're on client side
-    if (import.meta.client && recipeStore.currentProgress) {
-      const existingStoreTimer = recipeStore.currentProgress.activeTimers.find(t => t.id === id);
-      if (!existingStoreTimer) {
-        recipeStore.addTimer({
-          id,
-          label,
-          duration,
-          remaining: duration,
-          isActive: false,
-          stepIndex
-        });
+    // Sync with shared storage - only if not already there and we're on client side
+    if (import.meta.client && storageManager) {
+      const currentState = storageManager.getCurrentRecipeState();
+      if (currentState) {
+        const existingStoreTimer = currentState.activeTimers.find(t => t.id === id);
+        if (!existingStoreTimer) {
+          storageManager.addTimer({
+            id,
+            label,
+            duration,
+            remaining: duration,
+            isActive: false,
+            stepIndex
+          });
+        }
       }
     }
     
@@ -138,24 +140,27 @@ export const useTimerManager = () => {
     
     timer.status = 'running';
     
-    // Update store (ensure timer exists first)
-    if (recipeStore.currentProgress) {
-      // Make sure timer exists in store first
-      const existingTimer = recipeStore.currentProgress.activeTimers.find(t => t.id === id);
-      if (!existingTimer) {
-        recipeStore.addTimer({
-          id,
-          label: timer.label,
-          duration: timer.duration,
-          remaining: timer.remaining,
-          isActive: true,
-          stepIndex: timer.stepIndex
-        });
-      } else {
-        recipeStore.updateTimer(id, {
-          remaining: timer.remaining,
-          isActive: true
-        });
+    // Update storage (ensure timer exists first)
+    if (storageManager) {
+      const currentState = storageManager.getCurrentRecipeState();
+      if (currentState) {
+        // Make sure timer exists in storage first
+        const existingTimer = currentState.activeTimers.find(t => t.id === id);
+        if (!existingTimer) {
+          storageManager.addTimer({
+            id,
+            label: timer.label,
+            duration: timer.duration,
+            remaining: timer.remaining,
+            isActive: true,
+            stepIndex: timer.stepIndex
+          });
+        } else {
+          storageManager.updateTimer(id, {
+            remaining: timer.remaining,
+            isActive: true
+          });
+        }
       }
     }
     
@@ -170,9 +175,9 @@ export const useTimerManager = () => {
         
         currentTimer.remaining--;
         
-        // Update store with remaining time (throttle to every 10 seconds to reduce localStorage writes)
-        if (recipeStore.currentProgress && currentTimer.remaining % 10 === 0) {
-          recipeStore.updateTimer(id, {
+        // Update storage with remaining time (throttle to every 10 seconds to reduce localStorage writes)
+        if (storageManager && currentTimer.remaining % 10 === 0) {
+          storageManager.updateTimer(id, {
             remaining: currentTimer.remaining
           });
         }
@@ -183,9 +188,9 @@ export const useTimerManager = () => {
           clearInterval(currentTimer.intervalId);
           delete currentTimer.intervalId;
           
-          // Update store
-          if (recipeStore.currentProgress) {
-            recipeStore.updateTimer(id, {
+          // Update storage
+          if (storageManager) {
+            storageManager.updateTimer(id, {
               remaining: 0,
               isActive: false
             });
@@ -217,9 +222,9 @@ export const useTimerManager = () => {
       timer.intervalId = undefined;
     }
     
-    // Update store
-    if (recipeStore.currentProgress) {
-      recipeStore.updateTimer(id, {
+    // Update storage
+    if (storageManager) {
+      storageManager.updateTimer(id, {
         isActive: false,
         remaining: timer.remaining
       });
@@ -243,9 +248,9 @@ export const useTimerManager = () => {
     timer.remaining = timer.duration;
     timer.status = 'idle';
     
-    // Update store
-    if (recipeStore.currentProgress) {
-      recipeStore.updateTimer(id, {
+    // Update storage
+    if (storageManager) {
+      storageManager.updateTimer(id, {
         remaining: timer.duration,
         isActive: false
       });
@@ -271,9 +276,9 @@ export const useTimerManager = () => {
     
     timer.status = 'running';
     
-    // Update store
-    if (recipeStore.currentProgress) {
-      recipeStore.updateTimer(id, {
+    // Update storage
+    if (storageManager) {
+      storageManager.updateTimer(id, {
         remaining: timer.remaining,
         isActive: true
       });
@@ -290,9 +295,9 @@ export const useTimerManager = () => {
         
         currentTimer.remaining--;
         
-        // Update store with remaining time (throttle to every 10 seconds to reduce localStorage writes)
-        if (recipeStore.currentProgress && currentTimer.remaining % 10 === 0) {
-          recipeStore.updateTimer(id, {
+        // Update storage with remaining time (throttle to every 10 seconds to reduce localStorage writes)
+        if (storageManager && currentTimer.remaining % 10 === 0) {
+          storageManager.updateTimer(id, {
             remaining: currentTimer.remaining
           });
         }
@@ -303,9 +308,9 @@ export const useTimerManager = () => {
           clearInterval(currentTimer.intervalId);
           delete currentTimer.intervalId;
           
-          // Update store
-          if (recipeStore.currentProgress) {
-            recipeStore.updateTimer(id, {
+          // Update storage
+          if (storageManager) {
+            storageManager.updateTimer(id, {
               remaining: 0,
               isActive: false
             });
@@ -354,13 +359,18 @@ export const useTimerManager = () => {
     timers.value.clear();
   };
 
-  // Restore timers from store
+  // Restore timers from storage
   const restoreTimersFromStore = () => {
-    if (!recipeStore.currentProgress) {
+    if (!storageManager) {
       return;
     }
     
-    const storeTimers = recipeStore.currentProgress.activeTimers;
+    const currentState = storageManager.getCurrentRecipeState();
+    if (!currentState) {
+      return;
+    }
+    
+    const storeTimers = currentState.activeTimers;
     
     storeTimers.forEach(storeTimer => {
       const timer: Timer = {
@@ -376,7 +386,7 @@ export const useTimerManager = () => {
       
       timers.value.set(storeTimer.id, timer);
       
-      // If timer was active, restart it without going through startTimer to avoid double-updating store
+      // If timer was active, restart it without going through startTimer to avoid double-updating storage
       if (storeTimer.isActive && storeTimer.remaining > 0) {
         // Ensure no existing interval before creating new one
         if (timer.intervalId) {
@@ -397,9 +407,9 @@ export const useTimerManager = () => {
             
             currentTimer.remaining--;
             
-            // Update store with remaining time (throttle to every 10 seconds to reduce localStorage writes)
-            if (recipeStore.currentProgress && currentTimer.remaining % 10 === 0) {
-              recipeStore.updateTimer(storeTimer.id, {
+            // Update storage with remaining time (throttle to every 10 seconds to reduce localStorage writes)
+            if (storageManager && currentTimer.remaining % 10 === 0) {
+              storageManager.updateTimer(storeTimer.id, {
                 remaining: currentTimer.remaining
               });
             }
@@ -410,9 +420,9 @@ export const useTimerManager = () => {
               clearInterval(currentTimer.intervalId);
               delete currentTimer.intervalId;
               
-              // Update store
-              if (recipeStore.currentProgress) {
-                recipeStore.updateTimer(storeTimer.id, {
+              // Update storage
+              if (storageManager) {
+                storageManager.updateTimer(storeTimer.id, {
                   remaining: 0,
                   isActive: false
                 });
@@ -435,31 +445,31 @@ export const useTimerManager = () => {
     updateActiveTimersStatus();
   };
 
-  // // Save all timer states before page unload/refresh
-  // const saveTimersOnUnload = () => {
-  //   if (!recipeStore.currentProgress) return;
+  // Save all timer states before page unload/refresh
+  const saveTimersOnUnload = () => {
+    if (!storageManager) return;
     
-  //   timers.value.forEach((timer) => {
-  //     // Force update all timers to store before unload
-  //     recipeStore.updateTimer(timer.id, {
-  //       remaining: timer.remaining,
-  //       isActive: timer.status === 'running'
-  //     });
-  //   });
-  // };
+    timers.value.forEach((timer) => {
+      // Force update all timers to storage before unload
+      storageManager.updateTimer(timer.id, {
+        remaining: timer.remaining,
+        isActive: timer.status === 'running'
+      });
+    });
+  };
 
-  // // Set up beforeunload listener on client side
-  // if (import.meta.client && typeof window !== 'undefined') {
-  //   window.addEventListener('beforeunload', saveTimersOnUnload);
-  // }
+  // Set up beforeunload listener on client side
+  if (import.meta.client && typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', saveTimersOnUnload);
+  }
 
-  // // Clean up on unmount
-  // onUnmounted(() => {
-  //   if (import.meta.client && typeof window !== 'undefined') {
-  //     window.removeEventListener('beforeunload', saveTimersOnUnload);
-  //   }
-  //   cleanup();
-  // });
+  // Clean up on unmount
+  onUnmounted(() => {
+    if (import.meta.client && typeof window !== 'undefined') {
+      window.removeEventListener('beforeunload', saveTimersOnUnload);
+    }
+    cleanup();
+  });
 
   return {
     timers: readonly(timers),

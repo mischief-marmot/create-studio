@@ -88,7 +88,12 @@ export function widgetBuilder() {
             resolve: {
               alias: {
                 'vue': 'vue/dist/vue.esm-bundler.js',
-                '@': resolve(process.cwd())
+                '@': resolve(process.cwd()),
+                '~': resolve(process.cwd()),
+                '~/lib': resolve(process.cwd(), 'lib'),
+                '~/utils': resolve(process.cwd(), 'utils'),
+                '~/composables': resolve(process.cwd(), 'composables'),
+                '~/components': resolve(process.cwd(), 'components')
               }
             }
           })

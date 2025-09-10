@@ -4,7 +4,7 @@
       class="btn btn-primary btn-sm"
       @click="openModal"
     >
-      {{ config.buttonText || 'Try Interactive Mode!' }}
+      {{ buttonText }}
     </button>
     
     <Teleport to="body">
@@ -45,6 +45,8 @@
 <script setup lang="ts">
 import { XMarkIcon } from '@heroicons/vue/20/solid'
 import { ref, computed, inject, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
+import { createRecipeKey, normalizeDomain } from '~/utils/domain'
 
 interface Props {
   config: {
@@ -68,19 +70,45 @@ const showModal = ref(false)
 // Mobile detection
 const isMobile = ref(false)
 
+// Initialize shared storage manager
+const storageManager = new SharedStorageManager()
+
 // Theme support can be added later if needed via CSS custom properties
+
+// Create recipe key from domain and creation ID
+const recipeKey = computed(() => {
+  const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
+  const domain = normalizeDomain(siteUrl)
+  return createRecipeKey(domain, props.config.creationId)
+})
+
+// Dynamic button text based on interaction state
+const buttonText = computed(() => {
+  if (props.config.buttonText) {
+    return props.config.buttonText
+  }
+  
+  // Check if user has interacted with this recipe
+  const recipeState = storageManager.getRecipeState(recipeKey.value)
+  const hasInteracted = recipeState?.hasInteracted || false
+  
+  return hasInteracted ? 'Continue Recipe' : 'Try Interactive Mode!'
+})
 
 const iframeSrc = computed(() => {
   console.log('Props', props.config)
   const baseUrl = props.config.embedUrl || globalConfig?._meta?.baseUrl || window.location.origin
-  const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
-  const creationId = props.config.creationId
   
-  return `${baseUrl}/creations/${creationId}/interactive?site_url=${encodeURIComponent(siteUrl)}`
+  return `${baseUrl}/creations/${recipeKey.value}/interactive`
 })
 
 function openModal() {
   showModal.value = true
+  
+  // Initialize recipe in shared storage when modal opens
+  const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
+  const domain = normalizeDomain(siteUrl)
+  storageManager.initializeRecipe(domain, props.config.creationId)
   
   // Wait for DOM to update then handle fullscreen for mobile
   nextTick(() => {
@@ -100,6 +128,7 @@ function openModal() {
     
     if (globalConfig?._meta?.debug) {
       console.log('Create Studio Interactive mode opened for creation:', props.config.creationId)
+      console.log('Recipe key:', recipeKey.value)
       console.log('iframe src:', iframeSrc.value)
       console.log('Mobile mode:', isMobile.value)
     }

@@ -8,17 +8,10 @@
         </div>
         <!-- Show skeleton loader during SSR or while persistence is loading -->
         <RecipeSkeletonLoader v-else-if="!isHydrated || isLoadingPersistence || isLoadingCreation || !dataReady" />
-        <!-- <RecipeSkeletonLoader v-if="false" /> -->
 
         <!-- Responsive Card Container -->
         <div v-else ref="containerRef" class="md:w-full w-dvw md:max-w-lg md:max-h-256 h-dvh bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl overflow-hidden" @mousedown="startDrag"
             @touchstart="startDrag">
-            <!-- Fullscreen toggle button -->
-            <!-- <button @click="toggleFullscreen"
-                class="absolute top-4 right-4 z-20 w-10 h-10 bg-base-200/80 text-base-content backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-base-100/80 transition-colors">
-                <ArrowsPointingOutIcon v-if="!isFullscreen" class="w-5 h-5" />
-                <ArrowsPointingInIcon v-else class="w-5 h-5" />
-            </button> -->
             <!-- Top Figure Section - Collapsible Height -->
             <figure :class="[
                 'relative overflow-hidden flex-shrink-0 -mb-6',
@@ -91,20 +84,20 @@
                             <!-- Step-specific supplies/ingredients -->
                             <div v-if="step.supply && step.supply.length > 0" class="box-gray">
                                 <div class="flex justify-between cursor-pointer"
-                                    @click="recipeStore.toggleStepIngredientsVisibility()">
+                                    @click="storageManager.toggleStepIngredientsVisibility()">
                                     <span class="font-medium text-base-content">Step Ingredients</span>
-                                    <PlusIcon v-if="!recipeStore.currentProgress?.showStepIngredients"
+                                    <PlusIcon v-if="!currentRecipeState?.showStepIngredients"
                                         class="w-5 h-5" />
-                                    <MinusIcon v-if="recipeStore.currentProgress?.showStepIngredients"
+                                    <MinusIcon v-if="currentRecipeState?.showStepIngredients"
                                         class="w-5 h-5" />
                                 </div>
-                                <ul v-show="recipeStore.currentProgress?.showStepIngredients" class="space-y-1 mt-2">
+                                <ul v-show="currentRecipeState?.showStepIngredients" class="space-y-1 mt-2">
                                     <li v-for="(supply, supplyIdx) in step.supply"
                                         :key="`step-${index}-supply-${supplyIdx}`">
                                         <label class="flex items-start space-x-3 text-base-content">
                                             <input type="checkbox" class="checkbox checkbox-lg"
-                                                :checked="recipeStore.currentProgress?.checkedStepIngredients?.get(index)?.has(`${supply.name}`) || false"
-                                                @change="recipeStore.toggleStepIngredient(index, `${supply.name}`)" />
+                                                :checked="storageManager.isStepIngredientChecked(index, `${supply.name}`)"
+                                                @change="storageManager.toggleStepIngredient(index, `${supply.name}`)" />
                                             <span>{{ supply.name }}</span>
                                         </label>
                                     </li>
@@ -292,28 +285,42 @@
 <script setup lang="ts">
 import type { HowTo, HowToStep } from '~/types/schema-org';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
-import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, StarIcon, XMarkIcon } from '@heroicons/vue/20/solid';
-import { useRecipeInteractionStore } from '~/stores/recipeInteraction';
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
+import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager';
+import { parseRecipeKey } from '~/utils/domain';
+import { useSharedTimerManager } from '~/composables/useSharedTimerManager';
 
 const route = useRoute();
-const id = route.params.id as string;
+
+const recipeKey = route.params.recipeKey as string;
 const { formatDuration } = useRecipeUtils();
+// Parse recipe key to get domain and creation ID
+const recipeInfo = parseRecipeKey(recipeKey);
+if (!recipeInfo) {
+    throw createError({
+        statusCode: 404,
+        statusMessage: 'Invalid recipe key'
+    });
+}
 
-// Initialize recipe interaction store
-const recipeStore = useRecipeInteractionStore();
+const { domain, creationId } = recipeInfo;
 
-// Provide timer manager at the page level so it persists across slides
-const timerManager = useTimerManager();
+// Initialize shared storage manager
+const storageManager = new SharedStorageManager();
+
+// Initialize timer manager with storage manager
+const timerManager = useSharedTimerManager(storageManager);
 provide('timerManager', timerManager);
 
-// Check for external site_url parameter
-const siteUrl = route.query.site_url as string | undefined;
 const cacheBust = route.query.cache_bust === 'true';
 
 // Recipe data - will be populated from API or fixtures
 const creation = ref<HowTo | null>(null);
 const isLoadingCreation = ref(false);
 const creationError = ref<string | null>(null);
+
+// Get current recipe state from shared storage
+const currentRecipeState = computed(() => storageManager.getCurrentRecipeState());
 
 // Get steps as HowToStep array for template usage
 const steps = computed(() => {
@@ -328,7 +335,6 @@ const carouselRef = ref<HTMLElement>();
 const containerRef = ref<HTMLElement>();
 const showIngredients = ref(false);
 const showActiveTimers = ref(false);
-
 
 // Loading and ready state - start loading only on client side
 const isLoadingPersistence = ref(false);
@@ -348,6 +354,7 @@ const imageHeightPx = computed(() => {
     const containerHeight = containerRef.value.offsetHeight || 600;
     return Math.round((imageHeight.value / 100) * containerHeight);
 });
+
 // Calculate minimum height to offset the -mb-6 (-24px) margin
 const getMinHeightPercent = () => {
     const viewportHeight = window.innerHeight;
@@ -359,33 +366,24 @@ const COLLAPSED_THRESHOLD = 10; // Threshold for collapsed state
 
 // Load creation data
 async function loadCreationData() {
-    if (siteUrl) {
-        // Fetch from external API
-        isLoadingCreation.value = true;
-        try {
-            const data = await $fetch<HowTo>('/api/fetch-creation', {
-                method: 'POST',
-                body: {
-                    site_url: siteUrl,
-                    creation_id: parseInt(id),
-                    cache_bust: cacheBust
-                }
-            });
-            creation.value = data;
-        } catch (error: any) {
-            console.error('Failed to fetch creation:', error);
-            creationError.value = error?.statusMessage || 'Failed to load creation data';
-        } finally {
-            isLoadingCreation.value = false;
-        }
-    } else {
-        // Use local fixtures
-        const recipeData = recipesById[parseInt(id) as keyof typeof recipesById];
-        if (recipeData) {
-            creation.value = transformJsonLdToHowTo(recipeData);
-        } else {
-            creationError.value = 'Recipe not found';
-        }
+    isLoadingCreation.value = true;
+    const site_url = process.env.NODE_ENV === 'development' ? 'http://localhost:8074' : `https://${domain}`;
+    try {
+        // Always fetch from API
+        const data = await $fetch<HowTo>('/api/fetch-creation', {
+            method: 'POST',
+            body: {
+                site_url,
+                creation_id: parseInt(creationId),
+                cache_bust: cacheBust
+            }
+        });
+        creation.value = data;
+    } catch (error: any) {
+        console.error('Failed to fetch creation:', error);
+        creationError.value = error?.statusMessage || 'Failed to load creation data';
+    } finally {
+        isLoadingCreation.value = false;
     }
 }
 
@@ -406,26 +404,28 @@ onMounted(async () => {
         return;
     }
 
-    const recipeProgress = recipeStore.initializeRecipe(id);
+    // Initialize recipe in shared storage
+    storageManager.initializeRecipe(domain, creationId);
+    const recipeState = storageManager.getCurrentRecipeState();
 
-    // Restore persisted state
-    currentSlide.value = recipeProgress.currentStep;
-    imageHeight.value = recipeProgress.imageHeight;
-    isImageCollapsed.value = recipeProgress.isImageCollapsed;
 
-    // Clear any duplicate timers first
-    recipeStore.clearDuplicateTimers();
+    if (recipeState) {
+        // Restore persisted state
+        currentSlide.value = recipeState.currentStep;
+        imageHeight.value = recipeState.imageHeight;
+        isImageCollapsed.value = recipeState.isImageCollapsed;
+    }
 
-    // Restore timers from store
+    // Restore timers from storage
     timerManager.restoreTimersFromStore();
 
     // Set up watchers after initial load
     watch(currentSlide, (newSlide) => {
-        recipeStore.setCurrentStep(newSlide);
+        storageManager.setCurrentStep(newSlide);
     });
 
     watch([imageHeight, isImageCollapsed], ([height, collapsed]) => {
-        recipeStore.setImageState(height, collapsed);
+        storageManager.setImageState(height, collapsed);
     });
 
     // Wait for DOM to be ready, then navigate to persisted slide if not on intro
@@ -441,13 +441,12 @@ onMounted(async () => {
 
 // Auto-show active timers panel when timers become active
 watchEffect(() => {
-    const hasActive = timerManager.hasActiveTimers.value;
+    const hasActive = timerManager?.hasActiveTimers.value || false;
     if (hasActive) {
         showActiveTimers.value = true;
         showIngredients.value = false; // Close ingredients panel if open
     }
 });
-
 
 // Full-screen functionality
 const isFullscreen = ref(false);
@@ -584,13 +583,10 @@ onMounted(() => {
         MIN_HEIGHT.value = getMinHeightPercent();
     };
 
-
     document.addEventListener('keydown', handleKeydown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     window.addEventListener('resize', handleResize);
-
-    // We'll set up carousel listeners in a separate watcher
 
     onUnmounted(() => {
         document.removeEventListener('keydown', handleKeydown);
@@ -934,8 +930,8 @@ const reviewSubmission = useReviewSubmission()
 
 // Check for existing review on mount and when form appears
 const loadExistingReview = () => {
-    if (siteUrl && id) {
-        const existing = getInitialState(id)
+    if (creationId) {
+        const existing = getInitialState(creationId)
         if (existing) {
             existingReview.value = existing
             currentRating.value = parseInt(existing.rating.toString())
@@ -959,7 +955,7 @@ watch(currentSlide, (newSlide) => {
         loadExistingReview()
     } else {
         // On other slides - restore image size
-        imageHeight.value = recipeStore.currentProgress?.imageHeight || 25
+        imageHeight.value = currentRecipeState.value?.imageHeight || 25
     }
 })
 
@@ -1017,13 +1013,13 @@ const reviewPlaceholder = computed(() =>
 const handleRatingSelect = async (rating: number) => {
     currentRating.value = rating
 
-    // For high ratings, auto-submit rating if external site is available
-    if (rating >= ratingThreshold && siteUrl && id && !hasSubmittedRating.value) {
+    // For high ratings, auto-submit rating
+    if (rating >= ratingThreshold && creationId && !hasSubmittedRating.value) {
         const result = await reviewSubmission.submit({
-            creation: id,
+            creation: creationId,
             rating,
             type: 'review'
-        }, siteUrl)
+        }, `https://${domain}`)
 
         if (result.ok) {
             hasSubmittedRating.value = true
@@ -1034,14 +1030,14 @@ const handleRatingSelect = async (rating: number) => {
 }
 
 const handleFormSubmit = async () => {
-    if (!siteUrl || !id) {
-        console.warn('Cannot submit review: missing site URL or creation ID')
+    if (!creationId) {
+        console.warn('Cannot submit review: missing creation ID')
         return
     }
 
     // Build review data using MV state structure
     const reviewData = {
-        creation: id,
+        creation: creationId,
         rating: currentRating.value,
         type: 'review',
         review_title: form.title.trim(),
@@ -1050,7 +1046,7 @@ const handleFormSubmit = async () => {
         author_email: form.email.trim()
     }
 
-    const result = await reviewSubmission.submit(reviewData, siteUrl)
+    const result = await reviewSubmission.submit(reviewData, `https://${domain}`)
 
     if (result.ok) {
         hasSubmittedReview.value = true

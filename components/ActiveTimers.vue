@@ -95,8 +95,11 @@ defineEmits<{
 
 const { formatDuration } = useRecipeUtils();
 
-// Get timer manager from injection or create new
-const timerManager = inject('timerManager', useTimerManager());
+// Get timer manager from injection (must be provided from parent)
+const timerManager = inject<any>('timerManager');
+if (!timerManager) {
+  throw new Error('Timer manager not provided. Make sure to provide timerManager from parent component.');
+}
 const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume } = timerManager;
 
 // Computed list of active timers (running, paused, or completed)
