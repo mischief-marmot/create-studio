@@ -1,8 +1,15 @@
 <template>
-  <div class="w-full max-w-lg h-full md:max-h-256 bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl md:overflow-hidden">
+  <div 
+    ref="containerRef"
+    class="w-full max-w-lg bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl md:overflow-hidden"
+    :style="{ height: `${containerHeight}px` }"
+  >
     
     <!-- Image section skeleton -->
-    <div class="skeleton flex-shrink-0 -mb-6" style="height: 25%">
+    <div 
+      class="skeleton flex-shrink-0 -mb-6" 
+      :style="{ height: `${imageHeight}px` }"
+    >
     </div>
 
     <!-- Content section skeleton with rounded top corners overlapping image -->
@@ -53,4 +60,27 @@
     </div>
   </div>
 </template>
- 
+
+<script setup lang="ts">
+const containerRef = ref<HTMLElement>();
+
+// Calculate viewport-based heights (same logic as the main interactive page)
+const containerHeight = ref(1024); // Default fallback
+const imageHeight = ref(256); // Default fallback (25% of 1024)
+
+// Calculate heights based on viewport
+const calculateHeights = () => {
+  if (typeof window === 'undefined') return;
+  
+  const viewportHeight = window.innerHeight;
+  const calculatedHeight = Math.min(viewportHeight, 1024); // Max height like md:max-h-256 (1024px)
+  
+  containerHeight.value = calculatedHeight;
+  imageHeight.value = Math.round(calculatedHeight * 0.25); // 25% for image section
+};
+
+// Initialize heights on mount
+onMounted(() => {
+  calculateHeights();
+});
+</script>

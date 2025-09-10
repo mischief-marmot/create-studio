@@ -7,11 +7,17 @@
             <a href="/" class="btn btn-primary">Back to Home</a>
         </div>
         <!-- Show skeleton loader during SSR or while persistence is loading -->
-        <RecipeSkeletonLoader v-else-if="!isHydrated || isLoadingPersistence || isLoadingCreation || !dataReady" />
+        <RecipeSkeletonLoader v-if="!isHydrated || isLoadingCreation || !dataReady" />
 
-        <!-- Responsive Card Container -->
-        <div v-else ref="containerRef" class="md:w-full w-dvw md:max-w-lg md:max-h-256 h-dvh bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl overflow-hidden" @mousedown="startDrag"
+        <!-- Responsive Card Container - Always render when data is ready -->
+        <div v-if="dataReady" ref="containerRef" class="md:w-full w-dvw md:max-w-lg md:max-h-256 h-dvh bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl overflow-hidden relative" @mousedown="startDrag"
             @touchstart="startDrag">
+            
+            <!-- Skeleton overlay during initial positioning -->
+            <div v-if="isLoadingPersistence" class="absolute inset-0 z-50 md:rounded-xl overflow-hidden">
+                <RecipeSkeletonLoader />
+            </div>
+
             <!-- Top Figure Section - Collapsible Height -->
             <figure :class="[
                 'relative overflow-hidden flex-shrink-0 -mb-6',
@@ -428,15 +434,27 @@ onMounted(async () => {
         storageManager.setImageState(height, collapsed);
     });
 
-    // Wait for DOM to be ready, then navigate to persisted slide if not on intro
+    // Wait for DOM to be fully ready, then navigate to persisted slide if not on intro
     await nextTick();
+    
     if (currentSlide.value > 0) {
-        goToSlide(currentSlide.value, true); // Use immediate navigation to avoid scrolling through slides
+        // Ensure carousel ref is available before navigation
+        if (carouselRef.value) {
+            goToSlide(currentSlide.value, true); // Use immediate navigation to avoid scrolling through slides
+        } else {
+            // Retry after another tick if carousel ref not ready
+            await nextTick();
+            if (carouselRef.value) {
+                goToSlide(currentSlide.value, true);
+            }
+        }
+        // Small delay after scrolling to ensure positioning is complete
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
-
-    // Hide loading state after everything is set up
-    await nextTick();
-    isLoadingPersistence.value = false; 
+    
+    // Hide skeleton overlay after scrolling is complete
+    isLoadingPersistence.value = false;
+    
 });
 
 // Auto-show active timers panel when timers become active
