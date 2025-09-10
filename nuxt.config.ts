@@ -27,7 +27,7 @@ async function uploadWidgetToBlob() {
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
-  debug: true,
+  debug: false,
   devtools: { enabled: true, timeline: {enabled: true,} },
   nitro: {
     experimental: {

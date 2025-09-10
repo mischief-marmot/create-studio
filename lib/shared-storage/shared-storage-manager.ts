@@ -45,6 +45,7 @@ export interface UserPreferences {
  * Complete storage structure for create-studio localStorage key
  */
 export interface CreateStudioStorage {
+  id: string
   preferences: UserPreferences
   state: Record<string, RecipeState>
 }
@@ -330,6 +331,7 @@ export class SharedStorageManager {
 
   clearAll(): void {
     this.storage = {
+      id: '',
       preferences: {},
       state: {}
     }
@@ -345,6 +347,7 @@ export class SharedStorageManager {
     // Check if we're in a browser environment
     if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
       return {
+        id: this.generateUUID(),
         preferences: {},
         state: {}
       }
@@ -355,6 +358,7 @@ export class SharedStorageManager {
       if (stored) {
         const parsed = JSON.parse(stored)
         return {
+          id: parsed.id || this.generateUUID(),
           preferences: parsed.preferences || {},
           state: parsed.state || {}
         }
@@ -364,6 +368,7 @@ export class SharedStorageManager {
     }
 
     return {
+      id: this.generateUUID(),
       preferences: {},
       state: {}
     }
@@ -386,6 +391,21 @@ export class SharedStorageManager {
   }
 
   /**
+   * Generate a UUID for storage identification
+   */
+  private generateUUID(): string {
+    if (typeof window !== 'undefined' && window.crypto && window.crypto.randomUUID) {
+      return window.crypto.randomUUID()
+    }
+    // Fallback for environments without crypto.randomUUID
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0
+      const v = c === 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+
+  /**
    * Debug and utility methods
    */
   getAllRecipeStates(): Record<string, RecipeState> {
@@ -396,12 +416,17 @@ export class SharedStorageManager {
     return this.currentRecipeKey
   }
 
+  getStorageId(): string {
+    return this.storage.id
+  }
+
   exportData(): CreateStudioStorage {
     return JSON.parse(JSON.stringify(this.storage))
   }
 
   importData(data: CreateStudioStorage): void {
     this.storage = {
+      id: data.id || this.generateUUID(),
       preferences: data.preferences || {},
       state: data.state || {}
     }

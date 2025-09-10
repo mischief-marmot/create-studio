@@ -105,8 +105,8 @@
                             </div>
 
                             <!-- Timer -->
-                            <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index}-timer`"
-                                :step-index="index" />
+                            <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index + 1}-timer`"
+                                :step-index="index + 1" />
 
                         </div>
                     </div>
@@ -948,15 +948,20 @@ const loadExistingReview = () => {
 }
 
 // Watch for currentSlide changes to shrink image when on completion slide
-watch(currentSlide, (newSlide) => {
+watch(currentSlide, (newSlide, oldSlide) => {
     if (newSlide === totalSlides.value - 1) {
-        // On completion slide - shrink image
+        // On completion/review slide - shrink image for review form visibility
         imageHeight.value = 10
         loadExistingReview()
-    } else {
-        // On other slides - restore image size
-        imageHeight.value = currentRecipeState.value?.imageHeight || 25
+    } else if (oldSlide === totalSlides.value - 1) {
+        // Coming back from review slide - restore to user's adjusted height
+        const savedHeight = currentRecipeState.value?.imageHeight
+        if (savedHeight && savedHeight !== 10) {
+            imageHeight.value = savedHeight
+        }
+        // If no saved height or it was the review height, keep current height (don't reset)
     }
+    // For all other slide transitions, maintain the current imageHeight
 })
 
 onMounted(() => {

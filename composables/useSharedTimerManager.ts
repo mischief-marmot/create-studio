@@ -329,6 +329,25 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
     }, msToNextSecond);
   };
 
+  // Add a minute to a paused timer
+  const addMinute = (id: string) => {
+    const timer = timers.value.get(id);
+    if (!timer) return;
+    
+    // Add 60 seconds to remaining time
+    timer.remaining += 60;
+    
+    // Update storage
+    if (storageManager) {
+      storageManager.updateTimer(id, {
+        remaining: timer.remaining
+      });
+    }
+    
+    // Force reactivity update
+    timers.value = new Map(timers.value);
+  };
+
   // Get timer status
   const getTimerStatus = (id: string) => {
     const timer = timers.value.get(id);
@@ -479,6 +498,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
     pauseTimer,
     resetTimer,
     resumeTimer,
+    addMinute,
     getTimerStatus,
     getRemainingTime,
     updateActiveTimersStatus,

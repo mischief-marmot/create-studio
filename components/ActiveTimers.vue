@@ -32,7 +32,8 @@
               >{{ timer.label }}</div>
               <div
               :class="[
-                timer.remaining < 60 && timer.remaining > 0 ? 'text-2xl font-medium text-red-50 leading-5' : 'text-xs text-base-content/80'
+                timer.remaining < 60 && timer.remaining > 0 ? 'text-2xl font-medium text-red-50 leading-5' : 'text-xs text-base-content/80',
+                bouncingTimers.has(timer.id) ? 'animate-bounce' : ''
               ]"
               >{{ formatDuration(timer.remaining) || 'Complete' }}<span v-show="timer.status === 'paused'" class="italic text-xs"> (paused)</span></div>
             </div>
@@ -41,20 +42,33 @@
           <!-- Timer controls -->
           <div class="flex items-center gap-1">
             <!-- Running - show pause -->
-            <button v-if="timer.status === 'running'" @click="pauseTimer(timer.id)"
-              class="cursor-pointer py-1.5 px-3 rounded-full bg-base-100 border border-base-300 hover:bg-base-200">
+             <template v-if="timer.status === 'running'">
+              <div class="join">
+                <button @click="addMinute(timer.id)"
+                class="cursor-pointer join-item py-1.5 px-3 rounded-l-full bg-base-100 border border-base-300 hover:bg-green-700/70 hover:text-green-50 text-xs font-bold">
+                +1m
+              </button>
+              <button @click="pauseTimer(timer.id)"
+              class="cursor-pointer join-item py-1.5 px-3 rounded-r-full bg-base-100 border border-base-300 hover:bg-amber-400/70 hover:text-amber-800">
               <PauseIcon class="w-5 h-5" /> 
             </button>
+              </div>
+             </template>
+            
 
-            <!-- Paused - show resume and reset -->
+            <!-- Paused - show reset, +1m, and resume -->
             <template v-else-if="timer.status === 'paused'">
               <div class="join">
               <button @click="resetTimer(timer.id)"
                 class="cursor-pointer join-item py-1.5 px-3 rounded-l-full bg-base-100 border border-base-300 hover:bg-red-700/70 hover:text-red-50">
                 <TrashIcon class="w-5 h-5" />
               </button>
+              <button @click="addMinute(timer.id)"
+                class="cursor-pointer join-item py-1.5 px-3 bg-base-100 border border-base-300 hover:bg-green-700/70 hover:text-green-50 text-xs font-bold">
+                +1m
+              </button>
               <button @click="resumeTimer(timer.id)"
-                class="cursor-pointer join-item py-1.5 px-3 rounded-r-full bg-base-100 border border-base-300 hover:bg-base-200">
+                class="cursor-pointer join-item py-1.5 px-3 rounded-r-full bg-base-100 border border-base-300 hover:bg-primary hover:text-primary-content">
                 <PlayIcon class="w-5 h-5" />
               </button>
               </div>
@@ -95,12 +109,15 @@ defineEmits<{
 
 const { formatDuration } = useRecipeUtils();
 
+// Bounce animation state
+const bouncingTimers = ref<Set<string>>(new Set());
+
 // Get timer manager from injection (must be provided from parent)
 const timerManager = inject<any>('timerManager');
 if (!timerManager) {
   throw new Error('Timer manager not provided. Make sure to provide timerManager from parent component.');
 }
-const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume } = timerManager;
+const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume, addMinute: addMin } = timerManager;
 
 // Computed list of active timers (running, paused, or completed)
 const activeTimers = computed(() => {
@@ -114,4 +131,16 @@ const activeTimers = computed(() => {
 const pauseTimer = (id: string) => pause(id);
 const resetTimer = (id: string) => reset(id);
 const resumeTimer = (id: string) => resume(id);
+const addMinute = (id: string) => {
+  addMin(id);
+  
+  // Trigger bounce animation
+  bouncingTimers.value.add(id);
+  
+  // Remove bounce animation after animation completes (~0.5s)
+  setTimeout(() => {
+    bouncingTimers.value.delete(id);
+    bouncingTimers.value = new Set(bouncingTimers.value);
+  }, 2500);
+};
 </script>
