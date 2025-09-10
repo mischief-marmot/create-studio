@@ -32,7 +32,7 @@
           <iframe 
             :src="iframeSrc"
             class="w-full h-full md:rounded-lg"
-            :title="`${config.recipeName} - Interactive Mode`"
+            :title="`${config.creationName} - Interactive Mode`"
             frameborder="0"
             allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
           />
@@ -46,12 +46,12 @@
 import { XMarkIcon } from '@heroicons/vue/20/solid'
 import { ref, computed, inject, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
-import { createRecipeKey, normalizeDomain } from '~/utils/domain'
+import { createCreationKey, normalizeDomain } from '~/utils/domain'
 
 interface Props {
   config: {
     creationId: string
-    recipeName?: string
+    creationName?: string
     buttonText?: string
     siteUrl?: string 
     embedUrl?: string
@@ -75,11 +75,11 @@ const storageManager = new SharedStorageManager()
 
 // Theme support can be added later if needed via CSS custom properties
 
-// Create recipe key from domain and creation ID
-const recipeKey = computed(() => {
+// Create creation key from domain and creation ID
+const creationKey = computed(() => {
   const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
   const domain = normalizeDomain(siteUrl)
-  return createRecipeKey(domain, props.config.creationId)
+  return createCreationKey(domain, props.config.creationId)
 })
 
 // Dynamic button text based on interaction state
@@ -88,24 +88,24 @@ const buttonText = computed(() => {
     return props.config.buttonText
   }
   
-  // Check if user has interacted with this recipe
-  const recipeState = storageManager.getRecipeState(recipeKey.value)
-  const hasInteracted = recipeState?.hasInteracted || false
+  // Check if user has interacted with this creation
+  const creationState = storageManager.getRecipeState(creationKey.value)
+  const hasInteracted = creationState?.hasInteracted || false
   
-  return hasInteracted ? 'Continue Recipe' : 'Try Interactive Mode!'
+  return hasInteracted ? 'Continue' : 'Try Interactive Mode!'
 })
 
 const iframeSrc = computed(() => {
   console.log('Props', props.config)
   const baseUrl = props.config.embedUrl || globalConfig?._meta?.baseUrl || window.location.origin
   
-  return `${baseUrl}/creations/${recipeKey.value}/interactive`
+  return `${baseUrl}/creations/${creationKey.value}/interactive`
 })
 
 function openModal() {
   showModal.value = true
   
-  // Initialize recipe in shared storage when modal opens
+  // Initialize creation in shared storage when modal opens
   const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
   const domain = normalizeDomain(siteUrl)
   storageManager.initializeRecipe(domain, props.config.creationId)
@@ -128,7 +128,7 @@ function openModal() {
     
     if (globalConfig?._meta?.debug) {
       console.log('Create Studio Interactive mode opened for creation:', props.config.creationId)
-      console.log('Recipe key:', recipeKey.value)
+      console.log('Creation key:', creationKey.value)
       console.log('iframe src:', iframeSrc.value)
       console.log('Mobile mode:', isMobile.value)
     }

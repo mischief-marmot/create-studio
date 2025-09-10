@@ -287,23 +287,23 @@ import type { HowTo, HowToStep } from '~/types/schema-org';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager';
-import { parseRecipeKey } from '~/utils/domain';
+import { parseCreationKey } from '~/utils/domain';
 import { useSharedTimerManager } from '~/composables/useSharedTimerManager';
 
 const route = useRoute();
 
-const recipeKey = route.params.recipeKey as string;
+const creationKey = route.params.creationKey as string;
 const { formatDuration } = useRecipeUtils();
-// Parse recipe key to get domain and creation ID
-const recipeInfo = parseRecipeKey(recipeKey);
-if (!recipeInfo) {
+// Parse creation key to get domain and creation ID
+const creationInfo = parseCreationKey(creationKey);
+if (!creationInfo) {
     throw createError({
         statusCode: 404,
-        statusMessage: 'Invalid recipe key'
+        statusMessage: 'Invalid creation key'
     });
 }
 
-const { domain, creationId } = recipeInfo;
+const { domain, creationId } = creationInfo;
 
 // Initialize shared storage manager
 const storageManager = new SharedStorageManager();

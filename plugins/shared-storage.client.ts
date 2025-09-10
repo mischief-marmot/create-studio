@@ -17,10 +17,5 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       return
     }
     
-    // Initialize shared storage manager for global migration
-    const sharedStorage = new SharedStorageManager()
-    
-    // Run migration from legacy storage on app startup
-    sharedStorage.migrateFromLegacyStorage()
   }
 })

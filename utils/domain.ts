@@ -1,5 +1,5 @@
 /**
- * Domain normalization and recipe key utilities
+ * Domain normalization and creation key utilities
  */
 
 /**
@@ -24,28 +24,28 @@ export function normalizeDomain(url: string): string {
 }
 
 /**
- * Creates a Base64-encoded recipe key from domain and creation ID
+ * Creates a Base64-encoded creation key from domain and creation ID
  * Format: base64(domain:creationId)
  * 
  * @param domain - Domain URL or hostname
  * @param creationId - Unique creation identifier
- * @returns Base64-encoded recipe key
+ * @returns Base64-encoded creation key
  */
-export function createRecipeKey(domain: string, creationId: string | number): string {
+export function createCreationKey(domain: string, creationId: string | number): string {
   const normalized = normalizeDomain(domain)
   const keyString = `${normalized}:${creationId}`
   return btoa(keyString)
 }
 
 /**
- * Parses a Base64-encoded recipe key back to domain and creation ID
+ * Parses a Base64-encoded creation key back to domain and creation ID
  * 
- * @param recipeKey - Base64-encoded recipe key
+ * @param creationKey - Base64-encoded creation key
  * @returns Object with domain and creationId, or null if invalid
  */
-export function parseRecipeKey(recipeKey: string): { domain: string; creationId: string } | null {
+export function parseCreationKey(creationKey: string): { domain: string; creationId: string } | null {
   try {
-    const decoded = atob(recipeKey)
+    const decoded = atob(creationKey)
     const [domain, creationId] = decoded.split(':')
     
     if (!domain || !creationId) {
@@ -59,15 +59,15 @@ export function parseRecipeKey(recipeKey: string): { domain: string; creationId:
 }
 
 /**
- * Checks if the current domain matches a recipe key's domain
- * Useful for validating recipe access
+ * Checks if the current domain matches a creation key's domain
+ * Useful for validating creation access
  * 
- * @param recipeKey - Base64-encoded recipe key
+ * @param creationKey - Base64-encoded creation key
  * @param currentDomain - Current domain to check against (defaults to window.location.hostname)
  * @returns Boolean indicating if domains match
  */
-export function isRecipeKeyValid(recipeKey: string, currentDomain?: string): boolean {
-  const parsed = parseRecipeKey(recipeKey)
+export function isCreationKeyValid(creationKey: string, currentDomain?: string): boolean {
+  const parsed = parseCreationKey(creationKey)
   if (!parsed) return false
   
   const domain = currentDomain || (typeof window !== 'undefined' ? window.location.hostname : '')

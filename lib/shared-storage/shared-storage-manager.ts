@@ -1,4 +1,4 @@
-import { createRecipeKey, parseRecipeKey, normalizeDomain } from '~/utils/domain'
+import { createCreationKey, parseCreationKey, normalizeDomain } from '~/utils/domain'
 
 /**
  * Timer interface for recipe interactions
@@ -66,7 +66,7 @@ export class SharedStorageManager {
    * Initialize storage manager with a specific recipe
    */
   initializeRecipe(domain: string, creationId: string | number): string {
-    const recipeKey = createRecipeKey(domain, creationId)
+    const recipeKey = createCreationKey(domain, creationId)
     this.currentRecipeKey = recipeKey
 
     if (!this.storage.state[recipeKey]) {
@@ -93,7 +93,7 @@ export class SharedStorageManager {
    * Set the current active recipe by key
    */
   setCurrentRecipe(recipeKey: string): boolean {
-    const parsed = parseRecipeKey(recipeKey)
+    const parsed = parseCreationKey(recipeKey)
     if (!parsed) return false
 
     this.currentRecipeKey = recipeKey
@@ -337,100 +337,6 @@ export class SharedStorageManager {
     this.currentRecipeKey = null
   }
 
-  /**
-   * Migration and utility methods
-   */
-  migrateFromLegacyStorage(): void {
-    // Check if we're in a browser environment
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-      return
-    }
-
-    try {
-      // Migrate from old recipe-interaction store (Pinia store)
-      const legacyData = localStorage.getItem('recipe-interaction')
-      if (legacyData) {
-        const parsed = JSON.parse(legacyData)
-        
-        // Convert legacy recipe progress data to new format
-        Object.entries(parsed).forEach(([legacyId, legacyProgress]: [string, any]) => {
-          if (legacyProgress && typeof legacyProgress === 'object') {
-            try {
-              // Try to create a recipe key from current URL and legacy ID
-              // For migration, we'll use the current domain since we don't have the original domain
-              const currentDomain = typeof window !== 'undefined' 
-                ? normalizeDomain(window.location.origin)
-                : 'localhost'
-              
-              const recipeKey = createRecipeKey(currentDomain, legacyId)
-              
-              // Convert legacy progress to new format
-              const migratedProgress: RecipeState = {
-                recipeKey,
-                currentStep: legacyProgress.currentStep || 0,
-                checkedIngredients: Array.isArray(legacyProgress.checkedIngredients) 
-                  ? legacyProgress.checkedIngredients 
-                  : [],
-                checkedStepIngredients: this.convertLegacyStepIngredients(legacyProgress.checkedStepIngredients),
-                activeTimers: Array.isArray(legacyProgress.activeTimers) 
-                  ? legacyProgress.activeTimers 
-                  : [],
-                imageHeight: legacyProgress.imageHeight || 25,
-                isImageCollapsed: legacyProgress.isImageCollapsed || false,
-                showStepIngredients: legacyProgress.showStepIngredients || false,
-                startedAt: legacyProgress.startedAt || new Date().toISOString(),
-                lastUpdated: legacyProgress.lastUpdated || new Date().toISOString(),
-                hasInteracted: true // If there's legacy data, user has interacted
-              }
-              
-              // Only migrate if we don't already have data for this recipe key
-              if (!this.storage.state[recipeKey]) {
-                this.storage.state[recipeKey] = migratedProgress
-              }
-            } catch (error) {
-              console.warn('Failed to migrate individual recipe progress:', error)
-            }
-          }
-        })
-        
-        // Save migrated data and remove legacy data
-        this.saveStorage()
-        localStorage.removeItem('recipe-interaction')
-      }
-
-      // Migrate from old create-studio-preferences (Widget StorageManager)
-      const legacyPrefs = localStorage.getItem('create-studio-preferences')
-      if (legacyPrefs) {
-        const parsed = JSON.parse(legacyPrefs)
-        this.storage.preferences = { ...this.storage.preferences, ...parsed }
-        localStorage.removeItem('create-studio-preferences')
-        this.saveStorage()
-      }
-    } catch (error) {
-      console.warn('Failed to migrate legacy storage:', error)
-    }
-  }
-  
-  /**
-   * Convert legacy step ingredients format (Map serialized as object) to new format
-   */
-  private convertLegacyStepIngredients(legacyStepIngredients: any): Record<number, string[]> {
-    if (!legacyStepIngredients || typeof legacyStepIngredients !== 'object') {
-      return {}
-    }
-    
-    const result: Record<number, string[]> = {}
-    
-    // Handle both Map-like format and plain object format
-    Object.entries(legacyStepIngredients).forEach(([stepKey, ingredients]) => {
-      const stepIndex = parseInt(stepKey)
-      if (!isNaN(stepIndex) && Array.isArray(ingredients)) {
-        result[stepIndex] = ingredients
-      }
-    })
-    
-    return result
-  }
 
   /**
    * Storage persistence
