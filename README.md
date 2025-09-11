@@ -73,3 +73,20 @@ bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+
+# Embed script on site without Create Studio embed
+```js
+var script = document.createElement('script');
+script.src = 'http://localhost:3001/embed/create-studio.iife.js'; // change for running on production/preview
+
+script.onload = async function() {
+    await window.CreateStudio.init({
+        siteUrl: "SITE_URL",
+        debug: true,
+        baseUrl: "http://localhost:3001"  // for local development
+    });
+    const apps = await window.CreateStudio.mountInteractiveMode();
+};
+document.body.appendChild(script);
+```

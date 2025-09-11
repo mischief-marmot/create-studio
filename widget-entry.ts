@@ -99,7 +99,7 @@ window.CreateStudio = {
     if (!sdkInstance) {
       throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
     }
-    const defaultButtonSelector = '.mv-create-instructions > h3'
+    const defaultButtonSelector = '.mv-create-instructions-title'
 
     // Get site configuration first
     const siteConfig = await sdkInstance.getSiteConfig()

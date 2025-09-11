@@ -378,7 +378,7 @@ const COLLAPSED_THRESHOLD = 10; // Threshold for collapsed state
 // Load creation data
 async function loadCreationData() {
     isLoadingCreation.value = true;
-    const site_url = process.env.NODE_ENV === 'development' ? 'http://localhost:8074' : `https://${domain}`;
+    const site_url = domain === 'localhost'? 'http://localhost:8074' : `https://${domain}`;
     try {
         // Always fetch from API
         const data = await $fetch<HowTo>('/api/fetch-creation', {
