@@ -219,8 +219,8 @@ function extractImageFromText(text: string): {
   text: string
   imageId: number | null
 } {
-  // Extract [mv_img id="XX"] pattern
-  const imageMatch = text.match(/\[mv_img\s+id="(\d+)"\]/i)
+  // Extract [mv_img id="XX"] or [mv_img id=&quot;XX&quot;] pattern
+  const imageMatch = text.match(/\[mv_img\s+id=(?:"|&quot;)(\d+)(?:"|&quot;)\]/i)
   if (imageMatch) {
     const imageId = parseInt(imageMatch[1])
     const cleanText = text.replace(imageMatch[0], '').trim()
