@@ -46,7 +46,7 @@ const timerManager = inject<any>('timerManager');
 if (!timerManager) {
   throw new Error('Timer manager not provided. Make sure to provide timerManager from parent component.');
 }
-const { getTimer, startTimer, pauseTimer, resetTimer, resumeTimer, timers } = timerManager;
+const { getTimer, startTimer, timers } = timerManager;
 
 // Initialize timer
 const timerState = computed(() => {

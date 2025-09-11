@@ -35,10 +35,14 @@ export function useRecipeUtils() {
         timeString = `${hours}h`;
       }
       if (minutes > 0) {
-        timeString += ` ${minutes}m`;
+        if (minutes == 1) {
+          timeString += ` ${minutes} minute`;
+        } else {
+          timeString += ` ${minutes} minutes`;
+        }
       }
       if (seconds > 0) {
-        timeString += ` ${seconds}s`;
+        timeString += ` ${seconds} seconds`;
       }
       if (duration < 60) {
         timeString = `${seconds} seconds`;

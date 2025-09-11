@@ -5,15 +5,17 @@ interface Timer {
   duration: number;
   label: string;
   remaining: number;
-  status: 'idle' | 'running' | 'paused' | 'completed';
+  status: 'idle' | 'running' | 'paused' | 'completed' | 'alarming';
   intervalId?: NodeJS.Timeout;
   stepIndex?: number;
+  alarmAudio?: HTMLAudioElement;
 }
 
 export const useSharedTimerManager = (storageManager: SharedStorageManager | null) => {
   const timers = ref<Map<string, Timer>>(new Map());
   const audioContext = ref<AudioContext | null>(null);
   const hasActiveTimers = ref(false);
+  const alarmAudioElements = ref<Map<string, HTMLAudioElement>>(new Map());
 
   // Initialize audio context on first user interaction
   const initAudio = async () => {
@@ -31,8 +33,43 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
     }
   };
 
-  // Play alarm sound using Web Audio API
-  const playAlarm = () => {
+  // Play alarm sound using custom audio file
+  const playAlarm = (timerId: string) => {
+    const timer = timers.value.get(timerId);
+    if (!timer) return;
+
+    // Create audio element if it doesn't exist
+    if (!timer.alarmAudio) {
+      timer.alarmAudio = new Audio('/audio/timer.mp3');
+      timer.alarmAudio.loop = true; // Enable looping
+      timer.alarmAudio.volume = 0.7;
+      alarmAudioElements.value.set(timerId, timer.alarmAudio);
+    }
+
+    // Play the alarm
+    timer.alarmAudio.play().catch(error => {
+      console.warn('Failed to play alarm audio:', error);
+      // Fallback to the original beep sound if custom audio fails
+      playFallbackAlarm();
+    });
+  };
+
+  // Stop the alarm for a specific timer
+  const stopAlarm = (timerId: string) => {
+    const timer = timers.value.get(timerId);
+    if (!timer || !timer.alarmAudio) return;
+
+    timer.alarmAudio.pause();
+    timer.alarmAudio.currentTime = 0;
+    timer.status = 'completed';
+    
+    // Force reactivity update
+    timers.value = new Map(timers.value);
+    updateActiveTimersStatus();
+  };
+
+  // Fallback alarm using Web Audio API (original implementation)
+  const playFallbackAlarm = () => {
     initAudio();
     if (!audioContext.value) return;
 
@@ -42,46 +79,15 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.value.destination);
     
-    // Create a pleasant alarm sound
     oscillator.frequency.value = 880; // A5 note
     oscillator.type = 'sine';
     
-    // Fade in and out
     gainNode.gain.setValueAtTime(0, audioContext.value.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.3, audioContext.value.currentTime + 0.1);
     gainNode.gain.linearRampToValueAtTime(0, audioContext.value.currentTime + 0.5);
     
     oscillator.start(audioContext.value.currentTime);
     oscillator.stop(audioContext.value.currentTime + 0.5);
-    
-    // Play three beeps
-    setTimeout(() => {
-      const osc2 = audioContext.value!.createOscillator();
-      const gain2 = audioContext.value!.createGain();
-      osc2.connect(gain2);
-      gain2.connect(audioContext.value!.destination);
-      osc2.frequency.value = 880;
-      osc2.type = 'sine';
-      gain2.gain.setValueAtTime(0, audioContext.value!.currentTime);
-      gain2.gain.linearRampToValueAtTime(0.3, audioContext.value!.currentTime + 0.1);
-      gain2.gain.linearRampToValueAtTime(0, audioContext.value!.currentTime + 0.5);
-      osc2.start(audioContext.value!.currentTime);
-      osc2.stop(audioContext.value!.currentTime + 0.5);
-    }, 600);
-    
-    setTimeout(() => {
-      const osc3 = audioContext.value!.createOscillator();
-      const gain3 = audioContext.value!.createGain();
-      osc3.connect(gain3);
-      gain3.connect(audioContext.value!.destination);
-      osc3.frequency.value = 880;
-      osc3.type = 'sine';
-      gain3.gain.setValueAtTime(0, audioContext.value!.currentTime);
-      gain3.gain.linearRampToValueAtTime(0.3, audioContext.value!.currentTime + 0.1);
-      gain3.gain.linearRampToValueAtTime(0, audioContext.value!.currentTime + 0.5);
-      osc3.start(audioContext.value!.currentTime);
-      osc3.stop(audioContext.value!.currentTime + 0.5);
-    }, 1200);
   };
 
   // Create or get a timer
@@ -184,7 +190,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
         
         if (currentTimer.remaining <= 0) {
           currentTimer.remaining = 0;
-          currentTimer.status = 'completed';
+          currentTimer.status = 'alarming';
           clearInterval(currentTimer.intervalId);
           delete currentTimer.intervalId;
           
@@ -196,7 +202,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
             });
           }
           
-          playAlarm();
+          playAlarm(id);
         }
         
         // Force reactivity update
@@ -304,7 +310,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
         
         if (currentTimer.remaining <= 0) {
           currentTimer.remaining = 0;
-          currentTimer.status = 'completed';
+          currentTimer.status = 'alarming';
           clearInterval(currentTimer.intervalId);
           delete currentTimer.intervalId;
           
@@ -316,7 +322,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
             });
           }
           
-          playAlarm();
+          playAlarm(id);
         }
         
         // Force reactivity update
@@ -363,7 +369,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
   // Update hasActiveTimers whenever timers change
   const updateActiveTimersStatus = () => {
     const activeCount = Array.from(timers.value.values()).filter(timer => 
-      timer.status === 'running' || timer.status === 'paused' || timer.status === 'completed'
+      timer.status === 'running' || timer.status === 'paused' || timer.status === 'completed' || timer.status === 'alarming'
     ).length;
     hasActiveTimers.value = activeCount > 0;
   };
@@ -374,7 +380,15 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
       if (timer.intervalId) {
         clearInterval(timer.intervalId);
       }
+      if (timer.alarmAudio) {
+        timer.alarmAudio.pause();
+        timer.alarmAudio = undefined;
+      }
     });
+    alarmAudioElements.value.forEach(audio => {
+      audio.pause();
+    });
+    alarmAudioElements.value.clear();
     timers.value.clear();
   };
 
@@ -435,7 +449,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
             
             if (currentTimer.remaining <= 0) {
               currentTimer.remaining = 0;
-              currentTimer.status = 'completed';
+              currentTimer.status = 'alarming';
               clearInterval(currentTimer.intervalId);
               delete currentTimer.intervalId;
               
@@ -447,7 +461,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
                 });
               }
               
-              playAlarm();
+              playAlarm(storeTimer.id);
             }
             
             // Force reactivity update
@@ -499,6 +513,7 @@ export const useSharedTimerManager = (storageManager: SharedStorageManager | nul
     resetTimer,
     resumeTimer,
     addMinute,
+    stopAlarm,
     getTimerStatus,
     getRemainingTime,
     updateActiveTimersStatus,

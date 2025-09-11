@@ -17,6 +17,7 @@
           :class="[
             timer.remaining < 60 && timer.remaining > 10 ? 'bg-orange-500 py-3' : '',
             timer.remaining < 11 && timer.remaining > 0 ? 'bg-red-600 py-3' : '',
+            timer.status === 'alarming' ? 'bg-red-600 animate-pulse py-3' : '',
           ]"
           >
           <div class="flex list-col-grow items-center space-x-3">
@@ -33,9 +34,14 @@
               <div
               :class="[
                 timer.remaining < 60 && timer.remaining > 0 ? 'text-2xl font-medium text-red-50 leading-5' : 'text-xs text-base-content/80',
+                timer.status === 'alarming' ? 'text-2xl font-bold text-white animate-pulse' : '',
                 bouncingTimers.has(timer.id) ? 'animate-bounce' : ''
               ]"
-              >{{ formatDuration(timer.remaining) || 'Complete' }}<span v-show="timer.status === 'paused'" class="italic text-xs"> (paused)</span></div>
+              >
+                <span v-if="timer.status === 'alarming'">Timer ended!</span>
+                <span v-else>{{ formatDuration(timer.remaining) || 'Complete' }}</span>
+                <span v-show="timer.status === 'paused'" class="italic text-xs"> (paused)</span>
+              </div>
             </div>
           </div>
 
@@ -72,6 +78,14 @@
                 <PlayIcon class="w-5 h-5" />
               </button>
               </div>
+            </template>
+
+            <!-- Alarming - show stop alarm button prominently -->
+            <template v-else-if="timer.status === 'alarming'">
+              <button @click="stopAlarm(timer.id)"
+                class="cursor-pointer py-2 px-4 rounded-full bg-white text-red-600 font-bold animate-pulse hover:bg-red-100">
+                STOP
+              </button>
             </template>
 
             <!-- Completed - show checkmark and reset -->
@@ -117,12 +131,12 @@ const timerManager = inject<any>('timerManager');
 if (!timerManager) {
   throw new Error('Timer manager not provided. Make sure to provide timerManager from parent component.');
 }
-const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume, addMinute: addMin } = timerManager;
+const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume, addMinute: addMin, stopAlarm } = timerManager;
 
-// Computed list of active timers (running, paused, or completed)
+// Computed list of active timers (running, paused, completed, or alarming)
 const activeTimers = computed(() => {
   const active = Array.from(timers.value.values()).filter(timer => 
-    timer.status === 'running' || timer.status === 'paused' || timer.status === 'completed'
+    timer.status === 'running' || timer.status === 'paused' || timer.status === 'completed' || timer.status === 'alarming'
   );
   return active;
 });

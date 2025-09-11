@@ -287,8 +287,8 @@ function formatTimerDuration(seconds: number): string {
   const s = seconds % 60
   
   if (h > 0) return `${h}h ${m}m`
-  if (m > 0) return `${m}m`
-  return `${s}s`
+  if (m > 0) return `${m} minutes`
+  return `${s} seconds`
 }
 
 
