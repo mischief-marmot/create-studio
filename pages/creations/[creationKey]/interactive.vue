@@ -722,42 +722,6 @@ watchEffect(() => {
     }
 });
 
-// Full-screen functionality
-const isFullscreen = ref(false);
-
-const enterFullscreen = async () => {
-    try {
-        if (document.documentElement.requestFullscreen) {
-            await document.documentElement.requestFullscreen();
-        } else if ((document.documentElement as any).webkitRequestFullscreen) {
-            await (document.documentElement as any).webkitRequestFullscreen();
-        }
-        isFullscreen.value = true;
-    } catch (error) {
-        // Fullscreen not supported or denied
-    }
-};
-
-const exitFullscreen = async () => {
-    try {
-        if (document.exitFullscreen) {
-            await document.exitFullscreen();
-        } else if ((document as any).webkitExitFullscreen) {
-            await (document as any).webkitExitFullscreen();
-        }
-        isFullscreen.value = false;
-    } catch (error) {
-        // Error exiting fullscreen
-    }
-};
-
-const toggleFullscreen = () => {
-    if (isFullscreen.value) {
-        exitFullscreen();
-    } else {
-        enterFullscreen();
-    }
-};
 
 // Navigation functions
 const goToSlide = (index: number, immediate = false) => {
@@ -841,16 +805,6 @@ onMounted(() => {
             previousSlide();
         }
     };
-    // Fullscreen change detection
-    const handleFullscreenChange = () => {
-        isFullscreen.value = !!(document.fullscreenElement ||
-            (document as any).webkitFullscreenElement);
-
-        // Recalculate MIN_HEIGHT when viewport changes due to fullscreen toggle
-        setTimeout(() => {
-            MIN_HEIGHT.value = getMinHeightPercent();
-        }, 100); // Small delay to ensure viewport has updated
-    };
 
     // Viewport resize detection
     const handleResize = () => {
@@ -858,14 +812,10 @@ onMounted(() => {
     };
 
     document.addEventListener('keydown', handleKeydown);
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     window.addEventListener('resize', handleResize);
 
     onUnmounted(() => {
         document.removeEventListener('keydown', handleKeydown);
-        document.removeEventListener('fullscreenchange', handleFullscreenChange);
-        document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
         window.removeEventListener('resize', handleResize);
 
         if (carouselRef.value) {
@@ -910,19 +860,9 @@ const startDrag = (event: MouseEvent | TouchEvent) => {
     const target = event.target as HTMLElement;
     const isFromHandle = target.closest('[data-draggable-handle="true"]');
 
-    // If not in fullscreen and not from handle, ignore (to prevent page refresh conflicts)
-    if (!isFullscreen.value && !isFromHandle) {
+    // Only allow drag from handle
+    if (!isFromHandle) {
         return;
-    }
-
-    // In fullscreen: ignore buttons/inputs. Not in fullscreen: only allow handle
-    if (isFullscreen.value) {
-        // In fullscreen: ignore interactive elements but allow drag from anywhere else
-        if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('textarea')) {
-            return;
-        }
-    } else {
-        // Not in fullscreen: only allow handle (already checked above)
     }
 
     // Store initial position and detect vertical drag intent

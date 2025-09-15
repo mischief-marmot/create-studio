@@ -34,7 +34,7 @@
             class="w-full h-full md:rounded-lg"
             :title="`${config.creationName} - Interactive Mode`"
             frameborder="0"
-            allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           />
         </div>
       </div>
@@ -44,7 +44,7 @@
  
 <script setup lang="ts">
 import { XMarkIcon } from '@heroicons/vue/20/solid'
-import { ref, computed, inject, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
 import { createCreationKey, normalizeDomain } from '~/utils/domain'
 
@@ -110,29 +110,12 @@ function openModal() {
   const domain = normalizeDomain(siteUrl)
   storageManager.initializeCreation(domain, props.config.creationId)
   
-  // Wait for DOM to update then handle fullscreen for mobile
-  nextTick(() => {
-    if (isMobile.value) {
-      const modalElement = document.getElementById(`create-studio-modal-${props.config.creationId}`)
-      if (modalElement) {
-        // Try to request fullscreen on mobile for better UX
-        if (modalElement.requestFullscreen) {
-          modalElement.requestFullscreen().catch(err => {
-            if (globalConfig?._meta?.debug) {
-              console.warn('Error attempting to enable full-screen mode:', err)
-            }
-          })
-        }
-      }
-    }
-    
-    if (globalConfig?._meta?.debug) {
-      console.log('Create Studio Interactive mode opened for creation:', props.config.creationId)
-      console.log('Creation key:', creationKey.value)
-      console.log('iframe src:', iframeSrc.value)
-      console.log('Mobile mode:', isMobile.value)
-    }
-  })
+  if (globalConfig?._meta?.debug) {
+    console.log('Create Studio Interactive mode opened for creation:', props.config.creationId)
+    console.log('Creation key:', creationKey.value)
+    console.log('iframe src:', iframeSrc.value)
+    console.log('Mobile mode:', isMobile.value)
+  }
 }
 
 function closeModal() {
