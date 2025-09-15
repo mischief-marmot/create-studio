@@ -2,7 +2,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 async function uploadWidgetToBlob() {
   const baseUrl = process.env.NUXT_PUBLIC_CREATE_STUDIO_BASE_URL || 'http://localhost:3001'
-  console.log('🚀 Uploading widget files to NuxtHub Blob from', baseUrl)
+  console.log('[CS] 🚀 Uploading widget files to NuxtHub Blob from', baseUrl)
   try {
     const response = await fetch(`${baseUrl}/api/upload-widget`, {
       method: 'POST',
