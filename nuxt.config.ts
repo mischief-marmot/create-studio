@@ -1,8 +1,9 @@
 import tailwindcss from "@tailwindcss/vite";
 
 async function uploadWidgetToBlob() {
+  const baseUrl = process.env.NUXT_PUBLIC_CREATE_STUDIO_BASE_URL || 'http://localhost:3001'
   try {
-    const response = await fetch('http://localhost:3001/api/upload-widget', {
+    const response = await fetch(`${baseUrl}/api/upload-widget`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -70,6 +71,11 @@ export default defineNuxtConfig({
     kv: true,
     database: true,
     cache: true,
+    bindings: {
+      observability: {
+        logs: true,
+      },
+    },
   },
 
   app: {
