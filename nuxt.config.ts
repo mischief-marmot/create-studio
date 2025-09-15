@@ -80,7 +80,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: "Halogen - Schema Cards",
+      title: "Create Studio - Schema Cards",
       meta: [
         { charset: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },

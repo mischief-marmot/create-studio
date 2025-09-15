@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Recipe Card Generator application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 3, TypeScript, Tailwind CSS v4, DaisyUI, Clerk Auth, and deployed on NuxtHub/Cloudflare.
+Create Studio is an application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 3, TypeScript, Tailwind CSS v4, DaisyUI, Clerk Auth, and deployed on NuxtHub/Cloudflare.
 
 **Project Plan**: See PROJECT_PLAN.md for detailed phased development approach and current progress.
 

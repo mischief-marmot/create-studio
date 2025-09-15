@@ -11,7 +11,7 @@ describe("Home Page", async () => {
 
     // Get page title using Playwright's page.title() method
     const pageTitle = await page.title();
-    expect(pageTitle).toBe("Halogen - Schema Cards");
+    expect(pageTitle).toBe("Create Studio - Schema Cards");
   });
 
   test("displays heading", async () => {

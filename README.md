@@ -1,6 +1,6 @@
-# Nuxt Starter
+# Create Studio
 
-This is a custom starter package for new Nuxt projects. 
+Create structured data cards for recipes, how-to guides, and FAQs with automatic JSON-LD generation and embeddable, interactive visual cards. 
 
 ## Setup
 
