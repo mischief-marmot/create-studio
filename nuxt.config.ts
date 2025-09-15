@@ -27,7 +27,7 @@ async function uploadWidgetToBlob() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2024-11-01",
+  compatibilityDate: "2025-09-15",
   debug: false,
   devtools: { enabled: false, timeline: {enabled: true,} },
   nitro: {
@@ -100,11 +100,11 @@ export default defineNuxtConfig({
   hooks: {
     // Build widget after Nuxt build
     'build:done': async () => {
-      // const { buildWidget } = await import('./scripts/build-widget.mjs')
-      // await buildWidget()
+      const { buildWidget } = await import('./scripts/build-widget.mjs')
+      await buildWidget()
       
       // Upload to NuxtHub blob storage
-      // await uploadWidgetToBlob()
+      await uploadWidgetToBlob()
     },
     // Build widget on dev server start
     'ready': async (nuxt) => {
