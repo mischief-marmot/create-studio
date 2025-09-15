@@ -193,6 +193,7 @@ class WidgetSDK {
 
   private registerBuiltInWidgets(): void {
     this.registry.registerWidget('interactive-mode', () => import('../../components/widgets/InteractiveMode/InteractiveModeWidget.vue'))
+    this.registry.registerWidget('servings-adjuster', () => import('../../components/widgets/ServingsAdjuster/ServingsAdjusterWidget.vue'))
   }
 
   private autoMountWidgets(): void {

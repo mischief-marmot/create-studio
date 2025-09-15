@@ -24,6 +24,7 @@ export interface CreationState {
   imageHeight: number
   isImageCollapsed: boolean
   showStepSupplies: boolean
+  servingsMultiplier: number
   startedAt: string
   lastUpdated: string
   hasInteracted: boolean
@@ -80,6 +81,7 @@ export class SharedStorageManager {
         imageHeight: 25,
         isImageCollapsed: false,
         showStepSupplies: false,
+        servingsMultiplier: 1,
         startedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         hasInteracted: false
@@ -110,6 +112,7 @@ export class SharedStorageManager {
         imageHeight: 25,
         isImageCollapsed: false,
         showStepSupplies: false,
+        servingsMultiplier: 1,
         startedAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         hasInteracted: false
@@ -269,6 +272,28 @@ export class SharedStorageManager {
     this.updateCreationState({ 
       showStepSupplies: !state.showStepSupplies 
     })
+  }
+
+  /**
+   * Servings multiplier management
+   */
+  getServingsMultiplier(creationKey?: string): number {
+    const key = creationKey || this.currentCreationKey
+    if (!key) return 1
+    
+    const state = this.storage.state[key]
+    return state ? state.servingsMultiplier : 1
+  }
+
+  setServingsMultiplier(creationKey: string, multiplier: number): void {
+    const oldCurrentKey = this.currentCreationKey
+    
+    // Temporarily set current creation to update the correct state
+    this.currentCreationKey = creationKey
+    this.updateCreationState({ servingsMultiplier: multiplier })
+    
+    // Restore original current creation
+    this.currentCreationKey = oldCurrentKey
   }
 
   /**

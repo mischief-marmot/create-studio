@@ -59,12 +59,20 @@
                                 <h1 class="text-2xl font-bold mb-3">{{ creation?.name || 'Recipe' }}</h1>
                                 <p v-if="creation?.description" v-html="creation?.description"
                                     class="text-base-content text-sm leading-relaxed"></p>
+                                <div v-if="adjustedYield" class="mt-2 text-sm text-base-content/80">
+                                    <span class="font-semibold">Yield:</span> {{ adjustedYield }}
+                                </div>
                             </div>
                             <div>
-                                <h2 class="text-xl font-bold mb-4">{{ suppliesLabel }}</h2>
+                                <h2 class="text-xl font-bold mb-4">
+                                    {{ suppliesLabel }}
+                                    <span v-if="servingsMultiplier !== 1" class="text-sm font-normal text-base-content/70">
+                                        ({{ servingsMultiplier }}x)
+                                    </span>
+                                </h2>
 
                                 <ul class="space-y-1">
-                                    <li v-for="supply in (creation?.recipeIngredient || [])" :key="supply"
+                                    <li v-for="supply in adjustedIngredients" :key="supply"
                                         class="flex items-start space-x-2">
                                         <span class="w-1.5 h-1.5 bg-gray-400 rounded-full mt-1.5 flex-shrink-0"></span>
                                         <span class="text-sm text-base-content">{{ supply }}</span>
@@ -221,13 +229,18 @@
                     class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 border-[0.25px] border-base-100/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl z-50">
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-semibold text-base">{{ suppliesLabel }}</h3>
+                            <h3 class="font-semibold text-base">
+                                {{ suppliesLabel }}
+                                <span v-if="servingsMultiplier !== 1" class="text-sm font-normal text-base-content/70">
+                                    ({{ servingsMultiplier }}x)
+                                </span>
+                            </h3>
                             <button @click="showSupplies = false" class="p-1 cursor-pointer">
                                 <XMarkIcon class="w-5 h-5" />
                             </button>
                         </div>
                         <ul class="space-y-1">
-                            <li v-for="(supply, idx) in (creation?.recipeIngredient || [])" :key="`sup-${idx}`">
+                            <li v-for="(supply, idx) in adjustedIngredients" :key="`sup-${idx}`">
                                 {{ supply }}
                             </li>
                         </ul>
@@ -332,6 +345,196 @@ const currentCreationState = computed(() => storageManager.getCurrentCreationSta
 const suppliesLabel = computed(() => {
     return creation.value?.['@type'] === 'Recipe' ? 'Ingredients' : 'Supplies';
 });
+
+// Get servings multiplier from storage
+const servingsMultiplier = computed(() => {
+    return currentCreationState.value?.servingsMultiplier || 1;
+});
+
+// Adjust ingredients based on servings multiplier
+const adjustedIngredients = computed(() => {
+    if (!creation.value?.recipeIngredient || servingsMultiplier.value === 1) {
+        return creation.value?.recipeIngredient || [];
+    }
+    
+    return creation.value.recipeIngredient.map(ingredient => {
+        return adjustIngredientAmount(ingredient, servingsMultiplier.value);
+    });
+});
+
+// Adjust yield based on servings multiplier
+const adjustedYield = computed(() => {
+    if (!creation.value?.yield || servingsMultiplier.value === 1) {
+        return creation.value?.yield;
+    }
+    
+    const originalYield = creation.value.yield;
+    
+    // Parse the yield (e.g., "8 servings", "12 cookies", or "Yield: 4")
+    let yieldMatch = originalYield.match(/^(\d+(?:\.\d+)?)\s*(.*)$/); // "4 servings"
+    
+    if (!yieldMatch) {
+        yieldMatch = originalYield.match(/^(.*?):\s*(\d+(?:\.\d+)?)\s*(.*)$/); // "Yield: 4"
+        if (yieldMatch) {
+            const prefix = yieldMatch[1]; // "Yield"
+            const originalNumber = parseFloat(yieldMatch[2]);
+            const unit = yieldMatch[3]; // remaining text
+            const newNumber = originalNumber * servingsMultiplier.value;
+            
+            // Format the number (remove unnecessary decimals)
+            const formattedNumber = newNumber % 1 === 0 ? newNumber.toString() : newNumber.toFixed(1);
+            
+            return `${prefix}: ${formattedNumber} ${unit}`.trim();
+        }
+    }
+    
+    if (yieldMatch) {
+        const originalNumber = parseFloat(yieldMatch[1]);
+        const unit = yieldMatch[2];
+        const newNumber = originalNumber * servingsMultiplier.value;
+        
+        // Format the number (remove unnecessary decimals)
+        const formattedNumber = newNumber % 1 === 0 ? newNumber.toString() : newNumber.toFixed(1);
+        
+        return `${formattedNumber} ${unit}`.trim();
+    }
+    
+    return originalYield;
+});
+
+// Helper function to adjust ingredient amounts
+function adjustIngredientAmount(ingredient: string, multiplier: number): string {
+    // Extract amount from ingredient text
+    const amountMatch = ingredient.match(/^([\d\s\/\.\-]+)(.*)$/);
+    if (!amountMatch) return ingredient;
+    
+    const numericPart = amountMatch[1].trim();
+    const restOfIngredient = amountMatch[2].trim();
+    
+    const adjustedAmount = calculateAdjustedAmount(numericPart, multiplier);
+    if (adjustedAmount) {
+        return `${adjustedAmount} ${restOfIngredient}`;
+    }
+    
+    return ingredient;
+}
+
+// Calculate adjusted amount (reusing logic from ServingsAdjuster)
+function calculateAdjustedAmount(amount: string, multiplier: number): string | null {
+    // Check for mixed fractions first (e.g., "2 1/4")
+    if (/^\d+\s+\d+\/\d+$/.test(amount)) {
+        return adjustFraction(amount, multiplier);
+    }
+    
+    // Handle simple fractions (e.g., "1/2")
+    if (amount.includes('/')) {
+        return adjustFraction(amount, multiplier);
+    }
+    
+    // Handle ranges
+    if (amount.includes('-')) {
+        const parts = amount.split('-').map(p => p.trim());
+        const adjustedParts = parts.map(part => {
+            if (part.includes('/')) {
+                return adjustFraction(part, multiplier) || part;
+            }
+            const num = parseFloat(part);
+            if (!isNaN(num)) {
+                return formatNumber(num * multiplier);
+            }
+            return part;
+        });
+        return adjustedParts.join('-');
+    }
+    
+    // Handle regular numbers
+    const num = parseFloat(amount);
+    if (!isNaN(num)) {
+        return formatNumber(num * multiplier);
+    }
+    
+    return null;
+}
+
+function adjustFraction(fraction: string, multiplier: number): string | null {
+    // Handle mixed fractions like "2 1/4"
+    const mixedMatch = fraction.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+    if (mixedMatch) {
+        const whole = parseInt(mixedMatch[1]);
+        const numerator = parseInt(mixedMatch[2]);
+        const denominator = parseInt(mixedMatch[3]);
+        const decimal = whole + (numerator / denominator);
+        const adjusted = decimal * multiplier;
+        return decimalToFraction(adjusted);
+    }
+    
+    // Handle simple fractions like "1/2"
+    const simpleMatch = fraction.match(/^(\d+)\/(\d+)$/);
+    if (simpleMatch) {
+        const numerator = parseInt(simpleMatch[1]);
+        const denominator = parseInt(simpleMatch[2]);
+        const decimal = numerator / denominator;
+        const adjusted = decimal * multiplier;
+        return decimalToFraction(adjusted);
+    }
+    
+    return null;
+}
+
+function decimalToFraction(decimal: number): string {
+    const whole = Math.floor(decimal);
+    const remainder = decimal - whole;
+    
+    if (remainder === 0) {
+        return whole.toString();
+    }
+    
+    // Common fractions
+    const fractions = [
+        { value: 0.125, str: '1/8' },
+        { value: 0.25, str: '1/4' },
+        { value: 0.333, str: '1/3' },
+        { value: 0.375, str: '3/8' },
+        { value: 0.5, str: '1/2' },
+        { value: 0.625, str: '5/8' },
+        { value: 0.666, str: '2/3' },
+        { value: 0.75, str: '3/4' },
+        { value: 0.875, str: '7/8' }
+    ];
+    
+    // Find closest fraction
+    let closest = fractions[0];
+    let minDiff = Math.abs(remainder - fractions[0].value);
+    
+    for (const frac of fractions) {
+        const diff = Math.abs(remainder - frac.value);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closest = frac;
+        }
+    }
+    
+    // If difference is too large, use decimal
+    if (minDiff > 0.05) {
+        return formatNumber(decimal);
+    }
+    
+    if (whole > 0) {
+        return `${whole} ${closest.str}`;
+    }
+    
+    return closest.str;
+}
+
+function formatNumber(num: number): string {
+    // Remove unnecessary decimals
+    if (num % 1 === 0) {
+        return num.toString();
+    }
+    
+    // Round to 2 decimal places
+    return (Math.round(num * 100) / 100).toString();
+}
 
 // Get steps as HowToStep array for template usage
 const steps = computed(() => {

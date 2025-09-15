@@ -167,6 +167,64 @@ window.CreateStudio = {
     return apps
   },
 
+  async mountServingsAdjuster(selector: string = 'section[id^="mv-creation-"][data-servings-adjustment]') {
+    if (!sdkInstance) {
+      throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
+    }
+
+    const sections = document.querySelectorAll(selector)
+    const apps: any[] = []
+
+    for (const section of sections) {
+      // Extract creation ID from mv-creation-{id}
+      const idMatch = section.id.match(/^mv-creation-(\d+)$/)
+      const creationId = idMatch ? idMatch[1] : section.id
+
+      if (!creationId) {
+        continue
+      }
+
+      // Check if servings adjuster should be shown
+      const servingsAdjustment = section.getAttribute('data-servings-adjustment')
+      if (!servingsAdjustment) {
+        continue
+      }
+
+      // Find the ingredients section to place the adjuster before it
+      const ingredientsSection = section.querySelector('.mv-create-ingredients')
+      if (!ingredientsSection) {
+        console.warn('Create Studio: Ingredients section not found for servings adjuster')
+        continue
+      }
+
+      // Check if adjuster already exists
+      const existingAdjuster = section.querySelector('.cs-servings-adjuster')
+      if (existingAdjuster) {
+        console.log('Create Studio: Servings adjuster already exists, skipping injection')
+        continue
+      }
+
+      // Create container for the adjuster before ingredients section
+      const adjusterContainer = document.createElement('div')
+      adjusterContainer.className = 'create-studio-widget cs-servings-adjuster-container'
+      
+      // Insert before the ingredients section
+      ingredientsSection.parentElement?.insertBefore(adjusterContainer, ingredientsSection)
+
+      const config = {
+        creationId,
+        defaultMultiplier: parseInt(servingsAdjustment) || 1,
+        siteUrl: sdkInstance.getSiteUrl(),
+        theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {}
+      }
+
+      const app = await sdkInstance.mount({ type: 'servings-adjuster', selector: adjusterContainer, config })
+      if (app) apps.push(app)
+    }
+
+    return apps
+  },
+
   getPreferences() {
     return sdkInstance?.getPreferences() || {}
   },
@@ -221,6 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log('🔧 Create Studio Widget Loading - Build Time:', window.CreateStudio.getBuildTime())
           // Auto-mount interactive mode widgets on mv-creation elements
           window.CreateStudio.mountInteractiveMode()
+          // Auto-mount servings adjuster widgets
+          window.CreateStudio.mountServingsAdjuster()
         })
         .catch((error: any) => {
           console.error('Create Studio auto-initialization failed:', error)
