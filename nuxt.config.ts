@@ -100,11 +100,11 @@ export default defineNuxtConfig({
   hooks: {
     // Build widget after Nuxt build
     'build:done': async () => {
-      const { buildWidget } = await import('./scripts/build-widget.mjs')
-      await buildWidget()
+      // const { buildWidget } = await import('./scripts/build-widget.mjs')
+      // await buildWidget()
       
       // Upload to NuxtHub blob storage
-      await uploadWidgetToBlob()
+      // await uploadWidgetToBlob()
     },
     // Build widget on dev server start
     'ready': async (nuxt) => {
