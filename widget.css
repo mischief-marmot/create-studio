@@ -1,4 +1,20 @@
-@import "tailwindcss";
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme) important;
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities) important;
+
+ol, ul, li {
+  list-style: inherit;
+}
+;
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark, cupcake;
+}
+
+.close-button {
+  @apply btn btn-md px-2 w-auto bg-base-content text-base-300 border-0 absolute top-4 right-4 z-10 shadow-xl hover:bg-base-content/80;
+}
+
+.interactive-buttton {
+  @apply btn bg-amber-500 btn-sm text-amber-50;
 }

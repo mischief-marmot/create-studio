@@ -1,7 +1,7 @@
 <template>
   <div>
     <button 
-      class="btn btn-primary btn-sm"
+      class="btn bg-amber-500 btn-sm text-amber-50"
       @click="openModal"
     >
       {{ buttonText }}
@@ -12,8 +12,8 @@
       <div 
         v-if="showModal"
         :class="[
-          'fixed inset-0 z-[1000] flex items-center justify-center w-full h-full',
-          isMobile ? ' top-0 left-0 z-50' : 'bg-black/80 '
+          'fixed inset-0 flex items-center justify-center w-full h-full',
+          isMobile ? ' top-0 left-0 z-[10000000000]' : 'bg-black/80 z-[1000000000] '
           ]"
         @click="handleOverlayClick"
       >
@@ -23,7 +23,7 @@
           @click="$event.stopPropagation()"
         >
           <button 
-            class="btn btn-md btn-squircle px-2 bg-base-content text-base-300 border-0 absolute top-4 right-4 z-10 shadow-xl hover:bg-base-content/80"
+            class="close-button"
             @click="closeModal"
             aria-label="Close"
           >

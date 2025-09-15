@@ -4,6 +4,14 @@
 }
 
 
+  @theme {
+  --text-xs: 0.9rem;
+  --text-sm: 0.975rem;
+  --text-md: 1.2rem;
+  --text-lg: 1.5rem;
+}
+
+
 /* Smooth Scroll */
 html {
   scroll-behavior: smooth;

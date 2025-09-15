@@ -80,7 +80,7 @@
                         <div class="px-4 py-8 flex flex-col space-y-8 overflow-y-auto">
                             <div class="flex space-x-3 justify-start w-full items-center">
                                 <div
-                                    class="flex justify-center items-center grow-0 shrink-0 h-12 w-12 bg-primary text-primary-content rounded-md">
+                                    class="flex justify-center items-center grow-0 shrink-0 h-14 w-14 bg-primary text-primary-content rounded-md">
                                     <span class="text-3xl font-mono">{{ index + 1 }}</span>
                                 </div>
 
@@ -170,38 +170,38 @@
                                 <!-- Review -->
                                 <div>
                                     <label for="review" class="block text-sm font-medium text-base-content/90 mb-1">
-                                        Review<span v-if="isFormRequired" class="text-red-600">*</span>
+                                        Review<span class="text-red-600">*</span>
                                     </label>
                                     <textarea id="review" v-model="form.review" rows="3"
                                         class="w-full textarea resize-none" :placeholder="reviewPlaceholder"
-                                        :required="isFormRequired" />
+                                        required />
                                 </div>
 
                                 <!-- Name -->
                                 <div>
                                     <label for="name" class="block text-sm font-medium text-base-content/90 mb-1">
-                                        Name<span v-if="isFormRequired" class="text-red-600">*</span>
+                                        Name<span class="text-red-600">*</span>
                                     </label>
                                     <input id="name" v-model="form.name" type="text" class="w-full input"
-                                        placeholder="Your name" :required="isFormRequired" />
+                                        placeholder="Your name" required />
                                 </div>
 
                                 <!-- Email -->
                                 <div>
                                     <label for="email" class="block text-sm font-medium text-base-content/90 mb-1">
-                                        Email<span v-if="isFormRequired" class="text-red-600">*</span>
+                                        Email<span class="text-red-600">*</span>
                                     </label>
                                     <input id="email" v-model="form.email" type="email" class="w-full input"
-                                        placeholder="your@email.com" :required="isFormRequired" />
+                                        placeholder="your@email.com" required />
                                 </div>
 
                                 <!-- Submit button -->
                                 <div class="justify-self-end">
                                     <button type="submit"
-                                        :disabled="reviewSubmission.isSubmitting.value || (!isFormValid && isFormRequired)"
+                                        :disabled="reviewSubmission.isSubmitting.value || (!isFormValid)"
                                         class="btn btn-primary btn-lg">
                                         <span v-if="reviewSubmission.isSubmitting.value">Submitting...</span>
-                                        <span v-else-if="existingReview">Update Review</span>
+                                        <span v-else-if="existingReview && form.review.length ">Update Review</span>
                                         <span v-else>Submit Review</span>
                                     </button>
                                 </div>
@@ -242,7 +242,7 @@
 
                         <!-- Progress Indicator -->
                         <div class="flex-1 flex justify-center items-center">
-                            <div class="text-xs text-base-content">Or swipe to start cooking! →</div>
+                            <div class="text-xs text-base-content">Swipe to begin! →</div>
                         </div>
 
                         <!-- Begin Button -->
@@ -966,6 +966,9 @@ const loadExistingReview = () => {
             form.review = existing.review_content || ''
             form.name = existing.author_name || ''
             form.email = existing.author_email || ''
+
+            // If showing review form, shrink
+            imageHeight.value = 10
         }
     }
 }
@@ -974,7 +977,10 @@ const loadExistingReview = () => {
 watch(currentSlide, (newSlide, oldSlide) => {
     if (newSlide === totalSlides.value - 1) {
         // On completion/review slide - shrink image for review form visibility
-        imageHeight.value = 10
+        if (showReviewForm) {
+            // If showing review form, shrink
+            imageHeight.value = 10
+        } 
         loadExistingReview()
     } else if (oldSlide === totalSlides.value - 1) {
         // Coming back from review slide - restore to user's adjusted height
