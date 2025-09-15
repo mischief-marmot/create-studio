@@ -1,7 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 
 async function uploadWidgetToBlob() {
-  const baseUrl = process.env.NUXT_PUBLIC_CREATE_STUDIO_BASE_URL || 'http://localhost:3001'
+  const baseUrl = process.env.NUXT_HUB_PROJECT_URL || 'http://localhost:3001'
   console.log('[CS] 🚀 Uploading widget files to NuxtHub Blob from', baseUrl)
   try {
     const response = await fetch(`${baseUrl}/api/upload-widget`, {
@@ -10,7 +10,6 @@ async function uploadWidgetToBlob() {
         'Content-Type': 'application/json'
       }
     })
-    
     if (response.ok) {
       const result = await response.json()
       if (result.success) {
@@ -28,7 +27,7 @@ async function uploadWidgetToBlob() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2025-09-15",
+  compatibilityDate: "2025-06-17",
   debug: false,
   devtools: { enabled: false, timeline: {enabled: true,} },
   nitro: {

@@ -64,7 +64,6 @@ onMounted(() => {
 
 async function initializeWidget() {
   if (!cardElement.value) {
-    console.warn('ServingsAdjuster: Card element not found for creation', props.config.creationId)
     return
   }
 
@@ -123,20 +122,12 @@ function storeOriginalAmounts() {
     const text = ingredient.textContent?.trim() || ''
     const amountData = (ingredient as HTMLElement).dataset.ingredientAmount
     
-    // Debug logging
-    if (globalConfig?._meta?.debug) {
-      console.log(`Ingredient ${index}: "${text}"`)
-      console.log(`  Data attribute amount: "${amountData}"`)
-    }
     
     // Always prefer the data attribute if it exists
     let amount = amountData
     if (!amount) {
       // Only try to extract from text if no data attribute
       amount = extractAmount(text)
-      if (globalConfig?._meta?.debug) {
-        console.log(`  Extracted amount from text: "${amount}"`)
-      }
     }
     
     originalAmounts.set(index, {
@@ -278,14 +269,6 @@ function updateIngredients() {
 
     const adjustedAmount = calculateAdjustedAmount(originalData.amount)
     
-    // Debug logging
-    if (globalConfig?._meta?.debug) {
-      console.log(`Adjusting ingredient ${index}:`)
-      console.log(`  Original amount: "${originalData.amount}"`)
-      console.log(`  Adjusted amount: "${adjustedAmount}"`)
-      console.log(`  Original text: "${originalData.text}"`)
-      console.log(`  Multiplier: ${currentMultiplier.value}`)
-    }
     
     if (adjustedAmount) {
       // Get the full original text

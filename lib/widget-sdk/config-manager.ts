@@ -46,7 +46,7 @@ export class ConfigManager {
       ? __CREATE_STUDIO_BASE_URL__ 
       : 'http://localhost:3001'
     this.baseUrl = options.baseUrl || defaultBaseUrl
-    this.debug = options.debug || false
+    this.debug = options.debug || true
     this.baseConfig = {
       siteUrl: options.siteUrl
     }

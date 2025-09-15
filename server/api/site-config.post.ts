@@ -22,6 +22,7 @@ export default defineEventHandler(async (event) => {
     showInteractiveMode: true,
     buttonText: "Try Interactive Mode!",
     baseUrl: process.env.CREATE_STUDIO_BASE_URL || 'https://create.studio',
+    debug: true,
     // Future config options:
     // license: { valid: false, tier: 'free' },
     // styling: { theme: 'default', position: 'after' },

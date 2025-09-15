@@ -45,7 +45,7 @@ export async function buildWidget() {
         cssMinify: true
       },
       esbuild: {
-        drop: ['console', 'debugger'], // Remove console.log and debugger statements
+        drop: ['debugger'], // Only remove debugger statements, keep console for debugging
         minifyIdentifiers: true,
         minifySyntax: true,
         minifyWhitespace: true,

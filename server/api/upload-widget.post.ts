@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
       return { success: false, message: "Widget files not ready yet" };
     }
     const jsContent = readFileSync(jsPath, "utf-8"); // Read as text
+    console.log(jsContent.slice(0, 100) + '...'); // Log first 100 chars for verification
     const uploadResult = await hubBlob().put(
       "create-studio.iife.js",
       jsContent,

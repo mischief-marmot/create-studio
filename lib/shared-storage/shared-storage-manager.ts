@@ -72,6 +72,7 @@ export class SharedStorageManager {
     this.currentCreationKey = creationKey
 
     if (!this.storage.state[creationKey]) {
+      // Create new creation state
       this.storage.state[creationKey] = {
         creationKey,
         currentStep: 0,
@@ -87,6 +88,27 @@ export class SharedStorageManager {
         hasInteracted: false
       }
       this.saveStorage()
+    } else {
+      // Migrate existing creation state if needed
+      const state = this.storage.state[creationKey]
+      let needsUpdate = false
+      
+      // Add missing servingsMultiplier property
+      if (state.servingsMultiplier === undefined) {
+        state.servingsMultiplier = 1
+        needsUpdate = true
+      }
+      
+      // Add any other missing properties here in the future
+      // if (state.newProperty === undefined) {
+      //   state.newProperty = defaultValue
+      //   needsUpdate = true
+      // }
+      
+      if (needsUpdate) {
+        state.lastUpdated = new Date().toISOString()
+        this.saveStorage()
+      }
     }
 
     return creationKey
@@ -285,6 +307,42 @@ export class SharedStorageManager {
     return state ? state.servingsMultiplier : 1
   }
 
+  /**
+   * Request servings multiplier from parent window (for iframe usage)
+   */
+  async requestServingsMultiplierFromParent(creationKey: string): Promise<number> {
+    return new Promise((resolve) => {
+      if (typeof window === 'undefined' || window === window.top) {
+        resolve(this.getServingsMultiplier(creationKey))
+        return
+      }
+
+      const messageId = Math.random().toString(36).substr(2, 9)
+      
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.type === 'SERVINGS_MULTIPLIER_RESPONSE' && event.data.messageId === messageId) {
+          window.removeEventListener('message', handleMessage)
+          resolve(event.data.multiplier || 1)
+        }
+      }
+
+      window.addEventListener('message', handleMessage)
+      
+      // Request servings multiplier from parent
+      window.parent.postMessage({
+        type: 'REQUEST_SERVINGS_MULTIPLIER',
+        messageId,
+        creationKey
+      }, '*')
+
+      // Fallback timeout
+      setTimeout(() => {
+        window.removeEventListener('message', handleMessage)
+        resolve(1)
+      }, 1000)
+    })
+  }
+
   setServingsMultiplier(creationKey: string, multiplier: number): void {
     const oldCurrentKey = this.currentCreationKey
     
@@ -389,7 +447,7 @@ export class SharedStorageManager {
         }
       }
     } catch (error) {
-      console.warn('Failed to load shared storage:', error)
+      // Silent fail for storage loading
     }
 
     return {
@@ -411,7 +469,7 @@ export class SharedStorageManager {
         JSON.stringify(this.storage)
       )
     } catch (error) {
-      console.warn('Failed to save shared storage:', error)
+      // Silent fail for storage saving
     }
   }
 

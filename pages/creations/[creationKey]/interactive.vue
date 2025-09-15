@@ -338,8 +338,13 @@ const creation = ref<HowTo | null>(null);
 const isLoadingCreation = ref(false);
 const creationError = ref<string | null>(null);
 
-// Get current creation state from shared storage
-const currentCreationState = computed(() => storageManager.getCurrentCreationState());
+// Get current creation state from shared storage (reactive)
+const currentCreationState = ref<any>(null);
+
+// Function to refresh creation state
+const refreshCreationState = () => {
+    currentCreationState.value = storageManager.getCurrentCreationState();
+};
 
 // Dynamic label based on creation type
 const suppliesLabel = computed(() => {
@@ -603,6 +608,14 @@ async function loadCreationData() {
 
 // Client-side only: Initialize loading and persistence
 onMounted(async () => {
+    // Set up cleanup before any async operations
+    let stateRefreshInterval: NodeJS.Timeout;
+    onUnmounted(() => {
+        if (stateRefreshInterval) {
+            clearInterval(stateRefreshInterval);
+        }
+    });
+
     // Calculate minimum height based on viewport
     MIN_HEIGHT.value = getMinHeightPercent();
 
@@ -619,8 +632,24 @@ onMounted(async () => {
     }
 
     // Initialize creation in shared storage
-    storageManager.initializeCreation(domain, creationId);
-    const creationState = storageManager.getCurrentCreationState();
+    const initKey = storageManager.initializeCreation(domain, creationId);
+    
+    // Update reactive creation state
+    refreshCreationState();
+    const creationState = currentCreationState.value;
+    
+    // Request servings multiplier from parent window if we're in an iframe
+    try {
+      const parentMultiplier = await storageManager.requestServingsMultiplierFromParent(initKey);
+      
+      if (parentMultiplier !== 1 && creationState?.servingsMultiplier !== parentMultiplier) {
+        // Update local storage with parent's multiplier
+        storageManager.setServingsMultiplier(initKey, parentMultiplier);
+        refreshCreationState();
+      }
+    } catch (error) {
+      // Silent fail for parent communication
+    }
 
 
     if (creationState) {
@@ -663,6 +692,25 @@ onMounted(async () => {
     // Hide skeleton overlay after scrolling is complete
     isLoadingPersistence.value = false;
     
+    // Set up periodic refresh of creation state to detect external changes
+    stateRefreshInterval = setInterval(async () => {
+        const currentState = currentCreationState.value;
+        
+        // Check parent window for updated servings multiplier
+        try {
+            const parentMultiplier = await storageManager.requestServingsMultiplierFromParent(initKey);
+            if (currentState?.servingsMultiplier !== parentMultiplier) {
+                storageManager.setServingsMultiplier(initKey, parentMultiplier);
+                refreshCreationState();
+            }
+        } catch (error) {
+            // Fallback to local storage check
+            const latestState = storageManager.getCurrentCreationState();
+            if (currentState?.servingsMultiplier !== latestState?.servingsMultiplier) {
+                refreshCreationState();
+            }
+        }
+    }, 1000); // Check every second
 });
 
 // Auto-show active timers panel when timers become active
@@ -686,7 +734,7 @@ const enterFullscreen = async () => {
         }
         isFullscreen.value = true;
     } catch (error) {
-        console.log('Fullscreen not supported or denied:', error);
+        // Fullscreen not supported or denied
     }
 };
 
@@ -699,7 +747,7 @@ const exitFullscreen = async () => {
         }
         isFullscreen.value = false;
     } catch (error) {
-        console.log('Error exiting fullscreen:', error);
+        // Error exiting fullscreen
     }
 };
 

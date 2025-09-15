@@ -252,6 +252,49 @@ window.CreateStudio = {
   }
 } 
 
+
+// Handle messages from iframe (for cross-domain storage access)
+if (typeof window !== 'undefined') {
+  window.addEventListener('message', (event) => {
+  
+    if (event.data.type === 'REQUEST_SERVINGS_MULTIPLIER') {
+      const { messageId, creationKey } = event.data
+      
+      // Get servings multiplier from local storage
+      const storageKey = 'create-studio'
+      try {
+        const storage = localStorage.getItem(storageKey)
+        let multiplier = 1
+        
+        if (storage) {
+          const parsed = JSON.parse(storage)
+          const state = parsed.state?.[creationKey]
+          multiplier = state?.servingsMultiplier || 1
+        }
+        
+        // Send response back to iframe
+        if (event.source) {
+          (event.source as Window).postMessage({
+            type: 'SERVINGS_MULTIPLIER_RESPONSE',
+            messageId,
+            multiplier
+          }, event.origin)
+        }
+        
+      } catch (error) {
+        // Send fallback response
+        if (event.source) {
+          (event.source as Window).postMessage({
+            type: 'SERVINGS_MULTIPLIER_RESPONSE',
+            messageId,
+            multiplier: 1
+          }, event.origin)
+        }
+      }
+    }
+  })
+}
+
 // Auto-initialization from script tag attributes
 document.addEventListener('DOMContentLoaded', () => {
   // Load CSS first
@@ -261,7 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (currentScript) {
     const siteUrl = currentScript.getAttribute('data-site-url')
-    const debug = currentScript.hasAttribute('data-create-studio-debug')
+    const debug = currentScript.hasAttribute('data-create-studio-debug') || true
     const baseUrl = currentScript.getAttribute('data-base-url')
     const apiKey = currentScript.getAttribute('data-api-key')
     
@@ -276,14 +319,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       window.CreateStudio.init(initOptions)
         .then(() => {
-          console.log('🔧 Create Studio Widget Loading - Build Time:', window.CreateStudio.getBuildTime())
           // Auto-mount interactive mode widgets on mv-creation elements
           window.CreateStudio.mountInteractiveMode()
           // Auto-mount servings adjuster widgets
           window.CreateStudio.mountServingsAdjuster()
-        })
-        .catch((error: any) => {
-          console.error('Create Studio auto-initialization failed:', error)
         })
     }
   }
