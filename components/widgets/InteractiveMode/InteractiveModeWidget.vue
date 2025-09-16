@@ -1,43 +1,60 @@
 <template>
   <div>
-    <button 
+    <button
       class="btn bg-amber-500 btn-sm text-amber-50"
       @click="openModal"
     >
       {{ buttonText }}
     </button>
-    
+
     <Teleport to="body">
-      <!-- Desktop Modal Overlay -->
-      <div 
+      <!-- Side-by-side Modal Container -->
+      <div
         v-if="showModal"
         :class="[
-          'fixed inset-0 flex items-center justify-center w-full h-full',
-          isMobile ? ' top-0 left-0 z-[10000000000]' : 'bg-black/80 z-[1000000000] '
-          ]"
-        @click="handleOverlayClick"
+          'fixed top-0 left-0 h-full flex z-[1000000000]',
+          `w-[${viewportWidth}px]`
+        ]"
+        :style="{ transform: `translateX(${scrollPosition}px)`}"
       >
-        <div 
-          :id="`create-studio-modal-${config.creationId}`"
-          class="md:rounded-lg md:shadow-xl md:max-w-lg md:max-h-256 w-full h-full relative overflow-hidden z-[1001]"
-          @click="$event.stopPropagation()"
+        <!-- Original Content Area -->
+        <div class="w-screen h-full overflow-auto">
+          <!-- This div serves as a placeholder for the original viewport content -->
+        </div>
+
+        <!-- Modal Content Area -->
+        <div
+          class="w-screen h-full bg-white dark:bg-gray-900 relative flex items-center justify-center"
         >
-          <button 
-            class="close-button"
+          <button
+            class="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors z-10"
             @click="closeModal"
             aria-label="Close"
           >
-            <XMarkIcon class="w-5 h-5" />
-          </button> 
-          <iframe 
-            :src="iframeSrc"
-            class="w-full h-full md:rounded-lg"
-            :title="`${config.creationName} - Interactive Mode`"
-            frameborder="0"
-            allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          />
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+
+          <div
+            :id="`create-studio-modal-${config.creationId}`"
+            class="w-full h-full mx-auto"
+          >
+            <iframe
+              :src="iframeSrc"
+              class="w-full h-full shadow-xl"
+              :title="`${config.creationName} - Interactive Mode`"
+              frameborder="0"
+              allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            />
+          </div>
         </div>
       </div>
+
+      <!-- Overlay to prevent interaction with original content -->
+      <div
+        v-if="showModal"
+        class="fixed top-0 left-0 w-screen h-full z-[999999999]"
+        @click="handleOverlayClick"
+      />
     </Teleport>
   </div>
 </template>
@@ -69,6 +86,8 @@ const globalConfig = inject<any>('widgetConfig')
 const theme = inject<any>('widgetTheme')
 
 const showModal = ref(false)
+const scrollPosition = ref(0)
+const viewportWidth = ref(window.innerWidth)
 
 // Mobile detection
 const isMobile = ref(false)
@@ -107,22 +126,37 @@ const iframeSrc = computed(() => {
 
 function openModal() {
   showModal.value = true
-  
+
+  // Capture current viewport and scroll to modal
+  viewportWidth.value = window.innerWidth
+
+  // Save original body overflow style
+  document.body.style.overflow = 'hidden'
+
+  // Animate scroll to the modal (slide to the right)
+  scrollPosition.value = -viewportWidth.value
+
   // Initialize creation in shared storage when modal opens
   const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
   const domain = normalizeDomain(siteUrl)
   storageManager.initializeCreation(domain, props.config.creationId)
-  
+
   if (globalConfig?._meta?.debug) {
     logger.debug('Create Studio Interactive mode opened for creation:', props.config.creationId)
     logger.debug('Creation key:', creationKey.value)
     logger.debug('iframe src:', iframeSrc.value)
     logger.debug('Mobile mode:', isMobile.value)
+    logger.debug('Viewport width:', viewportWidth)
   }
 }
 
 function closeModal() {
+  // Animate scroll back to original content
+  scrollPosition.value = 0
   showModal.value = false
+
+  // Restore body overflow
+  document.body.style.overflow = ''
 }
 
 function handleOverlayClick(event: MouseEvent) {
@@ -139,19 +173,30 @@ function handleEscKey(event: KeyboardEvent) {
   }
 }
 
+function handleResize() {
+  viewportWidth.value = window.innerWidth
+  // Update scroll position if modal is open to maintain alignment
+  if (showModal.value) {
+    scrollPosition.value = -viewportWidth.value
+  }
+}
+
 onMounted(() => {
   // Detect if device is mobile/tablet
   isMobile.value = window.matchMedia('(max-width: 768px)').matches
-  
+
   // Listen for screen size changes
   const mediaQuery = window.matchMedia('(max-width: 768px)')
   const handleMediaChange = (e: MediaQueryListEvent) => {
     isMobile.value = e.matches
   }
   mediaQuery.addEventListener('change', handleMediaChange)
-  
+
+  // Add resize listener for viewport width updates
+  window.addEventListener('resize', handleResize)
+
   document.addEventListener('keydown', handleEscKey)
-  
+
   // Cleanup function for media query listener
   onBeforeUnmount(() => {
     mediaQuery.removeEventListener('change', handleMediaChange)
@@ -160,6 +205,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleEscKey)
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 

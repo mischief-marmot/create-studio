@@ -1,5 +1,5 @@
 <template>
-    <div class="max-h-dvh h-full w-full flex items-center justify-center bg-base-300 text-base-content z-[1111]">
+    <div class="h-dvh w-full flex md:flex-col items-center justify-center bg-base-300 text-base-content z-[1111]">
         <!-- Show error message if loading failed -->
         <div v-if="creationError && !creation" class="text-center p-8">
             <h2 class="text-2xl font-bold text-error mb-4">Error Loading Recipe</h2>
@@ -9,8 +9,13 @@
         <!-- Show skeleton loader during SSR or while persistence is loading -->
         <RecipeSkeletonLoader v-if="!isHydrated || isLoadingCreation || !dataReady" />
 
-        <!-- Responsive Card Container - Always render when data is ready -->
-        <div v-if="dataReady" ref="containerRef" class="md:w-full w-dvw md:max-w-lg md:max-h-256 h-dvh bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl overflow-hidden relative" @mousedown="startDrag"
+        <!-- Unified Responsive Container -->
+        <div v-if="dataReady" ref="containerRef" 
+            :class="[
+                'w-full h-full bg-base-100 flex flex-col overflow-hidden relative',
+                'md:flex-row md:max-w-7xl md:max-h-[720px] md:mx-auto md:my-auto md:gap-8'
+                ]" 
+            @mousedown="startDrag"
             @touchstart="startDrag">
             
             <!-- Skeleton overlay during initial positioning -->
@@ -18,11 +23,13 @@
                 <RecipeSkeletonLoader />
             </div>
 
-            <!-- Top Figure Section - Collapsible Height -->
+            <!-- Figure Section - Collapsible on mobile, fixed on desktop -->
             <figure :class="[
-                'relative overflow-hidden flex-shrink-0 -mb-6',
+                'relative overflow-hidden flex-shrink-0',
+                'md:w-2/5 md:h-full md:mb-auto',
+                isMobile ? '-mb-6' : '',
                 isDragging ? '' : 'transition-all duration-300',
-            ]" :style="{ height: `${imageHeightPx}px` }" @dblclick="toggleImageCollapse">
+            ]" :style="isMobile ? { height: `${imageHeightPx}px` } : {}" @dblclick="toggleImageCollapse">
                 <!-- Current Step Media or Default Image -->
                 <template v-if="currentSlide === 0">
                     <!-- Intro Image -->
@@ -46,10 +53,13 @@
                 </template>
             </figure>
 
-            <!-- Middle Content Section - Scrollable with rounded top corners overlapping image -->
-            <div class="flex-1 overflow-hidden flex flex-col relative z-10 bg-base-100 rounded-t-3xl">
-                <!-- Draggable Handle -->
-                <DraggableHandle @start-drag="startDrag" />
+            <!-- Content Section - Scrollable with rounded top corners on mobile, side panel on desktop -->
+            <div :class="[
+                'flex-1 overflow-hidden flex flex-col relative z-10 bg-base-100 rounded-t-3xl  h-full w-full',
+                'md:rounded-none md:w-3/5 md:max-h-4/5 md:mb-auto md:z-0'
+                ]">
+                <!-- Draggable Handle - Mobile only -->
+                <DraggableHandle v-if="isMobile" @start-drag="startDrag" />
                 <div class="carousel carousel-center w-full flex-1 overflow-x-auto snap-x snap-mandatory flex flex-row"
                     ref="carouselRef">
                     <!-- Intro Slide - Title, Description, Stats -->
@@ -220,8 +230,11 @@
                 </div>
             </div>
 
-            <!-- Bottom Navigation Controls - Fixed -->
-            <div class="flex-shrink-0 bg-base-200 border-t border-base-300 relative">
+            <!-- Bottom Navigation Controls - Fixed at bottom for both mobile and desktop -->
+            <div :class="[
+                'flex-shrink-0 bg-base-200 border-t border-base-300 relative',
+                'md:absolute md:bottom-0 md:left-0 md:right-0 md:w-full'
+                ]">
                 <!-- Active Timers Panel -->
                 <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
 
@@ -249,7 +262,7 @@
                 </div>
 
                 <!-- Navigation Controls -->
-                <div class="p-4">
+                <div class="p-4 w-full max-w-2xl mx-auto ">
                     <div v-if="currentSlide === 0" class="flex items-center justify-between">
                         <!-- First slide - original layout -->
                         <div class="w-16"></div>
@@ -293,7 +306,7 @@
                     </div>
                 </div>
             </div>
-            <div class="flex-shrink-0 bg-base-300 text-base-content h-[50px] w-full p-2">
+            <div class="flex-shrink-0 bg-base-300 text-base-content h-[50px] w-full p-2 md:hidden">
                 <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="320x50"></div>
             </div>
         </div>
@@ -566,6 +579,9 @@ const containerRef = ref<HTMLElement>();
 const showSupplies = ref(false);
 const showActiveTimers = ref(false);
 
+// Mobile detection
+const isMobile = ref(false);
+
 // Loading and ready state - start loading only on client side
 const isLoadingPersistence = ref(false);
 const isHydrated = ref(false);
@@ -578,8 +594,9 @@ const isDragging = ref(false);
 const dragStartY = ref(0);
 const dragStartHeight = ref(0);
 
-// Calculate pixel height based on container height
+// Calculate pixel height based on container height - Mobile only
 const imageHeightPx = computed(() => {
+    if (!isMobile.value) return 0; // Desktop doesn't use dynamic height
     if (!containerRef.value) return 150; // Default fallback
     const containerHeight = containerRef.value.offsetHeight || 600;
     return Math.round((imageHeight.value / 100) * containerHeight);
@@ -625,6 +642,20 @@ onMounted(async () => {
         if (stateRefreshInterval) {
             clearInterval(stateRefreshInterval);
         }
+    });
+
+    // Detect if device is mobile/tablet
+    isMobile.value = window.matchMedia('(max-width: 768px)').matches;
+
+    // Listen for screen size changes
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+        isMobile.value = e.matches;
+    };
+    mediaQuery.addEventListener('change', handleMediaChange);
+
+    onUnmounted(() => {
+        mediaQuery.removeEventListener('change', handleMediaChange);
     });
 
     // Calculate minimum height based on viewport
@@ -694,10 +725,8 @@ onMounted(async () => {
             await nextTick();
             if (carouselRef.value) {
                 goToSlide(currentSlide.value, true);
-            }
+            } 
         }
-        // Small delay after scrolling to ensure positioning is complete
-        await new Promise(resolve => setTimeout(resolve, 100));
     }
     
     // Hide skeleton overlay after scrolling is complete
@@ -868,6 +897,11 @@ watch(carouselRef, (newRef, oldRef) => {
 
 // Drag handlers for collapsible image
 const startDrag = (event: MouseEvent | TouchEvent) => {
+    // Only allow drag on mobile
+    if (!isMobile.value) {
+        return;
+    }
+
     const target = event.target as HTMLElement;
     const isFromHandle = target.closest('[data-draggable-handle="true"]');
 
@@ -973,8 +1007,9 @@ const endDrag = () => {
     isImageCollapsed.value = imageHeight.value <= COLLAPSED_THRESHOLD;
 };
 
-// Toggle image collapse state (for double-click/double-tap)
+// Toggle image collapse state (for double-click/double-tap) - Mobile only
 const toggleImageCollapse = () => {
+    if (!isMobile.value) return;
     isDragging.value = false; // Prevent conflict with drag state
     if (isImageCollapsed.value) {
         // Expand to default height

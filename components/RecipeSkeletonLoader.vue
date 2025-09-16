@@ -1,21 +1,28 @@
 <template>
-  <div 
+  <div
     ref="containerRef"
-    class="w-full max-w-lg bg-base-100 flex flex-col md:mx-auto md:my-auto md:rounded-xl md:shadow-xl md:overflow-hidden"
-    :style="{ height: `${containerHeight}px` }"
+    :class="[
+      'w-full bg-base-100 flex flex-col overflow-hidden',
+      'md:flex-row md:max-w-7xl md:max-h-[80vh] md:mx-auto md:my-auto md:gap-8'
+    ]"
+    :style="isMobile ? { height: `${containerHeight}px` } : {}"
   >
-    
-    <!-- Image section skeleton -->
-    <div 
-      class="skeleton flex-shrink-0 -mb-6" 
-      :style="{ height: `${imageHeight}px` }"
+
+    <!-- Image section skeleton - Collapsible on mobile, fixed on desktop -->
+    <div
+      :class="[
+        'skeleton flex-shrink-0',
+        'md:w-2/5 md:h-full md:max-h-full',
+        isMobile ? '-mb-6' : ''
+      ]"
+      :style="isMobile ? { height: `${imageHeight}px` } : {}"
     >
     </div>
 
-    <!-- Content section skeleton with rounded top corners overlapping image -->
-    <div class="flex-1 overflow-hidden flex flex-col relative z-10 bg-base-100 rounded-t-3xl">
-      <!-- Draggable Handle skeleton -->
-      <div class="absolute top-0 left-0 right-0 h-8 flex items-start justify-center pt-2 z-20">
+    <!-- Content section skeleton with rounded top corners on mobile, side panel on desktop -->
+    <div class="flex-1 overflow-hidden flex flex-col relative z-10 bg-base-100 rounded-t-3xl md:rounded-none md:w-3/5 md:max-h-[80vh]">
+      <!-- Draggable Handle skeleton - Mobile only -->
+      <div v-if="isMobile" class="absolute top-0 left-0 right-0 h-8 flex items-start justify-center pt-2 z-20">
         <div class="w-12 h-1 bg-base-content/20 rounded-full"></div>
       </div>
       <div class="flex-1 overflow-y-auto">
@@ -35,8 +42,8 @@
         </div>
       </div>
 
-      <!-- Bottom navigation skeleton -->
-      <div class="flex-shrink-0 bg-base-200 border-t border-base-300">
+      <!-- Bottom navigation skeleton - Fixed at bottom for both mobile and desktop -->
+      <div class="flex-shrink-0 bg-base-200 border-t border-base-300 relative md:absolute md:bottom-0 md:left-0 md:right-0">
 
         <!-- Navigation controls skeleton -->
         <div class="p-4">
@@ -54,7 +61,7 @@
           </div>
         </div>
       </div>
-      <div class="py-4">
+      <div v-if="isMobile" class="py-4">
         <div class="h-10"></div>
       </div>
     </div>
@@ -64,6 +71,9 @@
 <script setup lang="ts">
 const containerRef = ref<HTMLElement>();
 
+// Mobile detection
+const isMobile = ref(false);
+
 // Calculate viewport-based heights (same logic as the main interactive page)
 const containerHeight = ref(1024); // Default fallback
 const imageHeight = ref(256); // Default fallback (25% of 1024)
@@ -71,16 +81,30 @@ const imageHeight = ref(256); // Default fallback (25% of 1024)
 // Calculate heights based on viewport
 const calculateHeights = () => {
   if (typeof window === 'undefined') return;
-  
+
   const viewportHeight = window.innerHeight;
   const calculatedHeight = Math.min(viewportHeight, 1024); // Max height like md:max-h-256 (1024px)
-  
+
   containerHeight.value = calculatedHeight;
   imageHeight.value = Math.round(calculatedHeight * 0.25); // 25% for image section
 };
 
 // Initialize heights on mount
 onMounted(() => {
+  // Detect if device is mobile/tablet
+  isMobile.value = window.matchMedia('(max-width: 768px)').matches;
+
+  // Listen for screen size changes
+  const mediaQuery = window.matchMedia('(max-width: 768px)');
+  const handleMediaChange = (e: MediaQueryListEvent) => {
+    isMobile.value = e.matches;
+  };
+  mediaQuery.addEventListener('change', handleMediaChange);
+
   calculateHeights();
+
+  onUnmounted(() => {
+    mediaQuery.removeEventListener('change', handleMediaChange);
+  });
 });
 </script>
