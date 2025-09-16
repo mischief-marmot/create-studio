@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { useLogger } from "~/utils/logger";
 
-const logger = useLogger('CS:UploadWidget')
+const logger = useLogger('CS:UploadWidget', true)
 
 export default defineEventHandler(async (event) => {
   try {
@@ -13,9 +13,9 @@ export default defineEventHandler(async (event) => {
 
     if (!existsSync(jsPath)) {
       logger.warn(
-        "JS file not found, widget build may still be in progress"
+        "JS file not found, widget build may still be in progress, jsPath:", jsPath
       );
-      return { success: false, message: "Widget files not ready yet" };
+      return { success: false, message: "Widget files not ready yet", jsPath };
     }
     const jsContent = readFileSync(jsPath, "utf-8"); // Read as text
     logger.debug(jsContent.slice(0, 50) + '...'); // Log first 100 chars for verification

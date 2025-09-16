@@ -27,7 +27,7 @@ async function uploadWidgetToBlob() {
       if (result.success) {
         logger.success('Widget files uploaded to NuxtHub Blob')
       } else {
-        logger.warn('Widget files not ready yet')
+        logger.warn('Widget files not ready yet', 'jsPath' in result ? `JS Path: ${result.jsPath}` : 'Result', result)
       }
     } else {
       logger.error('Blob upload failed with status:', response.status)
