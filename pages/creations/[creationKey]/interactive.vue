@@ -293,8 +293,8 @@
                     </div>
                 </div>
             </div>
-            <div class="flex-shrink-0 bg-base-300 text-base-content h-20 2-full p-2">
-                <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="300x80"></div>
+            <div class="flex-shrink-0 bg-base-300 text-base-content h-[50px] w-full p-2">
+                <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="320x50"></div>
             </div>
         </div>
     </div>
