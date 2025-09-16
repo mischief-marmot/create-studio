@@ -1,5 +1,8 @@
 import { transformCreationToHowTo } from '../utils/creationTransformer'
 import type { HowTo } from '~/types/schema-org'
+import { useLogger } from '~/utils/logger'
+
+const logger = useLogger('FetchCreation')
 
 interface FetchCreationBody {
   site_url: string
@@ -56,23 +59,23 @@ export default defineEventHandler(async (event) => {
     try {
       const cached = await storage.get<HowTo>(cacheKey)
       if (cached) {
-        console.log(`Cache hit for ${cacheKey}`)
+        logger.debug(`Cache hit for ${cacheKey}`)
         return cached
       }
     } catch (error) {
-      console.error('Cache read error:', error)
+      logger.error('Cache read error:', error)
     }
   } else if (cache_bust) {
-    console.log(`Cache bust requested for ${cacheKey}`)
+    logger.debug(`Cache bust requested for ${cacheKey}`)
   } else if (isDev) {
-    console.log(`Skipping cache in development mode`)
+    logger.debug(`Skipping cache in development mode`)
   }
   
   // Fetch fresh data from WordPress API
   const url = `${site_url}/wp-json/mv-create/v1/creations/${creation_id}`
   
   try {
-    console.log(`Fetching creation from ${url}`)
+    logger.debug(`Fetching creation from ${url}`)
     const response = await $fetch<WPCreationResponse>(url)
     
     // Transform the response to HowTo format
@@ -82,9 +85,9 @@ export default defineEventHandler(async (event) => {
     if (!isDev) {
       try {
         await storage.set(cacheKey, transformedData, { ttl: TTL })
-        console.log(`Cached data for ${cacheKey} with ${TTL}s TTL`)
+        logger.debug(`Cached data for ${cacheKey} with ${TTL}s TTL`)
       } catch (error) {
-        console.error('Cache write error:', error)
+        logger.error('Cache write error:', error)
       }
     }
     

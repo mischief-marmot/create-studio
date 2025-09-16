@@ -1,4 +1,8 @@
+import { useLogger } from '~/utils/logger'
+
 export default defineEventHandler(async (event) => {
+  const logger = useLogger('SiteConfig')
+
   // Set CORS headers to allow cross-origin requests from embedded scripts
   setResponseHeaders(event, {
     'Access-Control-Allow-Origin': '*',
@@ -22,7 +26,6 @@ export default defineEventHandler(async (event) => {
     showInteractiveMode: true,
     buttonText: "Try Interactive Mode!",
     baseUrl: process.env.CREATE_STUDIO_BASE_URL || 'https://create.studio',
-    debug: true,
     // Future config options:
     // license: { valid: false, tier: 'free' },
     // styling: { theme: 'default', position: 'after' },
@@ -30,7 +33,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Log for debugging
-  console.log(`Site config requested for: ${siteUrl}`)
+  logger.debug(`Site config requested for: ${siteUrl}`)
   
   return {
     success: true,

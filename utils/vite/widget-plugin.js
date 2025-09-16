@@ -1,6 +1,7 @@
 import { build } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import { consola } from 'consola'
 import tailwindcss from '@tailwindcss/vite'
 
 async function uploadWidgetToBlob() {
@@ -15,12 +16,12 @@ async function uploadWidgetToBlob() {
     
     if (response.ok) {
       await response.json()
-      console.log('📦 Widget files uploaded to NuxtHub Blob')
+      consola.success('📦 Widget files uploaded to NuxtHub Blob')
     } else {
-      console.error('❌ Blob upload failed:', await response.text())
+      consola.error('❌ Blob upload failed:', await response.text())
     }
   } catch (error) {
-    console.error('❌ Blob upload failed:', error)
+    consola.error('❌ Blob upload failed:', error)
   }
 }
 
@@ -35,7 +36,7 @@ export function widgetBuilder() {
         isBuilding = true
         
         try {
-          console.log('🔧 Building Create Studio widget...')
+          consola.info('🔧 Building Create Studio widget...')
           
           // Use the same exact config as the working build script
           await build({
@@ -98,12 +99,12 @@ export function widgetBuilder() {
             }
           })
           
-          console.log('✅ Create Studio widget built')
+          consola.success('✅ Create Studio widget built')
           
           // Upload built files to NuxtHub Blob
           await uploadWidgetToBlob()
         } catch (error) {
-          console.error('❌ Widget build failed:', error)
+          consola.error('❌ Widget build failed:', error)
         } finally {
           isBuilding = false
         }
@@ -131,7 +132,7 @@ export function widgetBuilder() {
           const regex = new RegExp(pattern.replace('**/*', '.*').replace('*', '[^/]*'))
           return regex.test(file)
         })) {
-          console.log(`📝 Widget file changed: ${file}`)
+          consola.info(`📝 Widget file changed: ${file}`)
           buildWidget()
         }
       })

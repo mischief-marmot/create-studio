@@ -1,8 +1,20 @@
 import tailwindcss from "@tailwindcss/vite";
+import { createConsola } from "consola"
+
+const logger = createConsola({
+  level: 5,
+  fancy: true,
+  formatOptions: {
+      columns: 80,
+      colors: true,
+      compact: false,
+      date: false,
+  },
+}).withTag('CS:NuxtConfig')
 
 async function uploadWidgetToBlob() {
   const baseUrl = process.env.NUXT_HUB_PROJECT_URL || 'http://localhost:3001'
-  console.log('[CS] 🚀 Uploading widget files to NuxtHub Blob from', baseUrl)
+  logger.info('Uploading widget files to NuxtHub Blob from', baseUrl)
   try {
     const response = await fetch(`${baseUrl}/api/upload-widget`, {
       method: 'POST',
@@ -13,12 +25,12 @@ async function uploadWidgetToBlob() {
     if (response.ok) {
       const result = await response.json()
       if (result.success) {
-        console.log('📦 Widget files uploaded to NuxtHub Blob')
+        logger.success('Widget files uploaded to NuxtHub Blob')
       } else {
-        console.log('⚠️  Widget files not ready yet')
+        logger.warn('Widget files not ready yet')
       }
     } else {
-      console.error('❌ Blob upload failed with status:', response.status)
+      logger.error('Blob upload failed with status:', response.status)
     }
   } catch (error) {
     throw error // Re-throw so caller can handle
@@ -117,10 +129,8 @@ export default defineNuxtConfig({
         const watcher = chokidar.watch([
           'widget-entry.ts',
           'widget.css',
-          'components/widgets/**/*.vue',
-          'components/widgets/**/*.ts',
-          'components/widgets/**/*.js',
-          'lib/widget-sdk/**/*'
+          './components/widgets',
+          './lib/widget-sdk'
         ], {
           ignored: /node_modules/,
           persistent: true
@@ -128,25 +138,35 @@ export default defineNuxtConfig({
         
         // Debug: log watched files
         watcher.on('ready', () => {
-          console.log('🔍 Widget file watcher is ready and watching:')
-          const watched = watcher.getWatched()
-          Object.keys(watched).forEach(dir => {
-            watched[dir].forEach(file => {
-              console.log(`  - ${dir}/${file}`)
+          if (process.env.ENV_DEBUG === 'true') {
+            logger.info('Widget file watcher is ready and watching:')
+            const watched = watcher.getWatched()
+            let watchedMessage = ``
+            Object.keys(watched).forEach(dir => {
+              watched[dir].forEach(file => {
+                watchedMessage += `- ${dir}/${file}\n`
+              })
             })
-          })
+            logger.box({title: 'Watched Files', message: watchedMessage.trim(), style: {
+              borderColor: 'cyan',
+              padding: 2,
+            }})
+          }
         })
         
         let building = false
         watcher.on('change', async (path) => {
           if (!building) {
             building = true
-            console.log(`📝 Widget file changed: ${path}`)
+            logger.box({title: 'Widget file changed', message: path, style: {
+              borderColor: 'yellow',
+              padding: 1,
+            }})
             await buildWidget()
             
             // Upload to blob storage after build (non-blocking)
             uploadWidgetToBlob().catch(err => 
-              console.log('⚠️  Blob upload failed:', err.message)
+              logger.warn('Blob upload failed:', err.message)
             )
             
             building = false
@@ -166,10 +186,10 @@ export default defineNuxtConfig({
             await uploadWidgetToBlob()
           } catch (error) {
             if (attempt < maxAttempts) {
-              console.log(`⏳ Upload attempt ${attempt} failed, retrying...`)
+              logger.warn(`Upload attempt ${attempt} failed, retrying...`)
               attemptUpload(attempt + 1, maxAttempts)
             } else {
-              console.log('⚠️  All upload attempts failed:', (error as Error).message)
+              logger.error('All upload attempts failed:', (error as Error).message)
             }
           }
         }, delay)

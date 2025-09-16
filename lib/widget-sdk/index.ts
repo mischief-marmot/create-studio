@@ -1,8 +1,10 @@
 import { type App } from 'vue'
+import { type ConsolaInstance } from 'consola'
 import { ConfigManager } from './config-manager'
 import { WidgetRegistry } from './widget-registry'
 import { MountManager } from './mount-manager'
 import { StorageManager } from './storage-manager'
+import { useLogger } from '../../utils/logger'
 
 export interface WidgetSDKOptions {
   apiKey?: string
@@ -28,6 +30,7 @@ class WidgetSDK {
   private initialized = false
   private themeStyleElement: HTMLStyleElement | null = null
   private version: string
+  private logger: ConsolaInstance
 
   constructor(options: WidgetSDKOptions) {
     this.configManager = new ConfigManager(options)
@@ -35,6 +38,7 @@ class WidgetSDK {
     this.mountManager = new MountManager()
     this.storageManager = new StorageManager(options.storagePrefix || 'create-studio')
     this.version = options.version || 'latest'
+    this.logger = useLogger('CS:WidgetSDK', options.debug)
     
     this.registerBuiltInWidgets()
   }
@@ -52,10 +56,10 @@ class WidgetSDK {
       this.initialized = true
       
       if (this.configManager.isDebug()) {
-        console.log(`🚀 Create Studio SDK initialized (version: ${this.version})`)
+        this.logger.info(`🚀 Create Studio SDK initialized (version: ${this.version})`)
       }
     } catch (error) {
-      console.error('Failed to initialize Widget SDK:', error)
+      this.logger.error('Failed to initialize Widget SDK:', error)
       throw error
     }
   }

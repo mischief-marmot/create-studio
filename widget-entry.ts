@@ -1,5 +1,6 @@
 import './widget.css'
 import { WidgetSDK } from './lib/widget-sdk'
+import { useLogger } from './utils/logger'
 
 // Function to dynamically load CSS
 function loadWidgetCSS() {
@@ -13,7 +14,7 @@ function loadWidgetCSS() {
   link.rel = 'stylesheet'
   link.type = 'text/css'
   // Get the base URL from the script tag or current domain
-  const scriptTag = document.querySelector('script[src*="create-studio.iife.js"]')
+  const scriptTag = document.querySelector('script[src*="create-studio.iife.js"]') as HTMLScriptElement | null
   const baseUrl = scriptTag ? new URL(scriptTag.src).origin : window.location.origin
   // Add cache-busting parameter for development
   const cacheBust = new Date().getTime()
@@ -46,6 +47,7 @@ function getCurrentScript(): HTMLScriptElement | null {
 }
 
 let sdkInstance: WidgetSDK | null = null
+let logger = useLogger('CS:WidgetEntry') // Will be re-initialized with debug option
 
 window.CreateStudio = {
   async init(options: { 
@@ -59,7 +61,7 @@ window.CreateStudio = {
     loadWidgetCSS()
     
     if (sdkInstance) {
-      console.warn('Create Studio already initialized')
+      logger.warn('Create Studio already initialized')
       return sdkInstance
     }
 
@@ -69,17 +71,21 @@ window.CreateStudio = {
       ...options,
       version: versionFromUrl || options.version || 'latest'
     }
+    
+    // Re-initialize logger with debug option
+    logger = useLogger('CS:WidgetEntry', finalOptions.debug)
+    logger.debug('Initializing Create Studio with options:', finalOptions)
 
     if (finalOptions.version !== 'latest') {
-      console.log(`🔧 Create Studio version override: ${finalOptions.version}`)
+      logger.debug(`Version override: ${finalOptions.version}`)
     }
-
     sdkInstance = new WidgetSDK(finalOptions)
     await sdkInstance.init()
     return sdkInstance
   },
 
   async mount(type: string, selector: string, config?: any) {
+    logger.debug(`Mounting widget of type "${type}" on selector:`, selector, 'with config:', config)
     if (!sdkInstance) {
       throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
     }
@@ -88,6 +94,7 @@ window.CreateStudio = {
   },
 
   async mountAll(type: string, selector: string, configExtractor?: (el: Element) => any) {
+    logger.debug(`Mounting all widgets of type "${type}" on selector:`, selector)
     if (!sdkInstance) {
       throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
     }
@@ -96,6 +103,7 @@ window.CreateStudio = {
   },
 
   async mountInteractiveMode(selector: string = 'section[id^="mv-creation-"]') {
+    logger.debug(`Mounting interactive mode on selector:`, selector)
     if (!sdkInstance) {
       throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
     }
@@ -131,14 +139,14 @@ window.CreateStudio = {
       
       if (!targetElement) {
         const selector = siteConfig.buttonSelector || defaultButtonSelector
-        console.warn('Create Studio: Target element not found:', selector)
+        logger.warn('Create Studio: Target element not found:', selector)
         continue
       }
 
       // Check if button already exists
       const existingButton = targetElement.querySelector('.create-studio-interactive-btn')
       if (existingButton) {
-        console.log('Create Studio: Button already exists, skipping injection')
+        logger.debug('Create Studio: Button already exists, skipping injection')
         continue
       }
 
@@ -193,14 +201,14 @@ window.CreateStudio = {
       // Find the ingredients section to place the adjuster before it
       const ingredientsSection = section.querySelector('.mv-create-ingredients')
       if (!ingredientsSection) {
-        console.warn('Create Studio: Ingredients section not found for servings adjuster')
+        logger.warn('Create Studio: Ingredients section not found for servings adjuster')
         continue
       }
 
       // Check if adjuster already exists
       const existingAdjuster = section.querySelector('.cs-servings-adjuster')
       if (existingAdjuster) {
-        console.log('Create Studio: Servings adjuster already exists, skipping injection')
+        logger.debug('Create Studio: Servings adjuster already exists, skipping injection')
         continue
       }
 
@@ -304,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (currentScript) {
     const siteUrl = currentScript.getAttribute('data-site-url')
-    const debug = currentScript.hasAttribute('data-create-studio-debug') || true
+    const debug = currentScript.hasAttribute('data-create-studio-debug') || false
     const baseUrl = currentScript.getAttribute('data-base-url')
     const apiKey = currentScript.getAttribute('data-api-key')
     

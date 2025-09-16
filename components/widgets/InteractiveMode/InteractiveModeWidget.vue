@@ -47,6 +47,9 @@ import { XMarkIcon } from '@heroicons/vue/20/solid'
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
 import { createCreationKey, normalizeDomain } from '~/utils/domain'
+import { useLogger } from '~/utils/logger'
+
+const logger = useLogger('InteractiveModeWidget')
 
 interface Props {
   config: {
@@ -96,9 +99,9 @@ const buttonText = computed(() => {
 })
 
 const iframeSrc = computed(() => {
-  console.log('Props', props.config)
+  logger.debug('Props', props.config)
   const baseUrl = props.config.embedUrl || globalConfig?._meta?.baseUrl || window.location.origin
-  
+
   return `${baseUrl}/creations/${creationKey.value}/interactive`
 })
 
@@ -111,10 +114,10 @@ function openModal() {
   storageManager.initializeCreation(domain, props.config.creationId)
   
   if (globalConfig?._meta?.debug) {
-    console.log('Create Studio Interactive mode opened for creation:', props.config.creationId)
-    console.log('Creation key:', creationKey.value)
-    console.log('iframe src:', iframeSrc.value)
-    console.log('Mobile mode:', isMobile.value)
+    logger.debug('Create Studio Interactive mode opened for creation:', props.config.creationId)
+    logger.debug('Creation key:', creationKey.value)
+    logger.debug('iframe src:', iframeSrc.value)
+    logger.debug('Mobile mode:', isMobile.value)
   }
 }
 
@@ -123,9 +126,9 @@ function closeModal() {
 }
 
 function handleOverlayClick(event: MouseEvent) {
-  console.log('Overlay click', event.target, event.currentTarget)
+  logger.debug('Overlay click', event.target, event.currentTarget)
   if (event.target === event.currentTarget) {
-    console.log('Closing modal due to overlay click')
+    logger.debug('Closing modal due to overlay click')
     closeModal()
   }
 }

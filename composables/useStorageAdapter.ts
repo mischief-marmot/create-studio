@@ -2,6 +2,10 @@
  * Storage adapter that handles different storage scenarios including iframes
  */
 
+import { useLogger } from '~/utils/logger'
+
+const logger = useLogger('StorageAdapter')
+
 interface StorageAdapter {
   getItem(key: string): string | null
   setItem(key: string, value: string): void
@@ -33,7 +37,7 @@ class LocalStorageAdapter implements StorageAdapter {
     try {
       localStorage.setItem(key, value)
     } catch {
-      console.warn('localStorage not available, data will not persist')
+      logger.warn('localStorage not available, data will not persist')
     }
   }
 
@@ -70,7 +74,7 @@ class SessionStorageAdapter implements StorageAdapter {
     try {
       sessionStorage.setItem(key, value)
     } catch {
-      console.warn('sessionStorage not available')
+      logger.warn('sessionStorage not available')
     }
   }
 
@@ -113,14 +117,14 @@ export const useStorageAdapter = (): StorageAdapter => {
   const isInIframe = window !== window.top
 
   if (isInIframe) {
-    console.log('Detected iframe context, checking storage availability...')
+    logger.debug('Detected iframe context, checking storage availability...')
   }
 
   // Try localStorage first
   const localStorage = new LocalStorageAdapter()
   if (localStorage.isAvailable()) {
     if (isInIframe) {
-      console.log('localStorage available in iframe')
+      logger.debug('localStorage available in iframe')
     }
     return localStorage
   }
@@ -128,11 +132,11 @@ export const useStorageAdapter = (): StorageAdapter => {
   // Fallback to sessionStorage
   const sessionStorage = new SessionStorageAdapter()
   if (sessionStorage.isAvailable()) {
-    console.warn('localStorage not available, using sessionStorage (data will not persist between sessions)')
+    logger.warn('localStorage not available, using sessionStorage (data will not persist between sessions)')
     return sessionStorage
   }
 
   // Final fallback to memory storage
-  console.warn('No persistent storage available, using memory storage (data will be lost on page refresh)')
+  logger.warn('No persistent storage available, using memory storage (data will be lost on page refresh)')
   return new MemoryStorageAdapter()
 }

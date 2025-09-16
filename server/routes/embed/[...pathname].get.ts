@@ -1,6 +1,9 @@
+import { useLogger } from '~/utils/logger'
+
 export default defineEventHandler(async (event) => {
+  const logger = useLogger('EmbedRoute')
   const { pathname } = getRouterParams(event)
-  console.log(`Request for ${pathname}`)
+  logger.debug(`Request for ${pathname}`)
 
   // Only serve specific widget files from blob storage
   const allowedFiles = ['create-studio.iife.js', 'create-studio.css']
@@ -13,7 +16,7 @@ export default defineEventHandler(async (event) => {
   }
   
   try {
-    console.log(`Serving ${pathname} from blob storage...`)
+    logger.debug(`Serving ${pathname} from blob storage...`)
     
     // Get the file from blob storage
     const blob = await hubBlob().get(pathname)
@@ -31,7 +34,7 @@ export default defineEventHandler(async (event) => {
     // Return the file content directly
     return blob.stream()
   } catch (error) {
-    console.error(`Error serving ${pathname} from blob:`, error)
+    logger.error(`Error serving ${pathname} from blob:`, error)
     throw createError({
       statusCode: 404,
       statusMessage: 'Widget file not found in storage'

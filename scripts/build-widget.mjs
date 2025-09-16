@@ -5,16 +5,31 @@ import { fileURLToPath } from 'url'
 import tailwindcss from '@tailwindcss/postcss'
 import autoprefixer from 'autoprefixer'
 import { config as loadEnv } from 'dotenv'
+import { consola } from 'consola'
 
 // Load environment variables from .env file
 loadEnv()
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
+const logger = consola.withTag('CS:BuildWidget')
 
 export async function buildWidget() {
-  console.log('🔧 Building Create Studio widget...')
-  
+  const defineEnv = {
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+        '__VUE_OPTIONS_API__': 'true',
+        '__VUE_PROD_DEVTOOLS__': 'false',
+        '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
+        '__CREATE_STUDIO_BASE_URL__': JSON.stringify(
+          process.env.CREATE_STUDIO_BASE_URL || 
+          process.env.NUXT_PUBLIC_CREATE_STUDIO_BASE_URL || 
+          process.env.NUXT_HUB_PROJECT_URL ||
+          'https://create-studio.jmlallier12912781.workers.dev/'
+        ),
+        '__CREATE_STUDIO_VERSION__': JSON.stringify(process.env.npm_package_version || '1.0.0')
+      }
+  logger.info('Building Create Studio widget...')
+
   try {
     // Build the widget bundle
     await build({
@@ -68,18 +83,7 @@ export async function buildWidget() {
           ]
         }
       },
-      define: {
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-        '__VUE_OPTIONS_API__': 'true',
-        '__VUE_PROD_DEVTOOLS__': 'false',
-        '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
-        '__CREATE_STUDIO_BASE_URL__': JSON.stringify(
-          process.env.CREATE_STUDIO_BASE_URL || 
-          process.env.NUXT_PUBLIC_CREATE_STUDIO_BASE_URL || 
-          'http://localhost:3001'
-        ),
-        '__CREATE_STUDIO_VERSION__': JSON.stringify(process.env.npm_package_version || '1.0.0')
-      },
+      define: defineEnv,
       resolve: {
         alias: {
           'vue': 'vue/dist/vue.esm-bundler.js',
@@ -93,10 +97,10 @@ export async function buildWidget() {
       }
     })
     
-    console.log('✅ Create Studio widget built successfully')
+    consola.success('✅ Create Studio widget built successfully')
     return true
   } catch (error) {
-    console.error('❌ Widget build failed:', error)
+    consola.error('❌ Widget build failed:', error)
     return false
   }
 }

@@ -2,6 +2,10 @@
  * Handles storage access in iframe contexts
  */
 
+import { useLogger } from '~/utils/logger'
+
+const logger = useLogger('IframeStorage')
+
 export const useIframeStorage = () => {
   const isInIframe = () => {
     return typeof window !== 'undefined' && window !== window.top
@@ -18,20 +22,20 @@ export const useIframeStorage = () => {
         // Check if we already have access
         const hasAccess = await document.hasStorageAccess()
         if (hasAccess) {
-          console.log('Storage access already granted')
+          logger.debug('Storage access already granted')
           return true
         }
 
         // Request storage access
         await document.requestStorageAccess()
-        console.log('Storage access granted')
+        logger.debug('Storage access granted')
         return true
       } catch (error) {
-        console.warn('Storage access denied:', error)
+        logger.warn('Storage access denied:', error)
         return false
       }
     } else {
-      console.warn('Storage Access API not supported')
+      logger.warn('Storage Access API not supported')
       return false
     }
   }

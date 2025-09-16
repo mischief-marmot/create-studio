@@ -1,21 +1,24 @@
 import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
+import { useLogger } from "~/utils/logger";
+
+const logger = useLogger('CS:UploadWidget')
 
 export default defineEventHandler(async (event) => {
   try {
-    console.log("Starting widget upload to blob storage...");
+    logger.info("Starting widget upload to blob storage...");
 
     // Upload IIFE JavaScript file
     const jsPath = resolve(process.cwd(), "dist/embed/create-studio.iife.js");
 
     if (!existsSync(jsPath)) {
-      console.log(
-        "⚠️  JS file not found, widget build may still be in progress"
+      logger.warn(
+        "JS file not found, widget build may still be in progress"
       );
       return { success: false, message: "Widget files not ready yet" };
     }
     const jsContent = readFileSync(jsPath, "utf-8"); // Read as text
-    console.log(jsContent.slice(0, 100) + '...'); // Log first 100 chars for verification
+    logger.debug(jsContent.slice(0, 50) + '...'); // Log first 100 chars for verification
     const uploadResult = await hubBlob().put(
       "create-studio.iife.js",
       jsContent,
@@ -24,7 +27,7 @@ export default defineEventHandler(async (event) => {
         contentType: "application/javascript",
       }
     );
-    console.log("✅ JS file uploaded to blob: ", Math.floor(uploadResult.size / 1024), "KB");
+    logger.success("JS file uploaded to blob: ", Math.floor(uploadResult.size / 1024), "KB");
 
     // Upload CSS file (optional - might be inlined in JS)
     const cssPath = resolve(process.cwd(), "dist/embed/create-studio.css");
@@ -34,10 +37,10 @@ export default defineEventHandler(async (event) => {
         addRandomSuffix: false,
         contentType: "text/css",
       });
-      console.log("✅ CSS file uploaded to blob:", Math.floor(cssUploadResult.size / 1024), "KB");
+      logger.success("CSS file uploaded to blob:", Math.floor(cssUploadResult.size / 1024), "KB");
     } catch (cssError) {
-      console.log(
-        "⚠️  CSS file not found (might be inlined in JS):",
+      logger.warn(
+        "CSS file not found (might be inlined in JS):",
         (cssError as Error).message
       );
       // This is okay if CSS is inlined in the JavaScript bundle
@@ -45,9 +48,16 @@ export default defineEventHandler(async (event) => {
 
     return { success: true, message: "Widget files uploaded to blob storage" };
   } catch (error) {
-    console.error("❌ Blob upload failed:", error);
-    console.error("Error details:", (error as Error).message);
-    console.error("Error stack:", (error as Error).stack);
+    logger.box({
+      title: "Blob Upload Failed",
+      message: () => {
+        return `${(error as Error).message}\n${(error as Error).stack}`;
+      },
+      style: {
+        borderColor: "red",
+        padding: 1,
+      },
+    })
     throw createError({
       statusCode: 500,
       statusMessage: `Failed to upload widget files: ${

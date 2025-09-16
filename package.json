@@ -2,6 +2,7 @@
   "name": "create-studio",
   "private": true,
   "type": "module",
+  "version": "0.0.1",
   "scripts": {
     "build": "nuxt build",
     "build:widget": "node scripts/build-widget.mjs",

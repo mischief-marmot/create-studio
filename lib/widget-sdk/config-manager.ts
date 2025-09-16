@@ -1,3 +1,6 @@
+import { type ConsolaInstance } from 'consola'
+import { useLogger } from '../../utils/logger'
+
 export interface ThemeConfig {
   primary?: string
   secondary?: string
@@ -37,35 +40,36 @@ export class ConfigManager {
   private apiKey: string
   private baseUrl: string
   private debug: boolean
+  private logger: ConsolaInstance
 
   constructor(options: { apiKey?: string; siteUrl?: string; baseUrl?: string; debug?: boolean }) {
     this.apiKey = options.apiKey || ''
     // Use build-time injected base URL, can be overridden by options.baseUrl
-    // @ts-ignore - __CREATE_STUDIO_BASE_URL__ is injected at build time
+    // @ts-ignore - build-time injected values
     const defaultBaseUrl = typeof __CREATE_STUDIO_BASE_URL__ !== 'undefined' 
+    // @ts-ignore - build-time injected values
       ? __CREATE_STUDIO_BASE_URL__ 
       : 'http://localhost:3001'
     this.baseUrl = options.baseUrl || defaultBaseUrl
-    this.debug = options.debug || true
+    this.debug = options.debug || false
     this.baseConfig = {
       siteUrl: options.siteUrl
     }
+    this.logger = useLogger('CS:ConfigManager', this.debug || false)
     
-    if (this.debug) {
+    this.logger.info('Widget initialized:', {
+      options,
+      baseUrl: this.baseUrl,
       // @ts-ignore - build-time injected values
-      console.log('🔧 Widget initialized:', {
-        baseUrl: this.baseUrl,
-        buildTime: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'unknown',
-        version: typeof __CREATE_STUDIO_VERSION__ !== 'undefined' ? __CREATE_STUDIO_VERSION__ : 'unknown'
-      })
-    }
+      buildTime: typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'unknown',
+      // @ts-ignore - build-time injected values
+      version: typeof __CREATE_STUDIO_VERSION__ !== 'undefined' ? __CREATE_STUDIO_VERSION__ : 'unknown'
+    })
   }
 
   async loadSiteConfig(): Promise<void> {
     if (!this.baseConfig.siteUrl && !this.apiKey) {
-      if (this.debug) {
-        console.log('📋 No siteUrl or apiKey provided, using defaults')
-      }
+      this.logger.info('No siteUrl or apiKey provided, using defaults')
       this.siteConfig = {
         accountId: 'default',
         features: ['interactive-mode']
@@ -94,12 +98,10 @@ export class ConfigManager {
 
       const result = await response.json()
       this.siteConfig = result.config || result
-      
-      if (this.debug) {
-        console.log('📋 Site config loaded:', this.siteConfig)
-      }
+
+      this.logger.debug('📋 Site config loaded:', this.siteConfig)
     } catch (error) {
-      console.warn('Failed to load site config, using defaults:', error)
+      this.logger.warn('Failed to load site config, using defaults:', error)
       this.siteConfig = {
         accountId: 'unknown',
         features: ['interactive-mode']
