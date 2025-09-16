@@ -117,6 +117,7 @@
                                     </li>
                                 </ul>
                             </div>
+                            <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="300x250"></div>
 
                             <!-- Timer -->
                             <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index + 1}-timer`"
@@ -293,9 +294,7 @@
                 </div>
             </div>
             <div class="flex-shrink-0 bg-base-300 text-base-content h-20 2-full p-2">
-                <div class="border-dashed border-2 border-gray-400 rounded-md h-full flex items-center justify-center">
-                    <span>Advertisement</span>
-                </div>
+                <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="300x80"></div>
             </div>
         </div>
     </div>
@@ -308,6 +307,18 @@ import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMa
 import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager';
 import { parseCreationKey } from '~/utils/domain';
 import { useSharedTimerManager } from '~/composables/useSharedTimerManager';
+
+useScript({
+    src: 'https://scripts.mediavine.com/tags/aj-test-2026.js',
+    async: true,
+    fetchpriority: 'high',
+    crossorigin: 'anonymous',
+    'data-noptimize': '1',
+    'data-cfasync': 'false'
+}, 
+{
+    trigger: 'server'
+});
 
 const route = useRoute();
 

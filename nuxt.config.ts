@@ -71,13 +71,7 @@ export default defineNuxtConfig({
   },
   css: ["~/assets/main.css"],
 
-  modules: [
-    "@nuxt/eslint",
-    "@nuxt/image",
-    "@nuxt/test-utils/module",
-    "@pinia/nuxt",
-    "@nuxthub/core",
-  ],
+  modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/test-utils/module", "@pinia/nuxt", "@nuxthub/core", '@nuxt/scripts'],
   hub: {
     blob: true,
     kv: true,
