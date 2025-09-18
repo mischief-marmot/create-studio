@@ -2,7 +2,7 @@
   <div
     ref="containerRef"
     :class="[
-      'w-full bg-base-100 flex flex-col overflow-hidden',
+      'w-full bg-base-100 flex flex-col h-full overflow-hidden',
       'md:flex-row md:max-w-7xl md:max-h-[80vh] md:mx-auto md:my-auto md:gap-8'
     ]"
     :style="isMobile ? { height: `${containerHeight}px` } : {}"
@@ -12,7 +12,7 @@
     <div
       :class="[
         'skeleton flex-shrink-0',
-        'md:w-2/5 md:h-full md:max-h-full',
+        'md:w-2/5 md:h-full md:max-h-4/5',
         isMobile ? '-mb-6' : ''
       ]"
       :style="isMobile ? { height: `${imageHeight}px` } : {}"

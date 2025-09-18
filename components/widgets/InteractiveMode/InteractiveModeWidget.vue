@@ -24,10 +24,10 @@
 
         <!-- Modal Content Area -->
         <div
-          class="w-screen h-full bg-white dark:bg-gray-900 relative flex items-center justify-center"
+          class="w-screen h-full bg-base-100 relative flex items-center justify-center"
         >
           <button
-            class="absolute top-4 right-4 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors z-10"
+            class="absolute top-4 right-4 p-2 rounded-full bg-base-300 dark:bg-gray-700 hover:bg-base-200 dark:hover:bg-gray-600 transition-colors z-10"
             @click="closeModal"
             aria-label="Close"
           >
