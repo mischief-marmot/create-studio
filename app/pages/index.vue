@@ -6,7 +6,7 @@
         <div class="flex lg:flex-1">
           <a href="/" class="-m-1.5 p-1.5">
             <span class="sr-only">Create by Mischief Marmot</span>
-            <img class="h-8 w-auto" src="/public/img/icon.svg" alt="Create Icon" title="Create by Mischief Marmot" />
+            <img class="h-8 w-auto" src="/img/icon.svg" alt="Create Icon" title="Create by Mischief Marmot" />
           </a>
         </div>
         <div class="flex lg:hidden">
@@ -85,7 +85,7 @@
             <div class="mt-16 flow-root sm:mt-24">
               <div
                 class="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-gray-900/10 ring-inset lg:-m-4 lg:rounded-2xl lg:p-4">
-                <img src="/public/img/screenshots/what-would-you-like-to-create.webp" alt="App screenshot" width="2432"
+                <img src="/img/screenshots/what-would-you-like-to-create.webp" alt="App screenshot" width="2432"
                   height="1442" class="w-304 rounded-md bg-gray-50 shadow-xl ring-1 ring-gray-900/10" />
               </div>
             </div>
@@ -302,7 +302,7 @@
     <footer class="relative mx-auto mt-32 max-w-7xl px-6 lg:px-8">
       <div class="border-t border-gray-900/10 py-16 sm:py-24 lg:py-32">
         <div class="xl:grid xl:grid-cols-3 xl:gap-8">
-          <img class="h-9" src="/public/img/icon.svg"
+          <img class="h-9" src="/img/icon.svg"
             alt="Create by Mischief Marmot" />
           <div class="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div class="md:grid md:grid-cols-2 md:gap-8">

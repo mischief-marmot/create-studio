@@ -1,5 +1,5 @@
 import { useIframeStorage } from '~/composables/useIframeStorage'
-import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
+import { SharedStorageManager } from '#shared/lib/shared-storage/shared-storage-manager'
 
 export default defineNuxtPlugin(async (nuxtApp) => {
   // Only run on client side

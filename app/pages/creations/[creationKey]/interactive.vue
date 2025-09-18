@@ -317,8 +317,8 @@
 import type { HowTo, HowToStep } from '~/types/schema-org';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
-import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager';
-import { parseCreationKey } from '~/utils/domain';
+import { SharedStorageManager } from '#shared/lib/shared-storage/shared-storage-manager';
+import { parseCreationKey } from '#shared/utils/domain';
 import { useSharedTimerManager } from '~/composables/useSharedTimerManager';
 
 useScript({

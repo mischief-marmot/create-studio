@@ -2,7 +2,7 @@
  * Handles storage access in iframe contexts
  */
 
-import { useLogger } from '~/utils/logger'
+import { useLogger } from '#shared/utils/logger'
 
 const logger = useLogger('IframeStorage')
 

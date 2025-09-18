@@ -2,7 +2,7 @@ import {
   calculateNutritionFromAPINinjasData, 
   type LegacyNutritionItem,
   type APINinjasNutrientResponse 
-} from '~/utils/nutrition-calculator'
+} from '#shared/utils/nutrition-calculator'
 
 interface NutritionRequest {
   ingredients: string[];

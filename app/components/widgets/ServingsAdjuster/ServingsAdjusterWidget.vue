@@ -21,8 +21,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, inject, nextTick } from 'vue'
-import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
-import { createCreationKey, normalizeDomain } from '~/utils/domain'
+import { SharedStorageManager } from '#shared/lib/shared-storage/shared-storage-manager'
+import { createCreationKey, normalizeDomain } from '#shared/utils/domain'
 
 interface Props {
   config: {

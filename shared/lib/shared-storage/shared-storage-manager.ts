@@ -1,4 +1,4 @@
-import { createCreationKey, parseCreationKey, normalizeDomain } from '~/utils/domain'
+import { createCreationKey, parseCreationKey, normalizeDomain } from '../../utils/domain'
 
 /**
  * Timer interface for recipe interactions
