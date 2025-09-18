@@ -1,6 +1,6 @@
 import { transformCreationToHowTo } from '../utils/creationTransformer'
 import type { HowTo } from '~/types/schema-org'
-import { useLogger } from '~/utils/logger'
+import { useLogger } from '#shared/utils/logger'
 
 const logger = useLogger('FetchCreation')
 

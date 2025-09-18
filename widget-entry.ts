@@ -1,6 +1,6 @@
 import './widget.css'
-import { WidgetSDK } from './lib/widget-sdk'
-import { useLogger } from './utils/logger'
+import { WidgetSDK } from './shared/lib/widget-sdk'
+import { useLogger } from './shared/utils/logger'
 
 // Function to dynamically load CSS
 function loadWidgetCSS() {

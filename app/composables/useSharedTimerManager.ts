@@ -1,4 +1,4 @@
-import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
+import { SharedStorageManager } from '#shared/lib/shared-storage/shared-storage-manager'
 
 interface Timer {
   id: string;

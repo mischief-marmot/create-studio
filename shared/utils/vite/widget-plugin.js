@@ -91,10 +91,10 @@ export function widgetBuilder() {
                 'vue': 'vue/dist/vue.esm-bundler.js',
                 '@': resolve(process.cwd()),
                 '~': resolve(process.cwd()),
-                '~/lib': resolve(process.cwd(), 'lib'),
-                '~/utils': resolve(process.cwd(), 'utils'),
-                '~/composables': resolve(process.cwd(), 'composables'),
-                '~/components': resolve(process.cwd(), 'components')
+                '#shared/lib': resolve(process.cwd(), 'shared/lib'),
+                '#shared/utils': resolve(process.cwd(), 'shared/utils'),
+                '~/app/composables': resolve(process.cwd(), 'app/composables'),
+                '~/app/components': resolve(process.cwd(), 'app/components')
               }
             }
           })

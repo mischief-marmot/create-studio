@@ -1,5 +1,5 @@
-import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
-import { createCreationKey, normalizeDomain } from '~/utils/domain'
+import { SharedStorageManager } from '#shared/lib/shared-storage/shared-storage-manager'
+import { createCreationKey, normalizeDomain } from '#shared/utils/domain'
 
 /**
  * Composable for using shared storage in Nuxt applications

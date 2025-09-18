@@ -1,4 +1,4 @@
-import { useLogger } from '~/utils/logger'
+import { useLogger } from '#shared/utils/logger'
 
 export default defineEventHandler(async (event) => {
   const logger = useLogger('EmbedRoute')

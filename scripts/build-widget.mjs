@@ -89,10 +89,10 @@ export async function buildWidget() {
           'vue': 'vue/dist/vue.esm-bundler.js',
           '@': root,
           '~': root,
-          '~/lib': resolve(root, 'lib'),
-          '~/utils': resolve(root, 'utils'),
-          '~/composables': resolve(root, 'composables'),
-          '~/components': resolve(root, 'components')
+          '#shared/lib': resolve(root, 'shared/lib'),
+          '#shared/utils': resolve(root, 'shared/utils'),
+          '~/app/composables': resolve(root, 'app/composables'),
+          '~/app/components': resolve(root, 'app/components')
         }
       }
     })

@@ -7,7 +7,7 @@ import {
   calculateNutritionFromAPINinjasData,
   type LegacyNutritionItem,
   type APINinjasNutrientResponse 
-} from '~/utils/nutrition-calculator'
+} from '#shared/utils/nutrition-calculator'
 import type { NutritionInformation } from '~/types/schemas'
 
 // Mock $fetch for testing

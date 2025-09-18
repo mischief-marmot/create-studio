@@ -2,7 +2,7 @@
  * Storage adapter that handles different storage scenarios including iframes
  */
 
-import { useLogger } from '~/utils/logger'
+import { useLogger } from '#shared/utils/logger'
 
 const logger = useLogger('StorageAdapter')
 

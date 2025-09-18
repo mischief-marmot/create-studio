@@ -62,9 +62,9 @@
 <script setup lang="ts">
 import { XMarkIcon } from '@heroicons/vue/20/solid'
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
-import { SharedStorageManager } from '~/lib/shared-storage/shared-storage-manager'
-import { createCreationKey, normalizeDomain } from '~/utils/domain'
-import { useLogger } from '~/utils/logger'
+import { SharedStorageManager } from '#shared/lib/shared-storage/shared-storage-manager'
+import { createCreationKey, normalizeDomain } from '#shared/utils/domain'
+import { useLogger } from '#shared/utils/logger'
 
 const logger = useLogger('InteractiveModeWidget')
 

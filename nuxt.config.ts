@@ -39,7 +39,10 @@ async function uploadWidgetToBlob() {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2025-06-17",
+  compatibilityDate: "2025-09-18",
+  future: {
+    compatibilityVersion: 4,
+  },
   debug: false,
   devtools: { enabled: false, timeline: {enabled: true,} },
   nitro: {
@@ -69,7 +72,7 @@ export default defineNuxtConfig({
       }
     }
   },
-  css: ["~/assets/main.css"],
+  css: ["./app/assets/main.css"],
 
   modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/test-utils/module", "@pinia/nuxt", "@nuxthub/core", '@nuxt/scripts'],
   hub: {
