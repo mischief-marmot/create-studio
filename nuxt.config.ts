@@ -13,28 +13,33 @@ const logger = createConsola({
 }).withTag('CS:NuxtConfig')
 
 async function uploadWidgetToBlob() {
+  if (process.env.NODE_ENV === 'test') return // Skip during tests
   const baseUrl = process.env.NUXT_HUB_PROJECT_URL || 'http://localhost:3001'
   logger.info('Uploading widget files to NuxtHub Blob from', baseUrl)
-  try {
-    const response = await fetch(`${baseUrl}/api/upload-widget`, {
+  function upload() {
+    fetch(`${baseUrl}/api/upload-widget`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       }
-    })
-    if (response.ok) {
-      const result = await response.json()
+    }).then(async res => {if (res.ok) {
+      const result = await res.json()
       if (result.success) {
         logger.success('Widget files uploaded to NuxtHub Blob')
       } else {
         logger.warn('Widget files not ready yet', 'jsPath' in result ? `JS Path: ${result.jsPath}` : 'Result', result)
-      }
+      } 
     } else {
-      logger.error('Blob upload failed with status:', response.status)
+      logger.error('Blob upload failed with status:', res.status, await res.text())
     }
-  } catch (error) {
-    throw error // Re-throw so caller can handle
+      return res
+    }).catch(err => {
+      throw err
+    })
   }
+  setTimeout(() => {
+    upload()
+  }, 5000) // Initial delay to allow server to be fully ready
 }
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -74,7 +79,7 @@ export default defineNuxtConfig({
   },
   css: ["./app/assets/main.css"],
 
-  modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/test-utils/module", "@pinia/nuxt", "@nuxthub/core", '@nuxt/scripts'],
+  modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/test-utils/module", "@pinia/nuxt", "@nuxthub/core", '@nuxt/scripts', 'nuxt-auth-utils'],
   hub: {
     blob: true,
     kv: true,
@@ -104,11 +109,21 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     apiNinjasKey: process.env.API_NINJAS_KEY,
+    jwtSecret: process.env.JWT_SECRET,
+    postmarkKey: process.env.POSTMARK_KEY,
+    sendingAddress: process.env.SENDING_ADDRESS || 'hello@create.studio',
+    nixId: process.env.NIX_ID,
+    nixKey: process.env.NIX_KEY,
+    rootUrl: process.env.ROOT_URL,
+    public: {
+      supportEmail: process.env.SUPPORT_EMAIL || 'support@create.studios',
+    }
   },
   
   hooks: {
     // Build widget after Nuxt build
     'build:done': async () => {
+      if (process.env.NODE_ENV !== 'production') return // Build-only
       const { buildWidget } = await import('./scripts/build-widget.mjs')
       await buildWidget()
       
@@ -117,6 +132,7 @@ export default defineNuxtConfig({
     },
     // Build widget on dev server start
     'ready': async (nuxt) => {
+      if (process.env.NODE_ENV !== 'development') return // Skip during tests, production
       if (nuxt.options.dev) {
         const { buildWidget } = await import('./scripts/build-widget.mjs')
         await buildWidget()
@@ -162,7 +178,7 @@ export default defineNuxtConfig({
             await buildWidget()
             
             // Upload to blob storage after build (non-blocking)
-            uploadWidgetToBlob().catch(err => 
+            uploadWidgetToBlob().catch(err =>
               logger.warn('Blob upload failed:', err.message)
             )
             
@@ -174,6 +190,7 @@ export default defineNuxtConfig({
     
     // Upload widget to blob after server is fully started
     'listen': async () => {
+      if (process.env.NODE_ENV !== 'development') return // Skip during tests
       // Wait longer and retry if needed for initial upload
       const attemptUpload = async (attempt = 1, maxAttempts = 3) => {
         const delay = attempt * 2000 // 2s, 4s, 6s
