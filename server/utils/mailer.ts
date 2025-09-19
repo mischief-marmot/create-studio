@@ -14,22 +14,26 @@ export interface EmailEnvelope {
   templateModel?: any
 }
 
+const config = useRuntimeConfig()
+const logger = useLogger('CS:Mailer', config.debug);
+
 /**
  * Send email using Postmark
  */
 export async function sendMail(envelope: EmailEnvelope): Promise<void> {
-  const config = useRuntimeConfig()
+  
 
   if (!config.postmarkKey) {
+    logger.error('Postmark API key not configured')
     throw new Error('Postmark API key not configured')
   }
-
   const client = new ServerClient(config.postmarkKey)
 
   try {
-    const fromEmail = envelope.from || config.sendingAddress || 'noreply@example.com'
+    const fromEmail = envelope.from || config.sendingAddress || 'noreply@mischiefmarmot.com'
 
     if (envelope.templateId && envelope.templateModel) {
+      logger.info('Sending email with template', { envelope });
       // Send with template
       await client.sendEmailWithTemplate({
         From: fromEmail,
@@ -38,6 +42,7 @@ export async function sendMail(envelope: EmailEnvelope): Promise<void> {
         TemplateModel: envelope.templateModel
       })
     } else {
+      logger.info('Sending regular email', { envelope });
       // Send regular email
       await client.sendEmail({
         From: fromEmail,
@@ -47,10 +52,9 @@ export async function sendMail(envelope: EmailEnvelope): Promise<void> {
         TextBody: envelope.textBody || ''
       })
     }
-
-    console.log(`✅ Email sent successfully to ${envelope.to}`)
+    logger.success(`Email sent successfully to ${envelope.to}`)
   } catch (error) {
-    console.error('❌ Failed to send email:', error)
+    logger.error('Failed to send email:', error)
     throw new Error('Failed to send email')
   }
 }
@@ -65,17 +69,26 @@ export async function sendValidationEmail(
 ): Promise<void> {
   const config = useRuntimeConfig()
   const baseUrl = config.rootUrl || 'http://localhost:3001'
-  const validationUrl = `${baseUrl}/user/validation/${validationToken}`
+  const validationUrl = `${baseUrl}/users/validate-email/${validationToken}`
 
-  // Template ID from the original API (8746393)
-  const templateId = 8746393
+  const templateId = 41539864
 
   const templateModel = {
-    validation_url: validationUrl,
-    first_name: userData.firstname || 'User',
-    last_name: userData.lastname || ''
+    action_url: validationUrl,
+    name: userData.firstname || 'Friend',
+    product_name: 'Create Studio',
+    company_name: 'Mischief Marmot LLC',
+    company_address: config.public.supportEmail || 'support@mischiefmarmot.com'
   }
-
+  if (config.postmarkKey && templateId) {
+    await sendMail({
+      to: email,
+      subject: 'Please validate your email address',
+      templateId,
+      templateModel
+    })
+    return
+  }
   await sendMail({
     to: email,
     textBody: `Please validate your email by clicking the following link: ${validationUrl}`,

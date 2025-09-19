@@ -108,6 +108,7 @@ export default defineNuxtConfig({
   },
 
   runtimeConfig: {
+    debug: process.env.ENV_DEBUG === 'true' || false,
     apiNinjasKey: process.env.API_NINJAS_KEY,
     jwtSecret: process.env.JWT_SECRET,
     postmarkKey: process.env.POSTMARK_KEY,

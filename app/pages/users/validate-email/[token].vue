@@ -78,11 +78,11 @@ onMounted(async () => {
       success.value = true
     } else {
       error.value = true
-      errorMessage.value = response.error.message || 'Validation failed'
+      errorMessage.value = response.error || 'Validation failed'
     }
   } catch (err: any) {
     error.value = true
-    errorMessage.value = err.data?.error.message || 'An error occurred during validation'
+    errorMessage.value = err.data?.error.message || err.message || 'An error occurred during validation'
   } finally {
     pending.value = false
   }

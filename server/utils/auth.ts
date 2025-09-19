@@ -1,5 +1,9 @@
 import jwt from 'jsonwebtoken'
 const DEFAULT_SECRET = 'default-secret-change-in-production'
+
+const config = useRuntimeConfig()
+const logger = useLogger('CS:Auth', config.debug)
+
 export interface JWTPayload {
   id: number
   email: string
@@ -35,12 +39,12 @@ export function generateToken(data: TokenGenerationData): string {
  * Verify and decode a JWT token
  */
 export function verifyToken(token: string): JWTPayload {
-  const config = useRuntimeConfig()
   const secret = config.jwtSecret || DEFAULT_SECRET
 
   try {
     return jwt.verify(token, secret) as JWTPayload
   } catch (error) {
+    logger.error('Token verification failed', { error })
     throw new Error('Invalid token')
   }
 }
@@ -49,11 +53,12 @@ export function verifyToken(token: string): JWTPayload {
  * Extract token from Authorization header
  */
 export function extractTokenFromHeader(authHeader: string | undefined): string {
+  logger.info('Extracting token from header', { authHeader })
   if (!authHeader) {
     throw new Error('Authorization header missing')
   }
 
-  if (!authHeader.startsWith('Bearer ')) {
+  if (!authHeader.startsWith('Bearer ') && !authHeader.startsWith('bearer ')) {
     throw new Error('Invalid authorization format')
   }
 
@@ -68,8 +73,10 @@ export async function verifyJWT(event: any): Promise<JWTPayload> {
   const token = extractTokenFromHeader(authHeader)
 
   try {
+    logger.info('Verifying JWT token', { token })
     return verifyToken(token)
   } catch (error) {
+    logger.error('JWT verification failed', { error })
     throw createError({
       statusCode: 401,
       statusMessage: 'Unauthorized'
