@@ -47,7 +47,7 @@ function getCurrentScript(): HTMLScriptElement | null {
 }
 
 let sdkInstance: WidgetSDK | null = null
-let logger = useLogger('CS:WidgetEntry') // Will be re-initialized with debug option
+let logger = useLogger('WidgetEntry') // Will be re-initialized with debug option
 
 window.CreateStudio = {
   async init(options: { 
@@ -73,7 +73,7 @@ window.CreateStudio = {
     }
     
     // Re-initialize logger with debug option
-    logger = useLogger('CS:WidgetEntry', finalOptions.debug)
+    logger = useLogger('WidgetEntry', finalOptions.debug)
     logger.debug('Initializing Create Studio with options:', finalOptions)
 
     if (finalOptions.version !== 'latest') {

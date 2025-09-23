@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { useLogger } from "#shared/utils/logger";
 
-const logger = useLogger('CS:UploadWidget', true)
+const logger = useLogger('UploadWidget', true)
 
 export default defineEventHandler(async (event) => {
   try {

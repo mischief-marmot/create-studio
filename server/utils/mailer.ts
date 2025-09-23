@@ -15,7 +15,7 @@ export interface EmailEnvelope {
 }
 
 const config = useRuntimeConfig()
-const logger = useLogger('CS:Mailer', config.debug);
+const logger = useLogger('Mailer', config.debug);
 
 /**
  * Send email using Postmark

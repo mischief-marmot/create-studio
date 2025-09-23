@@ -1,8 +1,7 @@
 import jwt from 'jsonwebtoken'
-const DEFAULT_SECRET = 'default-secret-change-in-production'
 
 const config = useRuntimeConfig()
-const logger = useLogger('CS:Auth', config.debug)
+const logger = useLogger('Auth', config.debug)
 
 export interface JWTPayload {
   id: number
@@ -23,7 +22,7 @@ export interface TokenGenerationData {
  */
 export function generateToken(data: TokenGenerationData): string {
   const config = useRuntimeConfig()
-  const secret = config.jwtSecret || DEFAULT_SECRET
+  const secret = config.servicesApiJWTSecret
 
   const payload: JWTPayload = {
     id: data.id,
@@ -39,7 +38,7 @@ export function generateToken(data: TokenGenerationData): string {
  * Verify and decode a JWT token
  */
 export function verifyToken(token: string): JWTPayload {
-  const secret = config.jwtSecret || DEFAULT_SECRET
+  const secret = config.servicesApiJWTSecret
 
   try {
     return jwt.verify(token, secret) as JWTPayload
@@ -96,7 +95,7 @@ export function isEmailVerifiedInToken(user: JWTPayload): boolean {
  */
 export function generateValidationToken(userData: { id: number; email: string }): string {
   const config = useRuntimeConfig()
-  const secret = config.jwtSecret || DEFAULT_SECRET
+  const secret = config.servicesApiJWTSecret
 
   return jwt.sign(
     { id: userData.id, email: userData.email, type: 'validation' },
@@ -110,7 +109,7 @@ export function generateValidationToken(userData: { id: number; email: string })
  */
 export function verifyValidationToken(token: string): { id: number; email: string } {
   const config = useRuntimeConfig()
-  const secret = config.jwtSecret || DEFAULT_SECRET
+  const secret = config.servicesApiJWTSecret
 
   try {
     const decoded = jwt.verify(token, secret) as any

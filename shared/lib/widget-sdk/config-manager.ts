@@ -55,7 +55,7 @@ export class ConfigManager {
     this.baseConfig = {
       siteUrl: options.siteUrl
     }
-    this.logger = useLogger('CS:ConfigManager', this.debug || false)
+    this.logger = useLogger('ConfigManager', this.debug || false)
     
     this.logger.info('Widget initialized:', {
       options,
