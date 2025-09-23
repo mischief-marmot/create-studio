@@ -11,5 +11,5 @@ export const useLogger = (tag?: string, debug: boolean = false): ConsolaInstance
     },
   });
 
-  return tag ? logger.withTag(tag) : logger
+  return tag ? logger.withTag(`CS:${tag}`) : logger.withTag('CS')
 }

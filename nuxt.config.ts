@@ -48,6 +48,9 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
+  devServer: {
+    port: 3001
+  },
   debug: false,
   devtools: { enabled: false, timeline: {enabled: true,} },
   nitro: {
@@ -72,6 +75,7 @@ export default defineNuxtConfig({
   vite: {
     plugins: [tailwindcss()],
     server: {
+      allowedHosts: ['host.docker.internal', 'localhost'],
       watch: {
         ignored: ['**/dist/**', '**/public/embed/**']
       }
@@ -110,14 +114,14 @@ export default defineNuxtConfig({
   runtimeConfig: {
     debug: process.env.ENV_DEBUG === 'true' || false,
     apiNinjasKey: process.env.API_NINJAS_KEY,
-    jwtSecret: process.env.JWT_SECRET,
+    servicesApiJWTSecret: process.env.SERVICES_API_JWT_SECRET,
     postmarkKey: process.env.POSTMARK_KEY,
-    sendingAddress: process.env.SENDING_ADDRESS || 'hello@create.studio',
+    sendingAddress: process.env.POSTMARK_SENDING_ADDRESS,
     nixId: process.env.NIX_ID,
     nixKey: process.env.NIX_KEY,
-    rootUrl: process.env.ROOT_URL,
+    rootUrl: process.env.NUXT_PUBLIC_SITE_URL,
     public: {
-      supportEmail: process.env.SUPPORT_EMAIL || 'support@create.studios',
+      supportEmail: process.env.SUPPORT_EMAIL,
     }
   },
   
