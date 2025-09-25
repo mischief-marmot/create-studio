@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const decodedToken = verifyValidationToken(token)
+    const decodedToken = await verifyValidationToken(token)
     const userRepo = new UserRepository()
 
     const updatedUser = await userRepo.updateEmailValidation(decodedToken.id, true)

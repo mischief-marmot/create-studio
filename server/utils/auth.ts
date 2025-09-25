@@ -1,7 +1,4 @@
-import jwt from 'jsonwebtoken'
-
-const config = useRuntimeConfig()
-const logger = useLogger('Auth', config.debug)
+import { SignJWT, jwtVerify } from 'jose'
 
 export interface JWTPayload {
   id: number
@@ -18,11 +15,25 @@ export interface TokenGenerationData {
 }
 
 /**
+ * Get the secret as Uint8Array for jose
+ */
+function getSecret(): Uint8Array {
+  // In test environment, use process.env directly
+  const secret = process.env.NUXT_SERVICES_API_JWT_SECRET ||
+                  (typeof useRuntimeConfig !== 'undefined' ? useRuntimeConfig().servicesApiJWTSecret : '')
+
+  if (!secret) {
+    throw new Error('JWT secret is not configured')
+  }
+
+  return new TextEncoder().encode(secret)
+}
+
+/**
  * Generate a new JWT token
  */
-export function generateToken(data: TokenGenerationData): string {
-  const config = useRuntimeConfig()
-  const secret = config.servicesApiJWTSecret
+export async function generateToken(data: TokenGenerationData): Promise<string> {
+  const secret = getSecret()
 
   const payload: JWTPayload = {
     id: data.id,
@@ -31,19 +42,27 @@ export function generateToken(data: TokenGenerationData): string {
     site_id: data.site_id
   }
 
-  return jwt.sign(payload, secret, { algorithm: 'HS256' })
+  return await new SignJWT(payload as any)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .sign(secret)
 }
 
 /**
  * Verify and decode a JWT token
  */
-export function verifyToken(token: string): JWTPayload {
-  const secret = config.servicesApiJWTSecret
+export async function verifyToken(token: string): Promise<JWTPayload> {
+  const secret = getSecret()
 
   try {
-    return jwt.verify(token, secret) as JWTPayload
+    const { payload } = await jwtVerify(token, secret)
+    return payload as unknown as JWTPayload
   } catch (error) {
-    logger.error('Token verification failed', { error })
+    if (typeof useLogger !== 'undefined') {
+      const config = useRuntimeConfig()
+      const logger = useLogger('Auth', config.debug)
+      logger.error('Token verification failed', { error })
+    }
     throw new Error('Invalid token')
   }
 }
@@ -53,12 +72,20 @@ export function verifyToken(token: string): JWTPayload {
  */
 export function extractTokenFromHeader(authHeader: string | undefined): string {
   if (!authHeader) {
-    logger.error('Authorization header')
+    if (typeof useLogger !== 'undefined') {
+      const config = useRuntimeConfig()
+      const logger = useLogger('Auth', config.debug)
+      logger.error('Authorization header')
+    }
     throw new Error('Authorization header missing')
   }
 
   if (!authHeader.startsWith('Bearer ') && !authHeader.startsWith('bearer ')) {
-    logger.error('Invalid authorization format')
+    if (typeof useLogger !== 'undefined') {
+      const config = useRuntimeConfig()
+      const logger = useLogger('Auth', config.debug)
+      logger.error('Invalid authorization format')
+    }
     throw new Error('Invalid authorization format')
   }
 
@@ -73,9 +100,13 @@ export async function verifyJWT(event: any): Promise<JWTPayload> {
   const token = extractTokenFromHeader(authHeader)
 
   try {
-    return verifyToken(token)
+    return await verifyToken(token)
   } catch (error) {
-    logger.error('JWT verification failed', { error })
+    if (typeof useLogger !== 'undefined') {
+      const config = useRuntimeConfig()
+      const logger = useLogger('Auth', config.debug)
+      logger.error('JWT verification failed', { error })
+    }
     throw createError({
       statusCode: 401,
       statusMessage: 'Unauthorized'
@@ -93,33 +124,35 @@ export function isEmailVerifiedInToken(user: JWTPayload): boolean {
 /**
  * Generate validation token for email verification
  */
-export function generateValidationToken(userData: { id: number; email: string }): string {
-  const config = useRuntimeConfig()
-  const secret = config.servicesApiJWTSecret
+export async function generateValidationToken(userData: { id: number; email: string }): Promise<string> {
+  const secret = getSecret()
 
-  return jwt.sign(
-    { id: userData.id, email: userData.email, type: 'validation' },
-    secret,
-    { expiresIn: '24h' }
-  )
+  return await new SignJWT({ id: userData.id, email: userData.email, type: 'validation' } as any)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('24h')
+    .sign(secret)
 }
 
 /**
  * Verify validation token for email verification
  */
-export function verifyValidationToken(token: string): { id: number; email: string } {
-  const config = useRuntimeConfig()
-  const secret = config.servicesApiJWTSecret
+export async function verifyValidationToken(token: string): Promise<{ id: number; email: string }> {
+  const secret = getSecret()
 
   try {
-    const decoded = jwt.verify(token, secret) as any
+    const { payload } = await jwtVerify(token, secret)
+    const decoded = payload as any
 
     if (decoded.type !== 'validation') {
       throw new Error('Invalid token type')
     }
 
     return { id: decoded.id, email: decoded.email }
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'Invalid token type') {
+      throw error
+    }
     throw new Error('Invalid validation token')
   }
 }

@@ -11,6 +11,9 @@ import { calculateRecipeNutrition } from '~~/server/utils/nutritionix'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
 
+const { debug } = useRuntimeConfig()
+const logger = useLogger('NutritionCalculation', debug)
+
 export default defineEventHandler(async (event) => {
   try {
     // Verify JWT token and get user info
@@ -71,9 +74,11 @@ export default defineEventHandler(async (event) => {
       })),
       nutrition: body.nutrition
     }
+    logger.debug('Recipe data', recipeData)
 
     // Calculate nutrition using our service
     const nutritionResult = await calculateRecipeNutrition(recipeData, user.id)
+    logger.debug('Nutrition result', nutritionResult)
 
     // Format response to match original API
     const response: any = {}

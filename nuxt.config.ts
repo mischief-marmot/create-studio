@@ -111,17 +111,25 @@ export default defineNuxtConfig({
     },
   },
 
+  scripts: {
+    registry: {
+      googleAnalytics: {
+        id: 'G-Q7YTD7XTY0',
+      }
+    }
+  },
+
   runtimeConfig: {
-    debug: process.env.ENV_DEBUG === 'true' || false,
-    apiNinjasKey: process.env.API_NINJAS_KEY,
-    servicesApiJWTSecret: process.env.SERVICES_API_JWT_SECRET,
-    postmarkKey: process.env.POSTMARK_KEY,
-    sendingAddress: process.env.POSTMARK_SENDING_ADDRESS,
-    nixId: process.env.NIX_ID,
-    nixKey: process.env.NIX_KEY,
-    rootUrl: process.env.NUXT_PUBLIC_SITE_URL,
+    debug: false,
+    apiNinjasKey: '',
+    servicesApiJwtSecret: '',
+    postmarkKey: '',
+    sendingAddress: '',
+    nixId: '',
+    nixKey: '',
     public: {
-      supportEmail: process.env.SUPPORT_EMAIL,
+      rootUrl: '',
+      supportEmail: '',
     }
   },
   
@@ -156,7 +164,7 @@ export default defineNuxtConfig({
         
         // Debug: log watched files
         watcher.on('ready', () => {
-          if (process.env.ENV_DEBUG === 'true') {
+          if (process.env.NUXT_DEBUG === 'true') {
             logger.info('Widget file watcher is ready and watching:')
             const watched = watcher.getWatched()
             let watchedMessage = ``

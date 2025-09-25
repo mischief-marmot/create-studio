@@ -61,7 +61,7 @@ export default defineEventHandler(async (event) => {
     const siteId = site[0]?.id || null
 
     // Generate tokens
-    const authToken = generateToken({
+    const authToken = await generateToken({
       id: user.id!,
       email: user.email,
       validEmail: Boolean(user.validEmail),
@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
 
     // Send validation email if user email is not already validated
     if (!user.validEmail) {
-      const validationToken = generateValidationToken({
+      const validationToken = await generateValidationToken({
         id: user.id!,
         email: user.email
       })
