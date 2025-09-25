@@ -52,12 +52,13 @@ export function verifyToken(token: string): JWTPayload {
  * Extract token from Authorization header
  */
 export function extractTokenFromHeader(authHeader: string | undefined): string {
-  logger.info('Extracting token from header', { authHeader })
   if (!authHeader) {
+    logger.error('Authorization header')
     throw new Error('Authorization header missing')
   }
 
   if (!authHeader.startsWith('Bearer ') && !authHeader.startsWith('bearer ')) {
+    logger.error('Invalid authorization format')
     throw new Error('Invalid authorization format')
   }
 
@@ -72,7 +73,6 @@ export async function verifyJWT(event: any): Promise<JWTPayload> {
   const token = extractTokenFromHeader(authHeader)
 
   try {
-    logger.info('Verifying JWT token', { token })
     return verifyToken(token)
   } catch (error) {
     logger.error('JWT verification failed', { error })

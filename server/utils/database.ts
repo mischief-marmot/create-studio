@@ -134,13 +134,13 @@ export class SiteRepository {
   private db = hubDatabase()
 
   async findById(id: number): Promise<Site | null> {
-    const result = await this.db.prepare('SELECT * FROM Sites WHERE id = ?').bind(id).first()
+    const result = await this.db.prepare('SELECT * FROM Sites WHERE id = ?').bind(id).first() as Site
     return result || null
   }
 
   async findOrCreateByUserAndUrl(userId: number, url: string): Promise<Site> {
     // Try to find existing site
-    const existing = await this.db.prepare('SELECT * FROM Sites WHERE user_id = ? AND url = ?').bind(userId, url).first()
+    const existing = await this.db.prepare('SELECT * FROM Sites WHERE user_id = ? AND url = ?').bind(userId, url).first() as ite
 
     if (existing) {
       return existing
@@ -152,7 +152,7 @@ export class SiteRepository {
       INSERT INTO Sites (url, user_id, createdAt, updatedAt)
       VALUES (?, ?, ?, ?)
       RETURNING *
-    `).bind(url, userId, now, now).first()
+    `).bind(url, userId, now, now).first() as Site
 
     if (!result) {
       throw new Error('Failed to create site')
