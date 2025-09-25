@@ -1,0 +1,100 @@
+name: Upload Widget to Blob Storage
+on:
+  workflow_run:
+    workflows: ["Deploy to NuxtHub"]
+    types:
+      - completed
+    branches:
+      - main
+      - master
+      - services-api
+
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  upload-widget:
+    name: "Upload Widget to Blob Storage"
+    runs-on: ubuntu-latest
+    # Only run if the deployment was successful or manually triggered
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for deployment to be ready
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        run: |
+          echo "Waiting 30 seconds for deployment to stabilize..."
+          sleep 30
+
+      - name: Upload widget to blob storage
+        id: upload
+        run: |
+          echo "Uploading widget to blob storage..."
+
+          BASE_URL="${{ secrets.CREATE_STUDIO_BASE_URL || 'https://create.studio' }}"
+
+          # Call the upload-widget API endpoint
+          RESPONSE=$(curl -X POST \
+            -H "Content-Type: application/json" \
+            -w "\n%{http_code}" \
+            -s \
+            "$BASE_URL/api/upload-widget")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "Response: $BODY"
+          echo "HTTP Code: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::Widget upload failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "✅ Widget uploaded successfully!"
+
+      - name: Verify widget accessibility
+        run: |
+          echo "Verifying widget is accessible..."
+
+          BASE_URL="${{ secrets.CREATE_STUDIO_BASE_URL || 'https://create.studio' }}"
+          WIDGET_URL="$BASE_URL/embed/create-studio.iife.js"
+
+          # Check if widget is accessible
+          if curl -f -s "$WIDGET_URL" > /dev/null 2>&1; then
+            echo "✅ Widget is accessible at: $WIDGET_URL"
+
+            # Get file size for verification
+            SIZE=$(curl -sI "$WIDGET_URL" | grep -i content-length | awk '{print $2}' | tr -d '\r')
+            if [ -n "$SIZE" ]; then
+              echo "📦 Widget size: $((SIZE / 1024)) KB"
+            fi
+          else
+            echo "::error::Widget is not accessible at $WIDGET_URL"
+            exit 1
+          fi
+
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Widget Upload Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          BASE_URL="${{ secrets.CREATE_STUDIO_BASE_URL || 'https://create.studio' }}"
+
+          if [ "${{ steps.upload.outcome }}" == "success" ]; then
+            echo "✅ **Widget uploaded successfully**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- Widget URL: \`$BASE_URL/embed/create-studio.iife.js\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ github.event_name }}" == "workflow_run" ]; then
+              echo "- Triggered by: ${{ github.event.workflow_run.name }}" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **Widget upload failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the logs for more details." >> $GITHUB_STEP_SUMMARY
+          fi
