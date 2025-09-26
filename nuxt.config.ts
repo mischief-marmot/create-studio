@@ -118,9 +118,6 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
     server: {
       allowedHosts: ['host.docker.internal', 'localhost'],
-      watch: {
-        ignored: ['**/dist/**', '**/public/embed/**']
-      }
     }
   },
   css: ["./app/assets/main.css"],
