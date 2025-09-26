@@ -1,7 +1,8 @@
 import { useLogger } from '#shared/utils/logger'
 
 export default defineEventHandler(async (event) => {
-  const logger = useLogger('EmbedRoute')
+  const { debug } = useRuntimeConfig()
+  const logger = useLogger('EmbedRoute', debug)
   const { pathname } = getRouterParams(event)
   logger.debug(`Request for ${pathname}`)
 
@@ -14,18 +15,20 @@ export default defineEventHandler(async (event) => {
       statusMessage: 'Widget file not found'
     })
   }
+  const ext = pathname.endsWith('.js') ? 'js' : 'css'
+  const fileName = ext === 'js' ? 'main.js' : 'main.css'
   
   try {
     logger.debug(`Serving ${pathname} from blob storage...`)
     
     // Get the file from blob storage
-    const blob = await hubBlob().get(pathname)
+    const blob = await hubBlob().get(fileName)
     if (!blob) {
-      throw new Error(`File ${pathname} not found in blob storage`)
+      throw new Error(`File ${fileName} not found in blob storage`)
     }
     
     // Set appropriate headers
-    const contentType = pathname.endsWith('.js') ? 'application/javascript' : 'text/css'
+    const contentType = ext === 'js' ? 'application/javascript' : 'text/css'
     setResponseHeaders(event, {
       'Content-Type': contentType,
       'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
