@@ -3,13 +3,11 @@ import { useLogger } from "#shared/utils/logger";
 const logger = useLogger('UploadWidget', true)
 
 interface UploadPayload {
-  js: string;
-  css?: string | null;
+  filename: string;
+  content: string;
   metadata?: {
     buildTime?: string;
-    version?: string;
-    jsSize?: number;
-    cssSize?: number;
+    size?: number;
   };
 }
 
@@ -20,55 +18,53 @@ export default defineEventHandler(async (event) => {
     // Get the file contents from the request body
     const body = await readBody<UploadPayload>(event)
 
-    if (!body || !body.js) {
+    if (!body || !body.filename || !body.content) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Missing JavaScript content in request body'
+        statusMessage: 'Missing filename or content in request body'
       })
     }
 
-    logger.debug(`Received JS content: ${body.js.slice(0, 50)}...`); // Log first 50 chars for verification
+    logger.debug(`Uploading: ${body.filename} (${body.content.length} chars)`);
 
-    // Upload JavaScript file as main.js
+    // Determine content type
+    const contentType = body.filename.endsWith('.js') ? 'application/javascript' : 'text/css';
+
+    // Upload file to blob storage with the exact filename
     const uploadResult = await hubBlob().put(
-      "main.js",
-      body.js,
+      body.filename,
+      body.content,
       {
         addRandomSuffix: false,
-        contentType: "application/javascript",
+        contentType,
         customMetadata: {
           buildTime: body.metadata?.buildTime || new Date().toISOString(),
-          version: body.metadata?.version || '1.0.0'
+          chunkType: 'widget-chunk'
+        },
+        // Set cache control for browsers
+        httpMetadata: {
+          cacheControl: 'public, max-age=3600' // Cache for 1 hour in browsers
         }
       }
     );
-    logger.success("JS file uploaded to blob as main.js: ", Math.floor(uploadResult.size / 1024), "KB");
 
-    // Upload CSS file if provided
-    let cssUploadResult = null;
-    if (body.css) {
-      cssUploadResult = await hubBlob().put("main.css", body.css, {
-        addRandomSuffix: false,
-        contentType: "text/css",
-        customMetadata: {
-          buildTime: body.metadata?.buildTime || new Date().toISOString(),
-          version: body.metadata?.version || '1.0.0'
-        }
-      });
-      logger.success("CSS file uploaded to blob as main.css:", Math.floor(cssUploadResult.size / 1024), "KB");
-    } else {
-      logger.info("No CSS content provided (likely inlined in JS)");
-    }
+    logger.success(`Uploaded: ${body.filename} (${Math.floor(uploadResult.size / 1024)}KB)`);
 
     return {
       success: true,
-      message: "Widget files uploaded to blob storage",
+      message: `${body.filename} uploaded to blob storage`,
       timestamp: new Date().toISOString(),
-      jsSize: uploadResult.size,
-      cssSize: cssUploadResult?.size || 0,
+      filename: body.filename,
+      size: uploadResult.size,
       metadata: body.metadata
     };
   } catch (error) {
+    // Check if this is already an HTTP error from createError()
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      // Re-throw existing HTTP errors as-is
+      throw error;
+    }
+
     logger.box({
       title: "Blob Upload Failed",
       message: () => {

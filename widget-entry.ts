@@ -5,7 +5,7 @@ import { useLogger } from './shared/utils/logger'
 // Function to dynamically load CSS
 function loadWidgetCSS() {
   // Check if CSS is already loaded
-  if (document.querySelector('link[href*="main.css"]')) {
+  if (document.querySelector('link[href*="widget-entry.css"]')) {
     return
   }
 
@@ -13,12 +13,15 @@ function loadWidgetCSS() {
   const link = document.createElement('link')
   link.rel = 'stylesheet'
   link.type = 'text/css'
-  // Get the base URL from the script tag or current domain
-  const scriptTag = document.querySelector('script[src*="main.js"]') as HTMLScriptElement | null
-  const baseUrl = scriptTag ? new URL(scriptTag.src).origin : window.location.origin
+  // Get the base URL from the script tag (main.js source) to determine embed URL
+  const scriptTag = document.querySelector('script#create-studio-embed') as HTMLScriptElement | null
+  if (!scriptTag) return
+  const scriptSrc = scriptTag.src
+  const baseUrl = new URL(scriptSrc).origin
+  const debug = scriptTag.hasAttribute('data-create-studio-debug')
   // Add cache-busting parameter for development
   const cacheBust = new Date().getTime()
-  link.href = `${baseUrl}/embed/main.css?v=${cacheBust}`
+  link.href = `${baseUrl}/embed/widget-entry.css${debug ? '?v=' + cacheBust : ''}`
   document.head.appendChild(link)
 }
 
@@ -49,7 +52,7 @@ function getCurrentScript(): HTMLScriptElement | null {
 let sdkInstance: WidgetSDK | null = null
 let logger = useLogger('WidgetEntry') // Will be re-initialized with debug option
 
-window.CreateStudio = {
+const CreateStudio = {
   async init(options: { 
     apiKey?: string
     siteUrl?: string
@@ -336,4 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })
 
-export default window.CreateStudio
+// Make CreateStudio available globally
+window.CreateStudio = CreateStudio
+
+export default CreateStudio
