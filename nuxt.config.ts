@@ -19,79 +19,13 @@ async function buildAndUploadWidget() {
   building = true;
 
   const { buildWidget } = await import("./scripts/build-widget.mjs");
-  const { readFileSync, existsSync } = await import("fs");
-  const { resolve } = await import("path");
 
-  // Build the widget
-  await buildWidget();
+  // Build the widget (build script now handles uploads automatically)
+  const success = await buildWidget();
 
-  // Read the built files
-  const jsPath = resolve(process.cwd(), "dist/embed/main.js");
-  const cssPath = resolve(process.cwd(), "dist/embed/main.css");
+  building = false;
 
-  if (!existsSync(jsPath)) {
-    logger.warn("Widget JS file not found after build");
-    building = false;
-    return false;
-  }
-
-  const jsContent = readFileSync(jsPath, "utf-8");
-  let cssContent = null;
-
-  if (existsSync(cssPath)) {
-    cssContent = readFileSync(cssPath, "utf-8");
-  }
-
-  // Prepare payload
-  const payload = {
-    js: jsContent,
-    css: cssContent,
-    metadata: {
-      buildTime: new Date().toISOString(),
-      version: process.env.npm_package_version || "1.0.0",
-      jsSize: Buffer.byteLength(jsContent, "utf8"),
-      cssSize: cssContent ? Buffer.byteLength(cssContent, "utf8") : 0,
-    },
-  };
-
-  // Schedule upload after delay (non-blocking)
-  const baseUrl = process.env.NUXT_HUB_PROJECT_URL || "http://localhost:3001";
-
-  setTimeout(async () => {
-    logger.info("Uploading widget files to NuxtHub Blob at", baseUrl);
-
-    try {
-      const res = await fetch(`${baseUrl}/api/upload-widget`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        if (result.success) {
-          logger.success("Widget files uploaded to NuxtHub Blob");
-        } else {
-          logger.warn("Widget upload unsuccessful:", result);
-        }
-      } else {
-        logger.error(
-          "Blob upload failed with status:",
-          res.status,
-          await res.text()
-        );
-      }
-      building = false;
-    } catch (err) {
-      logger.error("Upload error:", err);
-      building = false;
-    }
-  }, 5000);
-
-  logger.info("Widget built, upload scheduled in 5 seconds...");
-  return true;
+  return success;
 }
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -281,11 +215,6 @@ export default defineNuxtConfig({
                 padding: 1,
               },
             });
-
-            // Build and upload widget
-            await buildAndUploadWidget().catch((err) =>
-              logger.warn("Widget build/upload failed:", err.message)
-            );
 
             changeTimeout = null;
           }, 500); // Wait 500ms after last change before rebuilding
