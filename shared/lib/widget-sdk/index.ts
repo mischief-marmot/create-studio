@@ -38,7 +38,7 @@ class WidgetSDK {
     this.mountManager = new MountManager()
     this.storageManager = new StorageManager(options.storagePrefix || 'create-studio')
     this.version = options.version || 'latest'
-    this.logger = useLogger('CS:WidgetSDK', options.debug)
+    this.logger = useLogger('WidgetSDK', options.debug)
     
     this.registerBuiltInWidgets()
   }

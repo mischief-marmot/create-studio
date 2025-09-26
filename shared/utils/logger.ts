@@ -2,7 +2,7 @@ import { createConsola, type ConsolaInstance } from 'consola'
 
 export const useLogger = (tag?: string, debug: boolean = false): ConsolaInstance => {
   const logger = createConsola({
-    level: debug ? 999 : 0,
+    level: debug ? 999 : 2,
     fancy: true,
     formatOptions: {
         colors: true,
@@ -11,5 +11,5 @@ export const useLogger = (tag?: string, debug: boolean = false): ConsolaInstance
     },
   });
 
-  return tag ? logger.withTag(tag) : logger
+  return tag ? logger.withTag(`CS:${tag}`) : logger.withTag('CS')
 }

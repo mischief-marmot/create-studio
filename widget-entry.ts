@@ -5,20 +5,20 @@ import { useLogger } from './shared/utils/logger'
 // Function to dynamically load CSS
 function loadWidgetCSS() {
   // Check if CSS is already loaded
-  if (document.querySelector('link[href*="create-studio.css"]')) {
+  if (document.querySelector('link[href*="main.css"]')) {
     return
   }
-  
+
   // Create and inject CSS link
   const link = document.createElement('link')
   link.rel = 'stylesheet'
   link.type = 'text/css'
   // Get the base URL from the script tag or current domain
-  const scriptTag = document.querySelector('script[src*="create-studio.iife.js"]') as HTMLScriptElement | null
+  const scriptTag = document.querySelector('script[src*="main.js"]') as HTMLScriptElement | null
   const baseUrl = scriptTag ? new URL(scriptTag.src).origin : window.location.origin
   // Add cache-busting parameter for development
   const cacheBust = new Date().getTime()
-  link.href = `${baseUrl}/embed/create-studio.css?v=${cacheBust}`
+  link.href = `${baseUrl}/embed/main.css?v=${cacheBust}`
   document.head.appendChild(link)
 }
 
@@ -39,7 +39,7 @@ function getCurrentScript(): HTMLScriptElement | null {
   const scripts = document.getElementsByTagName('script')
   for (let i = scripts.length - 1; i >= 0; i--) {
     const script = scripts[i] as HTMLScriptElement
-    if (script.src && script.src.includes('create-studio.iife.js')) {
+    if (script.src && script.src.includes('main.js')) {
       return script
     }
   }
@@ -47,7 +47,7 @@ function getCurrentScript(): HTMLScriptElement | null {
 }
 
 let sdkInstance: WidgetSDK | null = null
-let logger = useLogger('CS:WidgetEntry') // Will be re-initialized with debug option
+let logger = useLogger('WidgetEntry') // Will be re-initialized with debug option
 
 window.CreateStudio = {
   async init(options: { 
@@ -73,7 +73,7 @@ window.CreateStudio = {
     }
     
     // Re-initialize logger with debug option
-    logger = useLogger('CS:WidgetEntry', finalOptions.debug)
+    logger = useLogger('WidgetEntry', finalOptions.debug)
     logger.debug('Initializing Create Studio with options:', finalOptions)
 
     if (finalOptions.version !== 'latest') {

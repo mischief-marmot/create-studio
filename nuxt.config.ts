@@ -1,40 +1,97 @@
 import tailwindcss from "@tailwindcss/vite";
-import { createConsola } from "consola"
+import { createConsola } from "consola";
 
 const logger = createConsola({
   level: 5,
   fancy: true,
   formatOptions: {
-      columns: 80,
-      colors: true,
-      compact: false,
-      date: false,
+    columns: 80,
+    colors: true,
+    compact: false,
+    date: false,
   },
-}).withTag('CS:NuxtConfig')
+}).withTag("CS:NuxtConfig");
 
-async function uploadWidgetToBlob() {
-  const baseUrl = process.env.NUXT_HUB_PROJECT_URL || 'http://localhost:3001'
-  logger.info('Uploading widget files to NuxtHub Blob from', baseUrl)
-  try {
-    const response = await fetch(`${baseUrl}/api/upload-widget`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-    if (response.ok) {
-      const result = await response.json()
-      if (result.success) {
-        logger.success('Widget files uploaded to NuxtHub Blob')
-      } else {
-        logger.warn('Widget files not ready yet', 'jsPath' in result ? `JS Path: ${result.jsPath}` : 'Result', result)
-      }
-    } else {
-      logger.error('Blob upload failed with status:', response.status)
-    }
-  } catch (error) {
-    throw error // Re-throw so caller can handle
+let building = false;
+
+async function buildAndUploadWidget() {
+  if (process.env.NODE_ENV === "test" || building) return; // Skip during tests
+  building = true;
+
+  const { buildWidget } = await import("./scripts/build-widget.mjs");
+  const { readFileSync, existsSync } = await import("fs");
+  const { resolve } = await import("path");
+
+  // Build the widget
+  await buildWidget();
+
+  // Read the built files
+  const jsPath = resolve(process.cwd(), "dist/embed/main.js");
+  const cssPath = resolve(process.cwd(), "dist/embed/main.css");
+
+  if (!existsSync(jsPath)) {
+    logger.warn("Widget JS file not found after build");
+    building = false;
+    return false;
   }
+
+  const jsContent = readFileSync(jsPath, "utf-8");
+  let cssContent = null;
+
+  if (existsSync(cssPath)) {
+    cssContent = readFileSync(cssPath, "utf-8");
+  }
+
+  // Prepare payload
+  const payload = {
+    js: jsContent,
+    css: cssContent,
+    metadata: {
+      buildTime: new Date().toISOString(),
+      version: process.env.npm_package_version || "1.0.0",
+      jsSize: Buffer.byteLength(jsContent, "utf8"),
+      cssSize: cssContent ? Buffer.byteLength(cssContent, "utf8") : 0,
+    },
+  };
+
+  // Schedule upload after delay (non-blocking)
+  const baseUrl = process.env.NUXT_HUB_PROJECT_URL || "http://localhost:3001";
+
+  setTimeout(async () => {
+    logger.info("Uploading widget files to NuxtHub Blob at", baseUrl);
+
+    try {
+      const res = await fetch(`${baseUrl}/api/upload-widget`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const result = await res.json();
+        if (result.success) {
+          logger.success("Widget files uploaded to NuxtHub Blob");
+        } else {
+          logger.warn("Widget upload unsuccessful:", result);
+        }
+      } else {
+        logger.error(
+          "Blob upload failed with status:",
+          res.status,
+          await res.text()
+        );
+      }
+      building = false;
+    } catch (err) {
+      logger.error("Upload error:", err);
+      building = false;
+    }
+  }, 5000);
+
+  logger.info("Widget built, upload scheduled in 5 seconds...");
+  return true;
 }
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -43,21 +100,23 @@ export default defineNuxtConfig({
   future: {
     compatibilityVersion: 4,
   },
+  devServer: {
+    port: 3001,
+  },
   debug: false,
-  devtools: { enabled: false, timeline: {enabled: true,} },
+  devtools: { enabled: false, timeline: { enabled: true } },
   nitro: {
     experimental: {
       openAPI: true,
     },
     routeRules: {
-      '/embed/**': { 
-        cors: true, 
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        
-       },
-      '/creations/{id}/interactive': {
+      "/embed/**": {
         cors: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: { "Access-Control-Allow-Origin": "*" },
+      },
+      "/creations/{id}/interactive": {
+        cors: true,
+        headers: { "Access-Control-Allow-Origin": "*" },
         cache: {
           maxAge: 60 * 60 * 24, // 1 day
         },
@@ -65,16 +124,46 @@ export default defineNuxtConfig({
     },
   },
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [
+      tailwindcss(),
+      // hides sourcemap warning for tailwind
+      {
+        apply: "build",
+        name: "vite-plugin-ignore-sourcemap-warnings",
+        configResolved(config) {
+          const originalOnWarn = config.build.rollupOptions.onwarn;
+          config.build.rollupOptions.onwarn = (warning, warn) => {
+            if (
+              warning.code === "SOURCEMAP_BROKEN" &&
+              warning.plugin === "@tailwindcss/vite:generate:build"
+            ) {
+              return;
+            }
+
+            if (originalOnWarn) {
+              originalOnWarn(warning, warn);
+            } else {
+              warn(warning);
+            }
+          };
+        },
+      },
+    ],
     server: {
-      watch: {
-        ignored: ['**/dist/**', '**/public/embed/**']
-      }
-    }
+      allowedHosts: ["host.docker.internal", "localhost"],
+    },
   },
   css: ["./app/assets/main.css"],
 
-  modules: ["@nuxt/eslint", "@nuxt/image", "@nuxt/test-utils/module", "@pinia/nuxt", "@nuxthub/core", '@nuxt/scripts'],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/image",
+    "@nuxt/test-utils/module",
+    "@pinia/nuxt",
+    "@nuxthub/core",
+    "@nuxt/scripts",
+    "nuxt-auth-utils",
+  ],
   hub: {
     blob: true,
     kv: true,
@@ -102,97 +191,106 @@ export default defineNuxtConfig({
     },
   },
 
-  runtimeConfig: {
-    apiNinjasKey: process.env.API_NINJAS_KEY,
+  scripts: {
+    registry: {
+      googleAnalytics: {
+        id: "G-Q7YTD7XTY0",
+      },
+    },
   },
-  
+
+  runtimeConfig: {
+    debug: false,
+    apiNinjasKey: "",
+    servicesApiJwtSecret: "",
+    postmarkKey: "",
+    sendingAddress: "",
+    nixId: "",
+    nixKey: "",
+    public: {
+      rootUrl: "",
+      supportEmail: "",
+    },
+  },
+
   hooks: {
-    // Build widget after Nuxt build
-    'build:done': async () => {
-      const { buildWidget } = await import('./scripts/build-widget.mjs')
-      await buildWidget()
-      
-      // Upload to NuxtHub blob storage
-      await uploadWidgetToBlob()
+    // Build and upload widget after Nuxt build (for production)
+    "build:done": async () => {
+      if (process.env.NODE_ENV !== "production") return; // Skip during tests
+      // This runs during `nuxt build` which happens in production deployments
+      logger.info(
+        "Build done hook - building and uploading widget for production"
+      );
+      await buildAndUploadWidget();
     },
-    // Build widget on dev server start
-    'ready': async (nuxt) => {
+    // Build and upload widget on dev server start
+    ready: async (nuxt) => {
       if (nuxt.options.dev) {
-        const { buildWidget } = await import('./scripts/build-widget.mjs')
-        await buildWidget()
-        
         // Watch for widget file changes
-        const chokidar = await import('chokidar')
-        const watcher = chokidar.watch([
-          'widget-entry.ts',
-          'widget.css',
-          './components/widgets',
-          './lib/widget-sdk'
-        ], {
-          ignored: /node_modules/,
-          persistent: true
-        })
-        
+        const chokidar = await import("chokidar");
+        const watcher = chokidar.watch(
+          [
+            "widget-entry.ts",
+            "widget.css",
+            "./app/components/widgets",
+            "./shared/lib/widget-sdk",
+          ],
+          {
+            ignored: /node_modules/,
+            persistent: true,
+          }
+        );
+
         // Debug: log watched files
-        watcher.on('ready', () => {
-          if (process.env.ENV_DEBUG === 'true') {
-            logger.info('Widget file watcher is ready and watching:')
-            const watched = watcher.getWatched()
-            let watchedMessage = ``
-            Object.keys(watched).forEach(dir => {
-              watched[dir].forEach(file => {
-                watchedMessage += `- ${dir}/${file}\n`
-              })
-            })
-            logger.box({title: 'Watched Files', message: watchedMessage.trim(), style: {
-              borderColor: 'cyan',
+        watcher.on("ready", () => {
+          logger.info("Widget file watcher is ready and watching:");
+          const watched = watcher.getWatched();
+          let watchedMessage = ``;
+          Object.keys(watched).forEach((dir) => {
+            const files = watched[dir];
+            if (files) {
+              files.forEach((file) => {
+                watchedMessage += `- ${dir}/${file}\n`;
+              });
+            }
+          });
+          logger.box({
+            title: "Watched Files",
+            message: watchedMessage.trim(),
+            style: {
+              borderColor: "cyan",
               padding: 2,
-            }})
+            },
+          });
+        });
+
+        let changeTimeout: NodeJS.Timeout | null = null;
+        watcher.on("change", async (path) => {
+          // Clear any existing timeout
+          if (changeTimeout) {
+            clearTimeout(changeTimeout);
           }
-        })
-        
-        let building = false
-        watcher.on('change', async (path) => {
-          if (!building) {
-            building = true
-            logger.box({title: 'Widget file changed', message: path, style: {
-              borderColor: 'yellow',
-              padding: 1,
-            }})
-            await buildWidget()
-            
-            // Upload to blob storage after build (non-blocking)
-            uploadWidgetToBlob().catch(err => 
-              logger.warn('Blob upload failed:', err.message)
-            )
-            
-            building = false
-          }
-        })
+
+          // Set a new timeout to debounce multiple file changes
+          changeTimeout = setTimeout(async () => {
+            logger.box({
+              title: "Widget file changed",
+              message: path,
+              style: {
+                borderColor: "yellow",
+                padding: 1,
+              },
+            });
+
+            // Build and upload widget
+            await buildAndUploadWidget().catch((err) =>
+              logger.warn("Widget build/upload failed:", err.message)
+            );
+
+            changeTimeout = null;
+          }, 500); // Wait 500ms after last change before rebuilding
+        });
       }
     },
-    
-    // Upload widget to blob after server is fully started
-    'listen': async () => {
-      // Wait longer and retry if needed for initial upload
-      const attemptUpload = async (attempt = 1, maxAttempts = 3) => {
-        const delay = attempt * 2000 // 2s, 4s, 6s
-        
-        setTimeout(async () => {
-          try {
-            await uploadWidgetToBlob()
-          } catch (error) {
-            if (attempt < maxAttempts) {
-              logger.warn(`Upload attempt ${attempt} failed, retrying...`)
-              attemptUpload(attempt + 1, maxAttempts)
-            } else {
-              logger.error('All upload attempts failed:', (error as Error).message)
-            }
-          }
-        }, delay)
-      }
-      
-      attemptUpload()
-    }
-  }
+  },
 });

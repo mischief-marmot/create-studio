@@ -13,6 +13,7 @@ loadEnv()
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 const logger = consola.withTag('CS:BuildWidget')
+logger.level = 999
 
 export async function buildWidget() {
   const defineEnv = {
@@ -39,7 +40,7 @@ export async function buildWidget() {
         lib: {
           entry: resolve(root, 'widget-entry.ts'),
           name: 'CreateStudio',
-          fileName: (format) => `create-studio.${format}.js`,
+          fileName: () => 'main.js',
           formats: ['iife']
         },
         outDir: resolve(root, 'dist/embed'),
@@ -50,7 +51,7 @@ export async function buildWidget() {
             format: 'iife',
             name: 'CreateStudio',
             globals: {},
-            assetFileNames: 'create-studio.[ext]',
+            assetFileNames: 'main.[ext]',
             inlineDynamicImports: true
           }
         },
@@ -97,10 +98,10 @@ export async function buildWidget() {
       }
     })
     
-    consola.success('✅ Create Studio widget built successfully')
+    logger.success('Create Studio widget built successfully')
     return true
   } catch (error) {
-    consola.error('❌ Widget build failed:', error)
+    logger.error('Widget build failed:', error)
     return false
   }
 }
