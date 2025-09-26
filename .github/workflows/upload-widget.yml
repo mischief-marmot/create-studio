@@ -9,15 +9,29 @@ on:
       - master
       - services-api
 
-  # Allow manual trigger
+  # Allow manual trigger with environment selection
   workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to upload widget to'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - production
+          - preview
 
 jobs:
   upload-widget:
     name: "Upload Widget to Blob Storage"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     # Only run if the deployment was successful or manually triggered
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    # Use environment for manual triggers, default to preview for automatic
+    environment: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'preview' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -31,9 +45,10 @@ jobs:
       - name: Upload widget to blob storage
         id: upload
         run: |
-          echo "Uploading widget to blob storage..."
+          echo "Uploading widget to blob storage (${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'preview' }} environment)..."
 
-          BASE_URL="${{ secrets.CREATE_STUDIO_BASE_URL || 'https://create.studio' }}"
+          # Environment-specific URLs and tokens are automatically available from GitHub environments
+          BASE_URL="${{ vars.CREATE_STUDIO_BASE_URL || secrets.CREATE_STUDIO_BASE_URL || 'https://preview.create.studio' }}"
           CI_TOKEN="${{ secrets.CI_UPLOAD_TOKEN }}"
 
           # Call the CI upload-widget endpoint with authentication
@@ -72,7 +87,7 @@ jobs:
         run: |
           echo "Verifying widget is accessible..."
 
-          BASE_URL="${{ secrets.CREATE_STUDIO_BASE_URL || 'https://create.studio' }}"
+          BASE_URL="${{ vars.CREATE_STUDIO_BASE_URL || secrets.CREATE_STUDIO_BASE_URL || 'https://preview.create.studio' }}"
           WIDGET_URL="$BASE_URL/embed/create-studio.iife.js"
 
           # Check if widget is accessible
@@ -96,11 +111,13 @@ jobs:
           echo "## Widget Upload Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          BASE_URL="${{ secrets.CREATE_STUDIO_BASE_URL || 'https://create.studio' }}"
+          BASE_URL="${{ vars.CREATE_STUDIO_BASE_URL || secrets.CREATE_STUDIO_BASE_URL || 'https://preview.create.studio' }}"
+          ENVIRONMENT="${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'preview' }}"
 
           if [ "${{ steps.upload.outcome }}" == "success" ]; then
             echo "✅ **Widget uploaded successfully**" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+            echo "- Environment: **$ENVIRONMENT**" >> $GITHUB_STEP_SUMMARY
             echo "- Widget URL: \`$BASE_URL/embed/create-studio.iife.js\`" >> $GITHUB_STEP_SUMMARY
             echo "- Trigger: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
             if [ "${{ github.event_name }}" == "workflow_run" ]; then
