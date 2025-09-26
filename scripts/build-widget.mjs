@@ -39,7 +39,7 @@ export async function buildWidget() {
         lib: {
           entry: resolve(root, 'widget-entry.ts'),
           name: 'CreateStudio',
-          fileName: (format) => `create-studio.${format}.js`,
+          fileName: () => 'main.js',
           formats: ['iife']
         },
         outDir: resolve(root, 'dist/embed'),
@@ -50,7 +50,7 @@ export async function buildWidget() {
             format: 'iife',
             name: 'CreateStudio',
             globals: {},
-            assetFileNames: 'create-studio.[ext]',
+            assetFileNames: 'main.[ext]',
             inlineDynamicImports: true
           }
         },

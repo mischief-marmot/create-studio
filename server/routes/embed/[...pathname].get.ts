@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   logger.debug(`Request for ${pathname}`)
 
   // Only serve specific widget files from blob storage
-  const allowedFiles = ['create-studio.iife.js', 'create-studio.css']
+  const allowedFiles = ['main.js', 'main.css', 'create-studio.iife.js', 'create-studio.css']
   
   if (!allowedFiles.includes(pathname)) {
     throw createError({

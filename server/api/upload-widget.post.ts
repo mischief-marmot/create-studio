@@ -1,52 +1,73 @@
-import { readFileSync, existsSync } from "fs";
-import { resolve } from "path";
 import { useLogger } from "#shared/utils/logger";
 
 const logger = useLogger('UploadWidget', true)
+
+interface UploadPayload {
+  js: string;
+  css?: string | null;
+  metadata?: {
+    buildTime?: string;
+    version?: string;
+    jsSize?: number;
+    cssSize?: number;
+  };
+}
 
 export default defineEventHandler(async (event) => {
   try {
     logger.info("Starting widget upload to blob storage...");
 
-    // Upload IIFE JavaScript file
-    const jsPath = resolve(process.cwd(), "dist/embed/create-studio.iife.js");
+    // Get the file contents from the request body
+    const body = await readBody<UploadPayload>(event)
 
-    if (!existsSync(jsPath)) {
-      logger.warn(
-        "JS file not found, widget build may still be in progress, jsPath:", jsPath
-      );
-      return { success: false, message: "Widget files not ready yet", jsPath };
+    if (!body || !body.js) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Missing JavaScript content in request body'
+      })
     }
-    const jsContent = readFileSync(jsPath, "utf-8"); // Read as text
-    logger.debug(jsContent.slice(0, 50) + '...'); // Log first 100 chars for verification
+
+    logger.debug(`Received JS content: ${body.js.slice(0, 50)}...`); // Log first 50 chars for verification
+
+    // Upload JavaScript file as main.js
     const uploadResult = await hubBlob().put(
-      "create-studio.iife.js",
-      jsContent,
+      "main.js",
+      body.js,
       {
         addRandomSuffix: false,
         contentType: "application/javascript",
+        customMetadata: {
+          buildTime: body.metadata?.buildTime || new Date().toISOString(),
+          version: body.metadata?.version || '1.0.0'
+        }
       }
     );
-    logger.success("JS file uploaded to blob: ", Math.floor(uploadResult.size / 1024), "KB");
+    logger.success("JS file uploaded to blob as main.js: ", Math.floor(uploadResult.size / 1024), "KB");
 
-    // Upload CSS file (optional - might be inlined in JS)
-    const cssPath = resolve(process.cwd(), "dist/embed/create-studio.css");
-    try {
-      const cssContent = readFileSync(cssPath, "utf-8"); // Read as text
-      const cssUploadResult = await hubBlob().put("create-studio.css", cssContent, {
+    // Upload CSS file if provided
+    let cssUploadResult = null;
+    if (body.css) {
+      cssUploadResult = await hubBlob().put("main.css", body.css, {
         addRandomSuffix: false,
         contentType: "text/css",
+        customMetadata: {
+          buildTime: body.metadata?.buildTime || new Date().toISOString(),
+          version: body.metadata?.version || '1.0.0'
+        }
       });
-      logger.success("CSS file uploaded to blob:", Math.floor(cssUploadResult.size / 1024), "KB");
-    } catch (cssError) {
-      logger.warn(
-        "CSS file not found (might be inlined in JS):",
-        (cssError as Error).message
-      );
-      // This is okay if CSS is inlined in the JavaScript bundle
+      logger.success("CSS file uploaded to blob as main.css:", Math.floor(cssUploadResult.size / 1024), "KB");
+    } else {
+      logger.info("No CSS content provided (likely inlined in JS)");
     }
 
-    return { success: true, message: "Widget files uploaded to blob storage" };
+    return {
+      success: true,
+      message: "Widget files uploaded to blob storage",
+      timestamp: new Date().toISOString(),
+      jsSize: uploadResult.size,
+      cssSize: cssUploadResult?.size || 0,
+      metadata: body.metadata
+    };
   } catch (error) {
     logger.box({
       title: "Blob Upload Failed",
