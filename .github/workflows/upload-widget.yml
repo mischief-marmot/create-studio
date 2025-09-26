@@ -34,13 +34,26 @@ jobs:
           echo "Uploading widget to blob storage..."
 
           BASE_URL="${{ secrets.CREATE_STUDIO_BASE_URL || 'https://create.studio' }}"
+          CI_TOKEN="${{ secrets.CI_UPLOAD_TOKEN }}"
 
-          # Call the upload-widget API endpoint
-          RESPONSE=$(curl -X POST \
-            -H "Content-Type: application/json" \
-            -w "\n%{http_code}" \
-            -s \
-            "$BASE_URL/api/upload-widget")
+          # Call the CI upload-widget endpoint with authentication
+          if [ -n "$CI_TOKEN" ]; then
+            RESPONSE=$(curl -X POST \
+              -H "Content-Type: application/json" \
+              -H "X-CI-Token: $CI_TOKEN" \
+              -H "User-Agent: GitHub-Actions-CreateStudio-CI/1.0" \
+              -w "\n%{http_code}" \
+              -s \
+              "$BASE_URL/api/upload-widget-ci")
+          else
+            # Fallback to regular endpoint if no token configured
+            RESPONSE=$(curl -X POST \
+              -H "Content-Type: application/json" \
+              -H "User-Agent: GitHub-Actions-CreateStudio-CI/1.0" \
+              -w "\n%{http_code}" \
+              -s \
+              "$BASE_URL/api/upload-widget-ci")
+          fi
 
           HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
           BODY=$(echo "$RESPONSE" | head -n -1)
