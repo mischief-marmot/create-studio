@@ -7,7 +7,7 @@ import tailwindcss from '@tailwindcss/vite'
 async function uploadWidgetToBlob() {
   try {
     // Use fetch to call the server API endpoint for blob upload
-    const response = await fetch('http://localhost:3001/api/upload-widget', {
+    const response = await fetch('http://localhost:3001/api/v2/upload-widget', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

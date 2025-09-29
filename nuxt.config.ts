@@ -218,6 +218,7 @@ export default defineNuxtConfig({
 
             changeTimeout = null;
           }, 500); // Wait 500ms after last change before rebuilding
+          buildAndUploadWidget();
         });
       }
     },

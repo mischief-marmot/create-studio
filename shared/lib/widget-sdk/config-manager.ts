@@ -1,5 +1,5 @@
 import { type ConsolaInstance } from 'consola'
-import { useLogger } from '../../utils/logger'
+import { useLogger } from '../../utils/logger.js'
 
 export interface ThemeConfig {
   primary?: string
@@ -86,7 +86,7 @@ export class ConfigManager {
       }
       if (this.apiKey) headers['Authorization'] = `Bearer ${this.apiKey}`
 
-      const response = await fetch(`${this.baseUrl}/api/site-config`, {
+      const response = await fetch(`${this.baseUrl}/api/v2/site-config`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)

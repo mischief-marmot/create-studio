@@ -617,7 +617,7 @@ async function loadCreationData() {
     const site_url = domain === 'localhost'? 'http://localhost:8074' : `https://${domain}`;
     try {
         // Always fetch from API
-        const data = await $fetch<HowTo>('/api/fetch-creation', {
+        const data = await $fetch<HowTo>('/api/v2/fetch-creation', {
             method: 'POST',
             body: {
                 site_url,

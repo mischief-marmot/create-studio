@@ -1,11 +1,11 @@
 /**
  * CORS middleware for API compatibility routes
- * Applies CORS headers to all /api/services/compat/v1/* routes
+ * Applies CORS headers to all /api/v1/* routes
  */
 
 export default defineEventHandler((event) => {
-  // Only apply CORS to /api/services/compat/v1/* routes
-  if (!event.node.req.url?.startsWith('/api/services/compat/v1/')) {
+  // Only apply CORS to /api/v1/* routes
+  if (!event.node.req.url?.startsWith('/api/v1/')) {
     return
   }
 

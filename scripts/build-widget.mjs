@@ -56,7 +56,7 @@ async function uploadChunkedFilesToBlob() {
       const content = readFileSync(filePath, 'utf-8')
 
       try {
-        const response = await fetch(`${baseUrl}/api/upload-widget`, {
+        const response = await fetch(`${baseUrl}/api/v2/upload-widget`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
