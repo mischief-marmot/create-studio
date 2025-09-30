@@ -1,5 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import { createConsola } from "consola";
+import vue from '@vitejs/plugin-vue'
 
 const logger = createConsola({
   level: 5,
@@ -40,6 +41,9 @@ export default defineNuxtConfig({
   debug: false,
   devtools: { enabled: false, timeline: { enabled: true } },
   nitro: {
+    rollupConfig: {
+      plugins: [vue()]
+    },
     experimental: {
       openAPI: true,
     },
@@ -138,12 +142,14 @@ export default defineNuxtConfig({
     apiNinjasKey: "",
     servicesApiJwtSecret: "",
     postmarkKey: "",
-    sendingAddress: "",
+    sendingAddress: "hello@create.studio",
     nixId: "",
     nixKey: "",
     public: {
-      rootUrl: "",
-      supportEmail: "",
+      companyName: "Mischief Marmot LLC",
+      productName: "Create Studio",
+      rootUrl: "https://create.studio",
+      supportEmail: "support@create.studio",
     },
   },
 

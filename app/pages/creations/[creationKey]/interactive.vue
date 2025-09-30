@@ -330,7 +330,7 @@ useScript({
     'data-cfasync': 'false'
 }, 
 {
-    trigger: 'server'
+    trigger: 'onNuxtReady'
 });
 
 const route = useRoute();
