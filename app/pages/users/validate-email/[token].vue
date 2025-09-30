@@ -67,7 +67,7 @@ onMounted(async () => {
   }
 
   try {
-    const response = await $fetch('/api/services/compat/v1/users/validate-email', {
+    const response = await useFetch('/api/services/compat/v1/users/validate-email', {
       method: 'POST',
       body: { token }
     })

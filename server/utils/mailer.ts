@@ -1,61 +1,63 @@
-import { ServerClient } from 'postmark'
+import { ServerClient } from "postmark";
+import { render } from "@vue-email/render";
+import ConfirmEmail from "~/components/emails/ConfirmEmail.vue";
 
 /**
  * Email service for sending validation emails and other notifications
  */
 
 export interface EmailEnvelope {
-  to: string
-  from?: string
-  subject: string
-  htmlBody?: string
-  textBody?: string
-  templateId?: number
-  templateModel?: any
+  to: string;
+  from?: string;
+  subject: string;
+  htmlBody?: string;
+  textBody?: string;
+  templateId?: number;
+  templateModel?: any;
 }
 
-const config = useRuntimeConfig()
-const logger = useLogger('Mailer', config.debug);
+const config = useRuntimeConfig();
+const logger = useLogger("Mailer", config.debug);
 
 /**
  * Send email using Postmark
  */
 export async function sendMail(envelope: EmailEnvelope): Promise<void> {
-  
-
   if (!config.postmarkKey) {
-    logger.error('Postmark API key not configured')
-    throw new Error('Postmark API key not configured')
+    logger.error("Postmark API key not configured");
+    throw new Error("Postmark API key not configured");
   }
-  const client = new ServerClient(config.postmarkKey)
+  const client = new ServerClient(config.postmarkKey);
 
   try {
-    const fromEmail = envelope.from || config.sendingAddress || 'noreply@mischiefmarmot.com'
+    const fromEmail =
+      envelope.from || config.sendingAddress || "noreply@mischiefmarmot.com";
 
     if (envelope.templateId && envelope.templateModel) {
-      logger.info('Sending email with template', { envelope });
+      logger.info("Sending email with template", { envelope });
       // Send with template
       await client.sendEmailWithTemplate({
         From: fromEmail,
         To: envelope.to,
         TemplateId: envelope.templateId,
-        TemplateModel: envelope.templateModel
-      })
+        TemplateModel: envelope.templateModel,
+      });
     } else {
-      logger.info('Sending regular email', { envelope });
+      let { to, from, subject, ...rest } = envelope
+      logger.info("Sending regular email", { to, from, subject});
       // Send regular email
       await client.sendEmail({
         From: fromEmail,
         To: envelope.to,
         Subject: envelope.subject,
-        HtmlBody: envelope.htmlBody || '',
-        TextBody: envelope.textBody || ''
-      })
+        HtmlBody: envelope.htmlBody || "",
+        TextBody: envelope.textBody || "",
+      });
     }
-    logger.success(`Email sent successfully to ${envelope.to}`)
+    logger.success(`Email sent successfully to ${envelope.to}`);
   } catch (error) {
-    logger.error('Failed to send email:', error)
-    throw new Error('Failed to send email')
+    logger.error("Failed to send email:", error);
+    throw new Error("Failed to send email");
   }
 }
 
@@ -67,31 +69,24 @@ export async function sendValidationEmail(
   validationToken: string,
   userData: { firstname?: string; lastname?: string }
 ): Promise<void> {
-  const config = useRuntimeConfig()
-  const baseUrl = config.rootUrl || 'http://localhost:3001'
-  const validationUrl = `${baseUrl}/users/validate-email/${validationToken}`
-
-  const templateId = 41539864
+  const config = useRuntimeConfig();
+  const baseUrl = config.rootUrl || "http://localhost:3001";
+  const validationUrl = `${baseUrl}/users/validate-email/${validationToken}`;
+  const fromEmail = config.sendingAddress
 
   const templateModel = {
-    action_url: validationUrl,
-    name: userData.firstname || 'Friend',
-    product_name: 'Create Studio',
-    company_name: 'Mischief Marmot LLC',
-    company_address: config.public.supportEmail || 'support@mischiefmarmot.com'
-  }
-  if (config.postmarkKey && templateId) {
-    await sendMail({
-      to: email,
-      subject: 'Please validate your email address',
-      templateId,
-      templateModel
-    })
-    return
-  }
+    actionUrl: validationUrl,
+    name: userData.firstname || "Friend",
+    productName: config.public.productName || "Create Studio",
+    companyName: config.public.companyName || "Mischief Marmot LLC",
+    supportEmail: config.public.supportEmail || "support@mischiefmarmot.com",
+  };
   await sendMail({
     to: email,
-    textBody: `Please validate your email by clicking the following link: ${validationUrl}`,
-    subject: 'Please validate your email address',
-  })
+    from: fromEmail,
+    subject: "Please validate your email address",
+    htmlBody: await render(ConfirmEmail, templateModel, { pretty: true }),
+    textBody: await render(ConfirmEmail, templateModel, { plainText: true }),
+  });
+  return;
 }
