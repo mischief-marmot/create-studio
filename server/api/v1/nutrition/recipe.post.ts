@@ -1,5 +1,5 @@
 /**
- * POST /api/services/compat/v1/nutrition/recipe
+ * POST /api/v1/nutrition/recipe
  * Calculate recipe nutrition using Nutritionix API
  *
  * Maintains compatibility with original Express API

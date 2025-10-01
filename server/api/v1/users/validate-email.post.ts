@@ -1,5 +1,5 @@
 /**
- * POST /api/services/compat/v1/users/validate-email
+ * POST /api/v1/users/validate-email
  * Validate user email via token
  *
  * Request body: { token: string }
@@ -9,12 +9,16 @@
 import { UserRepository } from '~~/server/utils/database'
 import { verifyValidationToken } from '~~/server/utils/auth'
 
+const {debug} = useRuntimeConfig()
+const logger = useLogger('API:ValidateEmail', debug)
+
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   const { token } = body
 
   if (!token) {
     setResponseStatus(event, 400)
+    logger.debug('No token')
     return {
       success: false,
       error: 'No validation token provided'
@@ -26,7 +30,7 @@ export default defineEventHandler(async (event) => {
     const userRepo = new UserRepository()
 
     const updatedUser = await userRepo.updateEmailValidation(decodedToken.id, true)
-
+    
     if (!updatedUser) {
       setResponseStatus(event, 404)
       return {
@@ -34,13 +38,14 @@ export default defineEventHandler(async (event) => {
         error: "We couldn't validate your email address with this token"
       }
     }
+    logger.debug('Updated User', updatedUser)
 
     return {
       success: true
     }
 
   } catch (error: any) {
-    console.error('Email validation error:', error)
+    logger.error('Email validation error:', error)
 
     if (error.name === 'TokenExpiredError') {
       setResponseStatus(event, 400)

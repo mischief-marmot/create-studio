@@ -1,5 +1,5 @@
 /**
- * GET /api/services/compat/v1/users/:id
+ * GET /api/v1/users/:id
  * Get user by ID (authenticated, self only)
  *
  * Maintains compatibility with original Express API

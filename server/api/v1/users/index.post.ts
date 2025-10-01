@@ -1,5 +1,5 @@
 /**
- * POST /api/services/compat/v1/users
+ * POST /api/v1/users
  * Create user and send validation email
  *
  * Maintains compatibility with original Express API

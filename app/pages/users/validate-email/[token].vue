@@ -44,15 +44,19 @@ import { useHead } from 'nuxt/app'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+
 const config = useRuntimeConfig()
 const supportEmail = config.public.supportEmail || 'support@create.studio'
 const route = useRoute()
 const token = route.params.token as string
+const logger = useLogger('ValidateEmail:Token', config.public.debug)
 
 const pending = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
+
+logger.debug('Mounting')
 
 const closeWindow = () => {
   window.close()
@@ -63,11 +67,12 @@ onMounted(async () => {
     pending.value = false
     error.value = true
     errorMessage.value = 'No validation token provided'
+    logger.debug(error)
     return
   }
-
+  logger.debug('Validating')
   try {
-    const response = await useFetch('/api/services/compat/v1/users/validate-email', {
+    const response = await $fetch('/api/v1/users/validate-email', {
       method: 'POST',
       body: { token }
     })
@@ -83,6 +88,7 @@ onMounted(async () => {
   } catch (err: any) {
     error.value = true
     errorMessage.value = err.data?.error.message || err.message || 'An error occurred during validation'
+    logger.debug(errorMessage.value, error.value)
   } finally {
     pending.value = false
   }

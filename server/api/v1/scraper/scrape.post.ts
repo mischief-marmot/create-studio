@@ -1,5 +1,5 @@
 /**
- * POST /api/services/compat/v1/scraper/scrape
+ * POST /api/v1/scraper/scrape
  * Scrape website content using Mozilla Readability
  *
  * Maintains compatibility with original Express API

@@ -1,5 +1,5 @@
 /**
- * POST /api/services/compat/v1/sites/:id
+ * POST /api/v1/sites/:id
  * Update site information
  *
  * Maintains compatibility with original Express API
