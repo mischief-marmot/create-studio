@@ -1,11 +1,64 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+@layer utilities {
+
+  .full {
+    @apply size-full;
+  }
+ 
+  /* Act as a border */
+  .card-wrapper {
+    @apply relative overflow-hidden rounded-3xl bg-gradient-to-b from-slate-700 to-slate-800;
+  }
+
+  /* Gradient */
+  .card-wrapper::before {
+    background: conic-gradient(
+      rgba(244, 114, 182, 1) 0deg,
+      rgb(198, 64, 247) 180deg,
+      /* transparent 90deg, */
+      /* rgba(192, 132, 252, 1) 180deg, */
+      rgb(249, 152, 202) 360deg
+      /* transparent 270deg */
+    );
+
+    @apply absolute left-[-25%] top-[-100%] h-[300%] w-[150%] content-[''];
+    animation: borderSpin 7s linear infinite;
+  }
+
+
+  /* Body */
+  .card-content {
+    @apply absolute left-[6px] top-[6px] h-[calc(100%-12px)] w-[calc(100%-12px)] rounded-3xl bg-gradient-to-b from-slate-800 to-slate-900;
+  }
+}
+/* 
 @theme {
   --text-xs: 0.9rem;
   --text-sm: 0.975rem;
   --text-md: 1.2rem;
   --text-lg: 1.5rem;
+} */
+
+/* Custom reverse spin animation */
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.-animate-spin {
+  animation: spin-reverse 1s linear infinite;
+}
+
+@keyframes borderSpin {
+  100% {
+    transform: rotate(-360deg);
+  }
 }
 
 @plugin "daisyui/theme" {
@@ -64,7 +117,7 @@
   /* Visual Properties */
   --border: 1px;
   --depth: 1;
-  --noise: 0;
+  --noise: 1;
 }
 
 @plugin "daisyui/theme" {
@@ -101,7 +154,7 @@
   
   /* Success - Vibrant Teal-Green */
   --color-success: oklch(76.5% 0.177 163.223);
-  --color-success-content: oklch(15% 0 0);  /* Dark text for contrast */
+  --color-success-content: oklch(0.9529 0.0653 165.58);  /* Dark text for contrast */
   
   /* Warning - Amber (similar to accent but more orange) */
   --color-warning: oklch(79.718% 0.164 69.616);
@@ -123,7 +176,7 @@
   /* Visual Properties */
   --border: 1px;
   --depth: 1;
-  --noise: 0;
+  --noise: 1;
 }
 
 

@@ -16,22 +16,31 @@
                   </span>
                 </a>
               </div>
-              <h1 class="mt-10 text-5xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-7xl dark:text-white">
+              <h1 class="mt-6 sm:mt-10 text-5xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-7xl dark:text-white">
                 {{ heading }}
-                <span v-if="headingRotate && headingRotate.length > 0" class="block w-full">
-                  <span class="text-accent">{{ currentRotatingText }}</span>
-                  <span class="animate-pulse text-accent font-thin ml-2 leading-1">|</span>
+                <span v-if="headingRotate && headingRotate.length > 0" class="text-accent block">
+                    {{ currentRotatingText }}
+                    <span class="inline-flex items-center gap-3">
+                    <LogoSolo
+                      :class="[
+                    'inline-block', 
+                    isMobile ? 'size-10' : 'size-16',
+                      isDeleting ? '-animate-spin' : '',
+                      isTyping ? 'animate-spin' : ''
+                    ]"
+                    />
+                  </span>
                 </span>
               </h1>
               <p class="mt-8 text-lg font-medium text-pretty text-gray-500 sm:text-xl/8 dark:text-gray-400">{{ description }}</p>
-              <div class="mt-10 flex items-center gap-x-6">
+              <div class="sm:mt-10 flex items-center gap-x-6">
                 <a :href="primaryButtonLink" class="btn btn-accent">{{ primaryButtonText }}</a>
                 <a v-if="secondaryButtonText" :href="secondaryButtonLink" class="text-sm/6 font-semibold text-gray-900 dark:text-white">{{ secondaryButtonText }} <span aria-hidden="true">→</span></a>
               </div>
             </div>
           </div>
         </div>
-        <div class="mt-20 sm:mt-24 md:mx-auto md:max-w-2xl lg:mx-0 lg:mt-0 lg:w-screen">
+        <div class="mt-16 sm:mt-24 md:mx-auto md:max-w-2xl lg:mx-0 lg:mt-0 lg:w-screen">
           <div class="absolute inset-y-0 right-1/2 -z-10 -mr-10 w-[200%] skew-x-[-30deg] bg-white shadow-xl ring-1 shadow-primary/10 ring-indigo-50 md:-mr-20 lg:-mr-36 dark:bg-gray-800/30  dark:ring-white/5" aria-hidden="true" />
           <div class="shadow-lg md:rounded-3xl">
             <div class="bg-base-300 [clip-path:inset(0)] md:[clip-path:inset(0_round_var(--radius-3xl))]">
@@ -48,7 +57,7 @@
           </div>
         </div>
       </div>
-      <div class="absolute inset-x-0 bottom-0 -z-10 h-24 bg-linear-to-t from-base-100 sm:h-32" />
+      <div class="absolute inset-x-0 bottom-0 -z-10 h-16 bg-linear-to-t from-base-100 sm:h-32" />
     </div>
   </div>
 </template>
@@ -85,7 +94,9 @@ const props = withDefaults(defineProps<Props>(), {
 const currentRotatingText = ref('')
 const currentIndex = ref(0)
 const isDeleting = ref(false)
+const isTyping = ref(false)
 const charIndex = ref(0)
+const isMobile = ref(false)
 let timeoutId: ReturnType<typeof setTimeout> | null = null
 
 const typeText = () => {
@@ -96,11 +107,13 @@ const typeText = () => {
   if (!isDeleting.value) {
     // Typing
     if (charIndex.value < currentWord.length) {
+      isTyping.value = true
       currentRotatingText.value = currentWord.substring(0, charIndex.value + 1)
       charIndex.value++
       timeoutId = setTimeout(typeText, 65)
     } else {
       // Wait before deleting
+      isTyping.value = false
       timeoutId = setTimeout(() => {
         isDeleting.value = true
         typeText()
@@ -116,20 +129,30 @@ const typeText = () => {
       // Move to next word
       isDeleting.value = false
       currentIndex.value = (currentIndex.value + 1) % props.headingRotate.length
-      timeoutId = setTimeout(typeText, 200)
+      timeoutId = setTimeout(typeText, 250)
     }
   }
 }
 
 onMounted(() => {
+  // Check if mobile
+  isMobile.value = window.innerWidth < 640
+
   if (props.headingRotate && props.headingRotate.length > 0) {
     typeText()
   }
+
+  // Update mobile status on resize
+  const handleResize = () => {
+    isMobile.value = window.innerWidth < 640
+  }
+  window.addEventListener('resize', handleResize)
 })
 
 onUnmounted(() => {
   if (timeoutId) {
     clearTimeout(timeoutId)
   }
+  window.removeEventListener('resize', () => {})
 })
 </script>

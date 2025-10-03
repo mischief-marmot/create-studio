@@ -1,7 +1,7 @@
 <template>
   <div>
     <button
-      class="btn bg-amber-500 btn-sm text-amber-50"
+      class="btn bg-[#d42147] btn-sm text-amber-50"
       @click="openModal"
     >
       {{ buttonText }}

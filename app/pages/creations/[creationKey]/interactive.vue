@@ -269,7 +269,7 @@
 
                         <!-- Progress Indicator -->
                         <div class="flex-1 flex justify-center items-center">
-                            <div class="text-xs text-base-content">Swipe to begin! →</div>
+                            <div class="text-xs text-base-content">Swipe <span class="hidden md:inline-block">or scroll</span> to begin! →</div>
                         </div>
 
                         <!-- Begin Button -->
