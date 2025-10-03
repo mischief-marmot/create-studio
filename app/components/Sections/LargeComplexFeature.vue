@@ -17,8 +17,23 @@
         <div class="relative overflow-hidden py-12">
             <div class="w-full mx-auto max-w-7xl px-4 lg:px-8">
                 <div class="relative p-3 rounded-xl shadow-2xl shadow-base-200 ring-1 ring-base-200 overflow-hidden max-w-[412px] max-h-[760px] w-full h-screen lg:max-h-[720px] md:max-w-none mx-auto">
-                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent via-rose-300 to-warning  z-0"></div>
-                    <iframe :src="demoRecipeUrl" class="relative w-full h-full border-0 lg:aspect-video rounded-xl overflow-hidden z-10"
+                    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent via-rose-300 to-warning z-0"></div>
+
+                    <!-- Button placeholder before iframe loads -->
+                    <div v-if="!showIframe" class="relative w-full h-full flex items-center justify-center bg-white dark:bg-base-200 rounded-xl z-10">
+                        <button @click="showIframe = true" 
+                        :class="[
+                            'btn font-normal btn-2xl gap-2',
+                            'bg-slate-800 dark:bg-white text-white dark:text-slate-800'
+                            ]"
+                        >
+                            <LogoSolo class="animate-[spin_4s_linear_infinite] size-12" />
+                            Try Interactive Mode
+                        </button>
+                    </div>
+
+                    <!-- Iframe loads on button click -->
+                    <iframe v-if="showIframe" :src="demoRecipeUrl" class="relative w-full h-full border-0 lg:aspect-video rounded-xl overflow-hidden z-10"
                         frameborder="0"
                         allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         title="Interactive Mode Demo" loading="lazy" />
@@ -56,6 +71,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 interface Feature {
     name: string
     description: string
@@ -77,4 +94,6 @@ interface Props {
 withDefaults(defineProps<Props>(), {
     screenshotAlt: 'App screenshot'
 })
+
+const showIframe = ref(false)
 </script>

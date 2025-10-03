@@ -1,0 +1,9 @@
+name = "create-api-proxy"
+main = "cloudflare-proxy-worker.js"
+compatibility_date = "2024-01-01"
+
+# Custom domain route
+# After deploying, add custom domain in Cloudflare dashboard:
+# Workers & Pages → create-api-proxy → Settings → Triggers → Custom Domains
+# Add: api.create.studio
+# Then have mediavine.com domain forward to https://api.create.studio

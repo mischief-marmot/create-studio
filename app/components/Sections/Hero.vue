@@ -16,7 +16,7 @@
                   </span>
                 </a>
               </div>
-              <h1 class="mt-6 sm:mt-10 text-5xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-7xl dark:text-white">
+              <h1 class="mt-6 sm:mt-10 text-5xl font-semibold tracking-tight text-pretty text-base-content sm:text-7xl ">
                 {{ heading }}
                 <span v-if="headingRotate && headingRotate.length > 0" class="text-accent block">
                     {{ currentRotatingText }}
@@ -32,10 +32,10 @@
                   </span>
                 </span>
               </h1>
-              <p class="mt-8 text-lg font-medium text-pretty text-gray-500 sm:text-xl/8 dark:text-gray-400">{{ description }}</p>
-              <div class="sm:mt-10 flex items-center gap-x-6">
-                <a :href="primaryButtonLink" class="btn btn-accent">{{ primaryButtonText }}</a>
-                <a v-if="secondaryButtonText" :href="secondaryButtonLink" class="text-sm/6 font-semibold text-gray-900 dark:text-white">{{ secondaryButtonText }} <span aria-hidden="true">→</span></a>
+              <p class="mt-8 text-lg font-medium text-pretty text-base-content sm:text-xl/8">{{ description }}</p>
+              <div class="mt-6 sm:mt-10 flex items-center gap-x-6">
+                <a :href="primaryButtonLink" target="_blank" class="btn btn-accent">{{ primaryButtonText }}</a>
+                <a v-if="secondaryButtonText" :href="secondaryButtonLink" class="text-sm/6 font-semibold text-base-content">{{ secondaryButtonText }} <span aria-hidden="true">→</span></a>
               </div>
             </div>
           </div>
