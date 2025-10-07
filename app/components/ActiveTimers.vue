@@ -1,6 +1,6 @@
 <template>
   <div v-if="activeTimers.length > 0"
-    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 rounded-xl border-[0.5px] border-base-300/60 shadow-xl overflow-y-auto max-w-[90%] max-h-[50vh] text-base-content z-40">
+    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 rounded-xl border-[0.5px] border-base-300/60 shadow-xl overflow-y-auto max-w-[90%] sm:max-w-lg max-h-[50vh] text-base-content z-40">
     <div>
       <div class="flex items-center justify-end">
         <button v-if="showCloseButton" @click="$emit('close')" class="p-1 cursor-pointer">

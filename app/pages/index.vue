@@ -1,7 +1,13 @@
 <template>
   <div class="min-h-screen ">
     <!-- Navigation Bar -->
-    <nav class="navbar bg-base-100 shadow-lg sticky top-0 z-50 px-2 sm:px-4">
+    <nav 
+    :class="[
+      scrollPosition > 64 ? 'sm:bg-transparent ' : '',
+      'navbar sticky bg-base-100 top-0 text-base-content sm:pt-6 z-50 sm:px-8',
+      'transition-colors duration-0'
+    ]"
+    >
       <div class="navbar-start">
         <div class="dropdown">
           <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
@@ -10,39 +16,46 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
             </svg>
           </div>
-          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+          <ul tabindex="0" class="menu menu-lg dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
             <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="#pricing">Pricing</a></li>
-            <li><a href="#about">About</a></li>
           </ul>
         </div>
-        <a href="/">
+        <a href="/"
+        :class="[
+          scrollPosition > 64 ? 'hidden' : ''
+        ]"
+        >
           <LogoFull height="32" className="dark:text-base-content" />
         </a>
       </div>
-      <div class="navbar-center hidden lg:flex">
-        <ul class="menu menu-horizontal px-1">
-          <li><a href="#features">Features</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#about">About</a></li>
+      <div class="navbar-center hidden lg:flex px-6"
+        :class="[
+          scrollPosition > 64 ? 'bg-base-100 text-base-content ring-1 ring-base-content rounded-full' : ''
+        ]">
+        <ul class="menu menu-horizontal text-md">
+          <li><a class="px-6 rounded-full" href="#features">Features</a></li>
+          <li><a class="px-6 rounded-full" href="#interactive-mode">Interactive Mode</a></li>
+          <li><a class="px-6 rounded-full" href="#how-it-works">Free Forever</a></li>
         </ul>
       </div>
       <div class="navbar-end">
-        <a class="hidden btn btn-primary btn-sm sm:btn-md">Sign In</a>
+        <a class="btn rounded-full btn-primary btn-sm sm:btn-md"
+        :class="[
+          scrollPosition > 64 ? 'hidden' : ''
+        ]">Sign In</a>
       </div>
     </nav>
 
     <!-- Hero Section -->
-    <SectionsHero heading="Get rich results for your " :heading-rotate="['Recipes', 'How-Tos', 'Lists']"
-      description="Help readers find your content on search. Add automatic JSON-LD schema, free nutrition facts, user ratings, and interactive features—all completely free."
-      primary-button-text="Start Free" primary-button-link="https://wordpress.org/plugins/mediavine-create" screenshot-src="/img/screenshots/rich-results.png"
-      screenshot-alt="Screenshot showing rich results on Google search from Create cards" />
+    <LandingHero />
 
     <!-- Features Bento Grid -->
-    <div id="features" class="bg-base-100 py-6 sm:py-32">
+    <div id="features" class="bg-base-100 py-6 sm:py-24">
       <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
         <h2 class="text-base/7 font-semibold text-secondary">Everything you need</h2>
-        <p class="mt-2 max-w-lg text-4xl font-semibold tracking-tight text-pretty text-base-content sm:text-5xl">Give
+        <p class="mt-2 font-serif sm:max-w-lg text-5xl font-semibold tracking-tight text-pretty text-base-content">Give
           readers the best content experience</p>
         <div class="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6 lg:grid-rows-2 text-base-content text-md">
           <!-- Card Types & Schema -->
@@ -53,13 +66,13 @@
               <!-- <div class="h-80 aspect-square sm:aspect-autobg-base-300"></div> -->
               <img class="h-full max-h-80 object-cover object-top-center sm:object-top-left"
                 src="/img/screenshots/card-types.png" alt="Multiple card types with automatic schema" />
-              <div class="p-10 pt-4">
+              <div class="p-4 sm:p-10 pt-4">
                 <h3 class="text-sm/4 font-semibold text-secondary">Rich Results</h3>
                 <p class="mt-2 text-xl font-medium tracking-tight text-base-content">Show up in search with eye-catching
                   cards</p>
                 <p class="mt-2 max-w-lg ">Your readers see beautiful recipe cards, star ratings, and
                   cooking times right in Google search results.</p>
-                <p class="mt-1 max-w-lg">
+                <p class="mt-2 max-w-lg">
                   <strong>How it works:</strong> We automatically generate
                   proper JSON-LD schema for every card you create.
                 </p>
@@ -75,13 +88,13 @@
             <div class="relative flex h-full flex-col overflow-hidden rounded-box lg:rounded-tr-[calc(2rem+1px)]">
               <img class="h-full max-h-80 object-cover object-top-center sm:object-top-left"
                 src="/img/screenshots/calculate-nutrition.png" alt="Multiple card types with automatic schema" />
-              <div class="p-10 pt-4">
+              <div class="p-4 sm:p-10 pt-4">
                 <h3 class="text-sm/4 font-semibold text-secondary">Nutrition Facts</h3>
                 <p class="mt-2 text-xl font-medium tracking-tight text-base-content">Give readers accurate nutrition
                   info</p>
                 <p class="mt-2 max-w-lg">Save hours of manual work while helping health-conscious
                   readers make informed choices.</p>
-                  <p class="mt-1 max-w-lg"><strong>How it works:</strong> Our free API calculates nutrition facts
+                  <p class="mt-2 max-w-lg"><strong>How it works:</strong> Our <i><u>free</u></i> API calculates nutrition facts
                   automatically from your ingredient list.</p>
               </div>
             </div>
@@ -95,11 +108,11 @@
             <div class="relative flex h-full flex-col overflow-hidden rounded-box lg:rounded-bl-[calc(2rem+1px)]">
               <img class="h-full max-h-80 object-cover object-top-center sm:object-top-left"
                 src="/img/screenshots/user-ratings.png" alt="Multiple card types with automatic schema" />
-              <div class="p-10 pt-4">
+              <div class="p-4 sm:p-10 pt-4">
                 <h3 class="text-sm/4 font-semibold text-secondary">Social Proof</h3>
                 <p class="mt-2 text-xl font-medium tracking-tight text-base-content">Build trust with reader reviews</p>
-                <p class="mt-2 max-w-lg">Let your audience share their success stories and help new
-                  readers choose what to make. Respond to reviews to build community and keep readers coming back.</p>
+                <p class="mt-2 max-w-lg">Let your audience share their stories and help others choose what to make. Respond to reviews to build community and keep readers coming back.
+                  </p>
               </div>
             </div>
             <div
@@ -112,12 +125,12 @@
             <div class="relative flex h-full flex-col overflow-hidden rounded-box">
               <img class="h-full max-h-80 object-cover object-top-center sm:object-top-left"
                 src="/img/screenshots/adjustable-servings.png" alt="Multiple card types with automatic schema" />
-              <div class="p-10 pt-4">
-                <h3 class="text-sm/4 font-semibold text-secondary">Flexibility</h3>
+              <div class="p-4 sm:p-10 pt-4">
+                <h3 class="text-sm/4 font-semibold text-secondary">Servings Adjustments <span class="badge badge-secondary badge-sm ml-1">New!</span></h3>
                 <p class="mt-2 text-xl font-medium tracking-tight text-base-content">Readers scale recipes to their
                   needs</p>
-                <p class="mt-2 max-w-lg">Your readers can cook for 2 or 20 without doing math. All
-                  ingredients and nutrition facts adjust automatically when they change the serving size.</p>
+                <p class="mt-2 pb-6 max-w-lg">Your readers can double or triple ingredients without doing math. All
+                  ingredients adjust automatically when they change the serving size.</p>
               </div>
             </div>
             <div class="pointer-events-none absolute inset-0 rounded-box shadow-sm ring-1 ring-base-300" />
@@ -130,12 +143,12 @@
               class="relative flex h-full flex-col overflow-hidden rounded-box max-lg:rounded-b-[calc(2rem+1px)] lg:rounded-br-[calc(2rem+1px)]">
               <img class="h-full max-h-80 object-cover object-top-center sm:object-top-left"
                 src="/img/screenshots/recommended-products.png" alt="Multiple card types with automatic schema" />
-              <div class="p-10 pt-4">
-                <h3 class="text-sm/4 font-semibold text-secondary">Monetization</h3>
-                <p class="mt-2 text-xl font-medium tracking-tight text-base-content">Earn with product recommendations
+              <div class="p-4 sm:p-10 pt-4">
+                <h3 class="text-sm/4 font-semibold text-secondary">Affiliate Monetization</h3>
+                <p class="mt-2 text-xl font-medium tracking-tight text-base-content">Earn with Recommended Products
                 </p>
                 <p class="mt-2 max-w-lg">Help readers find the tools they need while earning
-                  affiliate commissions. Add Amazon links and we'll display them beautifully right in your recipe cards.
+                  affiliate commissions. Add links from anywhere and we'll display them natively and beautifully, right in your cards.
                 </p>
               </div>
             </div>
@@ -147,35 +160,41 @@
     </div>
 
     <!-- Interactive Mode Section -->
-    <SectionsLargeComplexFeature eyebrow="Transform how readers cook" title="Interactive Mode"
-      description="Give your readers an interactive cooking experience that keeps them on your site longer. Swipeable steps, smart timers, and distraction-free design—all free with ad support."
+    <LandingInteractiveMode eyebrow="Transforming on-page guides" title="Brand New Interactive Mode"
+      description="Give your readers a never-before-seen interactive experience that keeps them on your site longer. Swipeable steps, smart timers, and distraction-free design—all free with ad support."
       :demoRecipeUrl="demoRecipeUrl" screenshot="/img/screenshots/interactive-mode.gif"
-      screenshot-alt="Interactive mode demonstration" :features="[
-        { name: 'Engaging experience', description: `Your readers swipe through steps, interacting with your recipes in an immersive experience&mdash;increasing engagement and reducing frustration`, icon: CodeBracketIcon },
-        { name: 'Live ingredient scaling', description: 'Readers adjust servings in-card and ingredients stay updated in Interactive Mode', icon: WindowIcon },
-        { name: 'Smart timers', description: 'Create Studio parses your instructions to generate built-in timers to keep readers on-page', icon: BellAlertIcon },
-        { name: 'Distraction-free view', description: 'Clean, focused interface keeps readers cooking instead of scrolling past ads and pop-ups, losing their place and getting frustrated', icon: DevicePhoneMobileIcon },
-        { name: 'Longer site visits', description: 'Readers stay engaged with your content throughout the entire cooking process', icon: ClockIcon },
-        { name: 'Ad supported', description: `You get free access to all of Create's premium features, just from the ads on this feature. Or use your ads for a small fee!'`, icon: CurrencyDollarIcon },
-      ]" />
+      screenshot-alt="Interactive mode demonstration"  />
 
     <!-- How it Works Callout -->
-    <div class="bg-accent py-24 sm:py-32 px-6 sm:px-24">
+    <div id="how-it-works" class="bg-primary py-24 sm:py-32 px-6 sm:px-24">
       <div class="flex flex-col space-y-16 py-18 max-w-7xl rounded-xl bg-base-100 overflow-hidden mx-auto text-center font-light">
         <div class="flex flex-col items-center space-y-6">
           <h2 class="text-7xl font-serif">How It Works</h2>
-          <p class="text-3xl text-pretty max-w-3xl px-3">
-            Interactive Mode is free with our ads—or use your own ads for maximum earnings.
+          <p class="text-4xl text-pretty max-w-3xl px-3">
+            Create is free with our ads in Interactive Mode&mdash;or use your own ads to maximize earnings.
           </p>
+
+          <!-- Toggle for mobile/tablet -->
+          <div class="xl:hidden flex items-center gap-4 mt-8">
+            <span :class="['text-lg font-medium transition-opacity', activeTab === 'standard' ? 'opacity-100' : 'opacity-50']">Standard</span>
+            <input
+              type="checkbox"
+              class="toggle toggle-accent"
+              v-model="activeTab"
+              true-value="unlocked"
+              false-value="standard"
+            />
+            <span :class="['text-lg font-medium transition-opacity', activeTab === 'unlocked' ? 'opacity-100' : 'opacity-50']">Unlocked</span>
+          </div>
         </div>
 
-        <div class="flex flex-col gap-8 xl:px-0 xl:gap-0 xl:flex-row justify-evenly">
+        <div class="xl:flex xl:flex-row xl:justify-evenly xl:gap-0">
           <!-- Free Forever -->
-          <div class="px-3 flex-1">
+          <div class="px-3 flex-1" :class="{ 'hidden xl:block': activeTab === 'unlocked' }">
             <div class="hidden xl:inline-flex items-center rounded-full bg-transparent px-4 py-1 text-sm font-semibold text-transparent mb-4" aria-hidden="true">
               Nothing here
             </div>
-            <h3 class="text-5xl font-serif mb-4">Free Forever</h3>
+            <h3 class="text-6xl font-serif mb-4">Free Forever</h3>
             <p class="text-2xl text-pretty mb-6"><em>Ad-supported Interactive Mode</em></p>
             <p class="text-xl text-pretty mb-8 max-w-lg mx-auto">
               Keep 100% of your site's ad revenue while giving readers an amazing experience at zero cost.
@@ -183,34 +202,34 @@
 
             <div class="text-left max-w-lg mx-auto space-y-4">
               <h4 class="text-lg font-semibold text-secondary">How it works</h4>
-              <ul class="space-y-3">
+              <ul class="space-y-1">
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">Your site's ads stay 100% yours—on your pages and in your Create cards</span>
+                  <span class="text-lg">Your site's ads stay 100% yours—on your pages and in your Create cards</span>
                 </li>
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">When readers click "Interactive Mode," it opens in an iframe with our ads</span>
+                  <span class="text-lg">When readers click "Interactive Mode," it opens in an iframe with our ads</span>
                 </li>
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">Our ads keep all Create features free while respecting your exclusivity agreements</span>
+                  <span class="text-lg">Our ads keep all Create features free while respecting your exclusivity agreements</span>
                 </li>
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">Readers get hands-free cooking, you get premium features—everyone wins</span>
+                  <span class="text-lg">Readers get hands-free cooking, you get premium features—everyone wins</span>
                 </li>
               </ul>
             </div>
           </div>
           <!-- Divider -->
-          <div class="divider xl:divider-horizontal w-[35%] mx-auto"></div>
-          <!-- Create Pro -->
-          <div class="px-3 flex-1 relative">
-            <div class="inline-flex items-center rounded-full bg-accent px-4 py-1 text-sm font-semibold text-accent-content mb-4">
+          <div class="divider xl:divider-horizontal w-[35%] mx-auto hidden"></div>
+          <!-- Create Unlocked -->
+          <div class="px-3 flex-1 relative" :class="{ 'hidden xl:block': activeTab === 'standard' }">
+            <div class="hidden xl:inline-flex items-center rounded-full bg-accent px-4 py-1 text-sm font-semibold text-accent-content mb-4">
               Maximize Earnings
             </div>
-            <h3 class="text-5xl font-serif mb-4">Create Pro</h3>
+            <h3 class="text-6xl font-serif mb-4">Create Unlocked</h3>
             <p class="text-2xl text-pretty mb-6"><em>Your ads, your way</em></p>
             <p class="text-xl text-pretty mb-8 max-w-lg mx-auto">
               Use your own ad network in Interactive Mode and boost your revenue while keeping the amazing reader experience.
@@ -218,31 +237,31 @@
 
             <div class="text-left max-w-lg mx-auto space-y-4">
               <h4 class="text-lg font-semibold text-secondary">How it works</h4>
-              <ul class="space-y-3">
+              <ul class="space-y-1">
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">Interactive Mode renders directly on your page—no iframe needed</span>
+                  <span class="text-lg">Interactive Mode renders directly on your page—no iframe needed</span>
                 </li>
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">Your ad network runs throughout the entire experience</span>
+                  <span class="text-lg">Your ad network runs throughout the entire experience</span>
                 </li>
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">Readers still get the same great hands-free cooking features</span>
+                  <span class="text-lg">Readers still get the same great hands-free cooking features</span>
                 </li>
                 <li class="flex gap-x-3">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-base">You earn more from engaged readers spending extra time on your site</span>
+                  <span class="text-lg">You earn more from engaged readers spending extra time on your site</span>
                 </li>
               </ul>
 
-              <div class="mt-8 pt-6 border-t border-base-300 text-center">
+              <div class="mt-8 pt-6 text-center">
                 <div class="flex items-baseline justify-center gap-x-2 mb-4">
-                  <span class="text-4xl font-bold">$8</span>
+                  <span class="text-4xl font-bold">$15</span>
                   <span class="text-base opacity-70">/month</span>
                 </div>
-                <a href="#pricing" class="btn btn-accent">Go Pro</a>
+                <a href="#pricing" class="btn btn-accent">Unlock Now</a>
               </div>
             </div>
           </div>
@@ -309,14 +328,28 @@
 </template>
 
 <script setup lang="ts">
-import { BellAlertIcon, CheckCircleIcon, ClockIcon, CodeBracketIcon, CurrencyDollarIcon, DevicePhoneMobileIcon, ExclamationCircleIcon, WindowIcon } from '@heroicons/vue/20/solid';
+import {  CheckCircleIcon } from '@heroicons/vue/20/solid';
 const config = useRuntimeConfig().public
+
+const scrollPosition = ref(0)
+
+onMounted(() => {
+  scrollPosition.value = window.scrollY
+
+  const handleScroll = () => {
+    scrollPosition.value = window.scrollY
+  }
+  window.addEventListener('scroll', handleScroll)
+})
 
 // Randomly select a demo recipe on page load
 const demoRecipes = [81, 59]
 const randomRecipeId = demoRecipes[Math.floor(Math.random() * demoRecipes.length)]
 const creationKey = createCreationKey('thesweetestoccasion.com', randomRecipeId)
 const demoRecipeUrl = `${config.rootUrl}/creations/${creationKey}/interactive`
+
+// Tab toggle state for mobile/tablet
+const activeTab = ref('standard')
 
 // Page meta
 definePageMeta({

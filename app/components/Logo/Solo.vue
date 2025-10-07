@@ -5,7 +5,7 @@
     :height="height"
     viewBox="0 0 267.01025 267.00867"
     xmlns="http://www.w3.org/2000/svg"
-    aria-label="Create Studio Icon"
+    aria-label="Create Logo Icon"
   >
     <defs>
       <clipPath clipPathUnits="userSpaceOnUse" id="solo-c6-8-4"><path d="M 0,293.35 H 792 V 0 H 0 Z" transform="translate(-158.99061,-244.70631)" /></clipPath>

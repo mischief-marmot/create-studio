@@ -127,11 +127,12 @@
                                     </li>
                                 </ul>
                             </div>
-                            <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="300x250"></div>
-
                             <!-- Timer -->
                             <RecipeTimer v-if="step.timer" :timer="step.timer" :timer-id="`step-${index + 1}-timer`"
                                 :step-index="index + 1" />
+
+                            <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="300x250"></div>
+
 
                         </div>
                     </div>
@@ -235,12 +236,15 @@
                 'flex-shrink-0 bg-base-200 border-t border-base-300 relative',
                 'md:absolute md:bottom-0 md:left-0 md:right-0 md:w-full'
                 ]">
+                <div class="hidden absolute md:block top-1/2 -translate-y-1/2 left-6 text-xs lg:text-sm">
+                        Powered by <a href="https://create.studio/"><LogoSolo class="size-5 md:size-6 inline-block ml-1" /></a>
+                    </div>
                 <!-- Active Timers Panel -->
                 <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
 
                 <!-- Supplies Dropdown Panel (only shows after slide 0) -->
                 <div v-if="showSupplies && currentSlide > 0"
-                    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 border-[0.25px] border-base-100/60 shadow-xl overflow-y-auto max-w-[90%] rounded-2xl z-50">
+                    class="absolute bottom-[120%] left-0 right-0 mx-auto bg-base-300 border-[0.25px] border-base-100/60 shadow-xl overflow-y-auto max-w-[90%] sm:max-w-lg rounded-2xl z-50">
                     <div class="p-4">
                         <div class="flex items-center justify-between mb-3">
                             <h3 class="font-semibold text-base">
@@ -279,7 +283,7 @@
                             <ChevronDoubleRightIcon class="w-5 h-5" />
                         </button>
                     </div>
-                    <div v-else class="flex items-center justify-between">
+                    <div v-else class="flex items-center justify-between sm:justify-evenly">
                         <!-- After slide 0 - with supplies button -->
                         <!-- Previous Button -->
                         <button @click="previousSlide"
@@ -290,10 +294,10 @@
 
                         <!-- Supplies Button -->
                         <button @click="showSupplies = !showSupplies"
-                            class="flex items-center space-x-2 px-4 py-2 text-base-content hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+                            class="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-content hover:bg-primary/80 rounded-lg transition-colors cursor-pointer">
                             <!-- Supplies Icon SVG -->
                             <QueueListIcon class="w-5 h-5" />
-                            <span class="text-sm font-medium">{{ suppliesLabel }}</span>
+                            <span class="text-sm font-medium">{{ showSupplies ? 'Hide' : 'Show' }} {{ suppliesLabel }}</span>
                         </button>
 
                         <!-- Next Button -->
