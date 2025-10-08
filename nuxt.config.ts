@@ -145,12 +145,15 @@ export default defineNuxtConfig({
     sendingAddress: "hello@create.studio",
     nixId: "",
     nixKey: "",
+    stripeSecretKey: "",
+    stripeWebhookSecret: "",
     public: {
-      debug: process.env.NUXT_DEBUG || false,
+      debug: false,
       companyName: "Mischief Marmot LLC",
       productName: "Create Studio",
       rootUrl: "https://create.studio",
       supportEmail: "support@create.studio",
+      stripePublishableKey: "",
     },
   },
 

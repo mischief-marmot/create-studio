@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose'
+import bcrypt from 'bcryptjs'
 
 export interface JWTPayload {
   id: number
@@ -154,5 +155,56 @@ export async function verifyValidationToken(token: string): Promise<{ id: number
       throw error
     }
     throw new Error('Invalid validation token')
+  }
+}
+
+/**
+ * Hash a password using bcrypt
+ */
+export async function hashUserPassword(password: string): Promise<string> {
+  const saltRounds = 10
+  return await bcrypt.hash(password, saltRounds)
+}
+
+/**
+ * Verify a password against a hash
+ */
+export async function verifyUserPassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash)
+}
+
+/**
+ * Generate password reset token
+ */
+export async function generatePasswordResetToken(userData: { id: number; email: string }): Promise<string> {
+  const secret = getSecret()
+
+  return await new SignJWT({ id: userData.id, email: userData.email, type: 'password_reset' } as any)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('1h') // Password reset tokens expire in 1 hour
+    .sign(secret)
+}
+
+/**
+ * Verify password reset token
+ */
+export async function verifyPasswordResetToken(token: string): Promise<{ id: number; email: string }> {
+  const secret = getSecret()
+
+  try {
+    const { payload } = await jwtVerify(token, secret)
+    const decoded = payload as any
+
+    if (decoded.type !== 'password_reset') {
+      throw new Error('Invalid token type')
+    }
+
+    return { id: decoded.id, email: decoded.email }
+  } catch (error: any) {
+    if (error.message === 'Invalid token type') {
+      throw error
+    }
+    throw new Error('Invalid password reset token')
   }
 }

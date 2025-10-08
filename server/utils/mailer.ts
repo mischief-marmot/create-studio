@@ -1,6 +1,7 @@
 import { ServerClient } from "postmark";
 import { render } from "@vue-email/render";
 import ConfirmEmail from "~/components/emails/ConfirmEmail.vue";
+import ResetPassword from "~/components/emails/ResetPassword.vue";
 
 /**
  * Email service for sending validation emails and other notifications
@@ -87,6 +88,38 @@ export async function sendValidationEmail(
     subject: "Please validate your email address",
     htmlBody: await render(ConfirmEmail, templateModel, { pretty: true }),
     textBody: await render(ConfirmEmail, templateModel, { plainText: true }),
+  });
+  return;
+}
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  resetToken: string,
+  userData: { firstname?: string; lastname?: string }
+): Promise<void> {
+  const config = useRuntimeConfig();
+  const baseUrl = config.public.rootUrl || "http://localhost:3001";
+  const resetUrl = `${baseUrl}/auth/reset-password/${resetToken}`;
+  const fromEmail = config.sendingAddress
+
+  const templateModel = {
+    actionUrl: resetUrl,
+    name: userData.firstname || "Friend",
+    productName: config.public.productName || "Create Studio",
+    productUrl: baseUrl,
+    companyName: config.public.companyName || "Mischief Marmot LLC",
+    supportEmail: config.public.supportEmail || "support@mischiefmarmot.com",
+  };
+
+  await sendMail({
+    to: email,
+    from: fromEmail,
+    subject: "Reset your password",
+    htmlBody: await render(ResetPassword, templateModel, { pretty: true }),
+    textBody: await render(ResetPassword, templateModel, { plainText: true }),
   });
   return;
 }

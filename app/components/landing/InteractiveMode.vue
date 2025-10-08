@@ -21,7 +21,7 @@
                     showIframe ? '' : 'p-3'
                 ]"
                 >
-                    <div v-if="!showIframe" class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent via-rose-300 to-warning z-0"></div>
+                    <AbsoluteGradient v-if="!showIframe" />
 
                     <!-- Button placeholder before iframe loads -->
                     <div v-if="!showIframe" class="relative size-full flex items-center justify-center bg-white dark:bg-base-200 rounded-xl z-10">

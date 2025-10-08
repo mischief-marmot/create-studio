@@ -17,7 +17,6 @@ const logger = createConsola({
   level: 5,
   fancy: true,
   formatOptions: {
-    columns: 80,
     colors: true,
     compact: false,
     date: false,

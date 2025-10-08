@@ -192,3 +192,22 @@ html {
 .box-gray {
   @apply bg-base-300 rounded-xl p-3 border-[0.5px] border-base-300/60 text-base-content;
 }
+
+.fieldset {
+  font-size: var(--text-base);
+}
+
+
+.validator-hint {
+  display: none;
+}
+
+.validator {
+    &:user-invalid, &:has(:user-invalid), &[aria-invalid]:not([aria-invalid="false"]) {
+        & ~ .validator-hint {
+            display: block;
+            color: var(--color-error);
+        }
+    }
+}
+

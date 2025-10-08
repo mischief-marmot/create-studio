@@ -14,25 +14,26 @@ interface Props {
 const year = new Date().getFullYear()
 
 const props = withDefaults(defineProps<Props>(), {
-  name: 'there',
-  actionUrl: 'https://create.studio/validate-email/token',
+  name: 'Friend',
+  actionUrl: 'https://create.studio/auth/reset-password/token',
   productName: 'Create Studio',
   productUrl: 'https://create.studio',
   companyName: 'Create Studio',
   supportEmail: ''
 })
+
 </script>
 
 <template>
   <Preview>
-    Hello
+    Reset your password
   </Preview>
   <Html lang="en">
   <Head>
     <Style>
       table {
         border-collapse: separate;
-        border-spacing: 0 10px; /* 0px horizontal spacing, 10px vertical spacing between cells */
+        border-spacing: 0 10px;
     };
     </Style>
   </Head>
@@ -56,16 +57,24 @@ const props = withDefaults(defineProps<Props>(), {
               </Heading>
 
               <Text class="my-5 text-base leading-relaxed text-gray-600">
-                Please validate your email to unlock all Create features.
+                We received a request to reset your password. Click the button below to choose a new password.
+              </Text>
+
+              <Text class="my-5 text-base leading-relaxed text-gray-600">
+                <strong>This link will expire in 1 hour.</strong>
               </Text>
 
               <!-- Action Button -->
               <Section class="w-full my-8 mx-auto p-0 text-center">
                 <Button :href="actionUrl"
                   class="text-white bg-[#5972ac] text-lg px-5 py-3 inline-block no-underline rounded-xl shadow-md">
-                  Validate Your Email
+                  Reset Your Password
                 </Button>
               </Section>
+
+              <Text class="my-5 text-base leading-relaxed text-gray-600">
+                If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
+              </Text>
 
               <Text class="my-5 text-base leading-relaxed text-gray-600">
                 Thanks!
