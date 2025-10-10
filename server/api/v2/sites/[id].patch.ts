@@ -55,10 +55,21 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Verify user owns this site
-    if (existingSite.user_id !== userId) {
+    // V2 API: Verify this is a canonical site
+    if (existingSite.canonical_site_id !== null && existingSite.canonical_site_id !== undefined) {
+      setResponseStatus(event, 400)
+      logger.debug('Not a canonical site', { siteId, canonicalSiteId: existingSite.canonical_site_id })
+      return {
+        success: false,
+        error: 'Can only update canonical sites'
+      }
+    }
+
+    // V2 API: Verify user has access via SiteUsers
+    const hasAccess = await siteRepo.userHasAccessToSite(userId, siteId)
+    if (!hasAccess) {
       setResponseStatus(event, 403)
-      logger.debug('User does not own site', { userId, siteUserId: existingSite.user_id })
+      logger.debug('User does not have access to site', { userId, siteId })
       return {
         success: false,
         error: 'Forbidden'

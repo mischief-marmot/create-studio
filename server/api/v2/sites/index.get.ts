@@ -1,11 +1,14 @@
 /**
  * GET /api/v2/sites
- * Get all sites for the authenticated user
+ * Get all canonical sites the authenticated user has access to
  *
  * Requires authentication (session)
  * Response: { success: boolean, sites: Site[] }
+ *
+ * V2 API uses canonical sites via SiteUsers pivot table
  */
 
+import { SiteRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
 const { debug } = useRuntimeConfig()
@@ -25,17 +28,15 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Fetch user's sites
-    const sites = await hubDatabase()
-      .prepare('SELECT id, url, user_id, create_version, wp_version, php_version, createdAt, updatedAt FROM Sites WHERE user_id = ?')
-      .bind(userId)
-      .all()
+    // Fetch canonical sites user has access to
+    const siteRepo = new SiteRepository()
+    const sites = await siteRepo.getUserCanonicalSites(userId)
 
-    logger.debug('Fetched sites for user', userId, sites.results?.length || 0)
+    logger.debug('Fetched canonical sites for user', userId, sites.length)
 
     return {
       success: true,
-      sites: sites.results || []
+      sites
     }
 
   } catch (error: any) {

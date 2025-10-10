@@ -31,15 +31,34 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Verify user owns this site
+    // V2 API: Verify this is a canonical site and user has access
     const siteRepo = new SiteRepository()
     const site = await siteRepo.findById(siteId)
 
-    if (!site || site.user_id !== user.id) {
+    if (!site) {
+      setResponseStatus(event, 404)
+      return {
+        success: false,
+        error: 'Site not found'
+      }
+    }
+
+    // Must be canonical site
+    if (site.canonical_site_id !== null && site.canonical_site_id !== undefined) {
+      setResponseStatus(event, 400)
+      return {
+        success: false,
+        error: 'Can only access portal for canonical sites'
+      }
+    }
+
+    // Verify user has access via SiteUsers (typically must be owner)
+    const userRole = await siteRepo.getUserRole(user.id, siteId)
+    if (!userRole || userRole !== 'owner') {
       setResponseStatus(event, 403)
       return {
         success: false,
-        error: 'Unauthorized access to this site'
+        error: 'Only site owners can access billing portal'
       }
     }
 
@@ -56,12 +75,11 @@ export default defineEventHandler(async (event) => {
     }
 
     const config = useRuntimeConfig()
-    const baseUrl = config.public.rootUrl || 'http://localhost:3001'
-
+    const baseUrl = config.public.rootUrl
     // Create Stripe Customer Portal session
     const portalUrl = await createCustomerPortalSession({
       customerId: subscription.stripe_customer_id,
-      returnUrl: `${baseUrl}/settings/site`,
+      returnUrl: `${baseUrl}/admin/settings`,
     })
 
     logger.debug('Customer portal session created for site', siteId)

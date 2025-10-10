@@ -356,6 +356,95 @@ export class SiteRepository {
 
     return this.findById(id)
   }
+
+  /**
+   * V2 API: Find canonical site by URL
+   * Canonical sites have canonical_site_id = NULL
+   */
+  async findCanonicalSite(url: string): Promise<Site | null> {
+    const result = await this.db.prepare(`
+      SELECT * FROM Sites
+      WHERE url = ? AND canonical_site_id IS NULL
+    `).bind(url).first() as Site
+    return result || null
+  }
+
+  /**
+   * V2 API: Get all canonical sites a user has access to
+   * Uses SiteUsers pivot table
+   */
+  async getUserCanonicalSites(userId: number): Promise<Site[]> {
+    const results = await this.db.prepare(`
+      SELECT s.*
+      FROM Sites s
+      INNER JOIN SiteUsers su ON s.id = su.site_id
+      WHERE su.user_id = ? AND s.canonical_site_id IS NULL
+      ORDER BY s.id ASC
+    `).bind(userId).all()
+
+    return results.results as Site[]
+  }
+
+  /**
+   * V2 API: Check if user has access to a canonical site
+   */
+  async userHasAccessToSite(userId: number, canonicalSiteId: number): Promise<boolean> {
+    const result = await this.db.prepare(`
+      SELECT 1 FROM SiteUsers
+      WHERE site_id = ? AND user_id = ?
+    `).bind(canonicalSiteId, userId).first()
+
+    return !!result
+  }
+
+  /**
+   * V2 API: Get user's role for a canonical site
+   */
+  async getUserRole(userId: number, canonicalSiteId: number): Promise<string | null> {
+    const result = await this.db.prepare(`
+      SELECT role FROM SiteUsers
+      WHERE site_id = ? AND user_id = ?
+    `).bind(canonicalSiteId, userId).first()
+
+    return result?.role || null
+  }
+
+  /**
+   * V2 API: Add user to canonical site
+   */
+  async addUserToSite(canonicalSiteId: number, userId: number, role: string = 'admin'): Promise<void> {
+    const now = new Date().toISOString()
+
+    await this.db.prepare(`
+      INSERT INTO SiteUsers (site_id, user_id, role, joined_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT (site_id, user_id) DO UPDATE SET role = excluded.role
+    `).bind(canonicalSiteId, userId, role, now).run()
+  }
+
+  /**
+   * V2 API: Remove user from canonical site
+   */
+  async removeUserFromSite(canonicalSiteId: number, userId: number): Promise<void> {
+    await this.db.prepare(`
+      DELETE FROM SiteUsers
+      WHERE site_id = ? AND user_id = ?
+    `).bind(canonicalSiteId, userId).run()
+  }
+
+  /**
+   * V2 API: Get all users for a canonical site
+   */
+  async getSiteUsers(canonicalSiteId: number): Promise<Array<{ userId: number, role: string, joinedAt: string }>> {
+    const results = await this.db.prepare(`
+      SELECT user_id as userId, role, joined_at as joinedAt
+      FROM SiteUsers
+      WHERE site_id = ?
+      ORDER BY joined_at ASC
+    `).bind(canonicalSiteId).all()
+
+    return results.results as Array<{ userId: number, role: string, joinedAt: string }>
+  }
 }
 
 /**

@@ -14,7 +14,7 @@ function getStripeClient(): Stripe {
   }
 
   return new Stripe(apiKey, {
-    apiVersion: '2024-12-18.acacia'
+    apiVersion: '2025-09-30.clover'
   })
 }
 
@@ -25,6 +25,7 @@ export async function createCheckoutSession(params: {
   siteId: number
   userId: number
   userEmail: string
+  siteName?: string
   priceId: string
   successUrl: string
   cancelUrl: string
@@ -34,17 +35,24 @@ export async function createCheckoutSession(params: {
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer_email: params.userEmail,
-    line_items: [
-      {
-        price: params.priceId,
-        quantity: 1,
-      },
-    ],
+    line_items: [{
+      price: params.priceId,
+      quantity: 1,
+    }],
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
+    allow_promotion_codes: true,
     metadata: {
       site_id: params.siteId.toString(),
       user_id: params.userId.toString(),
+    },
+    subscription_data: {
+      description: params.siteName ? `Create Unlocked - ${params.siteName}` : 'Create Unlocked',
+      metadata: {
+        site_id: params.siteId.toString(),
+        user_id: params.userId.toString(),
+        site_name: params.siteName || '',
+      },
     },
   })
 
@@ -93,9 +101,13 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         stripe_subscription_id: subscription.id,
         status: subscription.status,
         tier,
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancel_at_period_end: subscription.cancel_at_period_end,
+        current_period_start: subscription.current_period_start
+          ? new Date(subscription.current_period_start * 1000).toISOString()
+          : new Date().toISOString(),
+        current_period_end: subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : new Date().toISOString(),
+        cancel_at_period_end: subscription.cancel_at_period_end || false,
       }
 
       // Check if subscription exists for this site
@@ -169,20 +181,14 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
 
 /**
  * Determine tier from Stripe price ID
- * This should match your actual Stripe price IDs
+ * All Create Unlocked prices map to 'pro' tier
  */
 function determineTierFromPriceId(priceId?: string): string {
   if (!priceId) return 'free'
 
-  // Map your actual Stripe price IDs here
-  const tierMap: Record<string, string> = {
-    // Example: Add your real price IDs from Stripe
-    // 'price_premium_monthly': 'premium',
-    // 'price_premium_annual': 'premium',
-    // 'price_inner_circle': 'inner_circle',
-  }
-
-  return tierMap[priceId] || 'premium' // Default to premium if not found
+  // All Create Unlocked subscription prices are 'pro' tier
+  // The billing interval (monthly, quarterly, annual, biannual) is handled by Stripe
+  return 'pro'
 }
 
 /**

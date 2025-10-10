@@ -154,6 +154,13 @@ export default defineNuxtConfig({
       rootUrl: "https://create.studio",
       supportEmail: "support@create.studio",
       stripePublishableKey: "",
+      stripePrice: {
+        monthly: "",
+        quarterly: "",
+        annual: "",
+        biannual: "",
+      },
+      stripeBillingPortalUrl: "",
     },
   },
 

@@ -10,6 +10,10 @@
 
   --color-dark-accent: oklch(39.211% 0.07401 338.439);
   --color-dark-accent-content: oklch(85.908% 0.04116 336.013); 
+
+  /* Deep Navy */
+  --color-deep-navy: oklch(34.283% 0.039 235.109);
+  --color-deep-navy-content: oklch(98% 0 0);  /* Near white for contrast */
 }
 
 
@@ -26,8 +30,8 @@
   --color-base-content: oklch(94% 0.002 247.839);  /* Light text on dark backgrounds */
   
   /* Primary - Lighter version of Deep Navy for visibility */
-  --color-primary: oklch(45% 0.098 235.109);
-  --color-primary-content: oklch(0.84 0.04 232.04);
+  --color-primary: oklch(0.7164 0.1318 235.31);
+  --color-primary-content: oklch(0.2191 0.0372 234.38);
   
   /* Secondary - Brighter Sky Blue */
   --color-secondary: oklch(68% 0.120 266.660);
@@ -85,7 +89,7 @@
   --color-base-content: oklch(26.209% 0.009 248.190);  /* Dark text for base backgrounds */
   
   /* Primary - Deep Navy */
-  --color-primary: oklch(34.283% 0.039 235.109);
+  --color-primary: oklch(0.456 0.0462 235.11);
   --color-primary-content: oklch(98% 0 0);  /* Near white for contrast */
   
   /* Secondary - Sky Blue */

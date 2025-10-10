@@ -6,14 +6,15 @@
       <header class="">
         <!-- Secondary navigation -->
         <nav class="flex overflow-x-auto items-center h-16 border-b border-base-300">
-          <ul role="list" class="flex min-w-full flex-none gap-x-6 px-4 text-sm font-semibold sm:px-6 lg:px-8">
-            <li v-for="item in secondaryNavigation" :key="item.name">
-              <a
-                :href="item.href"
-                :class="item.current ? 'text-accent' : 'text-base-content hover:text-base-content/70'"
-              >
+          <ul role="list" class="flex min-w-full flex-none px-4 text-sm font-semibold sm:px-6 lg:px-8 join">
+            <li v-for="item in secondaryNavigation" :key="item.name"
+            @click="setActiveTab(item.id)"
+            :class="[
+                  'px-3 py-2 cursor-pointer join-item text-base-content bg-primary/20',
+                  item.current ? 'bg-primary/90 text-primary-content' : ' hover:bg-primary/30'
+                  ]"
+                  >
                 {{ item.name }}
-              </a>
             </li>
           </ul>
         </nav>
@@ -22,7 +23,7 @@
       <!-- Settings forms -->
       <div class="divide-y divide-base-300">
         <!-- General Information -->
-        <div class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
+        <div :class="activeTab === 'general' ? '' : 'hidden'" class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
           <div>
             <h2 class="text-base font-semibold">General </h2>
             <p class="mt-1 text-sm text-base-content/70">
@@ -83,7 +84,7 @@
         </div>
 
         <!-- Subscription -->
-        <div class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
+        <div :class="activeTab === 'subscription' ? '' : 'hidden'" class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
           <div>
             <h2 class="text-base font-semibold">Subscription</h2>
             <p class="mt-1 text-sm text-base-content/70">
@@ -134,20 +135,25 @@
                 </div>
               </div>
 
-              <!-- Action Buttons -->
-              <div class="flex gap-3">
-                <button
-                  v-if="tier === 'free'"
-                  @click="handleUpgrade"
-                  class="btn btn-primary"
-                  :disabled="upgrading"
-                >
-                  <span v-if="upgrading" class="loading loading-spinner"></span>
-                  {{ upgrading ? 'Loading...' : 'Upgrade to Pro' }}
-                </button>
+              <!-- Upgrade Callout (Free tier only) -->
+              <div v-if="tier === 'free'">
+                <div class="alert alert-success">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <div class="flex-1">
+                    <h3 class="font-semibold">Upgrade to Create Unlocked for full control</h3>
+                    <div class="text-sm">Use your own ad network in Interactive Mode and boost your revenue.</div>
+                  </div>
+                  <button @click="showUpgradeModal = true" class="btn btn-sm btn-neutral">
+                    Learn More
+                  </button>
+                </div>
+              </div>
 
+              <!-- Action Buttons (Pro tier only) -->
+              <div v-if="tier !== 'free' && subscription?.stripe_customer_id" class="flex gap-3">
                 <button
-                  v-if="tier !== 'free' && subscription?.stripe_customer_id"
                   @click="handleManageBilling"
                   class="btn btn-primary"
                   :disabled="managingBilling"
@@ -165,7 +171,7 @@
         </div>
 
         <!-- Danger Zone -->
-        <div class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
+        <div :class="activeTab === 'general' ? 'hidden' : 'hidden'" class="grid max-w-7xl grid-cols-1 gap-x-8 gap-y-10 px-4 py-16 sm:px-6 md:grid-cols-3 lg:px-8">
           <div>
             <h2 class="text-base font-semibold text-error">Delete Site</h2>
             <p class="mt-1 text-sm text-base-content/70">
@@ -198,13 +204,109 @@
         <button>close</button>
       </form>
     </dialog>
+
+    <!-- Upgrade Modal -->
+    <dialog :class="{ 'modal-open': showUpgradeModal }" class="modal">
+      <div class="modal-box max-w-2xl bg-base-100">
+        <h3 class="font-bold text-2xl mb-2">Create Pro</h3>
+        <p class="text-sm italic mb-6">Your plugin, your way</p>
+
+        <!-- Benefits -->
+        <div class="space-y-4 mb-6">
+          <p>
+            Render your own ad network in Interactive Mode and boost your revenue while keeping the amazing reader experience.
+          </p>
+          <p>Or, disable Interactive Mode enitrely. The choice is yours!</p>
+
+          <ul class="space-y-3">
+            <li class="flex gap-x-3">
+              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Interactive Mode renders directly on your page&mdash;no iframe needed</span>
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Your ad network runs throughout the entire experience</span>
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Readers still get the same great immersive experience</span>
+            </li>
+            <li class="flex gap-x-3">
+              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>You earn more from engaged readers spending extra time on your site</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Pricing Options -->
+        <div class="space-y-4">
+          <h4 class="font-semibold text-lg">Choose Your Plan</h4>
+
+          <div class="space-y-3">
+            <label
+              v-for="plan in pricingPlans"
+              :key="plan.id"
+              class="flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all"
+              :class="selectedPriceId === plan.priceId ? 'border-primary-content bg-primary text-primary-content' : 'border-base-300 hover:bg-primary/80 hover:text-primary-content hover:border-primary/50'"
+            >
+              <input
+                type="radio"
+                name="pricing-plan"
+                v-model="selectedPriceId"
+                :value="plan.priceId"
+                class="radio radio-primary"
+              />
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-semibold">{{ plan.name }}</span>
+                  <span v-if="plan.savings" :class="`badge badge-accent badge-${plan.accentColor} badge-md`">Save {{ plan.savings }}</span>
+                </div>
+                <div class="text-sm">{{ plan.description }}</div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-lg">${{ plan.price }}</div>
+                <div class="text-xs">per {{ plan.period }}</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div v-if="subscriptionError" class="alert alert-error mt-4">
+          <span>{{ subscriptionError }}</span>
+        </div>
+
+        <div class="modal-action">
+          <button class="btn" @click="showUpgradeModal = false">Cancel</button>
+          <button
+            class="btn btn-primary"
+            @click="handleUpgrade"
+            :disabled="upgrading || !selectedPriceId"
+          >
+            <span v-if="upgrading" class="loading loading-spinner"></span>
+            {{ upgrading ? 'Processing...' : 'Continue to Checkout' }}
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop" @click="showUpgradeModal = false">
+        <button>close</button>
+      </form>
+    </dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
+import { useRouter, useRoute } from 'vue-router'
 import { useSiteContext } from '~/composables/useSiteContext.js'
 import { useAuthFetch } from '~/composables/useAuthFetch.js'
 
@@ -214,12 +316,42 @@ definePageMeta({
 })
 
 const router = useRouter()
-const { selectedSiteId, selectedSite, loadSites } = useSiteContext()
+const route = useRoute()
+const { selectedSiteId, loadSites } = useSiteContext()
 
-const secondaryNavigation = [
-  { name: 'General', href: '#', current: true },
-  { name: 'Subscription', href: '#subscription', current: false },
-]
+// Initialize to default tab to avoid hydration mismatch
+// Will be updated after mount based on URL hash
+const activeTab = ref('general')
+
+const secondaryNavigation = computed(() => [
+  { name: 'General', id: 'general', current: activeTab.value === 'general' },
+  { name: 'Subscription', id: 'subscription', current: activeTab.value === 'subscription' },
+])
+
+// Update URL hash when tab changes
+const setActiveTab = (tabId: string) => {
+  activeTab.value = tabId
+  router.push({ hash: `#${tabId}` })
+}
+
+// Initialize from hash after mount to avoid hydration mismatch
+onMounted(() => {
+  const hash = route.hash.replace('#', '')
+  if (hash && (hash === 'general' || hash === 'subscription')) {
+    activeTab.value = hash
+  } else {
+    // Set default hash if not present or invalid
+    router.replace({ hash: '#general' })
+  }
+})
+
+// Watch for hash changes (e.g., browser back/forward)
+watch(() => route.hash, (newHash) => {
+  const hash = newHash.replace('#', '')
+  if (hash && (hash === 'general' || hash === 'subscription')) {
+    activeTab.value = hash
+  }
+})
 
 const site = ref<any>(null)
 const subscription = ref<any>(null)
@@ -231,6 +363,7 @@ const savingGeneral = ref(false)
 const upgrading = ref(false)
 const managingBilling = ref(false)
 const showDeleteConfirm = ref(false)
+const showUpgradeModal = ref(false)
 
 const generalError = ref('')
 const generalSuccess = ref(false)
@@ -241,8 +374,62 @@ const siteForm = ref({
   url: ''
 })
 
-// TODO: Replace with actual Stripe price ID
-const PRO_PRICE_ID = 'price_pro_monthly'
+
+const config = useRuntimeConfig()
+const selectedPriceId = ref<string | null>(config.public.stripePrice.annual)
+
+// Pricing plans with actual prices and annual savings
+const pricingPlans = computed(() => {
+  const prices = {
+    monthly: 15,
+    quarterly: 40,
+    annual: 150,
+    biennial: 250
+  }
+
+  return [
+    {
+      id: 'monthly',
+      name: 'Monthly',
+      description: 'Billed monthly',
+      price: prices.monthly,
+      period: 'month',
+      priceId: config.public.stripePrice.monthly,
+      savings: null,
+      accentColor: '',      
+    },
+    {
+      id: 'quarterly',
+      name: 'Quarterly',
+      description: 'Billed every 3 months',
+      price: prices.quarterly, // 10% off
+      period: 'quarter',
+      priceId: config.public.stripePrice.quarterly,
+      savings: `$${Math.round((prices.monthly * 12) - (prices.quarterly * 4))}/year`,
+      accentColor: 'success',
+    },
+    {
+      id: 'annual',
+      name: 'Annual',
+      description: 'Billed yearly',
+      price: prices.annual,
+      period: 'year',
+      priceId: config.public.stripePrice.annual,
+      savings: `$${Math.round((prices.monthly * 12) - prices.annual)}/year`,
+      accentColor: 'success',
+    },
+    {
+      id: 'biennial',
+      name: 'Biennial',
+      description: 'Billed every 2 years',
+      price: prices.biennial,
+      period: '2 years',
+      priceId: config.public.stripePrice.biannual,
+      savings: `$${Math.round((prices.monthly * 24) - (prices.biennial))}`,
+      accentColor: 'accent',
+    }
+  ]
+})
 
 const tierDisplayName = computed(() => {
   return tier.value === 'pro' ? 'Pro' : 'Free'
@@ -322,6 +509,11 @@ const handleSaveGeneral = async () => {
 }
 
 const handleUpgrade = async () => {
+  if (!selectedPriceId.value) {
+    subscriptionError.value = 'Please select a billing period'
+    return
+  }
+
   upgrading.value = true
   subscriptionError.value = ''
 
@@ -330,7 +522,7 @@ const handleUpgrade = async () => {
       method: 'POST',
       body: {
         siteId: selectedSiteId.value,
-        priceId: PRO_PRICE_ID
+        priceId: selectedPriceId.value
       }
     })
 
@@ -347,6 +539,7 @@ const handleUpgrade = async () => {
 }
 
 const handleManageBilling = async () => {
+  // Always create a customer-specific portal session via API
   managingBilling.value = true
   subscriptionError.value = ''
 
@@ -359,7 +552,7 @@ const handleManageBilling = async () => {
     })
 
     if (response.success && response.url) {
-      window.location.href = response.url
+      window.open(response.url, '_blank')
     } else {
       subscriptionError.value = response.error || 'Failed to open billing portal'
     }

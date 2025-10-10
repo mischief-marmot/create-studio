@@ -28,11 +28,30 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Verify user owns this site
+    // V2 API: Verify this is a canonical site and user has access
     const siteRepo = new SiteRepository()
     const site = await siteRepo.findById(siteId)
 
-    if (!site || site.user_id !== userId) {
+    if (!site) {
+      setResponseStatus(event, 404)
+      return {
+        success: false,
+        error: 'Site not found'
+      }
+    }
+
+    // Must be canonical site
+    if (site.canonical_site_id !== null && site.canonical_site_id !== undefined) {
+      setResponseStatus(event, 400)
+      return {
+        success: false,
+        error: 'Subscriptions only available for canonical sites'
+      }
+    }
+
+    // Verify user has access via SiteUsers
+    const hasAccess = await siteRepo.userHasAccessToSite(userId, siteId)
+    if (!hasAccess) {
       setResponseStatus(event, 403)
       return {
         success: false,

@@ -166,7 +166,7 @@
       screenshot-alt="Interactive mode demonstration"  />
 
     <!-- How it Works Callout -->
-    <div id="how-it-works" class="bg-primary py-24 sm:py-32 px-6 sm:px-24">
+    <div id="how-it-works" class="bg-primary dark:bg-deep-navy py-24 sm:py-32 px-6 sm:px-24">
       <div class="flex flex-col space-y-16 py-18 max-w-7xl rounded-xl bg-base-100 overflow-hidden mx-auto text-center font-light">
         <div class="flex flex-col items-center space-y-6">
           <h2 class="text-7xl font-serif">How It Works</h2>

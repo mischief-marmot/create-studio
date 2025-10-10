@@ -26,8 +26,6 @@ export default defineEventHandler(async (event) => {
   let renderMode: 'iframe' | 'in-dom' = 'iframe'
 
   try {
-    const siteRepo = new SiteRepository()
-
     // Find site by URL - need to look up across all users
     const db = hubDatabase()
     const siteResult = await db.prepare('SELECT * FROM Sites WHERE url = ?').bind(siteUrl).first()
