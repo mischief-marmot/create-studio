@@ -6,6 +6,14 @@
 .cache
 dist
 
+# Package build artifacts
+packages/*/dist
+packages/*/.nuxt
+packages/*/.nitro
+packages/*/.cache
+packages/*/.output
+packages/*/node_modules
+
 # Node dependencies
 node_modules
 

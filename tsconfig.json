@@ -1,7 +1,19 @@
 {
-  // https://nuxt.com/docs/guide/concepts/typescript
-  "extends": "./.nuxt/tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "nodenext"
-  }
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "bundler",
+    "paths": {
+      "@create-studio/shared": ["./packages/shared/src"],
+      "@create-studio/shared/*": ["./packages/shared/src/*"],
+      "@create-studio/widgets": ["./packages/widgets/src"],
+      "@create-studio/widgets/*": ["./packages/widgets/src/*"]
+    }
+  },
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/widgets" },
+    { "path": "./packages/app" }
+  ]
 }

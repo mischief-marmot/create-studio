@@ -1,0 +1,147 @@
+import tailwindcss from "@tailwindcss/vite";
+import vue from '@vitejs/plugin-vue'
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: "2025-09-18",
+  future: {
+    compatibilityVersion: 4,
+  },
+  devServer: {
+    port: 3001,
+  },
+  debug: false,
+  devtools: { enabled: false, timeline: { enabled: true } },
+  nitro: {
+    rollupConfig: {
+      plugins: [vue()]
+    },
+    experimental: {
+      openAPI: true,
+      websocket: true,
+    },
+    routeRules: {
+      "/embed/**": {
+        cors: true,
+        headers: { "Access-Control-Allow-Origin": "*" },
+      },
+      "/creations/{id}/interactive": {
+        cors: true,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        cache: {
+          maxAge: 60 * 60 * 24, // 1 day
+        },
+      },
+      "/api/v2/timers/**": {
+        cors: true,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      },
+    },
+  },
+  vite: {
+    plugins: [
+      tailwindcss(),
+      // hides sourcemap warning for tailwind
+      {
+        apply: "build",
+        name: "vite-plugin-ignore-sourcemap-warnings",
+        configResolved(config) {
+          const originalOnWarn = config.build.rollupOptions.onwarn;
+          config.build.rollupOptions.onwarn = (warning, warn) => {
+            if (
+              warning.code === "SOURCEMAP_BROKEN" &&
+              warning.plugin === "@tailwindcss/vite:generate:build"
+            ) {
+              return;
+            }
+
+            if (originalOnWarn) {
+              originalOnWarn(warning, warn);
+            } else {
+              warn(warning);
+            }
+          };
+        },
+      },
+    ],
+    server: {
+      allowedHosts: ["host.docker.internal", "localhost", "7823d21b31b9.ngrok-free.app"],
+    },
+  },
+  css: ["./app/assets/main.css"],
+
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/image",
+    "@nuxt/test-utils/module",
+    "@pinia/nuxt",
+    "@nuxthub/core",
+    "@nuxt/scripts",
+    "nuxt-auth-utils",
+  ],
+  hub: {
+    blob: true,
+    kv: true,
+    database: true,
+    cache: true,
+    bindings: {
+      observability: {
+        logs: true,
+      },
+    },
+  },
+
+  app: {
+    head: {
+      title: "Create Studio - Schema Cards",
+      meta: [
+        { charset: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        {
+          name: "description",
+          content:
+            "Create structured data cards for recipes, how-to guides, and FAQs with automatic JSON-LD generation",
+        },
+      ],
+    },
+  },
+
+  scripts: {
+    registry: {
+      googleAnalytics: {
+        id: "G-Q7YTD7XTY0",
+      },
+    },
+  },
+
+  runtimeConfig: {
+    debug: false,
+    apiNinjasKey: "",
+    servicesApiJwtSecret: "",
+    postmarkKey: "",
+    sendingAddress: "hello@create.studio",
+    nixId: "",
+    nixKey: "",
+    stripeSecretKey: "",
+    stripeWebhookSecret: "",
+    public: {
+      debug: false,
+      companyName: "Mischief Marmot LLC",
+      productName: "Create Studio",
+      rootUrl: "https://create.studio",
+      supportEmail: "support@create.studio",
+      stripePublishableKey: "",
+      stripePrice: {
+        monthly: "",
+        quarterly: "",
+        annual: "",
+        biannual: "",
+      },
+      stripeBillingPortalUrl: "",
+    },
+  },
+});
