@@ -99,7 +99,16 @@
 import { ref, computed, inject } from 'vue'
 import { CheckIcon, PlayIcon } from '@heroicons/vue/20/solid';
 import { PauseIcon, TrashIcon } from '@heroicons/vue/24/outline';
-import { useRecipeUtils } from '../composables/useRecipeUtils' 
+import { useRecipeUtils } from '../composables/useRecipeUtils'
+
+interface Timer {
+  id: string;
+  label: string;
+  remaining: number;
+  status: 'idle' | 'running' | 'paused' | 'completed' | 'alarming';
+  duration: number;
+  stepIndex?: number;
+}
 
 interface Props {
   showCloseButton?: boolean;
@@ -126,8 +135,8 @@ if (!timerManager) {
 const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume, addMinute: addMin, stopAlarm } = timerManager;
 
 // Computed list of active timers (running, paused, completed, or alarming)
-const activeTimers = computed(() => {
-  const active = Array.from(timers.value.values()).filter(timer => 
+const activeTimers = computed<Timer[]>(() => {
+  const active = Array.from(timers.value.values() as IterableIterator<Timer>).filter((timer) =>
     timer.status === 'running' || timer.status === 'paused' || timer.status === 'completed' || timer.status === 'alarming'
   );
   return active;

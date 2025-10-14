@@ -5,7 +5,6 @@ import { WidgetRegistry } from './widget-registry'
 import { MountManager } from './mount-manager'
 import { StorageManager } from './storage-manager'
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { swManager } from '@create-studio/shared/lib/service-worker/sw-manager'
 
 export interface WidgetSDKOptions {
   apiKey?: string
@@ -50,29 +49,6 @@ class WidgetSDK {
     try {
       await this.configManager.loadSiteConfig()
       await this.storageManager.init()
-
-      // Register Service Worker for background timer processing
-      // Only register if we're on the app domain (where sw.js exists)
-      try {
-        if (swManager && this.configManager.getBaseUrl()) {
-          const baseUrl = this.configManager.getBaseUrl()
-          const currentOrigin = window.location.origin
-
-          // Only register SW if we're on the same origin as the app
-          if (baseUrl.startsWith(currentOrigin)) {
-            this.logger.info('🔧 Initializing Service Worker for widgets...')
-            await swManager.register('/sw.js')
-            if (swManager.isReady()) {
-              this.logger.info('✅ Service Worker ready for background timer processing')
-            }
-          } else {
-            this.logger.info('ℹ️  Skipping Service Worker registration (embedded on external site)')
-          }
-        }
-      } catch (error) {
-        // Service Worker registration is optional, don't block widget initialization
-        this.logger.warn('⚠️  Service Worker registration failed (widgets will still work):', error)
-      }
 
       this.injectThemeStyles()
       this.autoMountWidgets()

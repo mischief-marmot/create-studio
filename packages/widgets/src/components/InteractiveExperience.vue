@@ -1,7 +1,7 @@
 <template>
     <div class="cs:h-full cs:w-full cs:flex cs:md:flex-col cs:items-center cs:justify-center cs:bg-base-300 cs:text-base-content">
-        <!-- Notification Permission Modal -->
-        <NotificationPermissionModal ref="notificationModalRef" @allow="handleNotificationAllow" @decline="handleNotificationDecline" />
+        <!-- Timer Warning Modal -->
+        <TimerWarningModal ref="timerWarningModalRef" @accept="handleTimerWarningAccept" @decline="handleTimerWarningDecline" />
 
         <!-- Show error message if loading failed -->
         <div v-if="creationError && !creation" class="cs:text-center cs:p-8">
@@ -300,16 +300,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, watchEffect, onMounted, onUnmounted, provide, nextTick, reactive } from 'vue'
-import type { HowTo, HowToStep } from '../../types/schema-org.js';
+import { ref, computed, watch, onMounted, onUnmounted, provide, nextTick, reactive } from 'vue'
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
-import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/shared-storage-manager.js';
+import { SharedStorageManager } from '@create-studio/shared';
 import { useSharedTimerManager } from '../composables/useSharedTimerManager.js';
 import { useRecipeUtils } from '../composables/useRecipeUtils.js';
 import { useReviewStorage } from '../composables/useReviewStorage.js';
 import { useReviewSubmission } from '../composables/useReviewSubmission.js';
-import NotificationPermissionModal from './NotificationPermissionModal.vue';
+import TimerWarningModal from './TimerWarningModal.vue';
+import { HowTo, HowToStep } from '@create-studio/shared';
 
 interface Props {
   creationId?: string
@@ -345,52 +345,62 @@ const { formatDuration } = useRecipeUtils();
 // Initialize shared storage manager
 const storageManager = new SharedStorageManager();
 
-// Initialize timer manager with server sync enabled
+// Initialize timer manager with local storage
 const timerManager = useSharedTimerManager({
     storageManager,
     baseUrl: finalBaseUrl.value,
-    creationId: finalCreationId.value,
-    useServerSync: true
+    creationId: finalCreationId.value
 });
 provide('timerManager', timerManager);
 
-// Notification modal ref
-const notificationModalRef = ref<any>(null);
-const pendingTimerData = ref<any>(null);
+// Timer warning modal ref
+const timerWarningModalRef = ref<any>(null);
+const pendingTimerCallback = ref<(() => void) | null>(null);
 
-// Provide notification request function to child components
-const requestNotificationPermission = (timerData: any) => {
-    console.log('📨 [InteractiveExperience] Request notification permission for timer:', timerData);
-    pendingTimerData.value = timerData;
+// Check if timer warning has been shown this session
+const hasShownTimerWarning = () => {
+    if (typeof sessionStorage === 'undefined') return false;
+    return sessionStorage.getItem('timerWarningSeen') === 'true';
+};
 
-    // Only show modal if permission is not already granted
-    if ('Notification' in window && Notification.permission === 'granted') {
-        console.log('✅ Notifications already granted, skipping modal');
+// Provide timer warning request function to child components
+const requestTimerWarning = (callback: () => void) => {
+    console.log('⏱️  [InteractiveExperience] Request timer warning for user');
+
+    // If user has already seen the warning this session, just start the timer
+    if (hasShownTimerWarning()) {
+        console.log('✅ Timer warning already shown this session, starting timer');
+        callback();
         return;
     }
 
-    if (notificationModalRef.value) {
-        notificationModalRef.value.show();
+    // Store the callback to execute after user accepts
+    pendingTimerCallback.value = callback;
+
+    if (timerWarningModalRef.value) {
+        timerWarningModalRef.value.show();
     } else {
-        console.error('❌ [InteractiveExperience] notificationModalRef is null');
+        console.error('❌ [InteractiveExperience] timerWarningModalRef is null');
+        // Fallback: start timer anyway
+        callback();
     }
 };
-provide('requestNotificationPermission', requestNotificationPermission);
+provide('requestTimerWarning', requestTimerWarning);
 
-// Handle notification modal actions
-const handleNotificationAllow = (permission: NotificationPermission) => {
-    console.log('✅ [InteractiveExperience] User allowed notifications, permission:', permission);
+// Handle timer warning modal actions
+const handleTimerWarningAccept = () => {
+    console.log('✅ [InteractiveExperience] User accepted timer warning');
 
-    // Modal has already handled the permission request
-    // Just proceed with starting the timer if we have pending timer data
-    if (pendingTimerData.value && permission === 'granted') {
-        console.log('✅ Permission granted, timer will start automatically');
+    // Execute the pending timer start callback
+    if (pendingTimerCallback.value) {
+        pendingTimerCallback.value();
+        pendingTimerCallback.value = null;
     }
 };
 
-const handleNotificationDecline = () => {
-    console.log('❌ [InteractiveExperience] User declined notifications');
-    pendingTimerData.value = null;
+const handleTimerWarningDecline = () => {
+    console.log('❌ [InteractiveExperience] User declined timer warning');
+    pendingTimerCallback.value = null;
 };
 
 // Recipe data - will be populated from API
@@ -814,16 +824,6 @@ onMounted(async () => {
         }
     }, 1000); // Check every second
 });
-
-// Auto-show active timers panel when timers become active
-watchEffect(() => {
-    const hasActive = timerManager?.hasActiveTimers.value || false;
-    if (hasActive) {
-        showActiveTimers.value = true;
-        showSupplies.value = false; // Close supplies panel if open
-    }
-});
-
 
 // Navigation functions
 const goToSlide = (index: number, immediate = false) => {

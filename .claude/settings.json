@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(do)",
+      "Bash(echo \"=== $file ===\")",
+      "Bash(npm run typecheck:*)",
+      "Bash(npx tsc:*)",
+      "Bash(cat:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install)",
+      "Bash(lsof:*)",
+      "Bash(mkdir:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "includeCoAuthoredBy": false
+}

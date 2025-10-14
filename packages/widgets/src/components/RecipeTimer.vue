@@ -50,8 +50,8 @@ if (!timerManager) {
 }
 const { getTimer, startTimer, timers } = timerManager;
 
-// Inject notification permission request function
-const requestNotificationPermission = inject<any>('requestNotificationPermission');
+// Inject timer warning request function
+const requestTimerWarning = inject<any>('requestTimerWarning');
 
 // Initialize timer
 const timerState = computed(() => {
@@ -75,18 +75,15 @@ const displayTime = computed(() => {
 const handleStartClick = () => {
   console.log('🚀 [RecipeTimer] handleStartClick called');
 
-  // Request notification permission via provided function (shows modal in InteractiveExperience)
-  if (requestNotificationPermission) {
-    requestNotificationPermission({
-      timerId: props.timerId,
-      duration: props.timer.duration,
-      label: props.timer.label,
-      stepIndex: props.stepIndex
+  // Request timer warning (shows modal in InteractiveExperience on first timer)
+  if (requestTimerWarning) {
+    requestTimerWarning(() => {
+      handleStart();
     });
+  } else {
+    // Fallback if requestTimerWarning not provided
+    handleStart();
   }
-
-  // Now start the timer
-  handleStart();
 };
 
 const handleStart = () => {
