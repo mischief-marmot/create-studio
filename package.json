@@ -9,14 +9,17 @@
   "scripts": {
     "dev": "npm run dev --workspace=@create-studio/app",
     "dev:widgets": "npm run dev --workspace=@create-studio/widgets",
+    "dev:docs": "npm run dev --workspace=@create-studio/docs",
     "build": "npm run build --workspace=@create-studio/shared && npm run build --workspace=@create-studio/widgets && npm run build --workspace=@create-studio/app",
     "build:shared": "npm run build --workspace=@create-studio/shared",
     "build:widgets": "npm run build --workspace=@create-studio/widgets",
     "build:app": "npm run build --workspace=@create-studio/app",
+    "build:docs": "npm run build --workspace=@create-studio/docs",
     "test": "npm run test --workspaces",
     "test:shared": "npm run test --workspace=@create-studio/shared",
     "test:widgets": "npm run test --workspace=@create-studio/widgets",
     "test:app": "npm run test --workspace=@create-studio/app",
+    "test:docs": "npm run test --workspace=@create-studio/docs",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
