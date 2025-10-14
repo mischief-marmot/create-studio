@@ -1,0 +1,276 @@
+<template>
+  <div class="p-6">
+    <div class="max-w-4xl mx-auto space-y-6">
+      <!-- Header -->
+      <div>
+        <h1 class="text-3xl font-bold">Site Settings</h1>
+      </div>
+
+      <!-- Site Information Card -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">Site Information</h2>
+
+          <div v-if="loading" class="flex justify-center py-8">
+            <span class="loading loading-spinner loading-lg"></span>
+          </div>
+
+          <div v-else-if="site" class="space-y-4">
+            <div>
+              <label class="label">
+                <span class="label-text font-semibold">Site URL</span>
+              </label>
+              <div class="text-lg">{{ site.url || 'Not set' }}</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div>
+              <label class="label">
+                <span class="label-text font-semibold">Versions</span>
+              </label>
+              <div class="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <div class="text-base-content/70">Create</div>
+                  <div class="font-mono">{{ site.create_version || 'N/A' }}</div>
+                </div>
+                <div>
+                  <div class="text-base-content/70">WordPress</div>
+                  <div class="font-mono">{{ site.wp_version || 'N/A' }}</div>
+                </div>
+                <div>
+                  <div class="text-base-content/70">PHP</div>
+                  <div class="font-mono">{{ site.php_version || 'N/A' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscription Card -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title">Subscription</h2>
+
+          <div v-if="subscriptionLoading" class="flex justify-center py-8">
+            <span class="loading loading-spinner loading-lg"></span>
+          </div>
+
+          <div v-else class="space-y-4">
+            <!-- Current Tier Badge -->
+            <div>
+              <label class="label">
+                <span class="label-text font-semibold">Current Plan</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <span
+                  class="badge badge-lg"
+                  :class="{
+                    'badge-neutral': tier === 'free',
+                    'badge-primary': tier === 'pro'
+                  }"
+                >
+                  {{ tierDisplayName }}
+                </span>
+                <span v-if="subscription?.status === 'active'" class="text-sm text-success">
+                  ✓ Active
+                </span>
+                <span v-else-if="subscription?.status" class="text-sm text-warning">
+                  {{ subscription.status }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Subscription Details -->
+            <div v-if="subscription && subscription.status !== 'free'" class="space-y-2">
+              <div v-if="subscription.current_period_end" class="text-sm">
+                <span class="text-base-content/70">Renews on:</span>
+                <span class="font-semibold ml-2">
+                  {{ formatDate(subscription.current_period_end) }}
+                </span>
+              </div>
+
+              <div v-if="subscription.cancel_at_period_end" class="alert alert-warning">
+                <span>Your subscription will cancel at the end of the current period.</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card-actions justify-end mt-6">
+              <button
+                v-if="tier === 'free'"
+                @click="handleUpgrade"
+                class="btn btn-primary"
+                :disabled="upgrading"
+              >
+                <span v-if="upgrading" class="loading loading-spinner"></span>
+                {{ upgrading ? 'Loading...' : 'Upgrade to Pro' }}
+              </button>
+
+              <button
+                v-if="tier !== 'free' && subscription?.stripe_customer_id"
+                @click="handleManageBilling"
+                class="btn btn-primary"
+                :disabled="managingBilling"
+              >
+                <span v-if="managingBilling" class="loading loading-spinner"></span>
+                {{ managingBilling ? 'Loading...' : 'Manage Billing' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Success/Error Messages -->
+      <div v-if="route.query.success" class="alert alert-success">
+        <span>Subscription activated successfully!</span>
+      </div>
+
+      <div v-if="route.query.canceled" class="alert alert-info">
+        <span>Checkout canceled. You can upgrade anytime.</span>
+      </div>
+
+      <div v-if="error" class="alert alert-error">
+        <span>{{ error }}</span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '~/composables/useAuth'
+import { useAuthFetch } from '~/composables/useAuthFetch'
+
+definePageMeta({
+  middleware: 'auth',
+  layout: 'dashboard'
+})
+
+const route = useRoute()
+const router = useRouter()
+const { logout: authLogout } = useAuth()
+
+const site = ref<any>(null)
+const subscription = ref<any>(null)
+const tier = ref<string>('free')
+
+const loading = ref(true)
+const subscriptionLoading = ref(true)
+const upgrading = ref(false)
+const managingBilling = ref(false)
+const error = ref('')
+
+// TODO: Replace with your actual Stripe price ID for Pro plan
+const PRO_PRICE_ID = 'price_pro_monthly'
+
+const tierDisplayName = computed(() => {
+  const names: Record<string, string> = {
+    free: 'Free',
+    pro: 'Pro'
+  }
+  return names[tier.value] || tier.value
+})
+
+const loadSiteData = async () => {
+  try {
+    // For now, we'll assume siteId from query params or get from auth token
+    const siteId = route.query.siteId
+
+    if (!siteId) {
+      error.value = 'No site ID provided'
+      return
+    }
+
+    // Load site data
+    const siteResponse = await useAuthFetch(`/api/v2/sites/${siteId}`)
+    site.value = siteResponse
+
+    // Load subscription status
+    const subResponse = await useAuthFetch(`/api/v2/subscriptions/status/${siteId}`)
+
+    if (subResponse.success) {
+      subscription.value = subResponse.subscription
+      tier.value = subResponse.tier || 'free'
+    }
+  } catch (err: any) {
+    console.error('Failed to load site data:', err)
+    error.value = err.data?.error || 'Failed to load site data'
+  } finally {
+    loading.value = false
+    subscriptionLoading.value = false
+  }
+}
+
+const handleUpgrade = async () => {
+  upgrading.value = true
+  error.value = ''
+
+  try {
+    const response = await useAuthFetch('/api/v2/subscriptions/create-checkout-session', {
+      method: 'POST',
+      body: {
+        siteId: site.value.id,
+        priceId: PRO_PRICE_ID
+      }
+    })
+
+    if (response.success && response.url) {
+      // Redirect to Stripe Checkout
+      window.location.href = response.url
+    } else {
+      error.value = response.error || 'Failed to create checkout session'
+    }
+  } catch (err: any) {
+    error.value = err.data?.error || 'Failed to create checkout session'
+  } finally {
+    upgrading.value = false
+  }
+}
+
+const handleManageBilling = async () => {
+  managingBilling.value = true
+  error.value = ''
+
+  try {
+    const response = await useAuthFetch('/api/v2/subscriptions/portal', {
+      method: 'POST',
+      body: {
+        siteId: site.value.id
+      }
+    })
+
+    if (response.success && response.url) {
+      // Redirect to Stripe Customer Portal
+      window.location.href = response.url
+    } else {
+      error.value = response.error || 'Failed to open billing portal'
+    }
+  } catch (err: any) {
+    error.value = err.data?.error || 'Failed to open billing portal'
+  } finally {
+    managingBilling.value = false
+  }
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+}
+
+onMounted(() => {
+  loadSiteData()
+})
+
+useHead({
+  title: 'Site Settings - Create Studio',
+  meta: [
+    { name: 'description', content: 'Manage your Create Studio site settings and subscription' }
+  ]
+})
+</script>

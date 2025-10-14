@@ -1,0 +1,14 @@
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json",
+  "compilerOptions": {
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "noEmit": false,
+    "composite": true,
+    "paths": {
+      "@create-studio/shared": ["../shared/src"],
+      "@create-studio/shared/*": ["../shared/src/*"]
+    }
+  }
+}
