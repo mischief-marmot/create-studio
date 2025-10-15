@@ -76,7 +76,7 @@ async function uploadChunkedFilesToBlob() {
       } catch (error) {
         const failureReason = `Network error: ${error.message}`
         uploadFailures.push({ filename, reason: failureReason })
-        logger.error(`Upload error for ${filename}:`, failureReason)
+        logger.error(`Upload error to ${baseUrl} for ${filename}:`, failureReason)
       }
     }
 
