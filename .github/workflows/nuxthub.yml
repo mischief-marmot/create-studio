@@ -1,9 +1,14 @@
-name: Deploy to NuxtHub
-on: push
+name: Deploy Create Studio
+on:
+  push:
+    paths-ignore:
+      - packages/docs/**
+env:
+  NUXT_PUBLIC_ROOT_URL: ${{ vars.NUXT_PUBLIC_ROOT_URL }}
 
 jobs:
   deploy:
-    name: "Deploy CS to NuxtHub"
+    name: "Deploy to NuxtHub"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -32,10 +37,10 @@ jobs:
 
       - name: Ensure NuxtHub module is installed
         run: npx nuxthub@latest ensure
-        working-directory: /packages/app
+        working-directory: packages/app
 
       - name: Build & Deploy to NuxtHub
         uses: nuxt-hub/action@v2
         with:
           project-key: create-studio-53me
-          directory: /packages/app
+          directory: packages/app

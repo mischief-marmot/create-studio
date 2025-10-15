@@ -41,7 +41,7 @@ async function uploadChunkedFilesToBlob() {
     logger.info(`Found ${files.length} files to upload:`, files)
 
     // Upload each file individually to blob storage
-    const baseUrl = process.env.NUXT_HUB_PROJECT_URL || process.env.NUXT_PUBLIC_CREATE_STUDIO_BASE_URL || 'http://localhost:3001'
+    const baseUrl = process.env.NUXT_PUBLIC_ROOT_URL || 'https://create.studio'
     const uploadFailures = []
 
     for (const filename of files) {
