@@ -14,7 +14,8 @@ export default defineNuxtConfig({
   devtools: { enabled: false, timeline: { enabled: true } },
   nitro: {
     rollupConfig: {
-      plugins: [vue()]
+      plugins: [vue()],
+      external: ['axios', 'form-data', 'combined-stream', 'delayed-stream']
     },
     experimental: {
       openAPI: true,

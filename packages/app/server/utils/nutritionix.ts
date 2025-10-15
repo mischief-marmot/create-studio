@@ -1,5 +1,4 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
-import axios from 'axios'
 
 /**
  * Nutritionix API service for nutrition calculation
@@ -118,7 +117,9 @@ async function fetchNutritionFromAPI(ingredients: Ingredient[], servings: number
     num_servings: servings
   }
 
-  const response = await axios.post(url, requestBody, {
+  const response = await $fetch(url, {
+    method: 'POST',
+    body: requestBody,
     headers: {
       'x-app-id': appId,
       'x-app-key': appKey,
@@ -127,7 +128,7 @@ async function fetchNutritionFromAPI(ingredients: Ingredient[], servings: number
     }
   })
 
-  return response.data
+  return response
 }
 
 /**

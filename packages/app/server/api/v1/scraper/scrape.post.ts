@@ -6,7 +6,6 @@
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import axios from "axios";
 import * as cheerio from "cheerio";
 import { verifyJWT } from "~~/server/utils/auth";
 import { sendErrorResponse } from "~~/server/utils/errors";
@@ -33,18 +32,15 @@ export default defineEventHandler(async (event) => {
 
     const url = body.url;
 
-    // Configure axios with proper headers
-    const axiosConfig: any = {
+    // Fetch HTML content
+    const parsedUrl = new URL(url);
+    let html = await $fetch<string>(url, {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.85 Safari/537.36",
       },
-    };
-
-    // Fetch HTML content
-    const parsedUrl = new URL(url);
-    const response = await axios.get(url, axiosConfig);
-    let html = response.data;
+      parseResponse: (txt) => txt, // Return raw HTML string, not parsed JSON
+    });
 
     // Fix relative URLs that start with //
     const regEx = new RegExp(`"\\/\\/${parsedUrl.hostname}`, "g");
@@ -135,11 +131,9 @@ export default defineEventHandler(async (event) => {
     // Handle specific service unavailable errors (firewall/bot-blocker)
     if (
       (error as any)?.message?.includes("503") ||
-      (error as any)?.response?.status === 503
+      (error as any)?.statusCode === 503
     ) {
-      errorMessage = `Our server was unable to fetch [${
-        (error as any).config?.url || "the URL"
-      }] because of a firewall/bot-blocker on that site. Please contact support for help.`;
+      errorMessage = `Our server was unable to fetch [${body?.url || "the URL"}] because of a firewall/bot-blocker on that site. Please contact support for help.`;
     }
 
     return sendErrorResponse(event, errorMessage);
