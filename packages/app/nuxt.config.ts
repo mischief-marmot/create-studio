@@ -14,8 +14,20 @@ export default defineNuxtConfig({
   devtools: { enabled: false, timeline: { enabled: true } },
   nitro: {
     rollupConfig: {
-      plugins: [vue()],
-      external: ['axios', 'form-data', 'combined-stream', 'delayed-stream']
+      plugins: [vue()]
+    },
+    cloudflare: {
+      pages: {
+        routes: {
+          exclude: ['/assets/*']
+        }
+      }
+    },
+    compatibilityFlags: ['nodejs_compat'],
+    alias: {
+      'object-inspect': '../../node_modules/unenv/dist/runtime/mock/empty.mjs',
+      'picomatch': '../../node_modules/unenv/dist/runtime/mock/empty.mjs',
+      'anymatch': '../../node_modules/unenv/dist/runtime/mock/empty.mjs'
     },
     experimental: {
       openAPI: true,
