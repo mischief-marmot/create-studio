@@ -1,7 +1,7 @@
 <template>
   <div class="sm:py-32 bg-base-100 text-base-content min-h-screen py-24">
-    <div v-if="recipe" class="max-w-7xl lg:px-8 px-6 mx-auto">
-      <div class="max-w-4xl mx-auto">
+    <div v-if="recipe" class="max-w-7xl mx-auto">
+      <div class="max-w-4xl lg:px-8 mx-auto">
         <!-- Back Link -->
         <NuxtLink to="/demos" class="text-base-content/70 hover:text-base-content inline-flex items-center gap-2 mb-8 text-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,7 +54,7 @@
         <!-- Interactive Widget - Loads Immediately -->
         <div
           :id="`interactive-widget-${recipe.id}`"
-          class="w-full min-h-[600px] rounded-2xl bg-base-200/50"
+          class="w-full rounded-2xl bg-base-200/50"
         />
       </div>
     </div>
