@@ -18,12 +18,24 @@
 
 import { consola } from 'consola'
 
+interface MigrationRequest {
+  limit?: number
+  offset?: number
+}
+
 export default defineEventHandler(async (event) => {
   const logger = consola.withTag('migrate-canonical-sites')
   logger.start('Starting canonical sites migration...')
 
   try {
     const db = hubDatabase()
+
+    // Parse request body for pagination
+    const body = await readBody<MigrationRequest>(event)
+    const limit = body.limit || 500
+    const offset = body.offset || 0
+
+    logger.info(`Pagination: limit=${limit}, offset=${offset}`)
 
     // Get all unique URLs that haven't been migrated yet
     // (URLs where none of the sites have canonical_site_id set)
@@ -34,8 +46,9 @@ export default defineEventHandler(async (event) => {
       AND url NOT IN (
         SELECT DISTINCT url FROM Sites WHERE canonical_site_id IS NOT NULL
       )
-      LIMIT 100
-    `).all()
+      ORDER BY url
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all()
     const urls = urlsResult.results.map((row: any) => row.url)
 
     logger.info(`Found ${urls.length} unique URLs to process`)
@@ -144,21 +157,42 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    logger.success('Migration completed successfully!')
+    // Check if there are more URLs to process
+    const remainingResult = await db.prepare(`
+      SELECT COUNT(DISTINCT url) as count FROM Sites
+      WHERE url IS NOT NULL
+      AND url NOT IN (
+        SELECT DISTINCT url FROM Sites WHERE canonical_site_id IS NOT NULL
+      )
+    `).first()
+    const totalRemaining = (remainingResult as any)?.count || 0
+    const hasMore = totalRemaining > (offset + limit)
+    const nextOffset = hasMore ? offset + limit : null
+
+    logger.success('Migration batch completed!')
     logger.info(`Summary:`)
     logger.info(`  - Canonical sites: ${canonicalCount}`)
     logger.info(`  - Legacy sites: ${legacyCount}`)
     logger.info(`  - SiteUsers entries created: ${siteUserCount}`)
     logger.info(`  - Subscriptions moved: ${subscriptionCount}`)
+    logger.info(`  - URLs processed: ${urls.length}/${totalRemaining} remaining`)
 
     return {
       success: true,
-      message: 'Migration completed successfully!',
+      message: hasMore ? 'Migration batch completed. More URLs to process.' : 'Migration completed successfully!',
       summary: {
         canonicalSites: canonicalCount,
         legacySites: legacyCount,
         siteUsersCreated: siteUserCount,
         subscriptionsMoved: subscriptionCount
+      },
+      pagination: {
+        processed: urls.length,
+        totalRemaining,
+        offset,
+        limit,
+        hasMore,
+        nextOffset
       }
     }
 

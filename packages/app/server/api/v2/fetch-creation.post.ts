@@ -48,6 +48,9 @@ export default defineEventHandler(async (event) => {
   const startTime = performance.now()
   const checkpoints: Record<string, number> = {}
 
+  // Set cache control headers - 30 days to match HubKV TTL
+  setHeader(event, 'Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400')
+
   const body = await readBody<FetchCreationBody>(event)
   checkpoints.readBody = performance.now()
 

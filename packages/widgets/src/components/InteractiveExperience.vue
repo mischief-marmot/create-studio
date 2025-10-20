@@ -675,7 +675,8 @@ async function loadCreationData() {
             const response = await fetch(`${finalBaseUrl.value}/api/v2/fetch-creation`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'max-age=2592000' // 30 days, matches server TTL
                 },
                 body: JSON.stringify({
                     site_url,
@@ -694,6 +695,10 @@ async function loadCreationData() {
             // Using Nuxt $fetch
             const data = await fetchFn<HowTo>('/api/v2/fetch-creation', {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cache-Control': 'max-age=2592000' // 30 days, matches server TTL
+                },
                 body: {
                     site_url,
                     creation_id: parseInt(finalCreationId.value),
