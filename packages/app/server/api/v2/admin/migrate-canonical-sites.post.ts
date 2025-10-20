@@ -31,9 +31,9 @@ export default defineEventHandler(async (event) => {
     const db = hubDatabase()
 
     // Parse request body for pagination
-    const body = await readBody<MigrationRequest>(event)
-    const limit = body.limit || 500
-    const offset = body.offset || 0
+    const body = (await readBody<MigrationRequest>(event).catch(() => ({}))) as MigrationRequest
+    const limit = body?.limit || 500
+    const offset = body?.offset || 0
 
     logger.info(`Pagination: limit=${limit}, offset=${offset}`)
 
