@@ -73,7 +73,7 @@
   /* Visual Properties */
   --border: 1px;
   --depth: 1;
-  --noise: 0;
+  --noise: 1;
 }
 
 @plugin "daisyui/theme" {

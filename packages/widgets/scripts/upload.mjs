@@ -5,7 +5,7 @@ import { config as loadEnv } from 'dotenv'
 import { createConsola } from "consola";
 
 // Load environment variables from root .env file
-loadEnv({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../../.env') })
+loadEnv({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../app/.env') })
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')

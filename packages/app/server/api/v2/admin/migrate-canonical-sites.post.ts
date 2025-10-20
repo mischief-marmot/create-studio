@@ -25,9 +25,17 @@ export default defineEventHandler(async (event) => {
   try {
     const db = hubDatabase()
 
-    // Get all unique URLs
-    logger.info('Finding all unique URLs...')
-    const urlsResult = await db.prepare('SELECT DISTINCT url FROM Sites WHERE url IS NOT NULL').all()
+    // Get all unique URLs that haven't been migrated yet
+    // (URLs where none of the sites have canonical_site_id set)
+    logger.info('Finding unmigrated URLs...')
+    const urlsResult = await db.prepare(`
+      SELECT DISTINCT url FROM Sites
+      WHERE url IS NOT NULL
+      AND url NOT IN (
+        SELECT DISTINCT url FROM Sites WHERE canonical_site_id IS NOT NULL
+      )
+      LIMIT 100
+    `).all()
     const urls = urlsResult.results.map((row: any) => row.url)
 
     logger.info(`Found ${urls.length} unique URLs to process`)

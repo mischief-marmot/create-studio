@@ -3,11 +3,11 @@
         <div
             v-if="creationInfo"
             :id="`interactive-widget-${creationInfo.creationId}`"
-            class="h-full w-full"
+            class="h-full w-full pb-[71px]"
         />
-        <div v-else class="h-full w-full flex items-center justify-center bg-base-300">
-            <div class="text-center p-8">
-                <h2 class="text-2xl font-bold text-error mb-4">Invalid Creation</h2>
+        <div v-else class="bg-base-300 flex items-center justify-center w-full h-full">
+            <div class="p-8 text-center">
+                <h2 class="text-error mb-4 text-2xl font-bold">Invalid Creation</h2>
                 <p class="text-base-content mb-4">The creation key provided is not valid.</p>
                 <a href="/" class="btn btn-primary">Back to Home</a>
             </div>

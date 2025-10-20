@@ -61,11 +61,14 @@
 
             <div :ref="(el) => setWidgetRef(el, recipe.id)" :data-recipe-id="recipe.id"
               :data-creation-key="recipe.creationKey" :data-domain="recipe.domain"
-              class="w-full min-h-[600px] rounded-2xl bg-base-200/50 flex items-center justify-center transition-all duration-300"
+              class="rounded-2xl bg-base-200/50 flex items-center justify-center w-full overflow-hidden transition-all duration-300"
               :class="{ 'bg-base-200': !loadedWidgets.has(recipe.id) }">
               <!-- Widget Container -->
-              <div :id="`interactive-widget-${recipe.id}`" class="w-full h-full min-h-[600px]"
-                :class="{ 'hidden': !loadedWidgets.has(recipe.id) }" />
+               <div
+                :id="`interactive-widget-${recipe.id}`"
+                class="w-full"
+                :class="{ 'hidden': !loadedWidgets.has(recipe.id) }"
+              />
             </div>
           </article>
         </div>
@@ -78,13 +81,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { demoRecipes } from '~~/utils/demoRecipes'
 
-
-// Load widget SDK
-useScript({
-  src: '/embed/main.js',
-  type: 'module',
-  id: 'create-studio-embed'
-})
 
 // Track which widgets have been loaded
 const loadedWidgets = ref<Set<number>>(new Set())
@@ -192,6 +188,16 @@ onUnmounted(() => {
 definePageMeta({
   name: 'demos',
   layout: 'default'
+})
+
+useScript({
+   src: '/embed/main.js',
+    type: 'module',
+    id: 'create-studio-embed',
+    crossorigin: 'anonymous',
+    async: true,
+    defer: false,
+    fetchPriority: 'high',
 })
 
 // SEO meta tags
