@@ -392,6 +392,7 @@ export class SharedStorageManager {
 
   /**
    * Request servings multiplier from parent window (for iframe usage)
+   * Optimized to avoid long waits when not in an active iframe
    */
   async requestServingsMultiplierFromParent(creationKey: string): Promise<number> {
     return new Promise((resolve) => {
@@ -400,17 +401,33 @@ export class SharedStorageManager {
         return
       }
 
+      // Check if we're actually in an iframe with a different origin parent
+      // If document.referrer is empty or same-origin, parent is unlikely to have data
+      const isSameOrigin = window.parent.location.href.includes(window.location.hostname) ||
+                          window.parent === window.top
+      const hasValidParent = window.parent && window.parent !== window && !isSameOrigin
+
+      if (!hasValidParent) {
+        // Not in a valid cross-origin iframe, resolve immediately
+        resolve(this.getServingsMultiplier(creationKey))
+        return
+      }
+
       const messageId = Math.random().toString(36).substr(2, 9)
-      
+      let resolved = false
+
       const handleMessage = (event: MessageEvent) => {
         if (event.data.type === 'SERVINGS_MULTIPLIER_RESPONSE' && event.data.messageId === messageId) {
           window.removeEventListener('message', handleMessage)
-          resolve(event.data.multiplier || 1)
+          if (!resolved) {
+            resolved = true
+            resolve(event.data.multiplier || 1)
+          }
         }
       }
 
       window.addEventListener('message', handleMessage)
-      
+
       // Request servings multiplier from parent
       window.parent.postMessage({
         type: 'REQUEST_SERVINGS_MULTIPLIER',
@@ -418,11 +435,14 @@ export class SharedStorageManager {
         creationKey
       }, '*')
 
-      // Fallback timeout
+      // Reduced timeout from 1000ms to 200ms for faster fallback
       setTimeout(() => {
         window.removeEventListener('message', handleMessage)
-        resolve(1)
-      }, 1000)
+        if (!resolved) {
+          resolved = true
+          resolve(1)
+        }
+      }, 200)
     })
   }
 

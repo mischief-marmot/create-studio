@@ -124,11 +124,11 @@ export default defineNuxtConfig({
   },
 
   scripts: {
-    registry: {
-      googleAnalytics: {
-        id: "G-Q7YTD7XTY0",
+    registry: process.env.NODE_ENV === 'production' ?{
+      googleAnalytics:  {
+        id: "G-Q7YTD7XTY0"
       },
-    },
+    } : {},
   },
 
   runtimeConfig: {

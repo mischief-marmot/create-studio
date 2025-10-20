@@ -44,12 +44,16 @@ useHead({
     ]
 });
 
-// Load widget SDK
+
 useScript({
-    src: '/embed/main.js',
+   src: '/embed/main.js',
     type: 'module',
-    id: 'create-studio-embed'
-});
+    id: 'create-studio-embed',
+    crossorigin: 'anonymous',
+    async: true,
+    defer: false,
+    fetchPriority: 'high',
+})
 
 const route = useRoute();
 const creationKey = route.params.creationKey as string;

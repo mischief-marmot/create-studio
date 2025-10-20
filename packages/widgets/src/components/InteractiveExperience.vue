@@ -14,7 +14,10 @@
 
         <!-- Unified Responsive Container -->
         <div v-if="dataReady" ref="containerRef"
-            :class="[ 'cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:flex-col cs:overflow-hidden cs:relative', 'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-[720px] cs:md:mx-auto cs:md:my-auto cs:md:gap-8' ]"
+            :class="[ 
+                'cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:flex-col cs:overflow-hidden cs:relative', 
+                'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-[720px] cs:md:mx-auto cs:md:my-auto cs:md:gap-8 cs:pb-[71px]' 
+                ]"
             @mousedown="startDrag"
             @touchstart="startDrag">
 
@@ -222,7 +225,7 @@
             <!-- Bottom Navigation Controls - Fixed at bottom for both mobile and desktop -->
             <div :class="[ 'cs:flex-shrink-0 cs:bg-base-200 cs:border-t cs:border-base-300 cs:relative', 'cs:md:absolute cs:md:bottom-0 cs:md:left-0 cs:md:right-0 cs:md:w-full' ]">
                 <div v-if="!finalHideAttribution" class="cs:hidden cs:absolute cs:md:block cs:top-1/2 cs:-translate-y-1/2 cs:left-6 cs:text-xs cs:lg:text-sm">
-                    Powered by <a href="https://create.studio/"><LogoSolo class="cs:size-5 cs:md:size-6 cs:inline-block cs:ml-1" /></a>
+                    Powered by <a href="{{ finalBaseUrl }}"><LogoSolo class="cs:size-5 cs:md:size-6 cs:inline-block cs:ml-1" /></a>
                 </div>
                 <!-- Active Timers Panel -->
                 <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
@@ -301,6 +304,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, provide, nextTick, reactive } from 'vue'
+import LogoSolo from './Logo/Solo.vue';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { SharedStorageManager } from '@create-studio/shared';
@@ -657,7 +661,7 @@ const MIN_HEIGHT = ref(3); // Will be calculated dynamically
 const MAX_HEIGHT = 35; // Maximum 35% height when expanded
 const COLLAPSED_THRESHOLD = 10; // Threshold for collapsed state
 
-// Load creation data
+// Load creation data (server-side caching via HubKV is handled by /api/v2/fetch-creation)
 async function loadCreationData() {
     isLoadingCreation.value = true;
     const site_url = finalDomain.value === 'localhost'? 'http://localhost:8074' : `https://${finalDomain.value}`;
@@ -698,6 +702,7 @@ async function loadCreationData() {
             });
             creation.value = data;
         }
+
     } catch (error: any) {
         console.error('Failed to fetch creation:', error);
         creationError.value = error?.statusMessage || error?.message || 'Failed to load creation data';
@@ -706,8 +711,10 @@ async function loadCreationData() {
     }
 }
 
+
 // Client-side only: Initialize loading and persistence
 onMounted(async () => {
+
     // Set up cleanup before any async operations
     let stateRefreshInterval: NodeJS.Timeout;
     onUnmounted(() => {
@@ -765,7 +772,6 @@ onMounted(async () => {
       // Silent fail for parent communication
     }
 
-
     if (creationState) {
         // Restore persisted state
         currentSlide.value = creationState.currentStep;
@@ -801,7 +807,7 @@ onMounted(async () => {
         }
     }
 
-    // Hide skeleton overlay after scrolling is complete
+    // Hide skeleton overlay after all initialization is complete
     isLoadingPersistence.value = false;
 
     // Set up periodic refresh of creation state to detect external changes

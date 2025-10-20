@@ -1,5 +1,9 @@
 import type { HowTo, HowToStep, ImageObject } from '~/types/schema-org'
 import { parseTimerFromText } from './timerLabels'
+import { useLogger } from '@create-studio/shared/utils/logger'
+
+const config = useRuntimeConfig()
+const logger = useLogger('TransformCreation', config.debug)
 
 interface WPCreationResponse {
   id: number
@@ -25,6 +29,8 @@ interface WPCreationResponse {
   products?: any[]
   category_name?: string
   keywords?: string
+  created?: string
+  modified?: string
 }
 
 interface WPMediaResponse {
@@ -55,14 +61,17 @@ export async function transformCreationToHowTo(
   creation: WPCreationResponse,
   siteUrl: string
 ): Promise<HowTo> {
+  const startTime = performance.now()
   // Parse instructions HTML to extract steps and image IDs
   const { steps, stepImageMap } = parseInstructions(creation.instructions)
-  
+
   // Get unique image IDs to fetch
   const imageIds = Array.from(stepImageMap.values())
-  
+  logger.info(`${(performance.now() - startTime).toFixed(2)}ms Fetching ${imageIds.length} images`)
+
   // Fetch all images in parallel
   const images = await fetchImages(imageIds, siteUrl)
+  console.info(`${(performance.now() - startTime).toFixed(2)}ms Fetched ${imageIds.length} images`)
   
   // Map images to steps based on the step-image mapping
   const stepsWithImages = mapImagesToSteps(steps, images, stepImageMap)
@@ -76,7 +85,8 @@ export async function transformCreationToHowTo(
     '@type': 'Recipe',
     name: creation.title || 'Recipe',
     description: cleanHtml(creation.description || ''),
-    datePublished: new Date().toISOString(),
+    datePublished: creation.created || new Date().toISOString(),
+    dateModified: creation.modified || new Date().toISOString(),
     difficulty: mapDifficulty(creation.difficulty),
     interactiveMode: true,
     step: stepsWithImages,
@@ -135,6 +145,8 @@ export async function transformCreationToHowTo(
     howTo.nutrition = processNutrition(creation.nutrition)
   }
   
+  const totalTime = performance.now() - startTime
+  logger.info(`${totalTime.toFixed(2)}ms Total transform time`)
   return howTo
 }
 
