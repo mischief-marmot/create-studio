@@ -152,7 +152,7 @@ export default defineNuxtConfig({
         monthly: "",
         quarterly: "",
         annual: "",
-        biannual: "",
+        biennial: "",
       },
       stripeBillingPortalUrl: "",
     },

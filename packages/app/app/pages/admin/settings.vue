@@ -205,102 +205,8 @@
       </form>
     </dialog>
 
-    <!-- Upgrade Modal -->
-    <dialog :class="{ 'modal-open': showUpgradeModal }" class="modal">
-      <div class="modal-box max-w-2xl bg-base-100">
-        <h3 class="font-bold text-2xl mb-2">Create Pro</h3>
-        <p class="text-sm italic mb-6">Your plugin, your way</p>
-
-        <!-- Benefits -->
-        <div class="space-y-4 mb-6">
-          <p>
-            Render your own ad network in Interactive Mode and boost your revenue while keeping the amazing reader experience.
-          </p>
-          <p>Or, disable Interactive Mode enitrely. The choice is yours!</p>
-
-          <ul class="space-y-3">
-            <li class="flex gap-x-3">
-              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Interactive Mode renders directly on your page&mdash;no iframe needed</span>
-            </li>
-            <li class="flex gap-x-3">
-              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Your ad network runs throughout the entire experience</span>
-            </li>
-            <li class="flex gap-x-3">
-              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Readers still get the same great immersive experience</span>
-            </li>
-            <li class="flex gap-x-3">
-              <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>You earn more from engaged readers spending extra time on your site</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Pricing Options -->
-        <div class="space-y-4">
-          <h4 class="font-semibold text-lg">Choose Your Plan</h4>
-
-          <div class="space-y-3">
-            <label
-              v-for="plan in pricingPlans"
-              :key="plan.id"
-              class="flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all"
-              :class="selectedPriceId === plan.priceId ? 'border-primary-content bg-primary text-primary-content' : 'border-base-300 hover:bg-primary/80 hover:text-primary-content hover:border-primary/50'"
-            >
-              <input
-                type="radio"
-                name="pricing-plan"
-                v-model="selectedPriceId"
-                :value="plan.priceId"
-                class="radio radio-primary"
-              />
-              <div class="flex-1">
-                <div class="flex items-center gap-2">
-                  <span class="font-semibold">{{ plan.name }}</span>
-                  <span v-if="plan.savings" :class="`badge badge-accent badge-${plan.accentColor} badge-md`">Save {{ plan.savings }}</span>
-                </div>
-                <div class="text-sm">{{ plan.description }}</div>
-              </div>
-              <div class="text-right">
-                <div class="font-bold text-lg">${{ plan.price }}</div>
-                <div class="text-xs">per {{ plan.period }}</div>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <div v-if="subscriptionError" class="alert alert-error mt-4">
-          <span>{{ subscriptionError }}</span>
-        </div>
-
-        <div class="modal-action">
-          <button class="btn" @click="showUpgradeModal = false">Cancel</button>
-          <button
-            class="btn btn-primary"
-            @click="handleUpgrade"
-            :disabled="upgrading || !selectedPriceId"
-          >
-            <span v-if="upgrading" class="loading loading-spinner"></span>
-            {{ upgrading ? 'Processing...' : 'Continue to Checkout' }}
-          </button>
-        </div>
-      </div>
-      <form method="dialog" class="modal-backdrop" @click="showUpgradeModal = false">
-        <button>close</button>
-      </form>
-    </dialog>
+    <!-- Upgrade Modal (using reusable component) -->
+    <SubscriptionUpgradeModal v-model="showUpgradeModal" />
   </div>
 </template>
 
@@ -360,7 +266,6 @@ const tier = ref('free')
 const loading = ref(true)
 const subscriptionLoading = ref(true)
 const savingGeneral = ref(false)
-const upgrading = ref(false)
 const managingBilling = ref(false)
 const showDeleteConfirm = ref(false)
 const showUpgradeModal = ref(false)
@@ -375,61 +280,6 @@ const siteForm = ref({
 })
 
 
-const config = useRuntimeConfig()
-const selectedPriceId = ref<string | null>(config.public.stripePrice.annual)
-
-// Pricing plans with actual prices and annual savings
-const pricingPlans = computed(() => {
-  const prices = {
-    monthly: 15,
-    quarterly: 40,
-    annual: 150,
-    biennial: 250
-  }
-
-  return [
-    {
-      id: 'monthly',
-      name: 'Monthly',
-      description: 'Billed monthly',
-      price: prices.monthly,
-      period: 'month',
-      priceId: config.public.stripePrice.monthly,
-      savings: null,
-      accentColor: '',      
-    },
-    {
-      id: 'quarterly',
-      name: 'Quarterly',
-      description: 'Billed every 3 months',
-      price: prices.quarterly, // 10% off
-      period: 'quarter',
-      priceId: config.public.stripePrice.quarterly,
-      savings: `$${Math.round((prices.monthly * 12) - (prices.quarterly * 4))}/year`,
-      accentColor: 'success',
-    },
-    {
-      id: 'annual',
-      name: 'Annual',
-      description: 'Billed yearly',
-      price: prices.annual,
-      period: 'year',
-      priceId: config.public.stripePrice.annual,
-      savings: `$${Math.round((prices.monthly * 12) - prices.annual)}/year`,
-      accentColor: 'success',
-    },
-    {
-      id: 'biennial',
-      name: 'Biennial',
-      description: 'Billed every 2 years',
-      price: prices.biennial,
-      period: '2 years',
-      priceId: config.public.stripePrice.biannual,
-      savings: `$${Math.round((prices.monthly * 24) - (prices.biennial))}`,
-      accentColor: 'accent',
-    }
-  ]
-})
 
 const tierDisplayName = computed(() => {
   return tier.value === 'pro' ? 'Pro' : 'Free'
@@ -505,36 +355,6 @@ const handleSaveGeneral = async () => {
     generalError.value = error.data?.error || 'Failed to save settings'
   } finally {
     savingGeneral.value = false
-  }
-}
-
-const handleUpgrade = async () => {
-  if (!selectedPriceId.value) {
-    subscriptionError.value = 'Please select a billing period'
-    return
-  }
-
-  upgrading.value = true
-  subscriptionError.value = ''
-
-  try {
-    const response = await useAuthFetch('/api/v2/subscriptions/create-checkout-session', {
-      method: 'POST',
-      body: {
-        siteId: selectedSiteId.value,
-        priceId: selectedPriceId.value
-      }
-    })
-
-    if (response.success && response.url) {
-      window.location.href = response.url
-    } else {
-      subscriptionError.value = response.error || 'Failed to create checkout session'
-    }
-  } catch (error: any) {
-    subscriptionError.value = error.data?.error || 'Failed to create checkout session'
-  } finally {
-    upgrading.value = false
   }
 }
 

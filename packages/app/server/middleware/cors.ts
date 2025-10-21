@@ -9,6 +9,7 @@ export default defineEventHandler((event) => {
     /^\/api\/v2\/fetch-creation/,
     /^\/api\/v2\/auth\/request-password-reset/,
     /^\/api\/v2\/timers/,
+    /^\/api\/v2\/users\/.*/,
   ]
   const path = event.node.req.url || '';
 

@@ -2,36 +2,36 @@
   <!-- Upgrade Modal -->
   <dialog :class="{ 'modal modal-open': modelValue }" class="modal">
     <div class="modal-box max-w-2xl">
-      <h3 class="font-bold text-2xl mb-2">Create Unlocked</h3>
-      <p class="text-sm opacity-70 mb-6">Your ads, your way</p>
+      <h3 class="mb-2 text-2xl font-bold">Create Unlocked</h3>
+      <p class="opacity-70 mb-6 text-sm">Your ads, your way</p>
 
       <!-- Benefits -->
-      <div class="space-y-4 mb-6">
+      <div class="mb-6 space-y-4">
         <p class="text-base">
           Use your own ad network in Interactive Mode and boost your revenue while keeping the amazing reader experience.
         </p>
 
         <ul class="space-y-3">
-          <li class="flex gap-x-3">
-            <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <li class="gap-x-3 flex">
+            <svg class="text-success flex-none w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Interactive Mode renders directly on your page—no iframe needed</span>
           </li>
-          <li class="flex gap-x-3">
-            <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <li class="gap-x-3 flex">
+            <svg class="text-success flex-none w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Your ad network runs throughout the entire experience</span>
           </li>
-          <li class="flex gap-x-3">
-            <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <li class="gap-x-3 flex">
+            <svg class="text-success flex-none w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>Readers still get the same great hands-free cooking features</span>
           </li>
-          <li class="flex gap-x-3">
-            <svg class="h-6 w-6 flex-none text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <li class="gap-x-3 flex">
+            <svg class="text-success flex-none w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <span>You earn more from engaged readers spending extra time on your site</span>
@@ -43,13 +43,13 @@
 
       <!-- Pricing Options -->
       <div class="space-y-4">
-        <h4 class="font-semibold text-lg">Choose Your Plan</h4>
+        <h4 class="text-lg font-semibold">Choose Your Plan</h4>
 
         <div class="space-y-3">
           <label
             v-for="plan in pricingPlans"
             :key="plan.id"
-            class="flex items-center gap-4 p-4 border-2 rounded-lg cursor-pointer transition-all"
+            class="flex items-center gap-4 p-4 transition-all border-2 rounded-lg cursor-pointer"
             :class="selectedPriceId === plan.priceId ? 'border-primary bg-primary/10' : 'border-base-300 hover:border-primary/50'"
           >
             <input
@@ -57,18 +57,25 @@
               name="pricing-plan"
               v-model="selectedPriceId"
               :value="plan.priceId"
-              class="radio radio-primary"
+              :checked="selectedPriceId === plan.priceId"
+              class="radio inset-ring-[1.5px] inset-ring-primary text-primary"
             />
             <div class="flex-1">
               <div class="flex items-center gap-2">
                 <span class="font-semibold">{{ plan.name }}</span>
-                <span v-if="plan.savings" :class="`badge badge-${plan.accentColor} badge-md`">Save {{ plan.savings }}</span>
+                <!-- badge-accent badge-success -->
+                <div v-if="plan.savings" class="tooltip ">
+                  <div class="tooltip-content max-w-50">
+                    {{ plan.savingsTooltip }}
+                  </div>
+                  <span :class="`badge badge-${plan.accentColor} badge-md`">Save {{ plan.savings }}</span>
+                </div>
               </div>
-              <div class="text-sm opacity-70">{{ plan.description }}</div>
+              <div class="opacity-70 text-sm">{{ plan.description }}</div>
             </div>
             <div class="text-right">
-              <div class="font-bold text-lg">${{ plan.price }}</div>
-              <div class="text-xs opacity-70">per {{ plan.period }}</div>
+              <div class="text-lg font-bold">${{ plan.price }}</div>
+              <div class="opacity-70 text-xs">per {{ plan.period }}</div>
             </div>
           </label>
         </div>
@@ -97,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useSiteContext } from '~/composables/useSiteContext'
 import { useAuthFetch } from '~/composables/useAuthFetch'
 
@@ -122,8 +129,12 @@ const pricingPlans = computed(() => {
     monthly: 15,
     quarterly: 40,
     annual: 150,
-    biennial: 250
+    biennial: 275
   }
+
+  const quarterlySavings = Math.round((prices.monthly * 12) - (prices.quarterly * 4))
+  const annualSavings = Math.round((prices.monthly * 12) - prices.annual)
+  const biennialSavings = Math.round(((prices.monthly * 12) - prices.annual) + ((prices.monthly * 12) - (prices.biennial - prices.annual)))
 
   return [
     {
@@ -143,7 +154,8 @@ const pricingPlans = computed(() => {
       price: prices.quarterly,
       period: 'quarter',
       priceId: config.public.stripePrice.quarterly,
-      savings: `$${Math.round((prices.monthly * 12) - (prices.quarterly * 4))}/year`,
+      savings: `$${quarterlySavings}`,
+      savingsTooltip: `Saves $${quarterlySavings} per year compared to monthly billing`,
       accentColor: 'success',
     },
     {
@@ -153,7 +165,8 @@ const pricingPlans = computed(() => {
       price: prices.annual,
       period: 'year',
       priceId: config.public.stripePrice.annual,
-      savings: `$${Math.round((prices.monthly * 12) - prices.annual)}/year`,
+      savings: `$${annualSavings}`,
+      savingsTooltip: `Saves $${annualSavings} per year compared to monthly billing`,
       accentColor: 'success',
     },
     {
@@ -162,11 +175,27 @@ const pricingPlans = computed(() => {
       description: 'Billed every 2 years',
       price: prices.biennial,
       period: '2 years',
-      priceId: config.public.stripePrice.biannual,
-      savings: `$${Math.round(((prices.monthly * 12) - prices.annual) + ((prices.monthly * 12) - (prices.biennial - prices.annual)))}/year`,
-      accentColor: 'success',
+      priceId: config.public.stripePrice.biennial,
+      savings: `$${biennialSavings}`,
+      savingsTooltip: `Saves $${biennialSavings} over 2 years compared to monthly billing`,
+      accentColor: 'accent',
     }
   ]
+})
+
+onMounted(async () => {
+  // Set default to biennial plan
+  const defaultPlan = pricingPlans.value.find((plan) => plan.id === 'annual')
+  const priceId = defaultPlan?.priceId || config.public.stripePrice.biennial
+  selectedPriceId.value = priceId
+
+  // Wait for DOM to update, then manually check the radio input
+  await nextTick()
+
+  const radioInput = document.querySelector(`input[value="${priceId}"]`) as HTMLInputElement
+  if (radioInput) {
+    radioInput.checked = true
+  }
 })
 
 const close = () => {
