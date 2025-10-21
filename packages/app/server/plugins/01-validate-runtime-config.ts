@@ -72,7 +72,7 @@ export default defineNitroPlugin((nitroApp) => {
     requiredPrivateConfig.forEach(({ key, path }) => {
       const value = config[key as keyof typeof config]
       if (!value || (typeof value === 'string' && value.trim() === '')) {
-        errors.push(`Missing required config: ${path}`)
+        errors.push(`Missing required config: \x1b[45m\x1b[30m ${path} \x1b[0m`)
       }
     })
 
@@ -80,13 +80,12 @@ export default defineNitroPlugin((nitroApp) => {
     if (errors.length > 0) {
       validationFailed = true
 
-      logger.error('Runtime Config Validation Failed!')
-      logger.error('The following required configuration values are missing:')
-      errors.forEach(error => {
-        logger.error(`  - ${error}`)
-      })
-      logger.error('Please set the required environment variables before deploying.')
-      logger.error('Check your .env file or deployment environment variables.')
+      const errorMessage = errors.reduce((acc, error) => {
+        return `\n${acc}- ${error}`
+      }, '')
+
+      logger.fatal(`Runtime Config Validation Failed\n\nThe following required configuration values are missing:${errorMessage}\n\nPlease set the required environment variables before deploying.\nCheck your .env file or deployment environment variables.
+      `)
 
       // Throw error to be caught
       throw new Error('Runtime configuration validation failed. Server startup aborted.')
@@ -98,16 +97,9 @@ export default defineNitroPlugin((nitroApp) => {
       logger.error('Unexpected error during config validation:', error)
     }
 
-    // Exit the process immediately to prevent server startup with missing config
-    logger.fatal('Exiting due to missing configuration.')
-
-    // Small delay to ensure all logger output is displayed
-    setTimeout(() => {
-      // Send SIGTERM to the current process
-      // This should trigger Nitro's graceful shutdown handlers
-      process.kill(process.pid, 'SIGTERM')
-    }, 150)
-
+    // Send SIGTERM to the current process
+    // This should trigger Nitro's graceful shutdown handlers
+    process.kill(process.pid, 'SIGTERM')
   } finally {
     // Log warnings and success messages
     if (!validationFailed) {
