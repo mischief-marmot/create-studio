@@ -41,10 +41,18 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Return in original format
+    // Return only safe user data (excluding sensitive fields like password)
     setResponseStatus(event, 200)
     return {
-      data: userData
+      data: {
+        id: userData.id,
+        email: userData.email,
+        avatar: userData.avatar,
+        firstname: userData.firstname,
+        lastname: userData.lastname,
+        validEmail: userData.validEmail,
+        Sites: userData.Sites
+      }
     }
 
   } catch (error) {
