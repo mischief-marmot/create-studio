@@ -13,8 +13,6 @@ export default defineNitroPlugin((nitroApp) => {
   const config = useRuntimeConfig()
   const logger = useLogger('ValidateConfig', true)
 
-  logger.info('Validating runtime configuration at server startup')
-
   const errors: string[] = []
   const warnings: string[] = []
   let validationFailed = false
@@ -81,7 +79,7 @@ export default defineNitroPlugin((nitroApp) => {
       validationFailed = true
 
       const errorMessage = errors.reduce((acc, error) => {
-        return `\n${acc}- ${error}`
+        return `\n${acc}- ${error}\n`
       }, '')
 
       logger.fatal(`Runtime Config Validation Failed\n\nThe following required configuration values are missing:${errorMessage}\n\nPlease set the required environment variables before deploying.\nCheck your .env file or deployment environment variables.
@@ -110,8 +108,6 @@ export default defineNitroPlugin((nitroApp) => {
         })
         logger.warn('These are optional but recommended for production.')
       }
-
-      logger.success('Runtime configuration validated successfully!')
     }
   }
 })

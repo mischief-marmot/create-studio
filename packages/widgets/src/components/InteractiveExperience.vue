@@ -676,7 +676,7 @@ async function loadCreationData() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Cache-Control': 'max-age=2592000' // 30 days, matches server TTL
+                    'Cache-Control': 'max-age=2592001' // 30 days, matches server TTL
                 },
                 body: JSON.stringify({
                     site_url,
