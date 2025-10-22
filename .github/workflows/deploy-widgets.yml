@@ -31,6 +31,9 @@ jobs:
         run: npm run build:shared
   
       - name: Build & deploy widgets
-        run: npm run build:widgets
         env:
           NUXT_PUBLIC_ROOT_URL: ${{ vars.NUXT_PUBLIC_ROOT_URL }}
+          CI: true
+        run: |
+          echo "Debug: NUXT_PUBLIC_ROOT_URL=$NUXT_PUBLIC_ROOT_URL"
+          npm run build:widgets

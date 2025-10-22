@@ -4,8 +4,11 @@ import { readFileSync, existsSync, readdirSync } from 'fs'
 import { config as loadEnv } from 'dotenv'
 import { createConsola } from "consola";
 
-// Load environment variables from root .env file
-loadEnv({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../app/.env') })
+// Load environment variables from root .env file (only if it exists and not in CI)
+const envPath = resolve(dirname(fileURLToPath(import.meta.url)), '../../app/.env')
+if (!process.env.CI && existsSync(envPath)) {
+  loadEnv({ path: envPath, override: false })
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
@@ -41,6 +44,12 @@ async function uploadChunkedFilesToBlob() {
     // Upload each file individually to blob storage
     const baseUrl = process.env.NUXT_PUBLIC_ROOT_URL || 'https://create.studio'
     const uploadFailures = []
+
+    // Debug logging for CI
+    if (process.env.CI) {
+      logger.info(`Running in CI environment`)
+      logger.info(`NUXT_PUBLIC_ROOT_URL from env: ${process.env.NUXT_PUBLIC_ROOT_URL}`)
+    }
 
     logger.info(`Found ${files.length} files to upload to ${baseUrl}:`, files)
 
