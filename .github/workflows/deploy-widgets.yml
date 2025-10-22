@@ -8,6 +8,7 @@ jobs:
   deploy:
     name: "Deploy Widgets"
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
     permissions:
       contents: read
       id-token: write
@@ -32,8 +33,8 @@ jobs:
   
       - name: Build & deploy widgets
         env:
-          NUXT_PUBLIC_ROOT_URL: ${{ vars.NUXT_PUBLIC_ROOT_URL }}
           CI: true
+          NUXT_PUBLIC_ROOT_URL: ${{ vars.NUXT_PUBLIC_ROOT_URL }}
         run: |
           echo "Debug: NUXT_PUBLIC_ROOT_URL=$NUXT_PUBLIC_ROOT_URL"
           npm run build:widgets
