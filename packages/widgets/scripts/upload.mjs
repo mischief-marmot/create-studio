@@ -5,6 +5,7 @@ import { config as loadEnv } from 'dotenv'
 import { createConsola } from "consola";
 
 // Load environment variables from root .env file (only if it exists and not in CI)
+// test comment
 const envPath = resolve(dirname(fileURLToPath(import.meta.url)), '../../app/.env')
 if (!process.env.CI && existsSync(envPath)) {
   loadEnv({ path: envPath, override: false })
