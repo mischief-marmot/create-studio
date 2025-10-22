@@ -5,7 +5,6 @@ import { config as loadEnv } from 'dotenv'
 import { createConsola } from "consola";
 
 // Load environment variables from root .env file (only if it exists and not in CI)
-// test comment
 const envPath = resolve(dirname(fileURLToPath(import.meta.url)), '../../app/.env')
 if (!process.env.CI && existsSync(envPath)) {
   loadEnv({ path: envPath, override: false })
@@ -43,7 +42,7 @@ async function uploadChunkedFilesToBlob() {
     }
 
     // Upload each file individually to blob storage
-    const baseUrl = process.env.NUXT_PUBLIC_ROOT_URL || 'https://create.studio'
+    const baseUrl = process.env.NUXT_PUBLIC_ROOT_URL || 'http://localhost:3001'
     const uploadFailures = []
 
     // Debug logging for CI

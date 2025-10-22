@@ -16,6 +16,9 @@ packages/*/.cache
 packages/*/.output
 packages/*/node_modules
 
+# TypeScript incremental compilation cache
+*.tsbuildinfo
+
 # Node dependencies
 node_modules
 

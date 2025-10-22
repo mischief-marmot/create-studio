@@ -16,6 +16,9 @@ export default defineNitroPlugin((nitroApp) => {
   const errors: string[] = []
   const warnings: string[] = []
   let validationFailed = false
+  if (process.env.NODE_ENV === 'development') {
+    return
+  }
 
   try {
     // Validate required public config
