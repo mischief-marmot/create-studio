@@ -10,7 +10,10 @@
 
       <!-- Content Card -->
       <div class="relative card bg-base-100 shadow-xl p-3 rounded-4xl overflow-hidden">
-        <AbsoluteGradient />
+        <AbsoluteGradient
+          :color="gradientColor"
+          :angle="gradientAngle"
+        />
         <div class="card-body z-10 bg-base-100 rounded-3xl">
           <slot />
         </div>
@@ -25,6 +28,27 @@
 </template>
 
 <script setup lang="ts">
+import { ref, provide } from 'vue'
+
+interface GradientConfig {
+  from: string
+  via: string
+  to: string
+  fromPercent?: number
+  viaPercent?: number
+}
+
 const config = useRuntimeConfig().public
-// Optional: Add any shared auth layout logic here
+
+// Can be a string (color class) or gradient config object
+const gradientColor = ref<string | GradientConfig>('') // Empty string defaults to default gradient
+const gradientAngle = ref<'mobile' | 'tablet'>('mobile')
+
+// Function to update gradient configuration from child components
+const setGradient = (colorOrGradient: string | GradientConfig) => {
+  gradientColor.value = colorOrGradient
+}
+
+// Provide gradient configuration to child components
+provide('authGradient', { setGradient })
 </script>

@@ -1,66 +1,77 @@
 <template>
-  <div class="min-h-screen bg-base-200 flex items-center justify-center p-4">
-    <div class="card w-96"
-    :class="[
-      !success && !error ? 'bg-primary text-primary-content' : '',
-      success ? 'bg-success text-success-content' : '',
-      error ? 'bg-error text-error-content' : '',
-    ]"
-      >
-      <div class="card-body items-center text-center space-y-4">
-        <h2 class="card-title">{{ pending ? 'Validating...' : success ? 'Validation Successful' : 'Validation Failed' }}</h2>
-        <div v-if="pending" class="py-8">
-          <span class="loading loading-spinner loading-lg text-primary-content"></span>
-          <p class="mt-4 ">Validating your email...</p>
-        </div>
+  <div>
+    <div class="card-body items-center space-y-4 text-center">
+      <h2 class="card-title">{{ pending ? 'Validating...' : success ? 'Validation Successful' : 'Validation Failed' }}</h2>
+      <div v-if="pending" class="py-8">
+        <span class="loading loading-spinner loading-lg"></span>
+        <p class="mt-4">Validating your email...</p>
+      </div>
 
-        <div v-else-if="error">
-            <p class="text-sm font-bold">{{ errorMessage || 'Oops! Something went wrong :(' }}</p>
-            <p class="text-sm">Please try again later, or contact us at 
-              <a class="underline" href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
-        </div>
+      <div v-else-if="error">
+        <p class="text-sm font-bold">{{ errorMessage || 'Oops! Something went wrong :(' }}</p>
+        <p class="text-sm">Please try again later, or contact us at
+          <a class="underline" href="mailto:{{supportEmail}}">{{supportEmail}}</a>.</p>
+      </div>
 
-        <div v-else-if="success">
-          <div>
-            <p class="text-sm">Your email address has been validated. You can now use all features of Create!</p>
-          </div>
+      <div v-else-if="success">
+        <div>
+          <p class="text-sm">Your email address has been validated. You can now use all features of Create!</p>
         </div>
+      </div>
 
-        <div v-if="!pending" class="card-actions justify-end">
-          <button class="btn btn-accent"
-          :class="[
-            success ? 'btn-success bg-success-content text-success' : '',
-            error ? 'btn-error bg-error-content text-error' : '',
-          ]"
-           @click="closeWindow">Close this Window</button>
-        </div>
+      <div v-if="!pending" class="card-actions justify-end">
+        <button class="btn btn-accent"
+        :class="[
+          success ? 'btn-success' : '',
+          error ? 'btn-error' : '',
+        ]"
+         @click="closeWindow">Close this Window</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useLogger } from '@create-studio/shared/utils/logger'
 import { useHead } from 'nuxt/app'
-import { onMounted, ref } from 'vue'
+import { inject, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+definePageMeta({
+  layout: 'auth'
+})
 
 const config = useRuntimeConfig()
 const supportEmail = config.public.supportEmail || 'support@create.studio'
 const route = useRoute()
 const token = route.params.token as string
-const logger = useLogger('ValidateEmail:Token', config.public.debug)
+const logger = useLogger('ValidateEmail:Page', config.public.debug)
 
 const pending = ref(true)
 const success = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
 
-logger.debug('Mounting')
+// Get the gradient setter from the auth layout
+const authGradient = inject<{ setGradient: (config: any) => void }>('authGradient')
 
 const closeWindow = () => {
   window.close()
 }
+
+// Watch for success or error state changes and update the gradient
+watch([success, error], ([successVal, errorVal]) => {
+  if (authGradient?.setGradient) {
+    if (successVal) {
+      authGradient.setGradient('bg-success')
+    } else if (errorVal) {
+      authGradient.setGradient('bg-error')
+    } else {
+      // Default/pending state - empty string uses default gradient
+      authGradient.setGradient('')
+    }
+  }
+})
 
 onMounted(async () => {
   if (!token) {
