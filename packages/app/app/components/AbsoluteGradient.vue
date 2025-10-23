@@ -1,6 +1,13 @@
 <template>
   <div
-    class="absolute z-0 inset-0 ring-1 bottom-0 ring-black/5 ring-inset"
+    v-if="isAnimated"
+    class="ring-1 ring-black/5 ring-inset absolute inset-0 bottom-0 z-0"
+    :style="animatedStyle"
+    :class="animatedClass"
+  ></div>
+  <div
+    v-else
+    class="ring-1 ring-black/5 ring-inset absolute inset-0 bottom-0 z-0"
     :class="computedClass"
   ></div>
 </template>
@@ -21,10 +28,16 @@ interface Props {
   color?: string | GradientConfig
   // Gradient angle: 'mobile' (115deg) or 'tablet' (145deg)
   angle?: 'mobile' | 'tablet'
+  // Enable animated conic gradient rotation
+  animate?: boolean
+  // Speed of animation in seconds
+  speed?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  angle: 'mobile'
+  angle: 'mobile',
+  animate: true,
+  speed: 4
 })
 
 // Default gradient (original)
@@ -35,6 +48,44 @@ const defaultGradient: GradientConfig = {
   fromPercent: 28,
   viaPercent: 70
 }
+
+const isAnimated = computed(() => props.animate)
+
+const getGradientColors = computed(() => {
+  if (typeof props.color === 'string' && props.color.trim() !== '') {
+    // For solid color strings, we can't use conic gradient, so return null
+    return null
+  } else if (props.color && typeof props.color === 'object') {
+    // Custom gradient object
+    return props.color as GradientConfig
+  } else {
+    // Default gradient
+    return defaultGradient
+  }
+})
+
+const animatedClass = computed(() => {
+  // If color is a solid color class string, apply it for animated mode
+  if (typeof props.color === 'string' && props.color.trim() !== '') {
+    return [props.color]
+  }
+  return []
+})
+
+const animatedStyle = computed(() => {
+  const colors = getGradientColors.value
+  if (!colors) return {}
+
+  return {
+    background: `conic-gradient(from 0deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.from})`,
+    animation: `spin ${props.speed}s linear infinite`,
+    width: '200%',
+    height: '200%',
+    top: '-50%',
+    left: '-50%',
+    transformOrigin: 'center'
+  }
+})
 
 const computedClass = computed(() => {
   const classes: string[] = []

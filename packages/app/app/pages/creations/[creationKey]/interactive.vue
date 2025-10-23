@@ -3,7 +3,6 @@
         <div
             v-if="creationInfo"
             :id="`interactive-widget-${creationInfo.creationId}`"
-            class="h-full w-full pb-[71px]"
         />
         <div v-else class="bg-base-300 flex items-center justify-center w-full h-full">
             <div class="p-8 text-center">

@@ -1,12 +1,12 @@
 <template>
-    <div id="interactive-mode" class="bg-base-100 py-16 sm:py-24">
-        <div class="mx-auto max-w-7xl px-6 lg:px-8">
-            <div class="mx-auto max-w-4xl text-center">
-                <h2 v-if="eyebrow" class="text-md font-semibold text-secondary">{{ eyebrow }}</h2>
+    <div id="interactive-mode" class="bg-base-100 sm:py-24 py-16">
+        <div class="max-w-7xl lg:px-8 px-6 mx-auto">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 v-if="eyebrow" class="text-md text-secondary font-semibold">{{ eyebrow }}</h2>
                 <p
-                    class="mt-2 text-6xl sm:text-7xl font-serif text-pretty text-base-content md:text-8xl sm:text-balance">
+                    class="sm:text-7xl text-pretty text-base-content md:text-8xl sm:text-balance mt-2 font-serif text-6xl">
                     {{ title }}</p>
-                <p v-if="description" class="mt-4 sm:mt-6 max-w-2xl mx-auto text-lg/8 text-pretty">{{ description }}</p>
+                <p v-if="description" class="sm:mt-6 text-lg/8 text-pretty max-w-2xl mx-auto mt-4">{{ description }}</p>
 
                 <!-- Slot for custom header content -->
                 <div v-if="$slots.header" class="mt-6">
@@ -14,8 +14,8 @@
                 </div>
             </div>
         </div>
-        <div class="relative overflow-hidden py-12">
-            <div class="w-full mx-auto max-w-7xl px-4 lg:px-8">
+        <div class="relative py-12 overflow-hidden">
+            <div class="max-w-7xl lg:px-8 w-full px-4 mx-auto">
                 <div class="relative rounded-xl shadow-2xl shadow-base-200 ring-1 ring-base-200 overflow-hidden max-w-[412px] max-h-[760px] w-full h-screen lg:max-h-[720px] md:max-w-none mx-auto"
                 :class="[
                     showIframe ? '' : 'p-3'
@@ -24,36 +24,37 @@
                     <AbsoluteGradient v-if="!showIframe" />
 
                     <!-- Button placeholder before iframe loads -->
-                    <div v-if="!showIframe" class="relative size-full flex items-center justify-center bg-white dark:bg-base-200 rounded-xl z-10">
+                    <div v-if="!showIframe" class="size-full dark:bg-base-200 rounded-xl relative z-10 flex flex-col items-center justify-center space-y-6 bg-white">
+                        <p class="text-pretty text-lg">Click the button to try Interactive Mode!</p>
                         <button @click="showIframe = true" 
                         :class="[
                             'btn font-normal btn-xl sm:btn-2xl gap-2 py-10',
                             'bg-slate-800 dark:bg-white text-white dark:text-slate-800'
                             ]"
                         >
-                            <LogoSolo class="animate-[spin_4s_linear_infinite] size-12" />
+                            <LogoSolo class="size-12" />
                             Try Interactive Mode
                         </button>
                     </div>
 
                     <!-- Iframe loads on button click -->
-                    <iframe v-if="showIframe" :src="demoRecipeUrl" class="relative w-full h-full border-0 lg:aspect-video rounded-xl overflow-hidden z-10"
+                    <iframe v-if="showIframe" :src="demoRecipeUrl" class="lg:aspect-video rounded-xl relative z-10 w-full h-full overflow-hidden border-0"
                         frameborder="0"
                         allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         title="Interactive Mode Demo" loading="lazy" />
                 </div>
-                <p v-if="showIframe" class="pt-4 text-center text-sm text-base-content italic">Try it out! Interact with the recipe above (from <a href="https://thesweetestoccasion.com/" target="_blank">The Sweetest Occasion</a>).</p>
+                <p v-if="showIframe" class="text-base-content pt-4 text-sm italic text-center">Try it out! Interact with the recipe above (from <a href="https://thesweetestoccasion.com/" target="_blank">The Sweetest Occasion</a>).</p>
 
-                <!-- <img v-if="screenshot && !screenshotLight && !screenshotDark" :src="screenshot" :alt="screenshotAlt" class="rounded-xl shadow-2xl ring-1 ring-base-300" width="2432" height="1442" /> -->
+                <!-- <img v-if="screenshot && !screenshotLight && !screenshotDark" :src="screenshot" :alt="screenshotAlt" class="rounded-xl ring-1 ring-base-300 shadow-2xl" width="2432" height="1442" /> -->
             </div>
         </div>
-        <div class="mx-auto mt-10 max-w-7xl px-6 sm:mt-12 md:mt-16 lg:px-8">
+        <div class="max-w-7xl sm:mt-12 md:mt-16 lg:px-8 px-6 mx-auto mt-10">
             <dl v-if="features && features.length > 0"
-                class="mx-auto grid max-w-2xl grid-cols-1 gap-x-6 gap-y-10 text-md text-pretty sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16">
-                <div v-for="feature, i in features" :key="i + feature.name" class="relative pl-9">
-                    <dt class="inline font-semibold text-base-content">
+                class="gap-x-6 gap-y-10 text-md text-pretty sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16 grid max-w-2xl grid-cols-1 mx-auto">
+                <div v-for="feature, i in features" :key="i + feature.name" class="pl-9 relative">
+                    <dt class="text-base-content inline font-semibold">
                         <component v-if="feature.icon" :is="feature.icon"
-                            class="absolute top-1 left-1 size-6 text-secondary" aria-hidden="true" />
+                            class="top-1 left-1 size-6 text-secondary absolute" aria-hidden="true" />
                         {{ feature.name }}.
                     </dt>
                     {{ ' ' }}

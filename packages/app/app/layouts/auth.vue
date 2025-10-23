@@ -1,26 +1,28 @@
 <template>
-  <div class="min-h-screen bg-base-100 text-base-content flex items-center justify-center p-3">
+  <div class="bg-base-100 text-base-content flex items-center justify-center min-h-screen p-3">
     <div class="w-full max-w-md">
       <!-- Logo/Brand -->
       <div class="text-center">
-        <NuxtLink to="/" class="inline-flex justify-center items-center space-x-2">
+        <NuxtLink to="/" class="inline-flex items-center justify-center space-x-2">
           <LogoFull class="size-52 inline-block" />
         </NuxtLink>
       </div>
 
       <!-- Content Card -->
-      <div class="relative card bg-base-100 shadow-xl p-3 rounded-4xl overflow-hidden">
+      <div class="card bg-base-100 rounded-4xl relative p-3 overflow-hidden shadow-xl">
         <AbsoluteGradient
+          animate
+          :speed=3
           :color="gradientColor"
           :angle="gradientAngle"
         />
-        <div class="card-body z-10 bg-base-100 rounded-3xl">
+        <div class="card-body bg-base-100 rounded-3xl z-10">
           <slot />
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="text-center mt-6 text-sm ">
+      <div class=" mt-6 text-sm text-center">
         <p>&copy; {{ new Date().getFullYear() }} {{ config.productName }}. All rights reserved.</p>
       </div>
     </div>
