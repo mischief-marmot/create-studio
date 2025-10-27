@@ -35,8 +35,8 @@ const FILE_TYPES = {
 }
 
 export default defineEventHandler(async (event) => {
-  const { debug } = useRuntimeConfig()
-  const logger = useLogger('EmbedRoute', debug)
+  const config = useRuntimeConfig()
+  const logger = useLogger('EmbedRoute', config.debug)
   const { pathname } = getRouterParams(event)
 
   logger.debug(`Embed request for: ${pathname}`)
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
     return await serveBlobFile(event, pathname, {
       allowlist: EMBED_ALLOWLIST,
       fileTypes: FILE_TYPES,
-      // cacheControl: 'public, max-age=3600', // Cache for 1 hour
+      cacheControl: config.debug ? 'public, max-age=0' : 'public, max-age=86400', // Cache for 1 day in prod
       cors: true, // Public CORS for widget embedding
       contentDisposition: 'inline' // Display inline (don't download)
     })

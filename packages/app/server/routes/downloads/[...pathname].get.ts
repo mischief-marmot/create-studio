@@ -18,7 +18,7 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 // Hardcoded allowlist of downloadable files
 const DOWNLOAD_ALLOWLIST = [
   'create-plugin.zip',
-  'recipe-importer.zip',
+  'create-recipe-importers.zip',
   // Add more files as needed
 ]
 
@@ -32,8 +32,8 @@ const FILE_TYPES = {
 }
 
 export default defineEventHandler(async (event) => {
-  const { debug } = useRuntimeConfig()
-  const logger = useLogger('DownloadRoute', debug)
+  const config = useRuntimeConfig()
+  const logger = useLogger('DownloadsRoute', config.debug)
   const { pathname } = getRouterParams(event)
 
   logger.debug(`Download request for: ${pathname}`)
@@ -43,7 +43,7 @@ export default defineEventHandler(async (event) => {
     return await serveBlobFile(event, pathname, {
       allowlist: DOWNLOAD_ALLOWLIST,
       fileTypes: FILE_TYPES,
-      cacheControl: 'public, max-age=3600', // Cache for 1 hour
+      cacheControl: config.debug ? 'public, max-age=0' : 'public, max-age=86400', // Cache for 1 day in prod
       cors: true, // Public CORS access
       contentDisposition: 'attachment' // Trigger browser download
     })

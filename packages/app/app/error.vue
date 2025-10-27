@@ -8,7 +8,7 @@
                         <span v-else class="" style="font-size: 24rem; height: 24rem; display: flex; align-items: center;">{{ char }}</span>
                     </template>
                 </div>
-                <p class="text-7xl ">{{ error.message }}</p>
+                <p class="text-balance max-w-xl text-5xl">{{ error.message }}</p>
                 <a href="/" class="btn btn-primary btn-2xl">Go Home</a>
             </div>
         </div>
