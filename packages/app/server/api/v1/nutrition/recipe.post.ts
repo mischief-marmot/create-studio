@@ -1,14 +1,19 @@
 /**
  * POST /api/v1/nutrition/recipe
- * Calculate recipe nutrition using Nutritionix API
+ * Calculate recipe nutrition using API Ninjas Nutrition API
  *
  * Maintains compatibility with original Express API
  * Includes rate limiting (15 requests per 5 minutes per user)
+ *
+ * Migration from Nutritionix to API Ninjas (Oct 2024)
+ * - Uses GET requests instead of POST
+ * - Manual serving size calculation
+ * - Simplified field structure
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { verifyJWT } from '~~/server/utils/auth'
-import { calculateRecipeNutrition } from '~~/server/utils/nutritionix'
+import { calculateRecipeNutrition } from '~~/server/utils/apiNinjasNutrition'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
 
@@ -101,13 +106,12 @@ export default defineEventHandler(async (event) => {
   } catch (error) {
     console.error('Nutrition calculation error:', error)
 
-    // Handle Axios errors (from Nutritionix API)
-    if ((error as any)?.isAxiosError) {
-      const axiosError = error as any
+    // Handle API Ninjas errors
+    if ((error as any)?.message?.includes('API Ninjas')) {
       setResponseStatus(event, 400)
       return {
         status: 400,
-        message: axiosError.response?.data?.message || 'Nutrition API error'
+        message: (error as any).message || 'Nutrition API error'
       }
     }
 
