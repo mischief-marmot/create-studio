@@ -1,49 +1,57 @@
+import { serveBlobFile } from '~~/server/utils/serveBlobFile'
 import { useLogger } from '@create-studio/shared/utils/logger'
+
+/**
+ * Embed endpoint: GET /embed/{filename}
+ *
+ * Serves widget embed files from blob storage with security validation
+ * Examples:
+ * - GET /embed/main.js → serves main.js
+ * - GET /embed/interactive-mode.js → serves interactive-mode.js
+ * - GET /embed/entry.css → serves entry.css
+ *
+ * Security:
+ * - Only whitelisted files can be embedded
+ * - Path traversal attacks are blocked
+ * - File type validation ensures only JS/CSS files
+ */
+
+// Hardcoded allowlist of embeddable widget files
+const EMBED_ALLOWLIST = [
+  'main.js',
+  'entry.css',
+  'interactive-mode.js',
+  'interactive-mode.css',
+  'servings-adjuster.js',
+  'servings-adjuster.css'
+  // Add more widget files as needed
+]
+
+// File type to content type mapping
+const FILE_TYPES = {
+  'js': 'application/javascript',
+  'map.js': 'application/javascript',
+  'css': 'text/css'
+}
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
   const logger = useLogger('EmbedRoute', debug)
   const { pathname } = getRouterParams(event)
-  logger.debug(`Request for ${pathname}`)
 
-  // Allow widget files from blob storage - main files and chunks
-  const isMainFile = ['main.js', 'entry.css'].includes(pathname)
-  const isChunkFile = pathname.match(/^(interactive-mode|servings-adjuster)\.(js|css)$/)
-
-  if (!isMainFile && !isChunkFile) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Widget file not found'
-    })
-  }
-  const ext = pathname.endsWith('.js') ? 'js' : 'css'
+  logger.debug(`Embed request for: ${pathname}`)
 
   try {
-    logger.debug(`Serving ${pathname} from blob storage...`)
-
-    // Get the file from blob storage
-    const blob = await hubBlob().get(pathname)
-    if (!blob) {
-      throw new Error(`File ${pathname} not found in blob storage`)
-    }
-    
-    // Set appropriate headers
-    const contentType = ext === 'js' ? 'application/javascript' : 'text/css'
-    setResponseHeaders(event, {
-      'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
-      'Access-Control-Allow-Origin': '*', // Allow all origins for widget embed
-      'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Content-Type'
+    // Use shared blob serving utility
+    return await serveBlobFile(event, pathname, {
+      allowlist: EMBED_ALLOWLIST,
+      fileTypes: FILE_TYPES,
+      // cacheControl: 'public, max-age=3600', // Cache for 1 hour
+      cors: true, // Public CORS for widget embedding
+      contentDisposition: 'inline' // Display inline (don't download)
     })
-    
-    // Return the file content directly
-    return blob.stream()
   } catch (error) {
-    logger.error(`Error serving ${pathname} from blob:`, error)
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Widget file not found in storage'
-    })
+    logger.error(`Error serving embed ${pathname}:`, error)
+    throw error
   }
 })

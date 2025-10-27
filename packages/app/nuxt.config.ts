@@ -1,6 +1,12 @@
 import tailwindcss from "@tailwindcss/vite";
 import vue from '@vitejs/plugin-vue'
 
+const toCache = process.env.NODE_ENV === 'production' && {
+          cache: {
+            maxAge: 60 * 60 * 24, // 1 day
+          }
+        }
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-09-18",
@@ -37,13 +43,17 @@ export default defineNuxtConfig({
       "/embed/**": {
         cors: true,
         headers: { "Access-Control-Allow-Origin": "*" },
+        toCache
+      },
+      "/download/**": {
+        cors: true,
+        headers: { "Access-Control-Allow-Origin": "*" },
+        toCache
       },
       "/creations/{id}/interactive": {
         cors: true,
         headers: { "Access-Control-Allow-Origin": "*" },
-        cache: {
-          maxAge: 60 * 60 * 24, // 1 day
-        },
+        toCache
       },
       "/api/v2/timers/**": {
         cors: true,
