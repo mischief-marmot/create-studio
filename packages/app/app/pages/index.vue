@@ -1,55 +1,5 @@
 <template>
-  <div class=" min-h-screen">
-    <!-- Navigation Bar -->
-    <nav 
-    :class="[
-      scrollPosition > 64 ? 'sm:bg-transparent ' : '',
-      'navbar sticky bg-base-100 top-0 text-base-content sm:pt-6 z-50 sm:px-8',
-      'transition-colors duration-0'
-    ]"
-    >
-      <div class="navbar-start">
-        <div class="dropdown">
-          <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
-            </svg>
-          </div>
-          <ul tabindex="0" class="menu menu-lg dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#how-it-works">How It Works</a></li>
-            <li><a href="#pricing">Pricing</a></li>
-          </ul>
-        </div>
-        <a href="/"
-        :class="[
-          scrollPosition > 64 ? 'hidden' : ''
-        ]"
-        >
-          <LogoFull height="32" className="dark:text-base-content" />
-        </a>
-      </div>
-      <div class="navbar-center lg:flex hidden px-6"
-        :class="[
-          scrollPosition > 64 ? 'bg-base-100 text-base-content ring-1 ring-base-content rounded-full' : ''
-        ]">
-        <ul class="menu menu-horizontal text-md">
-          <li><a class="px-6 rounded-full" href="#features">Features</a></li>
-          <li><a class="px-6 rounded-full" href="#interactive-mode">Interactive Mode</a></li>
-          <li><a class="px-6 rounded-full" href="#how-it-works">Free Forever</a></li>
-        </ul>
-      </div>
-      <div class="navbar-end">
-        <a 
-        href="/auth/login"
-        class="btn btn-primary btn-sm sm:btn-md rounded-full"
-        :class="[
-          scrollPosition > 64 ? 'hidden' : ''
-        ]">Sign In</a>
-      </div>
-    </nav>
-
+  <NuxtLayout name="main" :navLinks="navLinks">
     <!-- Hero Section -->
     <LandingHero />
 
@@ -96,7 +46,8 @@
                   info</p>
                 <p class="max-w-lg mt-2">Save hours of manual work while helping health-conscious
                   readers make informed choices.</p>
-                  <p class="max-w-lg mt-2"><strong>How it works:</strong> Our <i><u>free</u></i> API calculates nutrition facts
+                <p class="max-w-lg mt-2"><strong>How it works:</strong> Our <i><u>free</u></i> API calculates nutrition
+                  facts
                   automatically from your ingredient list.</p>
               </div>
             </div>
@@ -113,8 +64,9 @@
               <div class="sm:p-10 p-4 pt-4">
                 <h3 class="text-sm/4 text-secondary font-semibold">Social Proof</h3>
                 <p class="text-base-content mt-2 text-xl font-medium tracking-tight">Build trust with reader reviews</p>
-                <p class="max-w-lg mt-2">Let your audience share their stories and help others choose what to make. Respond to reviews to build community and keep readers coming back.
-                  </p>
+                <p class="max-w-lg mt-2">Let your audience share their stories and help others choose what to make.
+                  Respond to reviews to build community and keep readers coming back.
+                </p>
               </div>
             </div>
             <div
@@ -128,7 +80,8 @@
               <img class="max-h-80 object-top-center sm:object-top-left object-cover h-full"
                 src="/img/screenshots/adjustable-servings.png" alt="Multiple card types with automatic schema" />
               <div class="sm:p-10 p-4 pt-4">
-                <h3 class="text-sm/4 text-secondary font-semibold">Servings Adjustments <span class="badge badge-secondary badge-sm ml-1">New!</span></h3>
+                <h3 class="text-sm/4 text-secondary font-semibold">Servings Adjustments <span
+                    class="badge badge-secondary badge-sm ml-1">New!</span></h3>
                 <p class="text-base-content mt-2 text-xl font-medium tracking-tight">Readers scale recipes to their
                   needs</p>
                 <p class="max-w-lg pb-6 mt-2">Your readers can double or triple ingredients without doing math. All
@@ -150,7 +103,8 @@
                 <p class="text-base-content mt-2 text-xl font-medium tracking-tight">Earn with Recommended Products
                 </p>
                 <p class="max-w-lg mt-2">Help readers find the tools they need while earning
-                  affiliate commissions. Add links from anywhere and we'll display them natively and beautifully, right in your cards.
+                  affiliate commissions. Add links from anywhere and we'll display them natively and beautifully, right
+                  in your cards.
                 </p>
               </div>
             </div>
@@ -165,11 +119,12 @@
     <LandingInteractiveMode eyebrow="Transforming on-page guides" title="Brand New Interactive Mode"
       description="Give your readers a never-before-seen interactive experience that keeps them on your site longer. Swipeable steps, smart timers, and distraction-free design—all free with ad support."
       :demoRecipeUrl="demoRecipeUrl" screenshot="/img/screenshots/interactive-mode.gif"
-      screenshot-alt="Interactive mode demonstration"  />
+      screenshot-alt="Interactive mode demonstration" />
 
     <!-- How it Works Callout -->
     <div id="how-it-works" class="bg-primary dark:bg-deep-navy sm:py-32 sm:px-24 px-6 py-24">
-      <div class="py-18 max-w-7xl rounded-xl bg-base-100 flex flex-col mx-auto space-y-16 overflow-hidden font-light text-center">
+      <div
+        class="py-18 max-w-7xl rounded-xl bg-base-100 flex flex-col mx-auto space-y-16 overflow-hidden font-light text-center">
         <div class="flex flex-col items-center space-y-6">
           <h2 class="text-7xl font-serif">How It Works</h2>
           <p class="text-pretty max-w-3xl px-3 text-4xl">
@@ -178,22 +133,21 @@
 
           <!-- Toggle for mobile/tablet -->
           <div class="xl:hidden flex items-center gap-4 mt-8">
-            <span :class="['text-lg font-medium transition-opacity', activeTab === 'standard' ? 'opacity-100' : 'opacity-50']">Standard</span>
-            <input
-              type="checkbox"
-              class="toggle toggle-accent"
-              v-model="activeTab"
-              true-value="unlocked"
-              false-value="standard"
-            />
-            <span :class="['text-lg font-medium transition-opacity', activeTab === 'unlocked' ? 'opacity-100' : 'opacity-50']">Unlocked</span>
+            <span
+              :class="['text-lg font-medium transition-opacity', activeTab === 'standard' ? 'opacity-100' : 'opacity-50']">Standard</span>
+            <input type="checkbox" class="toggle toggle-accent" v-model="activeTab" true-value="unlocked"
+              false-value="standard" />
+            <span
+              :class="['text-lg font-medium transition-opacity', activeTab === 'unlocked' ? 'opacity-100' : 'opacity-50']">Unlocked</span>
           </div>
         </div>
 
         <div class="xl:flex xl:flex-row xl:justify-evenly xl:gap-0">
           <!-- Free Forever -->
           <div class="flex-1 px-3" :class="{ 'hidden xl:block': activeTab === 'unlocked' }">
-            <div class="xl:inline-flex items-center hidden px-4 py-1 mb-4 text-sm font-semibold text-transparent bg-transparent rounded-full" aria-hidden="true">
+            <div
+              class="xl:inline-flex items-center hidden px-4 py-1 mb-4 text-sm font-semibold text-transparent bg-transparent rounded-full"
+              aria-hidden="true">
               Nothing here
             </div>
             <h3 class="mb-4 font-serif text-6xl">Free Forever</h3>
@@ -215,7 +169,8 @@
                 </li>
                 <li class="gap-x-3 flex">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
-                  <span class="text-lg">Our ads keep all Create features free while respecting your exclusivity agreements</span>
+                  <span class="text-lg">Our ads keep all Create features free while respecting your exclusivity
+                    agreements</span>
                 </li>
                 <li class="gap-x-3 flex">
                   <CheckCircleIcon class="h-6 w-6 flex-none text-success mt-0.5" />
@@ -228,13 +183,15 @@
           <div class="divider xl:divider-horizontal w-[35%] mx-auto hidden"></div>
           <!-- Create Unlocked -->
           <div class="relative flex-1 px-3" :class="{ 'hidden xl:block': activeTab === 'standard' }">
-            <div class="xl:inline-flex bg-accent text-accent-content items-center hidden px-4 py-1 mb-4 text-sm font-semibold rounded-full">
+            <div
+              class="xl:inline-flex bg-accent text-accent-content items-center hidden px-4 py-1 mb-4 text-sm font-semibold rounded-full">
               Maximize Earnings
             </div>
             <h3 class="mb-4 font-serif text-6xl">Create Unlocked</h3>
             <p class="text-pretty mb-6 text-2xl"><em>Your ads, your way</em></p>
             <p class="text-pretty max-w-lg mx-auto mb-8 text-xl">
-              Use your own ad network in Interactive Mode and boost your revenue while keeping the amazing reader experience.
+              Use your own ad network in Interactive Mode and boost your revenue while keeping the amazing reader
+              experience.
             </p>
 
             <div class="max-w-lg mx-auto space-y-4 text-left">
@@ -326,7 +283,7 @@
         </p>
       </div>
     </footer> -->
-  </div>
+  </NuxtLayout>
 </template>
 
 <script setup lang="ts">
@@ -334,18 +291,6 @@ import { CheckCircleIcon } from '@heroicons/vue/20/solid';
 import { createCreationKey } from '@create-studio/shared';
 
 const config = useRuntimeConfig().public
-
-const scrollPosition = ref(0)
-
-onMounted(() => {
-  scrollPosition.value = window.scrollY
-
-  const handleScroll = () => {
-    scrollPosition.value = window.scrollY
-  }
-  window.addEventListener('scroll', handleScroll)
-})
-
 // Randomly select a demo recipe on page load
 const demoRecipes = [81, 59]
 const randomRecipeId = demoRecipes[Math.floor(Math.random() * demoRecipes.length)]
@@ -354,6 +299,13 @@ const demoRecipeUrl = `${config.rootUrl}/creations/${creationKey}/interactive`
 
 // Tab toggle state for mobile/tablet
 const activeTab = ref('standard')
+
+// Navigation links for main layout
+const navLinks = {
+  '#features': 'Features',
+  '#interactive-mode': 'Interactive Mode',
+  '#how-it-works': 'How It Works',
+}
 
 // Page meta
 definePageMeta({

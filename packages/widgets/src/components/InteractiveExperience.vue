@@ -9,8 +9,10 @@
             <p class="cs:text-base-content cs:mb-4">{{ creationError }}</p>
         </div>
 
-        <!-- Show skeleton loader while loading -->
-        <RecipeSkeletonLoader v-if="!isHydrated || isLoadingCreation || !dataReady" />
+        <!-- Show spinning logo while loading -->
+        <div v-if="!isHydrated || isLoadingCreation || !dataReady" class="cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:items-center cs:justify-center cs:absolute cs:inset-0">
+            <LogoSolo class="cs:w-24 cs:h-24 animate-spin-slow" />
+        </div>
 
         <!-- Unified Responsive Container -->
         <div v-if="dataReady" ref="containerRef"
@@ -23,7 +25,7 @@
 
             <!-- Skeleton overlay during initial positioning -->
             <div v-if="isLoadingPersistence" class="cs:absolute cs:inset-0 cs:z-50 cs:md:rounded-xl cs:overflow-hidden">
-                <RecipeSkeletonLoader />
+                <LogoSolo class="cs:w-24 cs:h-24 animate-spin-slow" />
             </div>
 
             <!-- Figure Section - Collapsible on mobile, fixed on desktop -->

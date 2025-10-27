@@ -28,11 +28,9 @@
                         <p class="text-pretty text-lg">Click the button to try Interactive Mode!</p>
                         <button @click="showIframe = true" 
                         :class="[
-                            'btn font-normal btn-xl sm:btn-2xl gap-2 py-10',
-                            'bg-slate-800 dark:bg-white text-white dark:text-slate-800'
+                            'btn btn-primary font-normal text-xl sm:text-3xl btn-xl sm:btn-2xl gap-2 py-10',
                             ]"
                         >
-                            <LogoSolo class="size-12" />
                             Try Interactive Mode
                         </button>
                     </div>

@@ -1,7 +1,6 @@
 @import "tailwindcss" prefix(cs);
 @plugin "daisyui";
 
-
 @theme {
   --text-xs: 0.9rem;
   --text-sm: 0.975rem;
@@ -15,13 +14,21 @@
   /* Deep Navy */
   --color-deep-navy: oklch(34.283% 0.039 235.109);
   --color-deep-navy-content: oklch(98% 0 0);  /* Near white for contrast */
+
+  /* Plum */
+  --color-plum: oklch(0.3921 0.074 338.47);
+  --color-plum-content: oklch(0.3921 0.074 338.47);
+
+  /* Coral */
+  --color-coral: oklch(0.8236 0.0853 24.42);
+  --color-coral-content: oklch(0.8236 0.0853 24.42);
 }
 
 
 @plugin "daisyui/theme" {
   name: "dark";
   default: false;
-  prefersdark: true;
+  prefersdark: false;
   color-scheme: "dark";
   
   /* Base colors - Dark backgrounds */
@@ -30,37 +37,37 @@
   --color-base-300: oklch(30% 0.015 248.190);      /* Slightly lighter (borders/hover) */
   --color-base-content: oklch(94% 0.002 247.839);  /* Light text on dark backgrounds */
   
-  /* Primary - Lighter version of Deep Navy for visibility */
-  --color-primary: oklch(0.7164 0.1318 235.31);
-  --color-primary-content: oklch(0.2191 0.0372 234.38);
+  /* Primary - Deep Navy */
+  --color-primary: oklch(0.456 0.0462 235.11);
+  --color-primary-content: oklch(98% 0 0);  /* Near white for contrast */
   
-  /* Secondary - Brighter Sky Blue */
-  --color-secondary: oklch(68% 0.120 266.660);
-  --color-secondary-content: oklch(15% 0 0);
+  /* Secondary - Sky Blue */
+  --color-secondary: oklch(55.278% 0.098 266.660);
+  --color-secondary-content: oklch(98% 0 0);  /* White text */
   
-  /* Accent - Keep Gold vibrant */
+  /* Accent - Sunburst Gold */
   --color-accent: oklch(88.235% 0.134 86.553);
-  --color-accent-content: oklch(0.38 0.08 84.68);
+  --color-accent-content: oklch(0.38 0.07 89.6);  /* Dark text for contrast */
   
-  /* Neutral - Lighter gray for dark theme */
-  --color-neutral: oklch(30% 0.016 244.893);
-  --color-neutral-content: oklch(95% 0 0);
+  /* Neutral - Mid Gray */
+  --color-neutral: oklch(55.754% 0.016 244.893);
+  --color-neutral-content: oklch(98% 0 0);  /* White text */
   
-  /* Info - Brighter Purple */
-  --color-info: oklch(70% 0.080 294.558);
-  --color-info-content: oklch(15% 0 0);
+  /* Info - Soft Purple */
+  --color-info: oklch(60.014% 0.056 294.558);
+  --color-info-content: oklch(98% 0 0);  /* White text */
   
-  /* Success - Keep vibrant teal */
+  /* Success - Vibrant Teal-Green */
   --color-success: oklch(76.5% 0.177 163.223);
-  --color-success-content: oklch(15% 0 0);
+  --color-success-content: oklch(15% 0 0);  /* Dark text for contrast */
   
-  /* Warning - Keep amber bright */
+  /* Warning - Amber (similar to accent but more orange) */
   --color-warning: oklch(79.718% 0.164 69.616);
-  --color-warning-content: oklch(20% 0 0);
+  --color-warning-content: oklch(20% 0 0);  /* Dark text */
   
-  /* Error - Slightly brighter coral */
-  --color-error: oklch(68% 0.179 29.576);
-  --color-error-content: oklch(15% 0 0);
+  /* Error - Coral Red */
+  --color-error: oklch(61.671% 0.179 29.576);
+  --color-error-content: oklch(98% 0 0);  /* White text */
   
   /* Border Radius - same as light theme */
   --radius-selector: 0.5rem;
@@ -74,7 +81,7 @@
   /* Visual Properties */
   --border: 1px;
   --depth: 1;
-  --noise: 0;
+  --noise: 1;
 }
 
 @plugin "daisyui/theme" {
@@ -133,7 +140,7 @@
   /* Visual Properties */
   --border: 1px;
   --depth: 1;
-  --noise: 0;
+  --noise: 1;
 }
 
 @layer utilities {
@@ -214,5 +221,9 @@ html {
             color: var(--color-error);
         }
     }
+}
+
+.animate-spin-slow {
+  animation: spin 10s linear infinite;
 }
 
