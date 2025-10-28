@@ -105,6 +105,7 @@ export default defineNuxtConfig({
     "@nuxthub/core",
     "@nuxt/scripts",
     "nuxt-auth-utils",
+    "@nuxt/content",
   ],
   hub: {
     blob: true,
@@ -117,7 +118,6 @@ export default defineNuxtConfig({
       },
     },
   },
-
   app: {
     head: {
       title: "Create Studio - Schema Cards",

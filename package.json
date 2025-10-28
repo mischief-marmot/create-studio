@@ -25,7 +25,12 @@
     "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "marked": "^16.4.1"
   }
 }
