@@ -50,6 +50,9 @@ if (!timerManager) {
 }
 const { getTimer, startTimer, timers } = timerManager;
 
+// Inject analytics
+const analytics = inject<any>('analytics');
+
 // Inject timer warning request function
 const requestTimerWarning = inject<any>('requestTimerWarning');
 
@@ -88,6 +91,11 @@ const handleStartClick = () => {
 
 const handleStart = () => {
   console.log('🚀 [RecipeTimer] handleStart called for timer:', props.timerId);
+
+  // Track timer start in analytics
+  if (analytics) {
+    analytics.trackTimerEvent('start', props.timerId);
+  }
 
   // Start the timer
   getTimer(props.timerId, props.timer.duration, props.timer.label, props.stepIndex);

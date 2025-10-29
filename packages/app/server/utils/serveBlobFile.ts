@@ -57,7 +57,7 @@ export async function serveBlobFile(
   event: H3Event,
   pathname: string,
   options: ServeBlobFileOptions
-): Promise<ReadableStream<Uint8Array>> {
+): Promise<ReadableStream<Uint8Array>|void> {
   const { debug } = useRuntimeConfig()
   const logger = useLogger('ServeBlobFile', debug)
 
@@ -71,7 +71,10 @@ export async function serveBlobFile(
     contentDisposition = 'inline'
   } = options
 
-  logger.debug(`Serving blob file: ${pathname}`)
+  // logger.debug(`Serving blob file: ${pathname}`)
+  if (pathname.includes('.map'))  {
+    return;
+  }
 
   // Security: Prevent directory traversal
   if (pathname.includes('..') || pathname.includes('/') || pathname.includes('\\')) {
@@ -107,7 +110,7 @@ export async function serveBlobFile(
   const fullPath = prefix ? `${prefix}/${pathname}` : pathname
 
   try {
-    logger.debug(`Fetching from blob storage: ${fullPath}`)
+    // logger.debug(`Fetching from blob storage: ${fullPath}`)
 
     // Fetch file from NuxtHub blob storage
     const blob = await hubBlob().get(fullPath)

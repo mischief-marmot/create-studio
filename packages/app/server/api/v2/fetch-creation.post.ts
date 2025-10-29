@@ -68,7 +68,7 @@ export default defineEventHandler(async (event) => {
   const cacheKey = `creation:${site_url}:${creation_id}`
   const TTL = 30 * 24 * 60 * 60 // 30 days in seconds
 
-  logger.info(`📋 Request params - site_url: ${site_url}, creation_id: ${creation_id}, cache_bust: ${cache_bust}`)
+  // logger.info(`📋 Request params - site_url: ${site_url}, creation_id: ${creation_id}, cache_bust: ${cache_bust}`)
 
   // Check cache if not busting
   let cachedCreation: CachedCreation | null = null
@@ -79,15 +79,15 @@ export default defineEventHandler(async (event) => {
       checkpoints.cacheCheckEnd = performance.now()
 
       if (cachedCreation) {
-        const cacheCheckDuration = checkpoints.cacheCheckEnd - checkpoints.cacheCheckStart
-        logger.info(`📦 Cache found: ${cacheKey}`)
-        logger.info(`  - Cached modified: ${cachedCreation.modified}`)
-        logger.info(`  - Cache lookup: ${cacheCheckDuration.toFixed(2)}ms`)
+        // const cacheCheckDuration = checkpoints.cacheCheckEnd - checkpoints.cacheCheckStart
+        // logger.info(`📦 Cache found: ${cacheKey}`)
+        // logger.info(`  - Cached modified: ${cachedCreation.modified}`)
+        // logger.info(`  - Cache lookup: ${cacheCheckDuration.toFixed(2)}ms`)
 
         // Return cached data immediately - we'll validate freshness in background
-        const totalTime = performance.now() - startTime
-        logger.info(`✅ CACHE HIT (returning immediately): ${cacheKey}`)
-        logger.info(`📊 Performance: ${totalTime.toFixed(2)}ms`)
+        // const totalTime = performance.now() - startTime
+        // logger.info(`✅ CACHE HIT (returning immediately): ${cacheKey}`)
+        // logger.info(`📊 Performance: ${totalTime.toFixed(2)}ms`)
 
         // Trigger background validation (check if stale and refresh if needed)
         validateAndRefreshCacheInBackground(
@@ -118,14 +118,14 @@ export default defineEventHandler(async (event) => {
     const response = await $fetch<WPCreationResponse>(url)
     checkpoints.wpFetchEnd = performance.now()
 
-    logger.info(`  - WordPress API response received in ${(checkpoints.wpFetchEnd - checkpoints.wpFetchStart).toFixed(2)}ms`)
+    // logger.info(`  - WordPress API response received in ${(checkpoints.wpFetchEnd - checkpoints.wpFetchStart).toFixed(2)}ms`)
 
     // Transform the response to HowTo format
     checkpoints.transformStart = performance.now()
     const transformedData = await transformCreationToHowTo(response, site_url)
     checkpoints.transformEnd = performance.now()
 
-    logger.info(`  - Data transformation completed in ${(checkpoints.transformEnd - checkpoints.transformStart).toFixed(2)}ms`)
+    // logger.info(`  - Data transformation completed in ${(checkpoints.transformEnd - checkpoints.transformStart).toFixed(2)}ms`)
 
     // Cache the transformed data
     try {
@@ -137,19 +137,19 @@ export default defineEventHandler(async (event) => {
       }
       await storage.set(cacheKey, wrappedData, { ttl: TTL })
       checkpoints.cacheWriteEnd = performance.now()
-      logger.info(`  - Data cached in HubKV in ${(checkpoints.cacheWriteEnd - checkpoints.cacheWriteStart).toFixed(2)}ms`)
+      // logger.info(`  - Data cached in HubKV in ${(checkpoints.cacheWriteEnd - checkpoints.cacheWriteStart).toFixed(2)}ms`)
     } catch (error) {
       logger.error('Cache write error:', error)
     }
 
     const totalTime = performance.now() - startTime
-    logger.info(`✅ Fresh fetch completed in ${totalTime.toFixed(2)}ms`)
-    logger.info(`📊 Detailed breakdown:`)
-    logger.info(`  - Read body: ${(checkpoints.readBody - startTime).toFixed(2)}ms`)
-    logger.info(`  - WordPress fetch: ${(checkpoints.wpFetchEnd - checkpoints.wpFetchStart).toFixed(2)}ms`)
-    logger.info(`  - Transform: ${(checkpoints.transformEnd - checkpoints.transformStart).toFixed(2)}ms`)
+    // logger.info(`✅ Fresh fetch completed in ${totalTime.toFixed(2)}ms`)
+    // logger.info(`📊 Detailed breakdown:`)
+    // logger.info(`  - Read body: ${(checkpoints.readBody - startTime).toFixed(2)}ms`)
+    // logger.info(`  - WordPress fetch: ${(checkpoints.wpFetchEnd - checkpoints.wpFetchStart).toFixed(2)}ms`)
+    // logger.info(`  - Transform: ${(checkpoints.transformEnd - checkpoints.transformStart).toFixed(2)}ms`)
     if (checkpoints.cacheWriteEnd) {
-      logger.info(`  - Cache write: ${(checkpoints.cacheWriteEnd - checkpoints.cacheWriteStart).toFixed(2)}ms`)
+      // logger.info(`  - Cache write: ${(checkpoints.cacheWriteEnd - checkpoints.cacheWriteStart).toFixed(2)}ms`)
     }
 
     return transformedData
@@ -184,7 +184,7 @@ async function validateAndRefreshCacheInBackground(
   const validationStartTime = performance.now()
 
   try {
-    logger.info(`🔍 Background validation started for ${cacheKey}`)
+    // logger.info(`🔍 Background validation started for ${cacheKey}`)
 
     // Fetch fresh modified timestamp from WordPress
     const url = `${siteUrl}/wp-json/mv-create/v1/creations/${creationId}`
@@ -194,10 +194,10 @@ async function validateAndRefreshCacheInBackground(
 
     // Check if cache is stale
     if (response.modified !== cachedCreation.modified) {
-      logger.info(`⚠️  Cache is stale for ${cacheKey}`)
-      logger.info(`  - Cached modified: ${cachedCreation.modified}`)
-      logger.info(`  - Fresh modified: ${response.modified}`)
-      logger.info(`  - WordPress fetch: ${validationFetchTime.toFixed(2)}ms`)
+      // logger.info(`⚠️  Cache is stale for ${cacheKey}`)
+      // logger.info(`  - Cached modified: ${cachedCreation.modified}`)
+      // logger.info(`  - Fresh modified: ${response.modified}`)
+      // logger.info(`  - WordPress fetch: ${validationFetchTime.toFixed(2)}ms`)
 
       // Transform and update cache
       const transformStartTime = performance.now()
@@ -212,16 +212,16 @@ async function validateAndRefreshCacheInBackground(
       await storage.set(cacheKey, wrappedData, { ttl })
 
       const totalTime = performance.now() - validationStartTime
-      logger.info(`✅ Background refresh completed for ${cacheKey} in ${totalTime.toFixed(2)}ms`)
-      logger.info(`  - WordPress fetch: ${validationFetchTime.toFixed(2)}ms`)
-      logger.info(`  - Transform: ${transformTime.toFixed(2)}ms`)
+      // logger.info(`✅ Background refresh completed for ${cacheKey} in ${totalTime.toFixed(2)}ms`)
+      // logger.info(`  - WordPress fetch: ${validationFetchTime.toFixed(2)}ms`)
+      // logger.info(`  - Transform: ${transformTime.toFixed(2)}ms`)
     } else {
-      logger.info(`✅ Cache is fresh for ${cacheKey}`)
-      logger.info(`  - Validation time: ${validationStartTime.toFixed(2)}ms`)
+      // logger.info(`✅ Cache is fresh for ${cacheKey}`)
+      // logger.info(`  - Validation time: ${validationStartTime.toFixed(2)}ms`)
     }
   } catch (error: any) {
     const validationTime = performance.now() - validationStartTime
-    logger.error(`⚠️  Background validation failed after ${validationTime.toFixed(2)}ms:`, error?.message || error)
+    // logger.error(`⚠️  Background validation failed after ${validationTime.toFixed(2)}ms:`, error?.message || error)
   }
 }
 

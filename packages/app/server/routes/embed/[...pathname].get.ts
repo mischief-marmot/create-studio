@@ -39,7 +39,7 @@ export default defineEventHandler(async (event) => {
   const logger = useLogger('EmbedRoute', config.debug)
   const { pathname } = getRouterParams(event)
 
-  logger.debug(`Embed request for: ${pathname}`)
+  // logger.debug(`Embed request for: ${pathname}`)
 
   try {
     // Use shared blob serving utility

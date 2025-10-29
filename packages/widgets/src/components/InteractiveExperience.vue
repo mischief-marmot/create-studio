@@ -311,11 +311,11 @@ import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { SharedStorageManager } from '@create-studio/shared';
 import { useSharedTimerManager } from '../composables/useSharedTimerManager.js';
-import { useRecipeUtils } from '../composables/useRecipeUtils.js';
 import { useReviewStorage } from '../composables/useReviewStorage.js';
 import { useReviewSubmission } from '../composables/useReviewSubmission.js';
 import TimerWarningModal from './TimerWarningModal.vue';
 import { HowTo, HowToStep } from '@create-studio/shared';
+import { useAnalytics } from '../composables/useAnalytics';
 
 interface Props {
   creationId?: string
@@ -346,7 +346,12 @@ const finalBaseUrl = computed(() => props.config?.baseUrl || props.baseUrl || ''
 const finalHideAttribution = computed(() => props.config?.hideAttribution ?? props.hideAttribution ?? false)
 const finalCacheBust = computed(() => props.config?.cacheBust ?? props.cacheBust ?? false)
 
-const { formatDuration } = useRecipeUtils();
+// Initialize analytics
+const analytics = useAnalytics({
+  baseUrl: finalBaseUrl.value,
+  domain: finalDomain.value,
+  creationId: finalCreationId.value
+})
 
 // Initialize shared storage manager
 const storageManager = new SharedStorageManager();
@@ -358,6 +363,7 @@ const timerManager = useSharedTimerManager({
     creationId: finalCreationId.value
 });
 provide('timerManager', timerManager);
+provide('analytics', analytics);
 
 // Timer warning modal ref
 const timerWarningModalRef = ref<any>(null);
@@ -626,10 +632,28 @@ const totalSlides = computed(() => steps.value.length + 2); // intro + steps + c
 
 // Reactive state with defaults - will be updated client-side
 const currentSlide = ref(0);
+
+// Track page views when slide changes
+watch(currentSlide, (newSlide) => {
+  analytics.trackPageView(newSlide, totalSlides.value)
+
+  // Track rating screen shown when user reaches the last slide
+  if (newSlide === totalSlides.value - 1) {
+    analytics.trackRatingEvent('screen_shown')
+  }
+});
 const carouselRef = ref<HTMLElement>();
 const containerRef = ref<HTMLElement>();
 const showSupplies = ref(false);
 const showActiveTimers = ref(false);
+
+// Auto-show active timers when a timer is running
+watch(() => timerManager.timers.value.size, () => {
+  const hasActiveTimers = Array.from(timerManager.timers.value.values()).some((timer: any) =>
+    timer.status === 'running' || timer.status === 'paused' || timer.status === 'completed' || timer.status === 'alarming'
+  );
+  showActiveTimers.value = hasActiveTimers;
+}, { deep: true });
 
 // Mobile detection
 const isMobile = ref(false);
@@ -1211,6 +1235,9 @@ const reviewPlaceholder = computed(() =>
 // Review handling methods
 const handleRatingSelect = async (rating: number) => {
     currentRating.value = rating
+
+    // Track rating submission in analytics
+    analytics.trackRatingEvent('submitted', rating)
 
     // For high ratings, auto-submit rating
     if (rating >= ratingThreshold && finalCreationId.value && !hasSubmittedRating.value) {

@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject } from 'vue'
+import { ref, computed, inject, watch } from 'vue'
 import { CheckIcon, PlayIcon } from '@heroicons/vue/20/solid';
 import { PauseIcon, TrashIcon } from '@heroicons/vue/24/outline';
 import { useRecipeUtils } from '../composables/useRecipeUtils'
@@ -134,6 +134,9 @@ if (!timerManager) {
 }
 const { timers, pauseTimer: pause, resetTimer: reset, resumeTimer: resume, addMinute: addMin, stopAlarm } = timerManager;
 
+// Inject analytics
+const analytics = inject<any>('analytics');
+
 // Computed list of active timers (running, paused, completed, or alarming)
 const activeTimers = computed<Timer[]>(() => {
   const active = Array.from(timers.value.values() as IterableIterator<Timer>).filter((timer) =>
@@ -142,9 +145,29 @@ const activeTimers = computed<Timer[]>(() => {
   return active;
 });
 
+// Track timer completions
+const trackedCompletions = ref<Set<string>>(new Set());
+watch(activeTimers, (newTimers) => {
+  newTimers.forEach(timer => {
+    if ((timer.status === 'completed' || timer.status === 'alarming') && !trackedCompletions.value.has(timer.id)) {
+      // Track timer completion in analytics
+      if (analytics) {
+        analytics.trackTimerEvent('complete', timer.id);
+      }
+      trackedCompletions.value.add(timer.id);
+    }
+  });
+}, { deep: true });
+
 // Timer control methods
 const pauseTimer = (id: string) => pause(id);
-const resetTimer = (id: string) => reset(id);
+const resetTimer = (id: string) => {
+  // Track timer stop in analytics
+  if (analytics) {
+    analytics.trackTimerEvent('stop', id);
+  }
+  reset(id);
+};
 const resumeTimer = (id: string) => resume(id);
 const addMinute = (id: string) => {
   addMin(id);
