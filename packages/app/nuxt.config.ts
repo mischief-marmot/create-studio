@@ -112,6 +112,12 @@ export default defineNuxtConfig({
     "nuxt-auth-utils",
     "@nuxt/content",
   ],
+  content: {
+    database: {
+      type: 'd1',
+      bindingName: 'DB'
+    }
+  },
   hub: {
     blob: true,
     kv: true,
