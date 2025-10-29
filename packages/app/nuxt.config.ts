@@ -33,7 +33,10 @@ export default defineNuxtConfig({
     alias: {
       'object-inspect': '../../node_modules/unenv/dist/runtime/mock/empty.mjs',
       'picomatch': '../../node_modules/unenv/dist/runtime/mock/empty.mjs',
-      'anymatch': '../../node_modules/unenv/dist/runtime/mock/empty.mjs'
+      'anymatch': '../../node_modules/unenv/dist/runtime/mock/empty.mjs',
+      'file-uri-to-path': '../../node_modules/unenv/dist/runtime/mock/empty.mjs',
+      'bindings': '../../node_modules/unenv/dist/runtime/mock/empty.mjs',
+      'better-sqlite3': '../../node_modules/unenv/dist/runtime/mock/empty.mjs'
     },
     experimental: {
       openAPI: true,
