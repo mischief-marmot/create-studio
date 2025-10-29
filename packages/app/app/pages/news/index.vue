@@ -2,9 +2,9 @@
   <NuxtLayout name="main">
     <div class="sm:py-32 bg-base-100 py-24">
       <div class="max-w-7xl lg:px-8 px-6 mx-auto">
-        <div class="max-w-2xl mx-auto text-center">
-          <h2 class="text-balance sm:text-5xl text-base-content text-4xl font-semibold tracking-tight">From the blog</h2>
-          <p class="text-lg/8 text-base-content/70 mt-2">Learn about the latest features and updates to Create Studio.</p>
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="text-balance sm:text-5xl text-base-content text-4xl font-semibold tracking-tight">Read the News</h2>
+          <p class="text-lg/8 text-base-content/70 mt-2">Learn about the latest features and updates to Create & Create Studio.</p>
         </div>
         <div class="auto-rows-fr sm:mt-20 lg:mx-0 lg:max-w-none lg:grid-cols-3 grid max-w-2xl grid-cols-1 gap-8 mx-auto mt-16">
           <article
@@ -57,7 +57,7 @@ definePageMeta({
 
 // Fetch posts using queryCollection
 const { data: posts } = await useAsyncData('news-posts', () => {
-  return queryCollection('news').order('date', 'DESC').all()
+  return queryCollection('news').where('_published', '=', true).order('date', 'DESC').all()
 })
 
 const formatDate = (dateString: string) => {

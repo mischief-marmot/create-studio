@@ -63,6 +63,8 @@ export default defineNuxtConfig({
           "Access-Control-Allow-Headers": "Content-Type",
         },
       },
+      '/plugin': { redirect: 'https://wordpress.org/plugins/mediavine-create' },
+
     },
   },
   vite: {

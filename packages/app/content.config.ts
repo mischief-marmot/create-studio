@@ -6,6 +6,7 @@ export default defineContentConfig({
       type: 'page',
       source: 'news/**',
       schema: z.object({
+        '_published': z.boolean().optional(),
         title: z.string(),
         description: z.string(),
         date: z.string(),

@@ -1,14 +1,15 @@
 <script lang="ts" setup>
 const route = useRoute()
-const slug = route.path
+const slug = `/news${route.path}`
 
 const { data: page } = await useAsyncData(route.path, () => {
-  return queryCollection('news', slug).first()
+  return queryCollection('news').path(slug).first()
 })
 
 // Get surrounding posts for navigation
 const { data: surroundings } = await useAsyncData('surround', () => {
   return queryCollectionItemSurroundings('news', slug)
+  .where('_published', '=', true)
   .order('date', 'DESC')
 })
 const [prev, next] = surroundings?.value || []
@@ -36,8 +37,16 @@ useHead({
   <NuxtLayout name="main">
     <div v-if="page" class="bg-base-100 min-h-screen">
       <div class="lg:max-w-7xl lg:px-8 max-w-2xl px-6 py-16 mx-auto">
+        <!-- Breadcrumbs -->
+        <div class="breadcrumbs text-sm mb-8">
+          <ul>
+            <li><NuxtLink to="/news">News</NuxtLink></li>
+            <li>{{ page.title }}</li>
+          </ul>
+        </div>
+
         <!-- Header -->
-        <h2 class="text-xs/5 text-base-content/60 mt-16 font-mono font-semibold tracking-widest uppercase">
+        <h2 class="text-xs/5 text-base-content/60 mt-8 font-mono font-semibold tracking-widest uppercase">
           {{ formatDate(page.date) }}
         </h2>
         <h1 class="text-pretty text-base-content sm:text-6xl mt-2 text-4xl font-medium tracking-tighter">
