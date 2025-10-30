@@ -98,3 +98,5 @@ In the meantime, while I'm busily wrapping up the upcoming 2.0 release, I'm here
 I think this is a very exciting new chapter for Create, and I'm honored to be the one leading it. Thank you for your patience, your trust, and your support. I promise to earn it every single day.
 
 **— JM**
+
+P.S. Check out [Mediavine's announcement](https://www.mediavine.com/create-has-a-new-home-and-exciting-updates-ahead/)!
