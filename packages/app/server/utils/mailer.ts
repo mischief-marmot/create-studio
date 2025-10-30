@@ -72,7 +72,7 @@ export async function sendValidationEmail(
   userData: { firstname?: string; lastname?: string }
 ): Promise<void> {
   const config = useRuntimeConfig();
-  const baseUrl = config.rootUrl || "http://localhost:3001";
+  const baseUrl = config.public.rootUrl || "https://create.studio";
   const validationUrl = `${baseUrl}/users/validate-email/${validationToken}`;
   const fromEmail = config.sendingAddress
 
