@@ -1,0 +1,52 @@
+{
+  "name": "@create-studio/docs",
+  "version": "0.0.2",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev --port 3002",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@d0rich/nuxt-content-mermaid": "^1.0.0",
+    "@headlessui/vue": "^1.7.23",
+    "@heroicons/vue": "^2.2.0",
+    "@nuxt/content": "^3.3.0",
+    "@nuxt/image": "^1.10.0",
+    "@nuxthub/core": "^0.9.0",
+    "@sindresorhus/slugify": "^2.2.1",
+    "@tailwindcss/typography": "^0.5.16",
+    "@tailwindcss/vite": "^4.1.6",
+    "@vueuse/core": "^11.3.0",
+    "better-sqlite3": "^12.4.1",
+    "clsx": "^2.1.1",
+    "fast-glob": "^3.3.3",
+    "flexsearch": "^0.8.205",
+    "js-yaml": "^4.1.0",
+    "nuxt": "^4.1.3",
+    "tailwindcss": "^4.1.6",
+    "vue": "^3.5.22",
+    "vue-router": "^4.5.1",
+    "wrangler": "^4.42.2"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.3.1",
+    "@nuxt/test-utils": "^3.19.2",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "daisyui": "^5.0.35",
+    "eslint": "^9.26.0",
+    "happy-dom": "^18.0.1",
+    "typescript": "^5.6.0",
+    "vite": "^6.0.5",
+    "vitest": "^3.2.4"
+  }
+}

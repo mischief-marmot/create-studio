@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@plugin "@tailwindcss/typography";
+
+@layer base {
+  * {
+    @apply border-slate-300 dark:border-slate-700;
+  }
+
+  html {
+    scroll-padding-top: 5rem;
+  }
+}
+
+@layer utilities {
+  .outline-hidden {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+}

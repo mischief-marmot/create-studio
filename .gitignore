@@ -6,6 +6,19 @@
 .cache
 dist
 
+syntax-ts
+
+# Package build artifacts
+packages/*/dist
+packages/*/.nuxt
+packages/*/.nitro
+packages/*/.cache
+packages/*/.output
+packages/*/node_modules
+
+# TypeScript incremental compilation cache
+*.tsbuildinfo
+
 # Node dependencies
 node_modules
 
@@ -24,3 +37,4 @@ logs
 !.env.example
 
 .wrangler
+tmp

@@ -1,5 +1,8 @@
-name: Deploy to NuxtHub
-on: push
+name: Deploy CS Docs
+on:
+  push:
+    paths:
+      - packages/docs/**
 
 jobs:
   deploy:
@@ -8,33 +11,27 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    defaults:
-      run:
-        working-directory: /packages/docs
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
-          cache-dependency-path: /packages/docs/pnpm-lock.yaml
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
       - name: Ensure NuxtHub module is installed
-        run: pnpx nuxthub@latest ensure
+        run: npx nuxthub@latest ensure
 
       - name: Build & Deploy to NuxtHub
         uses: nuxt-hub/action@v2
         with:
           project-key: cs-docs-znq0
-          directory: /packages/docs
+          directory: packages/docs

@@ -1,0 +1,40 @@
+name: Deploy Widgets
+on:
+  push:
+    paths:
+      - packages/widgets/**
+
+jobs:
+  deploy:
+    name: "Deploy Widgets"
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build shared package
+        run: npm run build:shared
+  
+      - name: Build & deploy widgets
+        env:
+          CI: true
+          NUXT_PUBLIC_ROOT_URL: ${{ vars.NUXT_PUBLIC_ROOT_URL }}
+        run: |
+          echo "Debug: NUXT_PUBLIC_ROOT_URL=$NUXT_PUBLIC_ROOT_URL"
+          npm run build:widgets

@@ -1,5 +1,8 @@
-name: Deploy to NuxtHub
-on: push
+name: Deploy Create Studio
+on:
+  push:
+    paths:
+      - packages/app/**
 
 jobs:
   deploy:
@@ -24,10 +27,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Build shared package
+        run: npm run build:shared
+  
       - name: Ensure NuxtHub module is installed
         run: npx nuxthub@latest ensure
+        working-directory: packages/app
 
       - name: Build & Deploy to NuxtHub
         uses: nuxt-hub/action@v2
         with:
           project-key: create-studio-53me
+          directory: packages/app
