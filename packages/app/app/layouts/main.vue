@@ -52,6 +52,10 @@
 			<div class="max-w-7xl w-full">
 				<footer class="footer sm:footer-horizontal bg-base-200 text-base-content p-10">
 					<nav>
+						<h6 class="footer-title">Product</h6>
+						<NuxtLink class="link link-hover" href="/plugin">Create Plugin</NuxtLink>
+					</nav>
+					<nav>
 						<h6 class="footer-title">Features</h6>
 						<NuxtLink class="link link-hover" href="/#features">Overview</NuxtLink>
 						<NuxtLink class="link link-hover" href="/#interactive-mode">Interactive Mode</NuxtLink>
@@ -60,7 +64,6 @@
 						<h6 class="footer-title">Company</h6>
 						<NuxtLink class="link link-hover" href="/news">News</NuxtLink>
 					</nav>
-					<nav></nav>
 					<nav></nav>
 				</footer>
 				<footer class="footer bg-base-200 text-base-content border-base-300 px-10 py-4 border-t">

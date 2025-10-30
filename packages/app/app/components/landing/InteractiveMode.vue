@@ -84,7 +84,7 @@ const features: Feature[] = [
         { name: 'Saved progress', description: 'Readers can close Interactive Mode, pause timers, or refresh the page and pick up where they left off next time they open it', icon: WindowIcon },
         { name: 'Distraction-free view', description: 'Clean, focused interface keeps readers cooking instead of scrolling past ads and pop-ups, losing their place and getting frustrated', icon: DevicePhoneMobileIcon },
         { name: 'Longer site visits', description: 'Readers stay engaged with your content throughout the entire cooking process', icon: ClockIcon },
-        { name: 'Ad supported', description: `You get free access to all of Create's premium features, just from the ads on this feature. Or use your ads for a small fee!'`, icon: CurrencyDollarIcon },
+        // { name: 'Ad supported', description: `You get free access to all of Create's premium features, just from the ads on this feature. Or use your ads for a small fee!'`, icon: CurrencyDollarIcon },
 ]
 
 interface Feature {

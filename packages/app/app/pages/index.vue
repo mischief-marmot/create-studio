@@ -1,8 +1,7 @@
 <template>
   <NuxtLayout name="main" :navLinks="navLinks">
     <div class="dark:bg-primary/20 px-3 py-8 bg-white">
-      <div role="alert"
-      style="background-image: none;"
+      <div role="alert" style="background-image: none;"
         class="alert bg-secondary text-secondary-content alert-vertical sm:alert-horizontal z-1000 max-w-3xl mx-auto">
         <div></div>
         <div>
@@ -130,8 +129,9 @@
     </div>
 
     <!-- Interactive Mode Section -->
+    <!-- description="Give your readers a never-before-seen interactive experience that keeps them on your site longer. Swipeable steps, smart timers, and distraction-free design—all free with ad support." -->
     <LandingInteractiveMode eyebrow="Transforming on-page guides" title="Brand New Interactive Mode"
-      description="Give your readers a never-before-seen interactive experience that keeps them on your site longer. Swipeable steps, smart timers, and distraction-free design—all free with ad support."
+      description="Give your readers a never-before-seen interactive experience that keeps them on your site longer. Swipeable steps, smart timers, and distraction-free design."
       :demoRecipeUrl="demoRecipeUrl" screenshot="/img/screenshots/interactive-mode.gif"
       screenshot-alt="Interactive mode demonstration" />
 
@@ -241,6 +241,23 @@
         </div>
       </div>
     </div>
+    
+    <div class="md:px-8 relative px-4 py-12">
+      <div class="text-accent-content rounded-3xl max-w-7xl bg-accent relative mx-auto">
+        <div class="sm:py-32 lg:px-8 px-6 py-24">
+          <div class="max-w-2xl mx-auto text-center">
+            <h2 class="text-balance sm:text-5xl text-4xl font-semibold tracking-tight">Get Rich Results Today.</h2>
+            <p class="text-lg/8 text-pretty max-w-xl mx-auto mt-6">
+              Install Create for free and get the best experience for you <strong><em>and</em></strong> your readers.
+            </p>
+            <div class="gap-x-6 flex items-center justify-center mt-10">
+              <a href="/plugin" class="btn btn-primary btn-lg">Install Create</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
     <!-- Pricing Section -->
     <!-- <SectionsPricing id="pricing" title="Everything Free. Forever." plan-name="Complete Access"
