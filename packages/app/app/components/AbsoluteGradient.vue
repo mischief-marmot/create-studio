@@ -79,10 +79,10 @@ const animatedStyle = computed(() => {
   return {
     background: `conic-gradient(from 0deg, ${colors.from}, ${colors.via}, ${colors.to}, ${colors.from})`,
     animation: `spin ${props.speed}s linear infinite`,
-    width: '200%',
-    height: '200%',
-    top: '-50%',
-    left: '-50%',
+    width: '250%',
+    height: '250%',
+    top: '-75%',
+    left: '-75%',
     transformOrigin: 'center'
   }
 })

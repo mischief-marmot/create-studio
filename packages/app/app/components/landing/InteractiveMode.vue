@@ -1,7 +1,8 @@
 <template>
     <div id="interactive-mode" class="bg-base-100 sm:py-24 py-16">
-        <div class="max-w-7xl lg:px-8 px-6 mx-auto">
+        <div class="max-w-7xl lg:px-8 px-3 mx-auto">
             <div class="max-w-4xl mx-auto text-center">
+                <div class="badge badge-md badge-accent mb-2">Coming Soon!</div>
                 <h2 v-if="eyebrow" class="text-md text-secondary font-semibold">{{ eyebrow }}</h2>
                 <p
                     class="sm:text-7xl text-pretty text-base-content md:text-8xl sm:text-balance mt-2 font-serif text-6xl">
@@ -16,7 +17,7 @@
         </div>
         <div class="relative py-12 overflow-hidden">
             <div class="max-w-7xl lg:px-8 w-full px-4 mx-auto">
-                <div class="relative rounded-xl shadow-2xl shadow-base-200 ring-1 ring-base-200 overflow-hidden max-w-[412px] max-h-[760px] w-full h-screen lg:max-h-[720px] md:max-w-none mx-auto"
+                <div class="relative rounded-xl shadow-2xl shadow-base-200 ring-1 ring-base-200 overflow-hidden max-w-[412px] max-h-[820px] w-full h-screen md:max-h-[720px] md:max-w-none mx-auto"
                 :class="[
                     showIframe ? '' : 'p-3'
                 ]"
@@ -25,7 +26,7 @@
 
                     <!-- Button placeholder before iframe loads -->
                     <div v-if="!showIframe" class="size-full dark:bg-base-200 rounded-xl relative z-10 flex flex-col items-center justify-center space-y-6 bg-white">
-                        <p class="text-pretty text-lg">Click the button to try Interactive Mode!</p>
+                        <p class="text-pretty text-lg text-center">Click the button to try Interactive Mode!</p>
                         <button @click="showIframe = true" 
                         :class="[
                             'btn btn-primary font-normal text-xl sm:text-3xl btn-xl sm:btn-2xl gap-2 py-10',
@@ -36,7 +37,7 @@
                     </div>
 
                     <!-- Iframe loads on button click -->
-                    <iframe v-if="showIframe" :src="demoRecipeUrl" class="lg:aspect-video rounded-xl relative z-10 w-full h-full overflow-hidden border-0"
+                    <iframe v-if="showIframe" :src="demoRecipeUrl" class="md:aspect-video rounded-xl relative z-10 w-full h-full overflow-hidden border-0"
                         frameborder="0"
                         allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         title="Interactive Mode Demo" loading="lazy" />

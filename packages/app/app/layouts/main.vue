@@ -2,7 +2,7 @@
     <div class="min-h-screen">
         <!-- Navigation Bar -->
         <nav :class="[
-            scrollPosition > 64 ? 'sm:bg-transparent ' : '',
+            scrollPosition > 64 ? 'md:bg-transparent ' : '',
             'navbar sticky bg-base-100 top-0 text-base-content sm:pt-6 z-50 sm:px-8',
             'transition-colors duration-0'
         ]">
@@ -24,7 +24,7 @@
                     </ul>
                 </div>
                 <a href="/" :class="[
-                    scrollPosition > 64 ? 'hidden' : ''
+                    scrollPosition > 64 ? '' : ''
                 ]">
                     <LogoFull height="32" width="auto" className="dark:text-base-content" />
                 </a>
@@ -40,7 +40,7 @@
                 </ul>
             </div>
             <div class="navbar-end">
-                <a href="/auth/login" class="btn btn-primary btn-sm sm:btn-md rounded-full" :class="[
+                <a href="/auth/login" class="btn btn-primary btn-sm sm:btn-md hidden rounded-full" :class="[
                     scrollPosition > 64 ? 'hidden' : ''
                 ]">Sign In</a>
             </div>

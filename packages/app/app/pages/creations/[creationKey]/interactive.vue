@@ -11,7 +11,8 @@
                 <a href="/" class="btn btn-primary">Back to Home</a>
             </div>
         </div>
-        <div class="flex-shrink-0 bg-base-300 text-base-content h-[50px] w-full p-2 md:hidden">
+        <!-- ad slot -->
+        <div class="hidden flex-shrink-0 bg-base-300 text-base-content h-[50px] w-full p-2 md:hidden">
             <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="320x50"></div>
         </div>
     </div>
@@ -105,6 +106,7 @@ onMounted(async () => {
             baseUrl: window.location.origin,
             hideAttribution: true
         });
+        targetElement.style.height = '100%'
     }
 });
 </script>

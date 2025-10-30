@@ -18,7 +18,7 @@
         <div v-if="dataReady" ref="containerRef"
             :class="[ 
                 'cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:flex-col cs:overflow-hidden cs:relative', 
-                'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-[720px] cs:md:mx-auto cs:md:my-auto cs:md:gap-8 cs:pb-[71px]' 
+                'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-[720px] cs:md:mx-auto cs:md:my-auto cs:md:gap-8 cs:md:pb-[71px]' 
                 ]"
             @mousedown="startDrag"
             @touchstart="startDrag">
@@ -377,11 +377,9 @@ const hasShownTimerWarning = () => {
 
 // Provide timer warning request function to child components
 const requestTimerWarning = (callback: () => void) => {
-    console.log('⏱️  [InteractiveExperience] Request timer warning for user');
 
     // If user has already seen the warning this session, just start the timer
     if (hasShownTimerWarning()) {
-        console.log('✅ Timer warning already shown this session, starting timer');
         callback();
         return;
     }

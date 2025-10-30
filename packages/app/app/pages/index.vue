@@ -122,7 +122,7 @@
       screenshot-alt="Interactive mode demonstration" />
 
     <!-- How it Works Callout -->
-    <div id="how-it-works" class="bg-primary dark:bg-deep-navy sm:py-32 sm:px-24 px-6 py-24">
+    <div id="how-it-works" class="bg-primary dark:bg-deep-navy sm:py-32 sm:px-24 hidden px-6 py-24">
       <div
         class="py-18 max-w-7xl rounded-xl bg-base-100 flex flex-col mx-auto space-y-16 overflow-hidden font-light text-center">
         <div class="flex flex-col items-center space-y-6">
