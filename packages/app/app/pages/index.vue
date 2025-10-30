@@ -1,5 +1,19 @@
 <template>
   <NuxtLayout name="main" :navLinks="navLinks">
+    <div class="dark:bg-primary/20 px-3 py-8 bg-white">
+      <div role="alert"
+      style="background-image: none;"
+        class="alert bg-secondary text-secondary-content alert-vertical sm:alert-horizontal z-1000 max-w-3xl mx-auto">
+        <div></div>
+        <div>
+          <h2 class="text-md font-medium">Exciting Announcement!</h2>
+          <p>Read the latest news about Create–I think you'll like it!</p>
+        </div>
+        <div>
+          <NuxtLink class="btn btn-neutral" href="/hello">Read now</NuxtLink>
+        </div>
+      </div>
+    </div>
     <!-- Hero Section -->
     <LandingHero />
 
@@ -261,28 +275,6 @@
         { name: 'Future-proof', description: 'We\'re constantly adding new card types and features to help you create better content' }
       ]" /> -->
 
-    <!-- Footer -->
-    <!-- <footer class="footer footer-center sm:p-8 lg:p-10 bg-base-300 text-base-content p-6 overflow-hidden">
-      <div class="sm:gap-4 sm:text-base grid flex-wrap justify-center grid-flow-col gap-3 text-sm">
-        <a class="link link-hover">About</a>
-        <a class="link link-hover">Contact</a>
-        <a class="link link-hover">Documentation</a>
-        <a class="link link-hover">Privacy Policy</a>
-        <a class="link link-hover">Terms of Service</a>
-      </div>
-      <div>
-        <div class="sm:gap-6 grid grid-flow-col gap-4">
-          <a class="link">Twitter</a>
-          <a class="link">GitHub</a>
-          <a class="link">LinkedIn</a>
-        </div>
-      </div>
-      <div>
-        <p class="sm:text-base text-sm">
-          © 2025 Create Studio. All rights reserved.
-        </p>
-      </div>
-    </footer> -->
   </NuxtLayout>
 </template>
 
@@ -304,7 +296,7 @@ const activeTab = ref('standard')
 const navLinks = {
   '#features': 'Features',
   '#interactive-mode': 'Interactive Mode',
-  '#how-it-works': 'How It Works',
+  // '#how-it-works': 'How It Works',
 }
 
 // Page meta

@@ -1,7 +1,7 @@
 <template>
   <div class="bg-base-200">
     <div class="isolate bg-linear-to-b from-primary/20 dark:from-primary/10 relative overflow-hidden">
-      <div class="max-w-7xl sm:pb-24 lg:grid lg:grid-cols-2 lg:gap-x-8 lg:px-8 lg:py-24 pt-10 pb-16 mx-auto">
+      <div class="max-w-7xl sm:pb-24 lg:grid lg:grid-cols-2 lg:gap-x-8 lg:px-8 lg:py-16 py-8 mx-auto">
         <div class="lg:px-0 lg:pt-4 px-6">
           <div class="sm:max-w-2xl mx-auto">
             <div class="sm:max-w-xl w-full">

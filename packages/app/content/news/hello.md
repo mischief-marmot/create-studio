@@ -93,7 +93,7 @@ More details coming very soon!
 In the meantime, while I'm busily wrapping up the upcoming 2.0 release, I'm here to listen, learn, and build something great with your input. Create's future will be shaped by the Create-ers who use it every day–including you!
 
 > - Email me at [jm@create.studio](mailto:jm@create.studio) 
-> - Or join the conversation in the [Facebook group](https://www.facebook.com/groups/2243472065724781)
+> - Or join the conversation in the [Facebook group](https://www.facebook.com/groups/createstudioapp/)
 
 I think this is a very exciting new chapter for Create, and I'm honored to be the one leading it. Thank you for your patience, your trust, and your support. I promise to earn it every single day.
 
