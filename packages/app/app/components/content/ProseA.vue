@@ -1,7 +1,7 @@
 <template>
   <NuxtLink
     :href="props.href"
-    :target="props.target"
+    target="_blank"
     class="inline-flex items-baseline justify-around h-[20px]"
   >
     <component :is="props.href && props.href.includes('mailto') ? EnvelopeIcon : LinkIcon"  class="size-4 inline-block mr-1" /><slot />
