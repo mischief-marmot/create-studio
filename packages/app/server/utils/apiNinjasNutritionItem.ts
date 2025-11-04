@@ -390,12 +390,14 @@ export async function calculateRecipeNutritionWithItems(
 
         if (typeof values[item.id] === 'number' && !isNaN(values[item.id])) {
           result.amount = Math.round(values[item.id] * 100) / 100
+        } else if (item.id === 'calculated') {
+          result.amount = new Date().toISOString()
         } else if (item.id === 'created') {
           result.amount = item.amount
         } else if (item.id === 'modified') {
           result.amount = item.amount
         } else if (item.id === 'source') {
-          result.amount = 'API Ninjas (Item)'
+          result.amount = 'API Ninjas Nutrition'
         } else if (item.id === 'serving_size' && !item.amount) {
           result.amount = '1'
         } else if (item.id === 'net_carbs') {
