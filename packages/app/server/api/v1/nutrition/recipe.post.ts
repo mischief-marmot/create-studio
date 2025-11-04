@@ -1,19 +1,20 @@
 /**
  * POST /api/v1/nutrition/recipe
- * Calculate recipe nutrition using API Ninjas Nutrition API
+ * Calculate recipe nutrition using API Ninjas /v1/nutritionitem endpoint
  *
  * Maintains compatibility with original Express API
  * Includes rate limiting (15 requests per 5 minutes per user)
  *
- * Migration from Nutritionix to API Ninjas (Oct 2024)
- * - Uses GET requests instead of POST
- * - Manual serving size calculation
- * - Simplified field structure
+ * Updated (Nov 2024)
+ * - Uses /v1/nutritionitem endpoint for better accuracy
+ * - Individual ingredient queries with explicit quantities
+ * - Parallel requests for efficiency
+ * - Supports pre-populated item/amount properties
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { verifyJWT } from '~~/server/utils/auth'
-import { calculateRecipeNutrition } from '~~/server/utils/apiNinjasNutrition'
+import { calculateRecipeNutritionWithItems } from '~~/server/utils/apiNinjasNutritionItem'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
 
@@ -76,21 +77,25 @@ export default defineEventHandler(async (event) => {
       title: body.title,
       yield: recipeYield,
       ingredients: body.ingredients.map((ingredient: any) => ({
-        original_text: ingredient.original_text || ''
+        original_text: ingredient.original_text || '',
+        item: ingredient.item,  // Pre-populated ingredient name (optional)
+        amount: ingredient.amount  // Pre-populated quantity (optional)
       })),
       nutrition: body.nutrition
     }
-    logger.debug('Recipe data', recipeData)
 
-    // Calculate nutrition using our service
-    const nutritionResult = await calculateRecipeNutrition(recipeData, user.id)
-    logger.debug('Nutrition result', nutritionResult)
+    // Calculate nutrition using the new /v1/nutritionitem approach
+    const nutritionResult = await calculateRecipeNutritionWithItems(recipeData, user.id)
 
     // Format response to match original API
     const response: any = {}
 
     if (nutritionResult.nutrition) {
       response.nutrition = nutritionResult.nutrition
+    }
+
+    if (nutritionResult.totalNutrition) {
+      response.totalNutrition = nutritionResult.totalNutrition
     }
 
     if (nutritionResult.ingredients_not_found && nutritionResult.ingredients_not_found.length > 0) {

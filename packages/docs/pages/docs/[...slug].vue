@@ -93,7 +93,7 @@ useHead({
               {{ page.title }}
             </h1>
           </header>
-          <div class="max-w-none placeholder-stone-800 prose">
+          <div class="lg:prose-xl prose-a:no-underline prose-a:hover:underline prose-zinc dark:prose-invert max-w-5xl prose prose-lg">
             <ContentRenderer :value="page" />
           </div>
         </article>

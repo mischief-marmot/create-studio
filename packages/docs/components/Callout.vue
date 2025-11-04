@@ -30,12 +30,12 @@ const icons = {
 
 <template>
   <div :class="clsx('my-8 flex rounded-3xl p-6', styles[type].container)">
-    <component :is="icons[type]" class="h-8 w-8 flex-none" />
-    <div class="ml-4 flex-auto">
+    <component :is="icons[type]" class="flex-none w-8 h-8" />
+    <div class="flex-auto ml-4">
       <p :class="clsx('not-prose font-display text-xl', styles[type].title)">
         {{ title }}
       </p>
-      <div :class="clsx('prose mt-2.5', styles[type].body)">
+      <div :class="clsx('prose dark:prose-invert mt-2.5', styles[type].body)">
         <slot />
       </div>
     </div>

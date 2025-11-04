@@ -16,7 +16,7 @@ Get your development environment set up for Create Studio.
 ## Clone the Repository
 
 ```bash
-git clone <repository-url>
+gh repo clone mischiefmarmot/create-studio
 cd create-studio
 ```
 
@@ -38,23 +38,7 @@ Copy the example environment file:
 cp .env.example .env
 ```
 
-Edit `.env` and add your configuration:
-
-```env
-# Clerk Authentication
-NUXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_key_here
-NUXT_CLERK_SECRET_KEY=your_secret_here
-
-# Stripe
-NUXT_STRIPE_SECRET_KEY=your_key_here
-NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=your_key_here
-
-# Other services...
-```
-
-::callout{type="warning" title="API Keys Required"}
-You'll need to sign up for Clerk and Stripe to get API keys for full functionality.
-::
+Edit `.env` and add your configuration values.
 
 ## Development Servers
 
