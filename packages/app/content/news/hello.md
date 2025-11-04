@@ -58,7 +58,9 @@ That said, I will do everything in my power to hear your concerns and be cogniza
 
 There will be changes, of course, and I will approach each one carefully. If something changes in a way that doesn't work for you–or something breaks 🙈–I humbly ask for your patience and communication as we work together to resolve it!
 
-> I fully recognize the tremendous responsibility and unique opportunity I have been given–I am truly honored.
+::callout{type="quote"}
+I fully recognize the tremendous responsibility and unique opportunity I have been given–I am truly honored.
+::
 
 ## What's Coming in Create 2.0
 
@@ -78,7 +80,9 @@ And this is just the beginning! After that, we'll see importer improvements, enh
 
 ## Keeping Create Free
 
-> I want you to know that **accessibility** and **equity** are core principles guiding every decision I make. I will do everything I can to ensure that cost is never a barrier to using any of Create's features!
+::callout{type="info"}
+I want you to know that **accessibility** and **equity** are core principles guiding every decision I make. I will do everything I can to ensure that cost is never a barrier to using any of Create's features!
+::
  
 As independent content creators, you are familiar with the need to support yourself or your family while providing high-value content for your readers at no cost. I see Create as the same situation: you shouldn't have to pay for "premium" features like user ratings and nutrition calculation. At the same time, I have three growing boys to feed! 😂
 
@@ -92,8 +96,10 @@ More details coming very soon!
 
 In the meantime, while I'm busily wrapping up the upcoming 2.0 release, I'm here to listen, learn, and build something great with your input. Create's future will be shaped by the Create-ers who use it every day–including you!
 
-> - Email me at [jm@create.studio](mailto:jm@create.studio) 
-> - Or join the conversation in the [Facebook group](https://www.facebook.com/groups/createstudioapp/)
+::callout{type="tip" title="Get In Touch"}
+- Email me at [jm@create.studio](mailto:jm@create.studio)
+- Or join the conversation in the [Facebook group](https://www.facebook.com/groups/createstudioapp/)
+::
 
 I think this is a very exciting new chapter for Create, and I'm honored to be the one leading it. Thank you for your patience, your trust, and your support. I promise to earn it every single day.
 
