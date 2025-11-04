@@ -26,7 +26,7 @@ export const navigation = [
       { title: 'Test-Driven Development', href: '/docs/test-driven-development' },
       { title: 'Adding Features', href: '/docs/adding-features' },
       { title: 'Widget Development', href: '/docs/widget-development' },
-      { title: 'API Routes', href: '/docs/api-routes' },
+      { title: 'API', href: '/docs/api' },
       { title: 'State Management', href: '/docs/state-management' },
     ],
   },

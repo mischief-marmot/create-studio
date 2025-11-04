@@ -4,7 +4,7 @@ import {
   verifyUserPassword,
   generatePasswordResetToken,
   verifyPasswordResetToken
-} from '~/server/utils/auth'
+} from '~~/server/utils/auth'
 
 describe('Password Hashing', () => {
   it('should hash a password', async () => {
@@ -77,7 +77,7 @@ describe('Password Reset Tokens', () => {
 
   it('should reject password reset token with wrong type', async () => {
     // Generate a regular validation token instead of password reset
-    const { generateValidationToken } = await import('~/server/utils/auth')
+    const { generateValidationToken } = await import('~~/server/utils/auth')
     const validationToken = await generateValidationToken({
       id: 1,
       email: 'test@example.com'
