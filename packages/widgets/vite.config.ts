@@ -50,7 +50,6 @@ export default defineConfig(({ mode }) => ({
     minify: 'esbuild',
     sourcemap: mode === 'development',
     esbuild: {
-      drop: mode === 'production' ? ['console', 'debugger'] : [],
       legalComments: 'none',
     },
     cssCodeSplit: true,
