@@ -12,12 +12,12 @@
     <div class="px-8 py-5 pl-8 pr-6">
       <span
         v-if="title"
-        class="text-accent opacity-90 mb-2 text-sm font-medium tracking-wide uppercase"
+        class="text-accent opacity-90 text-md mb-2 font-medium tracking-wide uppercase"
       >
         {{ title }}
       </span>
       <div
-        class="max-w-none text-base-content/85 prose-p:leading-relaxed prose-strong:text-info prose-strong:font-semibold prose-sm prose"
+        class="callout-content max-w-none prose-strong:text-info prose-strong:font-semibold text-base-content"
       >
         <slot />
       </div>
@@ -34,46 +34,44 @@ defineProps<Props>()
 </script>
 
 <style scoped>
-/* Ensure first and last elements don't have extra margins */
-.prose > :first-child {
-  margin-top: 0;
+/* Remove paragraph margins in callout content */
+.callout-content :deep(p) {
+  margin: 0 !important;
+  line-height: 1.6;
 }
 
-.prose > :last-child {
-  margin-bottom: 0;
+/* Spacing between consecutive paragraphs */
+.callout-content :deep(p + p) {
+  margin-top: 0.75rem !important;
 }
 
 /* Better list spacing */
-.prose ul,
-.prose ol {
+.callout-content :deep(ul),
+.callout-content :deep(ol) {
   margin-top: 0.75rem;
   margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
 }
 
-.prose li {
+.callout-content :deep(li) {
   margin-top: 0.25rem;
   margin-bottom: 0.25rem;
 }
 
 /* Remove default link underlines in callouts */
-.prose a {
+.callout-content :deep(a) {
   text-decoration-line: none;
   font-weight: 500;
   transition: all 0.2s;
 }
 
-.prose a:hover {
+.callout-content :deep(a:hover) {
   text-decoration-line: underline;
   text-underline-offset: 2px;
 }
 
-/* Better spacing for paragraphs */
-.prose p + p {
-  margin-top: 0.75rem;
-}
-
 /* Code styling within callouts */
-.prose code {
+.callout-content :deep(code) {
   font-size: 0.875em;
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
