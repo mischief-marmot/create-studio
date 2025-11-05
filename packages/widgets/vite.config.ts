@@ -3,8 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import autoprefixer from 'autoprefixer'
+import { minify as minifyPlugin } from 'rollup-plugin-esbuild'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     tailwindcss()
@@ -20,6 +21,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       external: [],
+      plugins: mode === 'production' ? [minifyPlugin()] : [],
       output: {
         format: 'es',
         assetFileNames: '[name].[ext]',
@@ -46,9 +48,9 @@ export default defineConfig({
       }
     },
     minify: 'esbuild',
-    sourcemap: true,
+    sourcemap: mode === 'development',
     esbuild: {
-      drop: [] // Don't drop console.log or debugger statements
+      legalComments: 'none',
     },
     cssCodeSplit: true,
     cssMinify: true
@@ -72,4 +74,4 @@ export default defineConfig({
     '__VUE_OPTIONS_API__': 'true',
     '__VUE_PROD_DEVTOOLS__': 'false',
   }
-})
+}))
