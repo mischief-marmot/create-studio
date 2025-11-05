@@ -4,7 +4,7 @@ import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import autoprefixer from 'autoprefixer'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
     tailwindcss()
@@ -46,9 +46,9 @@ export default defineConfig({
       }
     },
     minify: 'esbuild',
-    sourcemap: false,
+    sourcemap: mode === 'development',
     esbuild: {
-      drop: ['console', 'debugger'],
+      drop: mode === 'production' ? ['console', 'debugger'] : [],
       legalComments: 'none',
       minifyIdentifiers: true,
       minifySyntax: true,
@@ -77,4 +77,4 @@ export default defineConfig({
     '__VUE_OPTIONS_API__': 'true',
     '__VUE_PROD_DEVTOOLS__': 'false',
   }
-})
+}))
