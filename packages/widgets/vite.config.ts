@@ -46,9 +46,14 @@ export default defineConfig({
       }
     },
     minify: 'esbuild',
-    sourcemap: true,
+    sourcemap: false,
     esbuild: {
-      drop: [] // Don't drop console.log or debugger statements
+      drop: ['console', 'debugger'],
+      legalComments: 'none',
+      minifyIdentifiers: true,
+      minifySyntax: true,
+      minifyWhitespace: true,
+      treeShaking: true,
     },
     cssCodeSplit: true,
     cssMinify: true
