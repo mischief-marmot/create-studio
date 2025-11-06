@@ -41,10 +41,12 @@
              <template v-if="timer.status === 'running'">
               <div class="cs:join">
                 <button @click="addMinute(timer.id)"
+                data-role="add-min"
                 class="cs:cursor-pointer cs:join-item cs:py-1.5 cs:px-3 cs:rounded-l-full cs:bg-base-100 cs:border cs:border-base-300 cs:hover:bg-green-700/70 cs:hover:text-green-50 cs:text-xs cs:font-bold">
                 +1m
               </button>
               <button @click="pauseTimer(timer.id)"
+              data-role="pause"
               class="cs:cursor-pointer cs:join-item cs:py-1.5 cs:px-3 cs:rounded-r-full cs:bg-base-100 cs:border cs:border-base-300 cs:hover:bg-amber-400/70 cs:hover:text-amber-800">
               <PauseIcon class="cs:w-5 cs:h-5" />
             </button>
@@ -56,14 +58,17 @@
             <template v-else-if="timer.status === 'paused'">
               <div class="cs:join">
               <button @click="resetTimer(timer.id)"
+                data-role="reset"
                 class="cs:cursor-pointer cs:join-item cs:py-1.5 cs:px-3 cs:rounded-l-full cs:bg-base-100 cs:border cs:border-base-300 cs:hover:bg-red-700/70 cs:hover:text-red-50">
                 <TrashIcon class="cs:w-5 cs:h-5" />
               </button>
               <button @click="addMinute(timer.id)"
+                data-role="add-min"
                 class="cs:cursor-pointer cs:join-item cs:py-1.5 cs:px-3 cs:bg-base-100 cs:border cs:border-base-300 cs:hover:bg-green-700/70 cs:hover:text-green-50 cs:text-xs cs:font-bold">
                 +1m
               </button>
               <button @click="resumeTimer(timer.id)"
+                data-role="resume"
                 class="cs:cursor-pointer cs:join-item cs:py-1.5 cs:px-3 cs:rounded-r-full cs:bg-base-100 cs:border cs:border-base-300 cs:hover:bg-primary cs:hover:text-primary-content">
                 <PlayIcon class="cs:w-5 cs:h-5" />
               </button>
@@ -73,6 +78,7 @@
             <!-- Alarming - show stop alarm button prominently -->
             <template v-else-if="timer.status === 'alarming'">
               <button @click="stopAlarm(timer.id)"
+                data-role="stop"
                 class="cs:cursor-pointer cs:py-2 cs:px-4 cs:rounded-full cs:bg-white cs:text-red-600 cs:font-bold cs:animate-pulse cs:hover:bg-red-100">
                 STOP
               </button>
@@ -84,6 +90,7 @@
                 <CheckIcon class="cs:w-5 cs:h-5" />
               </span>
               <button @click="resetTimer(timer.id)"
+                data-role="reset"
                 class="cs:cursor-pointer cs:py-1.5 cs:px-3 cs:rounded-full cs:bg-base-100 cs:border cs:border-base-300 cs:hover:bg-red-700/70 cs:hover:text-red-50">
                 <TrashIcon class="cs:w-5 cs:h-5" />
               </button>

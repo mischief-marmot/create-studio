@@ -12,6 +12,7 @@
     <div class="cs:flex cs:items-center cs:gap-2">
       <!-- Idle state - Show Start button -->
       <button v-if="timerState.status === 'idle'"
+        data-role="start"
         @click="handleStartClick"
         class="cs:btn cs:btn-md cs:h-auto cs:py-3 cs:px-4 cs:shadow-none cs:rounded-full cs:font-normal cs:uppercase cs:text-base-content cs:bg-base-100 cs:flex cs:justify-center cs:items-center cs:gap-2">
         <span>start</span>
@@ -76,7 +77,7 @@ const displayTime = computed(() => {
 
 // Button handlers
 const handleStartClick = () => {
-  console.log('🚀 [RecipeTimer] handleStartClick called');
+  // console.log('🚀 [RecipeTimer] handleStartClick called');
 
   // Request timer warning (shows modal in InteractiveExperience on first timer)
   if (requestTimerWarning) {
@@ -90,7 +91,7 @@ const handleStartClick = () => {
 };
 
 const handleStart = () => {
-  console.log('🚀 [RecipeTimer] handleStart called for timer:', props.timerId);
+  // console.log('🚀 [RecipeTimer] handleStart called for timer:', props.timerId);
 
   // Track timer start in analytics
   if (analytics) {
