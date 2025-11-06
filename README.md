@@ -123,8 +123,18 @@ See [deployment documentation](https://nuxt.com/docs/getting-started/deployment)
 
 The project is configured for Cloudflare Pages deployment via NuxtHub.
 
+## Content Management
+
+The Create Studio News blog is managed using [Nuxt Studio](https://studio.nuxt.com), a web-based CMS for Nuxt Content.
+
+To manage blog content:
+1. Visit [studio.nuxt.com](https://studio.nuxt.com) and connect to this repository
+2. Navigate to the News collection to create/edit blog posts
+3. See [NUXT_STUDIO.md](docs/NUXT_STUDIO.md) for detailed setup and usage instructions
+
 ## Documentation
 
 - [CLAUDE.md](CLAUDE.md) - Development guidelines and project overview
+- [NUXT_STUDIO.md](docs/NUXT_STUDIO.md) - Nuxt Studio CMS setup and usage guide
 - [MONOREPO_MIGRATION.md](MONOREPO_MIGRATION.md) - Monorepo migration guide
 - [SUBSCRIPTION_IMPLEMENTATION.md](SUBSCRIPTION_IMPLEMENTATION.md) - Subscription system details
