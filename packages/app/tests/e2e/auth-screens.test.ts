@@ -57,9 +57,6 @@ test.describe('Authentication Screens', () => {
       const loginButton = page.locator('button[type="submit"]')
       await loginButton.click()
 
-      // Wait for error message
-      await page.waitForTimeout(2000)
-
       // Check for error alert or message
       const errorAlert = page.locator('.alert-error').or(
         page.locator('.error').or(
@@ -69,7 +66,7 @@ test.describe('Authentication Screens', () => {
 
       // Error should be displayed
       if (await errorAlert.count() > 0) {
-        await expect(errorAlert.first()).toBeVisible()
+        await expect(errorAlert.first()).toBeVisible({ timeout: 5000 })
       }
     })
 
@@ -126,12 +123,19 @@ test.describe('Authentication Screens', () => {
       const loginButton = page.locator('button[type="submit"]')
       await loginButton.click()
 
-      // Check for loading state quickly
-      await page.waitForTimeout(100)
-
       // Button should show loading text or spinner
       const loadingText = page.getByText(/logging in/i)
       const loadingSpinner = page.locator('.loading-spinner')
+
+      // Try to catch loading state or error/success response
+      try {
+        await Promise.race([
+          loadingText.first().waitFor({ timeout: 1000 }).catch(() => null),
+          loadingSpinner.first().waitFor({ timeout: 1000 }).catch(() => null)
+        ])
+      } catch {
+        // Loading state may be too fast to catch
+      }
 
       const hasLoadingState = (await loadingText.count() > 0) || (await loadingSpinner.count() > 0)
 
@@ -222,16 +226,29 @@ test.describe('Authentication Screens', () => {
 
       // Submit form
       const submitButton = page.locator('button[type="submit"]')
-      const buttonClickPromise = submitButton.click()
+      await submitButton.click()
 
-      // Wait a moment for the form submission to start
-      await page.waitForTimeout(500)
+      // Wait for form to be processed - look for either success message, error, or button state change
+      const successMessage = page.locator('.alert.alert-success')
+      const errorMessage = page.locator('.alert.alert-error')
 
-      // Click should complete without error
-      await buttonClickPromise
+      await Promise.race([
+        successMessage.waitFor({ timeout: 3000 }).catch(() => null),
+        errorMessage.waitFor({ timeout: 3000 }).catch(() => null),
+        submitButton.evaluate((el: HTMLButtonElement) => {
+          return new Promise((resolve) => {
+            const checkState = setInterval(() => {
+              if (el.disabled || el.textContent?.toLowerCase().includes('sent')) {
+                clearInterval(checkState)
+                resolve(true)
+              }
+            }, 100)
+            setTimeout(() => { clearInterval(checkState); resolve(false) }, 3000)
+          })
+        })
+      ])
 
-      // Form submission was attempted successfully (button was clickable)
-      // The actual API response will vary based on backend state
+      // Form submission was attempted successfully
       expect(true).toBeTruthy()
     })
 

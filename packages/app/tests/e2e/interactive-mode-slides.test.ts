@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { createCreationKey } from '@create-studio/shared'
+
+const creationKey = createCreationKey('thesweetestoccasion.com', 50)
 
 /**
  * E2E Tests for Interactive Mode - Slide Navigation
@@ -29,14 +32,9 @@ test.describe('Interactive Mode - Slide Navigation', () => {
     const button = page.getByText('Try Interactive Mode')
     await button.click()
 
-    // Wait for modal or iframe to appear
-    await page.waitForTimeout(2000)
-
-    // Check if iframe or interactive content is visible
-    const iframe = page.frameLocator('iframe').first()
-
-    // Wait for content to load inside iframe
-    await page.waitForTimeout(3000)
+    // Wait for iframe to appear
+    const iframe = page.locator('iframe')
+    await expect(iframe.first()).toBeVisible({ timeout: 10000 })
   })
 
   test('navigates through slides in direct interactive page', async ({ page }) => {
@@ -45,23 +43,22 @@ test.describe('Interactive Mode - Slide Navigation', () => {
 
     // Wait for page to load and widget to initialize
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000) // Give time for SDK to load
 
     // Check for carousel (it should be in the shadow DOM or iframe)
     // Since the widget loads via SDK, we need to wait for it
     const widgetContainer = page.locator('[id^="interactive-widget-"]')
-    await expect(widgetContainer).toBeVisible({ timeout: 10000 })
+    await expect(widgetContainer).toBeVisible({ timeout: 15000 })
   })
 
   test('slide navigation with carousel elements', async ({ page }) => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     // Look for carousel navigation elements
     // The carousel should have slide elements with IDs like slide0, slide1, etc.
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     // If carousel exists, test navigation
     if (await carousel.count() > 0) {
@@ -82,13 +79,10 @@ test.describe('Interactive Mode - Slide Navigation', () => {
         await page.mouse.move(box.x + 50, box.y + box.height / 2, { steps: 10 })
         await page.mouse.up()
 
-        await page.waitForTimeout(500)
-
-        // Check if we're on a different slide
+        // Wait for slide transition to complete by checking scroll position change
         const firstStepSlide = page.locator('#slide1')
         if (await firstStepSlide.count() > 0) {
-          // Slide should be visible after swipe
-          expect(await firstStepSlide.isVisible()).toBeTruthy()
+          await expect(firstStepSlide).toBeVisible({ timeout: 3000 })
         }
       }
     }
@@ -98,7 +92,10 @@ test.describe('Interactive Mode - Slide Navigation', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
+
+    // Wait for widget to load first
+    const widgetContainer = page.locator('[id^="interactive-widget-"]')
+    await expect(widgetContainer).toBeVisible({ timeout: 15000 })
 
     // Look for recipe title and description
     const title = page.getByText(/raspberry.*margarita/i)
@@ -118,10 +115,10 @@ test.describe('Interactive Mode - Slide Navigation', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     // Navigate to the last slide (review/completion)
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Scroll to the end
@@ -129,14 +126,11 @@ test.describe('Interactive Mode - Slide Navigation', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
-      // Look for "All done!" heading or completion message
-      const completionHeading = page.locator('h2').filter({ hasText: /all done|complete|finish/i })
-
-      if (await completionHeading.count() > 0) {
-        await expect(completionHeading.first()).toBeVisible()
-      } else {
+      // Wait for either completion heading or verify carousel is still visible
+      try {
+        const completionHeading = page.locator('h2').filter({ hasText: /all done|complete|finish/i })
+        await expect(completionHeading.first()).toBeVisible({ timeout: 5000 })
+      } catch {
         // If no completion message, at least verify we navigated
         const carousel = page.locator('.cs\\:carousel')
         expect(await carousel.count()).toBeGreaterThan(0)

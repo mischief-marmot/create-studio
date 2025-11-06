@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { createCreationKey } from '@create-studio/shared'
+
+const creationKey = createCreationKey('thesweetestoccasion.com', 50)
 
 /**
  * E2E Tests for Landing Page and Demo Pages
@@ -45,13 +48,11 @@ test.describe('Landing Page and Demos', () => {
       if (await tryButton.count() > 0) {
         await tryButton.first().click()
 
-        await page.waitForTimeout(2000)
-
         // Iframe or interactive content should appear
         const iframe = page.locator('iframe')
 
         if (await iframe.count() > 0) {
-          await expect(iframe.first()).toBeVisible()
+          await expect(iframe.first()).toBeVisible({ timeout: 5000 })
         }
       }
     })
@@ -204,14 +205,12 @@ test.describe('Landing Page and Demos', () => {
       const tryButton = page.getByText(/try.*interactive.*mode/i).first()
       await tryButton.click()
 
-      await page.waitForTimeout(2000)
-
       // Should open modal or navigate to interactive view
       const modal = page.locator('[class*="modal"]').or(page.locator('iframe'))
 
       if (await modal.count() > 0) {
         // Modal or iframe should appear
-        expect(await modal.first().isVisible()).toBeTruthy()
+        await expect(modal.first()).toBeVisible({ timeout: 5000 })
       }
     })
 
@@ -264,11 +263,17 @@ test.describe('Landing Page and Demos', () => {
       const tryButton = page.getByText(/try.*interactive.*mode/i).first()
       await tryButton.click()
 
-      await page.waitForTimeout(2000)
-
       // Should open interactive mode (modal or new page)
+      // Wait for either modal to appear or URL to change
+      const iframe = page.locator('iframe')
+
+      await Promise.race([
+        iframe.first().waitFor({ timeout: 5000 }).catch(() => null),
+        page.waitForURL(/\/interactive/, { timeout: 5000 }).catch(() => null)
+      ])
+
       // Check if URL changed or modal appeared
-      const hasModal = await page.locator('iframe').count() > 0
+      const hasModal = await iframe.count() > 0
       const urlChanged = page.url().includes('/interactive')
 
       expect(hasModal || urlChanged).toBeTruthy()
@@ -316,13 +321,12 @@ test.describe('Landing Page and Demos', () => {
       await page.goto(`/creations/${creationKey}/interactive`)
 
       await page.waitForLoadState('networkidle')
-      await page.waitForTimeout(5000)
 
       // Widget should load on mobile
       const widget = page.locator('[id^="interactive-widget-"]')
 
       if (await widget.count() > 0) {
-        await expect(widget).toBeVisible()
+        await expect(widget).toBeVisible({ timeout: 15000 })
       }
     })
   })

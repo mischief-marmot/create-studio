@@ -1,0 +1,109 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e5]:
+  - link "Back to all demos" [ref=e6] [cursor=pointer]:
+    - /url: /demos
+    - img [ref=e7]
+    - text: Back to all demos
+  - generic [ref=e11]:
+    - figure [ref=e12]:
+      - img "Raspberry Swirl Pineapple Mango Margaritas" [ref=e14]
+    - generic [ref=e16]:
+      - generic [ref=e18]:
+        - generic [ref=e19]:
+          - heading "Raspberry Swirl Pineapple Mango Margaritas" [level=1] [ref=e20]
+          - generic [ref=e21]: "Yield: 1"
+        - generic [ref=e22]:
+          - heading "Ingredients" [level=2] [ref=e23]
+          - list [ref=e24]:
+            - listitem [ref=e25]:
+              - generic [ref=e27]: 2 cups frozen mango chunks
+            - listitem [ref=e28]:
+              - generic [ref=e30]: 2 cups frozen pineapple chunks
+            - listitem [ref=e31]:
+              - generic [ref=e33]: 2/3 cup clementine juice
+            - listitem [ref=e34]:
+              - generic [ref=e36]: 1/3 cup simple syrup
+            - listitem [ref=e37]:
+              - generic [ref=e39]: 8 oz silver tequila
+            - listitem [ref=e40]:
+              - generic [ref=e42]: 2 cups ice
+            - listitem [ref=e43]:
+              - generic [ref=e45]: 2 tablespoons raspberry sauce
+            - listitem [ref=e46]:
+              - generic [ref=e48]: 3 cups fresh raspberries
+            - listitem [ref=e49]:
+              - generic [ref=e51]: 1/2 cup sugar
+            - listitem [ref=e52]:
+              - generic [ref=e54]: Juice of 1/2 lemon
+      - generic [ref=e57]:
+        - generic [ref=e59]: "1"
+        - generic [ref=e60]: Add mango, pineapple, celementime juice, simple syrup and tequila to a blender. Blend on high until smooth.
+      - generic [ref=e63]:
+        - generic [ref=e65]: "2"
+        - generic [ref=e66]: Add ice a handful at a time, and blend on high until smooth and frothy.
+      - generic [ref=e69]:
+        - generic [ref=e71]: "3"
+        - generic [ref=e72]: Using a spoon, swirl most of the raspberry sauce around the inside of a margarita glass.
+      - generic [ref=e75]:
+        - generic [ref=e77]: "4"
+        - generic [ref=e78]: Pour margarita mixture into the glass, top with the remaining raspberry sauce.
+      - generic [ref=e81]:
+        - generic [ref=e83]: "5"
+        - generic [ref=e84]: Start with cleaned, dry raspberries. Add them to the bowl of a food processor and blend until smooth.
+      - generic [ref=e87]:
+        - generic [ref=e89]: "6"
+        - generic [ref=e90]: Strain raspberry puree through a sieve into a medium saucepan to remove the seeds.
+      - generic [ref=e93]:
+        - generic [ref=e95]: "7"
+        - generic [ref=e96]: Whisk in sugar and lemon juice, then bring to a low boil over medium-high heat.
+      - generic [ref=e99]:
+        - generic [ref=e101]: "8"
+        - generic [ref=e102]: Reduce to medium heat, skimming the foam from the top for five minutes.
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - generic [ref=e107]: "9"
+          - generic [ref=e108]: Reduce to low heat and reduce down to about half, approximately 10 minutes.
+        - generic [ref=e109]:
+          - generic [ref=e110]:
+            - img [ref=e111]
+            - generic [ref=e113]:
+              - generic [ref=e114]: Reduce 10 minutes
+              - generic [ref=e115]: 10 minutes
+          - button "start" [ref=e117] [cursor=pointer]:
+            - generic [ref=e118]: start
+            - img [ref=e119]
+      - generic [ref=e123]:
+        - generic [ref=e125]: "10"
+        - generic [ref=e126]: Pour into a small heat-safe jar and allow to cool before using.
+      - generic [ref=e128]:
+        - generic [ref=e129]:
+          - heading "All done!" [level=2] [ref=e130]
+          - paragraph [ref=e131]: How was it?
+        - generic [ref=e133]:
+          - button "Rate 1 star" [ref=e134]:
+            - img [ref=e135]
+          - button "Rate 2 stars" [ref=e137]:
+            - img [ref=e138]
+          - button "Rate 3 stars" [ref=e140]:
+            - img [ref=e141]
+          - button "Rate 4 stars" [ref=e143]:
+            - img [ref=e144]
+          - button "Rate 5 stars" [ref=e146]:
+            - img [ref=e147]
+    - generic [ref=e149]:
+      - generic [ref=e150]:
+        - text: Powered by
+        - link "Create Logo Icon" [ref=e151] [cursor=pointer]:
+          - /url: "{{ finalBaseUrl }}"
+          - img "Create Logo Icon" [ref=e152]
+      - generic [ref=e163]:
+        - generic [ref=e165]:
+          - text: Swipe
+          - generic [ref=e166]: or scroll
+          - text: to begin! →
+        - button "Begin" [ref=e167] [cursor=pointer]:
+          - generic [ref=e168]: Begin
+          - img [ref=e169]
+```

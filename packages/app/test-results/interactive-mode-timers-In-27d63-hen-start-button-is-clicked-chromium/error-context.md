@@ -1,0 +1,109 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e6]:
+    - figure [ref=e7]:
+      - img "Raspberry Swirl Pineapple Mango Margaritas" [ref=e9]
+    - generic [ref=e11]:
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - heading "Raspberry Swirl Pineapple Mango Margaritas" [level=1] [ref=e15]
+          - generic [ref=e16]: "Yield: 1"
+        - generic [ref=e17]:
+          - heading "Ingredients" [level=2] [ref=e18]
+          - list [ref=e19]:
+            - listitem [ref=e20]:
+              - generic [ref=e22]: 2 cups frozen mango chunks
+            - listitem [ref=e23]:
+              - generic [ref=e25]: 2 cups frozen pineapple chunks
+            - listitem [ref=e26]:
+              - generic [ref=e28]: 2/3 cup clementine juice
+            - listitem [ref=e29]:
+              - generic [ref=e31]: 1/3 cup simple syrup
+            - listitem [ref=e32]:
+              - generic [ref=e34]: 8 oz silver tequila
+            - listitem [ref=e35]:
+              - generic [ref=e37]: 2 cups ice
+            - listitem [ref=e38]:
+              - generic [ref=e40]: 2 tablespoons raspberry sauce
+            - listitem [ref=e41]:
+              - generic [ref=e43]: 3 cups fresh raspberries
+            - listitem [ref=e44]:
+              - generic [ref=e46]: 1/2 cup sugar
+            - listitem [ref=e47]:
+              - generic [ref=e49]: Juice of 1/2 lemon
+      - generic [ref=e52]:
+        - generic [ref=e54]: "1"
+        - generic [ref=e55]: Add mango, pineapple, celementime juice, simple syrup and tequila to a blender. Blend on high until smooth.
+      - generic [ref=e58]:
+        - generic [ref=e60]: "2"
+        - generic [ref=e61]: Add ice a handful at a time, and blend on high until smooth and frothy.
+      - generic [ref=e64]:
+        - generic [ref=e66]: "3"
+        - generic [ref=e67]: Using a spoon, swirl most of the raspberry sauce around the inside of a margarita glass.
+      - generic [ref=e70]:
+        - generic [ref=e72]: "4"
+        - generic [ref=e73]: Pour margarita mixture into the glass, top with the remaining raspberry sauce.
+      - generic [ref=e76]:
+        - generic [ref=e78]: "5"
+        - generic [ref=e79]: Start with cleaned, dry raspberries. Add them to the bowl of a food processor and blend until smooth.
+      - generic [ref=e82]:
+        - generic [ref=e84]: "6"
+        - generic [ref=e85]: Strain raspberry puree through a sieve into a medium saucepan to remove the seeds.
+      - generic [ref=e88]:
+        - generic [ref=e90]: "7"
+        - generic [ref=e91]: Whisk in sugar and lemon juice, then bring to a low boil over medium-high heat.
+      - generic [ref=e94]:
+        - generic [ref=e96]: "8"
+        - generic [ref=e97]: Reduce to medium heat, skimming the foam from the top for five minutes.
+      - generic [ref=e99]:
+        - generic [ref=e100]:
+          - generic [ref=e102]: "9"
+          - generic [ref=e103]: Reduce to low heat and reduce down to about half, approximately 10 minutes.
+        - generic [ref=e104]:
+          - generic [ref=e105]:
+            - img [ref=e106]
+            - generic [ref=e108]:
+              - generic [ref=e109]: Reduce 10 minutes
+              - generic [ref=e110]: 10 minutes
+          - button "start" [ref=e112] [cursor=pointer]:
+            - generic [ref=e113]: start
+            - img [ref=e114]
+      - generic [ref=e118]:
+        - generic [ref=e120]: "10"
+        - generic [ref=e121]: Pour into a small heat-safe jar and allow to cool before using.
+      - generic [ref=e123]:
+        - generic [ref=e124]:
+          - heading "All done!" [level=2] [ref=e125]
+          - paragraph [ref=e126]: How was it?
+        - generic [ref=e128]:
+          - button "Rate 1 star" [ref=e129]:
+            - img [ref=e130]
+          - button "Rate 2 stars" [ref=e132]:
+            - img [ref=e133]
+          - button "Rate 3 stars" [ref=e135]:
+            - img [ref=e136]
+          - button "Rate 4 stars" [ref=e138]:
+            - img [ref=e139]
+          - button "Rate 5 stars" [ref=e141]:
+            - img [ref=e142]
+    - generic [ref=e146]:
+      - generic [ref=e148]:
+        - text: Swipe
+        - generic [ref=e149]: or scroll
+        - text: to begin! →
+      - button "Begin" [ref=e150] [cursor=pointer]:
+        - generic [ref=e151]: Begin
+        - img [ref=e152]
+  - img [ref=e154]
+  - generic [ref=e155]:
+    - iframe [ref=e158]:
+      - generic [ref=f1e1]:
+        - link [ref=f1e2] [cursor=pointer]:
+          - /url: https://googleads.g.doubleclick.net/pcs/click?xai=AKAOjsvD-aqn7Y94EMMsclUWJ16eAY1BcUixyeE8YuqWQd9SVfL3mYxcdbh8hWY3t1OfQNRkcalWdXnaceHaHJbY4fnwkw6WldpkwYQN7yKlM4DvheIlYq1R4v6tES3tqq2yxaJqUl7Rz4OnRijIPMdPj7Uaxe-DUnhpqpLysMAyCxmuuzs9TclVJ4pM1znZY4bDw-C_MeTchedvfV5xC738einB8ogSZQFxWprrqza0FG6G8woSSj-ne1II3pX9B4h3NvUralkMfXcH6AXaLXLwZNo-xyFyLPJt_c4fLx_ZLyi1pxXC8N-fs_ZIt7iVcn-jF9ja4ySMm7lsP6ccirQg2oW0FOb8dCmOFKmbioKcAzEjARu0yZo_Gb5ql7sAz4Uk5j_a8Mux&sai=AMfl-YRMJ0_4IoyKM-0TLC-s-e9yqgX8wSvYsOu_NxG_Os-CkZkq5ftPdGVEGaA4VJWp2WaEQzGUdmIZnOpkNMA4xYplUchhp2UpgvzxMOopFti3rKod64KOX7AlidFGbRMRF53p7mDfVlW2Ox6p9yjKYSxv9eQ1TwN5ax1W6R9h4boLBUCt1OVxIKly52IirHS4r3ngu9u-6qPTbqZ4RmgCpa-ptT1KdFLt-DzZJrcQK4WeykesJqJw9q0kcPRWglYR5IVmHbAmdlYtqZYt9Lq6a045PuMsALfoaomJMNYTbZsFEO3pQ02bK-75&sig=Cg0ArKJSzOfokAoXXTYX&fbs_aeid=%5Bgw_fbsaeid%5D&adurl=http://www.mediavine.com&nm=1
+        - img [ref=f1e6] [cursor=pointer]
+        - button [ref=f1e9] [cursor=pointer]:
+          - img [ref=f1e10]
+    - img "Ad Info" [ref=e161] [cursor=pointer]
+```

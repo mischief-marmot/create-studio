@@ -1,0 +1,918 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e5]:
+  - heading "Interactive Recipes" [level=2] [ref=e6]
+  - paragraph [ref=e7]: Experience our interactive recipe cards in action.
+  - generic [ref=e8]:
+    - article [ref=e9]:
+      - generic [ref=e10]:
+        - img "Raspberry Swirl Pineapple Mango Margaritas" [ref=e12]
+        - generic [ref=e14]:
+          - generic [ref=e16]:
+            - generic [ref=e17]: Cocktails
+            - generic [ref=e18]: "Prep: 10 mins"
+            - generic [ref=e19]: "Total: 25 mins"
+          - generic [ref=e20]:
+            - heading "Raspberry Swirl Pineapple Mango Margaritas" [level=3] [ref=e21]:
+              - link "Raspberry Swirl Pineapple Mango Margaritas" [active] [ref=e22] [cursor=pointer]:
+                - /url: https://thesweetestoccasion.com/2018/05/raspberry-swirl-pineapple-mango-margaritas/
+            - paragraph
+          - paragraph [ref=e26]:
+            - text: From
+            - link "thesweetestoccasion.com" [ref=e27] [cursor=pointer]:
+              - /url: https://thesweetestoccasion.com/2018/05/raspberry-swirl-pineapple-mango-margaritas/
+      - heading "Interactive Experience" [level=2] [ref=e28]
+      - generic [ref=e32]:
+        - figure [ref=e33]:
+          - img "Raspberry Swirl Pineapple Mango Margaritas" [ref=e35]
+        - generic [ref=e37]:
+          - generic [ref=e39]:
+            - generic [ref=e40]:
+              - heading "Raspberry Swirl Pineapple Mango Margaritas" [level=1] [ref=e41]
+              - generic [ref=e42]: "Yield: 1"
+            - generic [ref=e43]:
+              - heading "Ingredients" [level=2] [ref=e44]
+              - list [ref=e45]:
+                - listitem [ref=e46]:
+                  - generic [ref=e48]: 2 cups frozen mango chunks
+                - listitem [ref=e49]:
+                  - generic [ref=e51]: 2 cups frozen pineapple chunks
+                - listitem [ref=e52]:
+                  - generic [ref=e54]: 2/3 cup clementine juice
+                - listitem [ref=e55]:
+                  - generic [ref=e57]: 1/3 cup simple syrup
+                - listitem [ref=e58]:
+                  - generic [ref=e60]: 8 oz silver tequila
+                - listitem [ref=e61]:
+                  - generic [ref=e63]: 2 cups ice
+                - listitem [ref=e64]:
+                  - generic [ref=e66]: 2 tablespoons raspberry sauce
+                - listitem [ref=e67]:
+                  - generic [ref=e69]: 3 cups fresh raspberries
+                - listitem [ref=e70]:
+                  - generic [ref=e72]: 1/2 cup sugar
+                - listitem [ref=e73]:
+                  - generic [ref=e75]: Juice of 1/2 lemon
+          - generic [ref=e78]:
+            - generic [ref=e80]: "1"
+            - generic [ref=e81]: Add mango, pineapple, celementime juice, simple syrup and tequila to a blender. Blend on high until smooth.
+          - generic [ref=e84]:
+            - generic [ref=e86]: "2"
+            - generic [ref=e87]: Add ice a handful at a time, and blend on high until smooth and frothy.
+          - generic [ref=e90]:
+            - generic [ref=e92]: "3"
+            - generic [ref=e93]: Using a spoon, swirl most of the raspberry sauce around the inside of a margarita glass.
+          - generic [ref=e96]:
+            - generic [ref=e98]: "4"
+            - generic [ref=e99]: Pour margarita mixture into the glass, top with the remaining raspberry sauce.
+          - generic [ref=e102]:
+            - generic [ref=e104]: "5"
+            - generic [ref=e105]: Start with cleaned, dry raspberries. Add them to the bowl of a food processor and blend until smooth.
+          - generic [ref=e108]:
+            - generic [ref=e110]: "6"
+            - generic [ref=e111]: Strain raspberry puree through a sieve into a medium saucepan to remove the seeds.
+          - generic [ref=e114]:
+            - generic [ref=e116]: "7"
+            - generic [ref=e117]: Whisk in sugar and lemon juice, then bring to a low boil over medium-high heat.
+          - generic [ref=e120]:
+            - generic [ref=e122]: "8"
+            - generic [ref=e123]: Reduce to medium heat, skimming the foam from the top for five minutes.
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - generic [ref=e128]: "9"
+              - generic [ref=e129]: Reduce to low heat and reduce down to about half, approximately 10 minutes.
+            - generic [ref=e130]:
+              - generic [ref=e131]:
+                - img [ref=e132]
+                - generic [ref=e134]:
+                  - generic [ref=e135]: Reduce 10 minutes
+                  - generic [ref=e136]: 10 minutes
+              - button "start" [ref=e138] [cursor=pointer]:
+                - generic [ref=e139]: start
+                - img [ref=e140]
+          - generic [ref=e144]:
+            - generic [ref=e146]: "10"
+            - generic [ref=e147]: Pour into a small heat-safe jar and allow to cool before using.
+          - generic [ref=e149]:
+            - generic [ref=e150]:
+              - heading "All done!" [level=2] [ref=e151]
+              - paragraph [ref=e152]: How was it?
+            - generic [ref=e154]:
+              - button "Rate 1 star" [ref=e155]:
+                - img [ref=e156]
+              - button "Rate 2 stars" [ref=e158]:
+                - img [ref=e159]
+              - button "Rate 3 stars" [ref=e161]:
+                - img [ref=e162]
+              - button "Rate 4 stars" [ref=e164]:
+                - img [ref=e165]
+              - button "Rate 5 stars" [ref=e167]:
+                - img [ref=e168]
+        - generic [ref=e170]:
+          - generic [ref=e171]:
+            - text: Powered by
+            - link "Create Logo Icon" [ref=e172] [cursor=pointer]:
+              - /url: "{{ finalBaseUrl }}"
+              - img "Create Logo Icon" [ref=e173]
+          - generic [ref=e184]:
+            - generic [ref=e186]:
+              - text: Swipe
+              - generic [ref=e187]: or scroll
+              - text: to begin! →
+            - button "Begin" [ref=e188] [cursor=pointer]:
+              - generic [ref=e189]: Begin
+              - img [ref=e190]
+    - article [ref=e192]:
+      - generic [ref=e193]:
+        - img "Easy Oven Roasted Brussels Sprouts" [ref=e195]
+        - generic [ref=e197]:
+          - generic [ref=e199]:
+            - generic [ref=e200]: Side Dish
+            - generic [ref=e201]: "Prep: 10 mins"
+            - generic [ref=e202]: "Total: 40 mins"
+          - generic [ref=e203]:
+            - heading "Easy Oven Roasted Brussels Sprouts" [level=3] [ref=e204]:
+              - link "Easy Oven Roasted Brussels Sprouts" [ref=e205] [cursor=pointer]:
+                - /url: https://thesweetestoccasion.com/2020/05/easy-oven-roasted-brussels-sprouts/
+            - paragraph [ref=e206]: This easy oven roasted brussels sprouts recipe is a perfect, easy side dish or a great addition to salads, grain bowls, vegetarian entrées or even omelettes!
+          - paragraph [ref=e210]:
+            - text: From
+            - link "thesweetestoccasion.com" [ref=e211] [cursor=pointer]:
+              - /url: https://thesweetestoccasion.com/2020/05/easy-oven-roasted-brussels-sprouts/
+      - heading "Interactive Experience" [level=2] [ref=e212]
+    - article [ref=e213]:
+      - generic [ref=e214]:
+        - img "Antipasto Skewers" [ref=e216]
+        - generic [ref=e218]:
+          - generic [ref=e220]:
+            - generic [ref=e221]: Appetizer
+            - generic [ref=e222]: "Prep: 20 mins"
+            - generic [ref=e223]: "Total: 20 mins"
+          - generic [ref=e224]:
+            - heading "Antipasto Skewers" [level=3] [ref=e225]:
+              - link "Antipasto Skewers" [ref=e226] [cursor=pointer]:
+                - /url: https://thesweetestoccasion.com/2016/10/antipasto-skewers-party-appetizers/
+            - paragraph [ref=e227]: These crowd pleasing antipasto skewers make an easy party appetizer or a fun addition to a charcuterie board. Make your antipasto skewers a day in advance to make party prep even simpler – they come t
+          - paragraph [ref=e231]:
+            - text: From
+            - link "thesweetestoccasion.com" [ref=e232] [cursor=pointer]:
+              - /url: https://thesweetestoccasion.com/2016/10/antipasto-skewers-party-appetizers/
+      - heading "Interactive Experience" [level=2] [ref=e233]
+    - article [ref=e234]:
+      - generic [ref=e235]:
+        - img "Caramel Apple Sangria" [ref=e237]
+        - generic [ref=e239]:
+          - generic [ref=e241]:
+            - generic [ref=e242]: Cocktail
+            - generic [ref=e243]: "Prep: 15 mins"
+            - generic [ref=e244]: "Total: 15 mins"
+          - generic [ref=e245]:
+            - heading "Caramel Apple Sangria" [level=3] [ref=e246]:
+              - link "Caramel Apple Sangria" [ref=e247] [cursor=pointer]:
+                - /url: https://thesweetestoccasion.com/2015/10/caramel-apple-sangria/
+            - paragraph [ref=e248]: This easy caramel apple sangria recipe is a perfect fall cocktail that's so simple to make and a perennial crowd favorite. It's one of my most popular recipes!
+          - paragraph [ref=e252]:
+            - text: From
+            - link "thesweetestoccasion.com" [ref=e253] [cursor=pointer]:
+              - /url: https://thesweetestoccasion.com/2015/10/caramel-apple-sangria/
+      - heading "Interactive Experience" [level=2] [ref=e254]
+    - article [ref=e255]:
+      - generic [ref=e256]:
+        - img "Easy Chocolate Bark Recipe" [ref=e258]
+        - generic [ref=e260]:
+          - generic [ref=e262]:
+            - generic [ref=e263]: Dessert
+            - generic [ref=e264]: "Prep: 15 mins"
+            - generic [ref=e265]: "Total: 15 mins"
+          - generic [ref=e266]:
+            - heading "Easy Chocolate Bark Recipe" [level=3] [ref=e267]:
+              - link "Easy Chocolate Bark Recipe" [ref=e268] [cursor=pointer]:
+                - /url: https://thesweetestoccasion.com/2016/12/christmas-chocolate-bark-six-ways/
+            - paragraph [ref=e269]: This easy chocolate bark recipe makes the perfect Christmas bark when personalized with your favorite toppings. It's a great addition to cookie trays or bundled up as a stocking stuffer!
+          - paragraph [ref=e273]:
+            - text: From
+            - link "thesweetestoccasion.com" [ref=e274] [cursor=pointer]:
+              - /url: https://thesweetestoccasion.com/2016/12/christmas-chocolate-bark-six-ways/
+      - heading "Interactive Experience" [level=2] [ref=e275]
+    - article [ref=e276]:
+      - generic [ref=e277]:
+        - img "Blueberry Bubbly Sparkler Champagne Cocktail" [ref=e279]
+        - generic [ref=e281]:
+          - generic [ref=e283]:
+            - generic [ref=e284]: Cocktail
+            - generic [ref=e285]: "Prep: 3 mins"
+            - generic [ref=e286]: "Total: 3 mins"
+          - generic [ref=e287]:
+            - heading "Blueberry Bubbly Sparkler Champagne Cocktail" [level=3] [ref=e288]:
+              - link "Blueberry Bubbly Sparkler Champagne Cocktail" [ref=e289] [cursor=pointer]:
+                - /url: https://thesweetestoccasion.com/2018/12/blueberry-sparkler-champagne-cocktail/
+            - paragraph [ref=e290]: This pretty champagne cocktail is perfect for sipping throughout the holiday season. It makes a great brunch cocktail on Christmas morning or the loveliest New Year's Eve cocktail for toasting what's
+          - paragraph [ref=e294]:
+            - text: From
+            - link "thesweetestoccasion.com" [ref=e295] [cursor=pointer]:
+              - /url: https://thesweetestoccasion.com/2018/12/blueberry-sparkler-champagne-cocktail/
+      - heading "Interactive Experience" [level=2] [ref=e296]
+    - article [ref=e297]:
+      - generic [ref=e298]:
+        - img "The Ultimate Strawberry Mojito" [ref=e300]
+        - generic [ref=e302]:
+          - generic [ref=e304]:
+            - generic [ref=e305]: Cocktail
+            - generic [ref=e306]: "Prep: 3 mins"
+            - generic [ref=e307]: "Total: 18 mins"
+          - generic [ref=e308]:
+            - heading "The Ultimate Strawberry Mojito" [level=3] [ref=e309]:
+              - link "The Ultimate Strawberry Mojito" [ref=e310] [cursor=pointer]:
+                - /url: https://thesweetestoccasion.com/2018/04/the-ultimate-strawberry-mojito/
+            - paragraph [ref=e311]: This fruity and refreshing strawberry mojito is the perfect summer cocktail. Made with homemade strawberry simple syrup, this is the ultimate strawberry mojito recipe.
+          - paragraph [ref=e315]:
+            - text: From
+            - link "thesweetestoccasion.com" [ref=e316] [cursor=pointer]:
+              - /url: https://thesweetestoccasion.com/2018/04/the-ultimate-strawberry-mojito/
+      - heading "Interactive Experience" [level=2] [ref=e317]
+    - article [ref=e318]:
+      - generic [ref=e319]:
+        - img "Blackstone Stuffed Hash Browns" [ref=e321]
+        - generic [ref=e323]:
+          - generic [ref=e325]:
+            - generic [ref=e326]: Breakfast
+            - generic [ref=e327]: "Prep: 10 mins"
+            - generic [ref=e328]: "Total: 40 mins"
+          - generic [ref=e329]:
+            - heading "Blackstone Stuffed Hash Browns" [level=3] [ref=e330]:
+              - link "Blackstone Stuffed Hash Browns" [ref=e331] [cursor=pointer]:
+                - /url: https://blackstonerecipesdaily.com/2024/12/13/blackstone-stuffed-hash-browns/
+            - paragraph [ref=e332]: Indulge in one of the ultimate breakfasts with these Blackstone Stuffed Hash Browns!
+          - paragraph [ref=e336]:
+            - text: From
+            - link "blackstonerecipesdaily.com" [ref=e337] [cursor=pointer]:
+              - /url: https://blackstonerecipesdaily.com/2024/12/13/blackstone-stuffed-hash-browns/
+      - heading "Interactive Experience" [level=2] [ref=e338]
+    - article [ref=e339]:
+      - generic [ref=e340]:
+        - img "Blackstone Chimichurri Steak Recipe" [ref=e342]
+        - generic [ref=e344]:
+          - generic [ref=e346]:
+            - generic [ref=e347]: Main Dish
+            - generic [ref=e348]: "Prep: 10 mins"
+            - generic [ref=e349]: "Total: 4 hr 25 mins"
+          - generic [ref=e350]:
+            - heading "Blackstone Chimichurri Steak Recipe" [level=3] [ref=e351]:
+              - link "Blackstone Chimichurri Steak Recipe" [ref=e352] [cursor=pointer]:
+                - /url: https://blackstonerecipesdaily.com/2025/02/07/blackstone-chimichurri-skirt-steak/
+            - paragraph [ref=e353]: Homemade chimichurri is the base for this easy Blackstone steak recipe! We love how flavorful this is, and rolling it into a pinwheel ensures that it'll be perfectly cooked!
+          - paragraph [ref=e357]:
+            - text: From
+            - link "blackstonerecipesdaily.com" [ref=e358] [cursor=pointer]:
+              - /url: https://blackstonerecipesdaily.com/2025/02/07/blackstone-chimichurri-skirt-steak/
+      - heading "Interactive Experience" [level=2] [ref=e359]
+    - article [ref=e360]:
+      - generic [ref=e361]:
+        - img "Frozen Fries on the Blackstone" [ref=e363]
+        - generic [ref=e365]:
+          - generic [ref=e367]:
+            - generic [ref=e368]: Side Dish
+            - generic [ref=e369]: "Prep: 5 mins"
+            - generic [ref=e370]: "Total: 20 mins"
+          - generic [ref=e371]:
+            - heading "Frozen Fries on the Blackstone" [level=3] [ref=e372]:
+              - link "Frozen Fries on the Blackstone" [ref=e373] [cursor=pointer]:
+                - /url: https://blackstonerecipesdaily.com/2025/02/21/frozen-fries-on-the-blackstone/
+            - paragraph [ref=e374]: These crispy fries are cooked from frozen right on your Blackstone Griddle! Just as crunchy, maybe even MORE crunchy, than your favorite fast food chain.
+          - paragraph [ref=e378]:
+            - text: From
+            - link "blackstonerecipesdaily.com" [ref=e379] [cursor=pointer]:
+              - /url: https://blackstonerecipesdaily.com/2025/02/21/frozen-fries-on-the-blackstone/
+      - heading "Interactive Experience" [level=2] [ref=e380]
+    - article [ref=e381]:
+      - generic [ref=e382]:
+        - img "Blackstone Dumpling Salad" [ref=e384]
+        - generic [ref=e386]:
+          - generic [ref=e388]:
+            - generic [ref=e389]: Main Dish
+            - generic [ref=e390]: "Prep: 10 mins"
+            - generic [ref=e391]: "Total: 30 mins"
+          - generic [ref=e392]:
+            - heading "Blackstone Dumpling Salad" [level=3] [ref=e393]:
+              - link "Blackstone Dumpling Salad" [ref=e394] [cursor=pointer]:
+                - /url: https://blackstonerecipesdaily.com/2025/04/10/viral-dumpling-salad/
+            - paragraph [ref=e395]: This incredible dumpling salad is simple, delicious, and worthy of every viral moment it has had. You've got to try this!
+          - paragraph [ref=e399]:
+            - text: From
+            - link "blackstonerecipesdaily.com" [ref=e400] [cursor=pointer]:
+              - /url: https://blackstonerecipesdaily.com/2025/04/10/viral-dumpling-salad/
+      - heading "Interactive Experience" [level=2] [ref=e401]
+    - article [ref=e402]:
+      - generic [ref=e403]:
+        - img "Blackstone Miso Lingcod" [ref=e405]
+        - generic [ref=e407]:
+          - generic [ref=e409]:
+            - generic [ref=e410]: Main Dish
+            - generic [ref=e411]: "Prep: 10 mins"
+            - generic [ref=e412]: "Total: 4 hr 20 mins"
+          - generic [ref=e413]:
+            - heading "Blackstone Miso Lingcod" [level=3] [ref=e414]:
+              - link "Blackstone Miso Lingcod" [ref=e415] [cursor=pointer]:
+                - /url: https://blackstonerecipesdaily.com/2025/05/29/blackstone-miso-lingcod/
+            - paragraph [ref=e416]: This incredibly flavorful Miso Marinated Lingcod is the perfect dish to serve your family, which really highlights the flavor and freshness of fish!
+          - paragraph [ref=e420]:
+            - text: From
+            - link "blackstonerecipesdaily.com" [ref=e421] [cursor=pointer]:
+              - /url: https://blackstonerecipesdaily.com/2025/05/29/blackstone-miso-lingcod/
+      - heading "Interactive Experience" [level=2] [ref=e422]
+    - article [ref=e423]:
+      - generic [ref=e424]:
+        - img "Blackstone Chicken Fajitas" [ref=e426]
+        - generic [ref=e428]:
+          - generic [ref=e430]:
+            - generic [ref=e431]: Main Dish
+            - generic [ref=e432]: "Prep: 10 mins"
+            - generic [ref=e433]: "Total: 25 mins"
+          - generic [ref=e434]:
+            - heading "Blackstone Chicken Fajitas" [level=3] [ref=e435]:
+              - link "Blackstone Chicken Fajitas" [ref=e436] [cursor=pointer]:
+                - /url: https://blackstonerecipesdaily.com/2025/07/27/blackstone-chicken-fajitas/
+            - paragraph [ref=e437]: These simple Blackstone Chicken Fajitas are perfect for a quick weeknight meal or feeding a crowd at a party!
+          - paragraph [ref=e441]:
+            - text: From
+            - link "blackstonerecipesdaily.com" [ref=e442] [cursor=pointer]:
+              - /url: https://blackstonerecipesdaily.com/2025/07/27/blackstone-chicken-fajitas/
+      - heading "Interactive Experience" [level=2] [ref=e443]
+    - article [ref=e444]:
+      - generic [ref=e445]:
+        - img "Blackstone Chicken Ramen Bowl" [ref=e447]
+        - generic [ref=e449]:
+          - generic [ref=e451]:
+            - generic [ref=e452]: Main Dish
+            - generic [ref=e453]: "Prep: 15 mins"
+            - generic [ref=e454]: "Total: 35 mins"
+          - generic [ref=e455]:
+            - heading "Blackstone Chicken Ramen Bowl" [level=3] [ref=e456]:
+              - link "Blackstone Chicken Ramen Bowl" [ref=e457] [cursor=pointer]:
+                - /url: https://blackstonerecipesdaily.com/2025/08/23/blackstone-chicken-ramen-bowl/
+            - paragraph [ref=e458]: Grilled chicken, ramen noodles, crisp veggies, and jammy eggs come together fast in this bold, saucy Blackstone Chicken Ramen Noodle Bowl. Ready in 35 minutes.
+          - paragraph [ref=e462]:
+            - text: From
+            - link "blackstonerecipesdaily.com" [ref=e463] [cursor=pointer]:
+              - /url: https://blackstonerecipesdaily.com/2025/08/23/blackstone-chicken-ramen-bowl/
+      - heading "Interactive Experience" [level=2] [ref=e464]
+    - article [ref=e465]:
+      - generic [ref=e466]:
+        - img "Easy Seafood Pasta with White Wine Butter Sauce" [ref=e468]
+        - generic [ref=e470]:
+          - generic [ref=e472]:
+            - generic [ref=e473]: Entree
+            - generic [ref=e474]: "Prep: 5 mins"
+            - generic [ref=e475]: "Total: 20 mins"
+          - generic [ref=e476]:
+            - heading "Easy Seafood Pasta with White Wine Butter Sauce" [level=3] [ref=e477]:
+              - link "Easy Seafood Pasta with White Wine Butter Sauce" [ref=e478] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/easy-seafood-pasta-white-wine-butter-sauce/
+            - paragraph [ref=e479]: This Easy Seafood Pasta with White Wine Butter Sauce is quick enough for a week night, but still great to impress your guests!
+          - paragraph [ref=e483]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e484] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/easy-seafood-pasta-white-wine-butter-sauce/
+      - heading "Interactive Experience" [level=2] [ref=e485]
+    - article [ref=e486]:
+      - generic [ref=e487]:
+        - img "Easy Shishito Peppers" [ref=e489]
+        - generic [ref=e491]:
+          - generic [ref=e493]:
+            - generic [ref=e494]: Appetizer
+            - generic [ref=e495]: "Prep: 5 mins"
+            - generic [ref=e496]: "Total: 10 mins"
+          - generic [ref=e497]:
+            - heading "Easy Shishito Peppers" [level=3] [ref=e498]:
+              - link "Easy Shishito Peppers" [ref=e499] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/easy-shishito-peppers/
+            - paragraph [ref=e500]: Learn how to cook shishito peppers with this easy recipe. Blistered shishito peppers are smoky, slightly sweet, and the perfect bite-sized snack or appetizer.
+          - paragraph [ref=e504]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e505] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/easy-shishito-peppers/
+      - heading "Interactive Experience" [level=2] [ref=e506]
+    - article [ref=e507]:
+      - generic [ref=e508]:
+        - img "Cucumber Moscow Mule" [ref=e510]
+        - generic [ref=e512]:
+          - generic [ref=e514]:
+            - generic [ref=e515]: Uncategorized
+            - generic [ref=e516]: "Prep: 0 mins"
+            - generic [ref=e517]: "Total: 0 mins"
+          - generic [ref=e518]:
+            - heading "Cucumber Moscow Mule" [level=3] [ref=e519]:
+              - link "Cucumber Moscow Mule" [ref=e520] [cursor=pointer]:
+                - /url: https://theculinarycompass.com
+            - paragraph
+          - paragraph [ref=e524]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e525] [cursor=pointer]:
+              - /url: https://theculinarycompass.com
+      - heading "Interactive Experience" [level=2] [ref=e526]
+    - article [ref=e527]:
+      - generic [ref=e528]:
+        - img "Baileys Grasshopper" [ref=e530]
+        - generic [ref=e532]:
+          - generic [ref=e534]:
+            - generic [ref=e535]: Drinks
+            - generic [ref=e536]: "Prep: 5 mins"
+            - generic [ref=e537]: "Total: 5 mins"
+          - generic [ref=e538]:
+            - heading "Baileys Grasshopper" [level=3] [ref=e539]:
+              - link "Baileys Grasshopper" [ref=e540] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/baileys-grasshopper/
+            - paragraph [ref=e541]: It only takes three ingredients to make this Baileys Grasshopper which is light and refreshing.
+          - paragraph [ref=e545]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e546] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/baileys-grasshopper/
+      - heading "Interactive Experience" [level=2] [ref=e547]
+    - article [ref=e548]:
+      - generic [ref=e549]:
+        - img "Easy Guacamole" [ref=e551]
+        - generic [ref=e553]:
+          - generic [ref=e555]:
+            - generic [ref=e556]: Uncategorized
+            - generic [ref=e557]: "Prep: 15 mins"
+            - generic [ref=e558]: "Total: 30 mins"
+          - generic [ref=e559]:
+            - heading "Easy Guacamole" [level=3] [ref=e560]:
+              - link "Easy Guacamole" [ref=e561] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/easy-guacamole/
+            - paragraph [ref=e562]: Easy guacamole for a quick side!
+          - paragraph [ref=e566]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e567] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/easy-guacamole/
+      - heading "Interactive Experience" [level=2] [ref=e568]
+    - article [ref=e569]:
+      - generic [ref=e570]:
+        - img "Quick Baked Turkey Meatballs" [ref=e572]
+        - generic [ref=e574]:
+          - generic [ref=e576]:
+            - generic [ref=e577]: Uncategorized
+            - generic [ref=e578]: "Prep: 15 mins"
+            - generic [ref=e579]: "Total: 35 mins"
+          - generic [ref=e580]:
+            - heading "Quick Baked Turkey Meatballs" [level=3] [ref=e581]:
+              - link "Quick Baked Turkey Meatballs" [ref=e582] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/quick-baked-turkey-meatballs/
+            - paragraph [ref=e583]: Light baked turkey meatballs perfect for an appetizer or to use as a part of an entree.
+          - paragraph [ref=e587]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e588] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/quick-baked-turkey-meatballs/
+      - heading "Interactive Experience" [level=2] [ref=e589]
+    - article [ref=e590]:
+      - generic [ref=e591]:
+        - img "Pike Place Breakfast Casserole" [ref=e593]
+        - generic [ref=e595]:
+          - generic [ref=e597]:
+            - generic [ref=e598]: Uncategorized
+            - generic [ref=e599]: "Prep: 30 mins"
+            - generic [ref=e600]: "Total: 1 hr 10 mins"
+          - generic [ref=e601]:
+            - heading "Pike Place Breakfast Casserole" [level=3] [ref=e602]:
+              - link "Pike Place Breakfast Casserole" [ref=e603] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/pike-place-breakfast-casserole/
+            - paragraph [ref=e604]: Perfect breakfast casserole for a weekend brunch.
+          - paragraph [ref=e608]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e609] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/pike-place-breakfast-casserole/
+      - heading "Interactive Experience" [level=2] [ref=e610]
+    - article [ref=e611]:
+      - generic [ref=e612]:
+        - img "Paella Inspired Shrimp and Chorizo Dish" [ref=e614]
+        - generic [ref=e616]:
+          - generic [ref=e618]:
+            - generic [ref=e619]: Uncategorized
+            - generic [ref=e620]: "Prep: 5 mins"
+            - generic [ref=e621]: "Total: 35 mins"
+          - generic [ref=e622]:
+            - heading "Paella Inspired Shrimp and Chorizo Dish" [level=3] [ref=e623]:
+              - link "Paella Inspired Shrimp and Chorizo Dish" [ref=e624] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/paella-inspired-shrimp-chorizo-dish/
+            - paragraph [ref=e625]: A quick take on a Shrimp and Chorizo paella
+          - paragraph [ref=e629]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e630] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/paella-inspired-shrimp-chorizo-dish/
+      - heading "Interactive Experience" [level=2] [ref=e631]
+    - article [ref=e632]:
+      - generic [ref=e633]:
+        - img "Lemon Dill Garlic Butter Salmon" [ref=e635]
+        - generic [ref=e637]:
+          - generic [ref=e639]:
+            - generic [ref=e640]: Uncategorized
+            - generic [ref=e641]: "Prep: 5 mins"
+            - generic [ref=e642]: "Total: 30 mins"
+          - generic [ref=e643]:
+            - heading "Lemon Dill Garlic Butter Salmon" [level=3] [ref=e644]:
+              - link "Lemon Dill Garlic Butter Salmon" [ref=e645] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/lemon-dill-garlic-butter-salmon/
+            - paragraph [ref=e646]: A bright and easy way to make Salmon with Lemon Dill Garlic Butter.
+          - paragraph [ref=e650]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e651] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/lemon-dill-garlic-butter-salmon/
+      - heading "Interactive Experience" [level=2] [ref=e652]
+    - article [ref=e653]:
+      - generic [ref=e654]:
+        - img "One Pot Chicken Fettuccine Alfredo" [ref=e656]
+        - generic [ref=e658]:
+          - generic [ref=e660]:
+            - generic [ref=e661]: Uncategorized
+            - generic [ref=e662]: "Prep: 10 mins"
+            - generic [ref=e663]: "Total: 30 mins"
+          - generic [ref=e664]:
+            - heading "One Pot Chicken Fettuccine Alfredo" [level=3] [ref=e665]:
+              - link "One Pot Chicken Fettuccine Alfredo" [ref=e666] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/one-pot-chicken-fettuccine-alfredo/
+            - paragraph [ref=e667]: A quick one pot pasta dish perfect for weeknights.
+          - paragraph [ref=e671]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e672] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/one-pot-chicken-fettuccine-alfredo/
+      - heading "Interactive Experience" [level=2] [ref=e673]
+    - article [ref=e674]:
+      - generic [ref=e675]:
+        - img "BLT with Cayenne Candied Bacon & Avocado Mayo" [ref=e677]
+        - generic [ref=e679]:
+          - generic [ref=e681]:
+            - generic [ref=e682]: Uncategorized
+            - generic [ref=e683]: "Prep: 10 mins"
+            - generic [ref=e684]: "Total: 30 mins"
+          - generic [ref=e685]:
+            - heading "BLT with Cayenne Candied Bacon & Avocado Mayo" [level=3] [ref=e686]:
+              - link "BLT with Cayenne Candied Bacon & Avocado Mayo" [ref=e687] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/blt-cayenne-candied-bacon-avocado-mayo/
+            - paragraph [ref=e688]: A delicious sweet and spicy take on your traditional BLTs.
+          - paragraph [ref=e692]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e693] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/blt-cayenne-candied-bacon-avocado-mayo/
+      - heading "Interactive Experience" [level=2] [ref=e694]
+    - article [ref=e695]:
+      - generic [ref=e696]:
+        - img "Chicken Tikka Masala" [ref=e698]
+        - generic [ref=e700]:
+          - generic [ref=e702]:
+            - generic [ref=e703]: Uncategorized
+            - generic [ref=e704]: "Prep: 15 mins"
+            - generic [ref=e705]: "Total: 45 mins"
+          - generic [ref=e706]:
+            - heading "Chicken Tikka Masala" [level=3] [ref=e707]:
+              - link "Chicken Tikka Masala" [ref=e708] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/chicken-tikka-masala/
+            - paragraph [ref=e709]: An easy and delicious Chicken Tikka Masala.
+          - paragraph [ref=e713]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e714] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/chicken-tikka-masala/
+      - heading "Interactive Experience" [level=2] [ref=e715]
+    - article [ref=e716]:
+      - generic [ref=e717]:
+        - img "Fried Plantains" [ref=e719]
+        - generic [ref=e721]:
+          - generic [ref=e723]:
+            - generic [ref=e724]: Uncategorized
+            - generic [ref=e725]: "Prep: 15 mins"
+            - generic [ref=e726]: "Total: 35 mins"
+          - generic [ref=e727]:
+            - heading "Fried Plantains" [level=3] [ref=e728]:
+              - link "Fried Plantains" [ref=e729] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/fried-plantains/
+            - paragraph [ref=e730]: These Fried Plantains are really easy to make and have you dreaming of a summer in the Caribbean!
+          - paragraph [ref=e734]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e735] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/fried-plantains/
+      - heading "Interactive Experience" [level=2] [ref=e736]
+    - article [ref=e737]:
+      - generic [ref=e738]:
+        - 'img "Chicago Style Hot Dog #SundaySupper" [ref=e740]'
+        - generic [ref=e742]:
+          - generic [ref=e744]:
+            - generic [ref=e745]: Uncategorized
+            - generic [ref=e746]: "Prep: 10 mins"
+            - generic [ref=e747]: "Total: 15 mins"
+          - generic [ref=e748]:
+            - 'heading "Chicago Style Hot Dog #SundaySupper" [level=3] [ref=e749]':
+              - 'link "Chicago Style Hot Dog #SundaySupper" [ref=e750] [cursor=pointer]':
+                - /url: https://www.theculinarycompass.com/chicago-style-hot-dog/
+            - paragraph [ref=e751]: Try this Chicago Style Hot Dog to be instantly transported to the Windy City!
+          - paragraph [ref=e755]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e756] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/chicago-style-hot-dog/
+      - heading "Interactive Experience" [level=2] [ref=e757]
+    - article [ref=e758]:
+      - generic [ref=e759]:
+        - img "Old Bay Trail Mix" [ref=e761]
+        - generic [ref=e763]:
+          - generic [ref=e765]:
+            - generic [ref=e766]: Appetizer
+            - generic [ref=e767]: "Prep: 10 mins"
+            - generic [ref=e768]: "Total: 1 hr"
+          - generic [ref=e769]:
+            - heading "Old Bay Trail Mix" [level=3] [ref=e770]:
+              - link "Old Bay Trail Mix" [ref=e771] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/old-bay-trail-mix/
+            - paragraph [ref=e772]: This Old Bay Trail Mix is easy to throw together and the perfect salty and crunchy treat.
+          - paragraph [ref=e776]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e777] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/old-bay-trail-mix/
+      - heading "Interactive Experience" [level=2] [ref=e778]
+    - article [ref=e779]:
+      - generic [ref=e780]:
+        - img "Sausage Caprese Stuffed Shells" [ref=e782]
+        - generic [ref=e784]:
+          - generic [ref=e786]:
+            - generic [ref=e787]: Uncategorized
+            - generic [ref=e788]: "Prep: 5 mins"
+            - generic [ref=e789]: "Total: 40 mins"
+          - generic [ref=e790]:
+            - heading "Sausage Caprese Stuffed Shells" [level=3] [ref=e791]:
+              - link "Sausage Caprese Stuffed Shells" [ref=e792] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/sausage-caprese-stuffed-shells/
+            - paragraph [ref=e793]: These Sausage Caprese Stuffed Shells are full of flavor and easy to make!
+          - paragraph [ref=e797]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e798] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/sausage-caprese-stuffed-shells/
+      - heading "Interactive Experience" [level=2] [ref=e799]
+    - article [ref=e800]:
+      - generic [ref=e801]:
+        - img "Hazelnut Mocha" [ref=e803]
+        - generic [ref=e805]:
+          - generic [ref=e807]:
+            - generic [ref=e808]: Uncategorized
+            - generic [ref=e809]: "Prep: 0 mins"
+            - generic [ref=e810]: "Total: 5 mins"
+          - generic [ref=e811]:
+            - heading "Hazelnut Mocha" [level=3] [ref=e812]:
+              - link "Hazelnut Mocha" [ref=e813] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/hazelnut-mocha/
+            - paragraph [ref=e814]: This Hazelnut Mocha is such an easy drink to make. You can never go wrong with a hazelnut, chocolate, and coffee combo!
+          - paragraph [ref=e818]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e819] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/hazelnut-mocha/
+      - heading "Interactive Experience" [level=2] [ref=e820]
+    - article [ref=e821]:
+      - generic [ref=e822]:
+        - img "Mediterranean Seven Layer Dip" [ref=e824]
+        - generic [ref=e826]:
+          - generic [ref=e828]:
+            - generic [ref=e829]: Uncategorized
+            - generic [ref=e830]: "Prep: 5 mins"
+            - generic [ref=e831]: "Total: 5 mins"
+          - generic [ref=e832]:
+            - heading "Mediterranean Seven Layer Dip" [level=3] [ref=e833]:
+              - link "Mediterranean Seven Layer Dip" [ref=e834] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/mediterranean-seven-layer-dip/
+            - paragraph [ref=e835]: This Mediterranean Seven Layer Dip is an easy and flavorful new take on the classic!
+          - paragraph [ref=e839]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e840] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/mediterranean-seven-layer-dip/
+      - heading "Interactive Experience" [level=2] [ref=e841]
+    - article [ref=e842]:
+      - generic [ref=e843]:
+        - img "3 Ingredient Turkey Sausage Gravy" [ref=e845]
+        - generic [ref=e847]:
+          - generic [ref=e849]:
+            - generic [ref=e850]: Uncategorized
+            - generic [ref=e851]: "Prep: 5 mins"
+            - generic [ref=e852]: "Total: 20 mins"
+          - generic [ref=e853]:
+            - heading "3 Ingredient Turkey Sausage Gravy" [level=3] [ref=e854]:
+              - link "3 Ingredient Turkey Sausage Gravy" [ref=e855] [cursor=pointer]:
+                - /url: https://www.theculinarycompass.com/3-ingredient-turkey-sausage-gravy/
+            - paragraph [ref=e856]: This Turkey Sausage Gravy is so easy to make and perfect for brunch!
+          - paragraph [ref=e860]:
+            - text: From
+            - link "theculinarycompass.com" [ref=e861] [cursor=pointer]:
+              - /url: https://www.theculinarycompass.com/3-ingredient-turkey-sausage-gravy/
+      - heading "Interactive Experience" [level=2] [ref=e862]
+    - article [ref=e863]:
+      - generic [ref=e864]:
+        - img "Sweet Potato Custard" [ref=e866]
+        - generic [ref=e868]:
+          - generic [ref=e870]:
+            - generic [ref=e871]: Desserts
+            - generic [ref=e872]: "Prep: 1 hr"
+            - generic [ref=e873]: "Total: 2 hr"
+          - generic [ref=e874]:
+            - heading "Sweet Potato Custard" [level=3] [ref=e875]:
+              - link "Sweet Potato Custard" [ref=e876] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/
+            - paragraph [ref=e877]: This recipe makes 2-4 individual servings depending on the size of your ramekins or baking dishes. Use larger dishes for 2 servings and smaller ramekins for 4 servings.
+          - paragraph [ref=e881]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e882] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/gluten-free-sweet-potato-custard/
+      - heading "Interactive Experience" [level=2] [ref=e883]
+    - article [ref=e884]:
+      - generic [ref=e885]:
+        - img "Blood Orange Rosemary Cocktail" [ref=e887]
+        - generic [ref=e889]:
+          - generic [ref=e891]:
+            - generic [ref=e892]: Drinks
+            - generic [ref=e893]: "Prep: 10 mins"
+            - generic [ref=e894]: "Total: 10 mins"
+          - generic [ref=e895]:
+            - heading "Blood Orange Rosemary Cocktail" [level=3] [ref=e896]:
+              - link "Blood Orange Rosemary Cocktail" [ref=e897] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/blood-orange-rosemary-cocktail/
+            - paragraph [ref=e898]: This blood orange cocktail is so sweet, it is perfect for a Valentine's Day drink for two. It's also a great use of the abundant winter citrus!
+          - paragraph [ref=e902]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e903] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/blood-orange-rosemary-cocktail/
+      - heading "Interactive Experience" [level=2] [ref=e904]
+    - article [ref=e905]:
+      - generic [ref=e906]:
+        - img "Almond Coffee Cake (Whole Grain)" [ref=e908]
+        - generic [ref=e910]:
+          - generic [ref=e912]:
+            - generic [ref=e913]: Uncategorized
+            - generic [ref=e914]: "Prep: 30 mins"
+            - generic [ref=e915]: "Total: 1 hr 30 mins"
+          - generic [ref=e916]:
+            - heading "Almond Coffee Cake (Whole Grain)" [level=3] [ref=e917]:
+              - link "Almond Coffee Cake (Whole Grain)" [ref=e918] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/almond-coffee-cake-whole-grain/
+            - paragraph [ref=e919]: This almond coffee cake is made with white whole wheat flour and I promise, you won't notice!
+          - paragraph [ref=e923]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e924] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/almond-coffee-cake-whole-grain/
+      - heading "Interactive Experience" [level=2] [ref=e925]
+    - article [ref=e926]:
+      - generic [ref=e927]:
+        - img "Blueberry Sage Hand Pies" [ref=e929]
+        - generic [ref=e931]:
+          - generic [ref=e933]:
+            - generic [ref=e934]: Desserts
+            - generic [ref=e935]: "Prep: 1 hr"
+            - generic [ref=e936]: "Total: 2 hr 10 mins"
+          - generic [ref=e937]:
+            - heading "Blueberry Sage Hand Pies" [level=3] [ref=e938]:
+              - link "Blueberry Sage Hand Pies" [ref=e939] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/blueberry-sage-hand-pies/
+            - paragraph [ref=e940]: These Blueberry Sage Hand Pies are made with a whole grain crust that is made with good for your whole grains. The blueberries are perfectly paired with fresh sage to create a dynamic taste.
+          - paragraph [ref=e944]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e945] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/blueberry-sage-hand-pies/
+      - heading "Interactive Experience" [level=2] [ref=e946]
+    - article [ref=e947]:
+      - generic [ref=e948]:
+        - img "Blueberry Mango Wine Slushy" [ref=e950]
+        - generic [ref=e952]:
+          - generic [ref=e954]:
+            - generic [ref=e955]: Drinks
+            - generic [ref=e956]: "Prep: 15 mins"
+            - generic [ref=e957]: "Total: 15 mins"
+          - generic [ref=e958]:
+            - heading "Blueberry Mango Wine Slushy" [level=3] [ref=e959]:
+              - link "Blueberry Mango Wine Slushy" [ref=e960] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/blueberry-mango-wine-slushy/
+            - paragraph [ref=e961]: This recipe can be served immediately or frozen to enjoy later. If you do freeze this the consistency will be similar to that of Italian ice which is just as good as the slush version!
+          - paragraph [ref=e965]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e966] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/blueberry-mango-wine-slushy/
+      - heading "Interactive Experience" [level=2] [ref=e967]
+    - article [ref=e968]:
+      - generic [ref=e969]:
+        - img "Stove-Top Bacon Mushroom Crème Fraîche Macaroni + Cheese" [ref=e971]
+        - generic [ref=e973]:
+          - generic [ref=e975]:
+            - generic [ref=e976]: Entree
+            - generic [ref=e977]: "Prep: 30 mins"
+            - generic [ref=e978]: "Total: 30 mins"
+          - generic [ref=e979]:
+            - heading "Stove-Top Bacon Mushroom Crème Fraîche Macaroni + Cheese" [level=3] [ref=e980]:
+              - link "Stove-Top Bacon Mushroom Crème Fraîche Macaroni + Cheese" [ref=e981] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/bacon-mushroom-macaroni-and-cheese/
+            - paragraph [ref=e982]: Before you begin cooking this, make sure to measure out all ingredients because your hands will be busy continuously whisking during the roux!
+          - paragraph [ref=e986]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e987] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/bacon-mushroom-macaroni-and-cheese/
+      - heading "Interactive Experience" [level=2] [ref=e988]
+    - article [ref=e989]:
+      - generic [ref=e990]:
+        - img "Gluten Free Peanut Butter Swirl Brownies" [ref=e992]
+        - generic [ref=e994]:
+          - generic [ref=e996]:
+            - generic [ref=e997]: Uncategorized
+            - generic [ref=e998]: "Prep: 15 mins"
+            - generic [ref=e999]: "Total: 35 mins"
+          - generic [ref=e1000]:
+            - heading "Gluten Free Peanut Butter Swirl Brownies" [level=3] [ref=e1001]:
+              - link "Gluten Free Peanut Butter Swirl Brownies" [ref=e1002] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/gluten-free-peanut-butter-swirl-brownies/
+            - paragraph [ref=e1003]: These pancakes were made gluten-free using a gluten-free all-purpose flour mix. Feel free to use any brand 1:1 gluten-free flour such as Bob's Red Mill.
+          - paragraph [ref=e1007]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e1008] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/gluten-free-peanut-butter-swirl-brownies/
+      - heading "Interactive Experience" [level=2] [ref=e1009]
+    - article [ref=e1010]:
+      - generic [ref=e1011]:
+        - img "Whole Grain Apple Cake" [ref=e1013]
+        - generic [ref=e1015]:
+          - generic [ref=e1017]:
+            - generic [ref=e1018]: Dairy-Free
+            - generic [ref=e1019]: "Prep: 25 mins"
+            - generic [ref=e1020]: "Total: 1 hr 10 mins"
+          - generic [ref=e1021]:
+            - heading "Whole Grain Apple Cake" [level=3] [ref=e1022]:
+              - link "Whole Grain Apple Cake" [ref=e1023] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/whole-grain-apple-cake/
+            - paragraph [ref=e1024]: This whole grain apple cake is made healthier with whole grains, coconut oil and a reduced amount of coconut sugar.
+          - paragraph [ref=e1028]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e1029] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/whole-grain-apple-cake/
+      - heading "Interactive Experience" [level=2] [ref=e1030]
+    - article [ref=e1031]:
+      - generic [ref=e1032]:
+        - img "Blueberry Cherry Muffins" [ref=e1034]
+        - generic [ref=e1036]:
+          - generic [ref=e1038]:
+            - generic [ref=e1039]: Bread
+            - generic [ref=e1040]: "Prep: 25 mins"
+            - generic [ref=e1041]: "Total: 55 mins"
+          - generic [ref=e1042]:
+            - heading "Blueberry Cherry Muffins" [level=3] [ref=e1043]:
+              - link "Blueberry Cherry Muffins" [ref=e1044] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/blueberry-cherry-muffins/
+            - paragraph [ref=e1045]: You can use fresh or frozen fruit in this recipe. This recipe was originally a blueberry recipe so if you do not have cherries feel free to add another cup of blueberries to the mix.
+          - paragraph [ref=e1049]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e1050] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/blueberry-cherry-muffins/
+      - heading "Interactive Experience" [level=2] [ref=e1051]
+    - article [ref=e1052]:
+      - generic [ref=e1053]:
+        - img "Homemade Chocolate Peanut Butter" [ref=e1055]
+        - generic [ref=e1057]:
+          - generic [ref=e1059]:
+            - generic [ref=e1060]: Condiments
+            - generic [ref=e1061]: "Prep: 20 mins"
+            - generic [ref=e1062]: "Total: 20 mins"
+          - generic [ref=e1063]:
+            - heading "Homemade Chocolate Peanut Butter" [level=3] [ref=e1064]:
+              - link "Homemade Chocolate Peanut Butter" [ref=e1065] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/homemade-chocolate-peanut-butter/
+            - paragraph [ref=e1066]: This chocolate peanut butter recipe is great with any flavor jam, on fruit or in a smoothie!
+          - paragraph [ref=e1070]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e1071] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/homemade-chocolate-peanut-butter/
+      - heading "Interactive Experience" [level=2] [ref=e1072]
+    - article [ref=e1073]:
+      - generic [ref=e1074]:
+        - img "Garlic Scape Pesto" [ref=e1076]
+        - generic [ref=e1078]:
+          - generic [ref=e1080]:
+            - generic [ref=e1081]: Condiments
+            - generic [ref=e1082]: "Prep: 10 mins"
+            - generic [ref=e1083]: "Total: 1 hr 30 mins"
+          - generic [ref=e1084]:
+            - heading "Garlic Scape Pesto" [level=3] [ref=e1085]:
+              - link "Garlic Scape Pesto" [ref=e1086] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/garlic-scape-pesto/
+            - paragraph [ref=e1087]: A classic pesto recipe with garlic scapes and arugula in place of basil. Pistachios and walnuts are used in place of pine nuts.
+          - paragraph [ref=e1091]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e1092] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/garlic-scape-pesto/
+      - heading "Interactive Experience" [level=2] [ref=e1093]
+    - article [ref=e1094]:
+      - generic [ref=e1095]:
+        - img "Lemon Bars with Brown Sugar Crust" [ref=e1097]
+        - generic [ref=e1099]:
+          - generic [ref=e1101]:
+            - generic [ref=e1102]: Desserts
+            - generic [ref=e1103]: "Prep: 15 mins"
+            - generic [ref=e1104]: "Total: 40 mins"
+          - generic [ref=e1105]:
+            - heading "Lemon Bars with Brown Sugar Crust" [level=3] [ref=e1106]:
+              - link "Lemon Bars with Brown Sugar Crust" [ref=e1107] [cursor=pointer]:
+                - /url: https://www.samanthaseeley.com/lemon-bars-with-brown-sugar-crust/
+            - paragraph [ref=e1108]: The brown sugar crust is a nice addition and twist to the classic lemon bar recipe with shortbread crust we all know and love.
+          - paragraph [ref=e1112]:
+            - text: From
+            - link "samanthaseeley.com" [ref=e1113] [cursor=pointer]:
+              - /url: https://www.samanthaseeley.com/lemon-bars-with-brown-sugar-crust/
+      - heading "Interactive Experience" [level=2] [ref=e1114]
+```

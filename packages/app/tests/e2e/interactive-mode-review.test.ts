@@ -1,4 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { createCreationKey } from '@create-studio/shared'
+
+const creationKey = createCreationKey('thesweetestoccasion.com', 50)
 
 /**
  * E2E Tests for Interactive Mode - Review Screen
@@ -10,10 +13,10 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     // Navigate to the last slide (review/completion)
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Scroll to the end
@@ -21,9 +24,7 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
-      // Look for "All done!" heading
+      // Wait for "All done!" heading to appear
       const allDoneHeading = page.locator('h2').filter({ hasText: 'All done!' })
 
       if (await allDoneHeading.count() > 0) {
@@ -36,9 +37,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -46,11 +47,14 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
-      // Look for star rating elements
-      // Stars should be clickable buttons or interactive elements
+      // Wait for review screen to appear by checking for "All done!" or star rating elements
+      const allDoneHeading = page.locator('h2').filter({ hasText: 'All done!' })
       const starRating = page.locator('[class*="star"]').or(page.locator('button').filter({ has: page.locator('svg') }))
+
+      await Promise.race([
+        allDoneHeading.first().waitFor({ timeout: 5000 }).catch(() => null),
+        starRating.first().waitFor({ timeout: 5000 }).catch(() => null)
+      ])
 
       // Rating component should exist
       const ratingCount = await starRating.count()
@@ -62,9 +66,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -72,10 +76,9 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
       // Find the review slide by looking for "All done!"
       const reviewSlide = page.locator('.cs\\:carousel-item').filter({ hasText: 'All done!' })
+      await expect(reviewSlide.first()).toBeVisible({ timeout: 5000 })
 
       if (await reviewSlide.count() > 0) {
         // Look for star buttons within the review slide
@@ -84,11 +87,15 @@ test.describe('Interactive Mode - Review Screen', () => {
         if (await stars.count() >= 5) {
           // Click the 5th star (5-star rating)
           await stars.nth(4).click()
-          await page.waitForTimeout(500)
 
-          // Should show a success message or form
+          // Wait for either success message or review form to appear
           const successAlert = page.locator('.cs\\:alert-success')
           const reviewForm = page.locator('form').filter({ has: page.locator('#review') })
+
+          await Promise.race([
+            successAlert.first().waitFor({ timeout: 3000 }).catch(() => null),
+            reviewForm.first().waitFor({ timeout: 3000 }).catch(() => null)
+          ])
 
           const hasSuccessMessage = await successAlert.count() > 0
           const hasReviewForm = await reviewForm.count() > 0
@@ -104,9 +111,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -114,9 +121,8 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
       const reviewSlide = page.locator('.cs\\:carousel-item').filter({ hasText: 'All done!' })
+      await expect(reviewSlide.first()).toBeVisible({ timeout: 5000 })
 
       if (await reviewSlide.count() > 0) {
         const stars = reviewSlide.locator('button').filter({ has: page.locator('svg') })
@@ -124,13 +130,12 @@ test.describe('Interactive Mode - Review Screen', () => {
         if (await stars.count() >= 5) {
           // Click 5-star rating
           await stars.nth(4).click()
-          await page.waitForTimeout(500)
 
           // Look for success message
           const successMessage = page.getByText(/rating submitted/i)
 
           if (await successMessage.count() > 0) {
-            await expect(successMessage.first()).toBeVisible()
+            await expect(successMessage.first()).toBeVisible({ timeout: 3000 })
           }
         }
       }
@@ -141,9 +146,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -151,9 +156,8 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
       const reviewSlide = page.locator('.cs\\:carousel-item').filter({ hasText: 'All done!' })
+      await expect(reviewSlide.first()).toBeVisible({ timeout: 5000 })
 
       if (await reviewSlide.count() > 0) {
         const stars = reviewSlide.locator('button').filter({ has: page.locator('svg') })
@@ -161,14 +165,12 @@ test.describe('Interactive Mode - Review Screen', () => {
         if (await stars.count() >= 5) {
           // Click 2-star rating (low rating)
           await stars.nth(1).click()
-          await page.waitForTimeout(500)
 
           // Look for error alert asking for feedback
           const errorAlert = page.locator('.cs\\:alert-error')
+          await expect(errorAlert.first()).toBeVisible({ timeout: 3000 })
 
           if (await errorAlert.count() > 0) {
-            await expect(errorAlert.first()).toBeVisible()
-
             // Should ask for feedback on what could be better
             const feedbackPrompt = page.getByText(/what could have been better/i)
             if (await feedbackPrompt.count() > 0) {
@@ -184,9 +186,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -194,9 +196,8 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
       const reviewSlide = page.locator('.cs\\:carousel-item').filter({ hasText: 'All done!' })
+      await expect(reviewSlide.first()).toBeVisible({ timeout: 5000 })
 
       if (await reviewSlide.count() > 0) {
         const stars = reviewSlide.locator('button').filter({ has: page.locator('svg') })
@@ -204,13 +205,17 @@ test.describe('Interactive Mode - Review Screen', () => {
         if (await stars.count() >= 5) {
           // Click a star to trigger form display
           await stars.nth(4).click()
-          await page.waitForTimeout(1000)
 
-          // Look for review form fields
-          const reviewTitleInput = page.locator('#reviewTitle')
+          // Wait for form fields to appear
           const reviewTextarea = page.locator('#review')
           const nameInput = page.locator('#name')
           const emailInput = page.locator('#email')
+
+          await Promise.race([
+            reviewTextarea.first().waitFor({ timeout: 3000 }).catch(() => null),
+            nameInput.first().waitFor({ timeout: 3000 }).catch(() => null),
+            emailInput.first().waitFor({ timeout: 3000 }).catch(() => null)
+          ])
 
           // Form should have these fields
           if (await reviewTextarea.count() > 0) {
@@ -233,9 +238,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -243,9 +248,8 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
       const reviewSlide = page.locator('.cs\\:carousel-item').filter({ hasText: 'All done!' })
+      await expect(reviewSlide.first()).toBeVisible({ timeout: 5000 })
 
       if (await reviewSlide.count() > 0) {
         const stars = reviewSlide.locator('button').filter({ has: page.locator('svg') })
@@ -253,13 +257,17 @@ test.describe('Interactive Mode - Review Screen', () => {
         if (await stars.count() >= 5) {
           // Click 5 stars
           await stars.nth(4).click()
-          await page.waitForTimeout(1000)
 
-          // Fill out form
-          const reviewTitleInput = page.locator('#reviewTitle')
+          // Wait for form fields to appear
           const reviewTextarea = page.locator('#review')
           const nameInput = page.locator('#name')
           const emailInput = page.locator('#email')
+          const reviewTitleInput = page.locator('#reviewTitle')
+
+          await Promise.race([
+            reviewTextarea.first().waitFor({ timeout: 3000 }).catch(() => null),
+            nameInput.first().waitFor({ timeout: 3000 }).catch(() => null)
+          ])
 
           if (await reviewTextarea.count() > 0) {
             await reviewTextarea.first().fill('This is a test review from automated testing')
@@ -289,9 +297,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -299,9 +307,8 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
-
       const reviewSlide = page.locator('.cs\\:carousel-item').filter({ hasText: 'All done!' })
+      await expect(reviewSlide.first()).toBeVisible({ timeout: 5000 })
 
       if (await reviewSlide.count() > 0) {
         const stars = reviewSlide.locator('button').filter({ has: page.locator('svg') })
@@ -309,19 +316,21 @@ test.describe('Interactive Mode - Review Screen', () => {
         if (await stars.count() >= 5) {
           // Click stars
           await stars.nth(4).click()
-          await page.waitForTimeout(1000)
 
           // Fill required fields
           const reviewTextarea = page.locator('#review')
           const nameInput = page.locator('#name')
           const emailInput = page.locator('#email')
 
+          await Promise.race([
+            reviewTextarea.first().waitFor({ timeout: 3000 }).catch(() => null),
+            nameInput.first().waitFor({ timeout: 3000 }).catch(() => null)
+          ])
+
           if (await reviewTextarea.count() > 0 && await nameInput.count() > 0 && await emailInput.count() > 0) {
             await reviewTextarea.first().fill('Test review content')
             await nameInput.first().fill('Test User')
             await emailInput.first().fill('test@example.com')
-
-            await page.waitForTimeout(500)
 
             // Find submit button
             const submitButton = page.locator('button[type="submit"]').or(
@@ -329,9 +338,8 @@ test.describe('Interactive Mode - Review Screen', () => {
             )
 
             if (await submitButton.count() > 0) {
-              // Button should be enabled
-              const isDisabled = await submitButton.first().isDisabled()
-              expect(isDisabled).toBeFalsy()
+              // Wait for button to be enabled
+              await expect(submitButton.first()).toBeEnabled({ timeout: 2000 })
             }
           }
         }
@@ -343,9 +351,9 @@ test.describe('Interactive Mode - Review Screen', () => {
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(5000)
 
     const carousel = page.locator('.cs\\:carousel')
+    await expect(carousel.first()).toBeVisible({ timeout: 15000 })
 
     if (await carousel.count() > 0) {
       // Navigate to review screen
@@ -353,7 +361,9 @@ test.describe('Interactive Mode - Review Screen', () => {
         el.scrollLeft = el.scrollWidth
       })
 
-      await page.waitForTimeout(1000)
+      // Wait for review screen to appear
+      const reviewSlide = page.locator('.cs\\:carousel-item').filter({ hasText: 'All done!' })
+      await expect(reviewSlide.first()).toBeVisible({ timeout: 5000 })
 
       // Look for completion emoji or image
       // The completion slide should show the recipe image or a celebration emoji
