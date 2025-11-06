@@ -18,6 +18,7 @@ export interface User {
   mediavine_publisher?: boolean
   validEmail?: boolean
   marketing_opt_in?: boolean
+  last_active_at?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -30,6 +31,7 @@ export interface Site {
   create_version?: string
   wp_version?: string
   php_version?: string
+  last_active_at?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -259,6 +261,32 @@ export class UserRepository {
     return updatedUser
   }
 
+  async updateLastActive(id: number): Promise<void> {
+    const now = new Date().toISOString()
+
+    await this.db.prepare(`
+      UPDATE Users
+      SET last_active_at = ?
+      WHERE id = ?
+    `).bind(now, id).run()
+  }
+
+  async getLastActiveUser(): Promise<User | null> {
+    const result = await this.db.prepare(`
+      SELECT * FROM Users
+      WHERE last_active_at IS NOT NULL
+      ORDER BY last_active_at DESC
+      LIMIT 1
+    `).first()
+
+    return result ? this.normalizeUser(result) : null
+  }
+
+  async getTotalCount(): Promise<number> {
+    const result = await this.db.prepare('SELECT COUNT(*) as count FROM Users').first()
+    return result?.count || 0
+  }
+
   private normalizeUser(row: any): User {
     return {
       ...row,
@@ -444,6 +472,80 @@ export class SiteRepository {
     `).bind(canonicalSiteId).all()
 
     return results.results as Array<{ userId: number, role: string, joinedAt: string }>
+  }
+
+  async updateLastActive(id: number): Promise<void> {
+    const now = new Date().toISOString()
+
+    await this.db.prepare(`
+      UPDATE Sites
+      SET last_active_at = ?
+      WHERE id = ?
+    `).bind(now, id).run()
+  }
+
+  async getLastActiveSite(): Promise<Site | null> {
+    const result = await this.db.prepare(`
+      SELECT * FROM Sites
+      WHERE last_active_at IS NOT NULL
+      ORDER BY last_active_at DESC
+      LIMIT 1
+    `).first() as Site
+
+    return result || null
+  }
+
+  async getTotalCount(): Promise<number> {
+    const result = await this.db.prepare('SELECT COUNT(*) as count FROM Sites').first()
+    return result?.count || 0
+  }
+
+  async getUsersPerSite(): Promise<Array<{ siteId: number, siteName: string | null, url: string | null, userCount: number }>> {
+    const results = await this.db.prepare(`
+      SELECT
+        s.id as siteId,
+        s.name as siteName,
+        s.url,
+        COUNT(DISTINCT su.user_id) as userCount
+      FROM Sites s
+      LEFT JOIN SiteUsers su ON s.id = su.site_id
+      WHERE s.canonical_site_id IS NULL
+      GROUP BY s.id, s.name, s.url
+      ORDER BY userCount DESC, s.id ASC
+    `).all()
+
+    return results.results as Array<{ siteId: number, siteName: string | null, url: string | null, userCount: number }>
+  }
+
+  async getVersionInfo(): Promise<Array<{
+    siteId: number
+    siteName: string | null
+    url: string | null
+    wpVersion: string | null
+    phpVersion: string | null
+    createVersion: string | null
+  }>> {
+    const results = await this.db.prepare(`
+      SELECT
+        id as siteId,
+        name as siteName,
+        url,
+        wp_version as wpVersion,
+        php_version as phpVersion,
+        create_version as createVersion
+      FROM Sites
+      WHERE canonical_site_id IS NULL
+      ORDER BY id ASC
+    `).all()
+
+    return results.results as Array<{
+      siteId: number
+      siteName: string | null
+      url: string | null
+      wpVersion: string | null
+      phpVersion: string | null
+      createVersion: string | null
+    }>
   }
 }
 

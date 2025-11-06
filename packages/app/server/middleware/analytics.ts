@@ -1,7 +1,10 @@
 /**
  * API usage tracking middleware
  * Tracks all API calls to measure v1 vs v2 usage
+ * Also updates last_active_at for users and sites
  */
+
+import { UserRepository, SiteRepository } from '~/server/utils/database'
 
 export default defineEventHandler(async (event) => {
   const path = event.path
@@ -36,6 +39,33 @@ export default defineEventHandler(async (event) => {
     // Increment global API summary
     const summaryKey = getAnalyticsKey(['summary', 'api', date])
     await incrementCounter(summaryKey)
+
+    // Track last active time for authenticated users
+    try {
+      const session = await getUserSession(event)
+      if (session?.user?.id) {
+        const userRepo = new UserRepository()
+        await userRepo.updateLastActive(session.user.id)
+      }
+    } catch (err) {
+      // Silently fail if session not available (e.g., public endpoints)
+    }
+
+    // Track last active time for sites (v1 API uses site authentication)
+    if (version === 'v1') {
+      try {
+        // For v1 API, try to get site ID from query or body
+        const query = getQuery(event)
+        const siteId = query.site_id || query.siteId
+
+        if (siteId) {
+          const siteRepo = new SiteRepository()
+          await siteRepo.updateLastActive(Number(siteId))
+        }
+      } catch (err) {
+        // Silently fail if site ID not available
+      }
+    }
   } catch (error) {
     console.error('[Analytics] Error tracking API call:', error)
   }

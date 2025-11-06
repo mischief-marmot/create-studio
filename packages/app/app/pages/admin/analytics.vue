@@ -9,6 +9,9 @@
               <li>
                 <a href="/admin/analytics" class="text-primary">Analytics</a>
               </li>
+              <li>
+                <a href="/admin/reporting" class="text-base-content/60 hover:text-primary">Reporting</a>
+              </li>
             </ul>
           </nav>
 
