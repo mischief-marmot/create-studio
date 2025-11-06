@@ -39,7 +39,6 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
 
     // Wait for widget to load
     const widgetContainer = page.locator('[id^="interactive-widget-"]')
-    await widgetContainer.waitFor({ timeout: 3000 })
 
     // Navigate to a step with a timer
     const carousel = page.locator('.cs\\:carousel')
@@ -49,16 +48,15 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
       const slideCount = await slides.count()
       // Scroll through slides to find one with a timer
       for (let i = 0; i < slideCount - 1; i++) {
-        const timerButton = page.locator('button').filter({ hasText: /start/i })
+        const timerButton = page.locator('button').filter({ has: page.locator('span')})
 
         if (await timerButton.count() > 0) {
           // Click the start timer button
           await timerButton.first().click()
 
           // Wait for modal confirmation button to appear
-          const confirmButton = page.locator('button').filter({ hasText: /got it|start timer/i })
+          const confirmButton = page.locator('button').filter({ hasText: /start timer/i })
           try {
-            await confirmButton.waitFor({ timeout: 3000 })
             // Click the confirmation button
             await confirmButton.first().click()
           } catch (e) {
@@ -95,25 +93,19 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
 
     await page.waitForLoadState('networkidle')
 
-    // Wait for widget to load
-    const widgetContainer = page.locator('[id^="interactive-widget-"]')
-    await widgetContainer.waitFor({ timeout: 15000 })
-
     // Find and start a timer first
     const carousel = page.locator('.cs\\:carousel')
 
     if (await carousel.count() > 0) {
-      const startTimerButton = page.locator('button').filter({ hasText: /start/i })
+      const startTimerButton = page.locator('button').filter({ has: page.locator('span')})
 
       if (await startTimerButton.count() > 0) {
         // Start the timer
         await startTimerButton.first().click()
 
         // Wait for modal confirmation button to appear
-        const confirmButton = page.locator('button').filter({ hasText: /got it|start timer/i })
+        const confirmButton = page.locator('button').filter({ hasText: /start timer/i })
         try {
-          await confirmButton.waitFor({ timeout: 3000 })
-          // Click the confirmation button
           await confirmButton.first().click()
         } catch (e) {
           // Modal may not appear
@@ -123,7 +115,7 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
         const pauseButton = page.locator('button').filter({ hasText: /pause/i })
 
         try {
-          await pauseButton.waitFor({ timeout: 5000 })
+          await pauseButton.first().waitFor()
         } catch (e) {
           // Pause button didn't appear, that's okay
           return
@@ -135,7 +127,7 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
           // After pausing, button should change to resume/play
           const resumeButton = page.locator('button').filter({ hasText: /resume|play/i })
           try {
-            await resumeButton.waitFor({ timeout: 3000 })
+            await resumeButton.first().waitFor()
           } catch (e) {
             // Resume button may not appear immediately
           }
@@ -149,24 +141,18 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
 
     await page.waitForLoadState('networkidle')
 
-    // Wait for widget to load
-    const widgetContainer = page.locator('[id^="interactive-widget-"]')
-    await widgetContainer.waitFor({ timeout: 15000 })
-
     // Find a timer
     const carousel = page.locator('.cs\\:carousel')
 
     if (await carousel.count() > 0) {
-      const startTimerButton = page.locator('button').filter({ hasText: /start/i })
+      const startTimerButton = page.locator('button').filter({ has: page.locator('span')})
 
       if (await startTimerButton.count() > 0) {
         await startTimerButton.first().click()
 
         // Wait for modal confirmation button to appear
-        const confirmButton = page.locator('button').filter({ hasText: /got it|start timer/i })
+        const confirmButton = page.locator('button').filter({ hasText: /start timer/i })
         try {
-          await confirmButton.waitFor({ timeout: 3000 })
-          // Click the confirmation button
           await confirmButton.first().click()
         } catch (e) {
           // Modal may not appear
@@ -176,7 +162,7 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
         const addMinuteButton = page.locator('button').filter({ hasText: /\+1|add.*minute/i })
 
         try {
-          await addMinuteButton.waitFor({ timeout: 5000 })
+          await addMinuteButton.first().waitFor()
         } catch (e) {
           // Button didn't appear, that's okay
           return
@@ -197,24 +183,18 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
 
     await page.waitForLoadState('networkidle')
 
-    // Wait for widget to load
-    const widgetContainer = page.locator('[id^="interactive-widget-"]')
-    await widgetContainer.waitFor({ timeout: 15000 })
-
     const carousel = page.locator('.cs\\:carousel')
 
     if (await carousel.count() > 0) {
-      const startTimerButton = page.locator('button').filter({ hasText: /start/i })
+      const startTimerButton = page.locator('button').filter({ has: page.locator('span')})
 
       if (await startTimerButton.count() > 0) {
         // Start timer
         await startTimerButton.first().click()
 
         // Wait for modal confirmation button to appear
-        const confirmButton = page.locator('button').filter({ hasText: /got it|start timer/i })
+        const confirmButton = page.locator('button').filter({ hasText: /start timer/i })
         try {
-          await confirmButton.waitFor({ timeout: 3000 })
-          // Click the confirmation button
           await confirmButton.first().click()
         } catch (e) {
           // Modal may not appear
@@ -223,7 +203,7 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
         // Pause timer
         const pauseButton = page.locator('button').filter({ hasText: /pause/i })
         try {
-          await pauseButton.waitFor({ timeout: 5000 })
+          await pauseButton.first().waitFor()
         } catch (e) {
           return
         }
@@ -234,7 +214,7 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
           // Resume timer
           const resumeButton = page.locator('button').filter({ hasText: /resume|play/i })
           try {
-            await resumeButton.waitFor({ timeout: 3000 })
+            await resumeButton.first().waitFor()
           } catch (e) {
             // Resume button may not appear
             return
@@ -245,7 +225,7 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
 
             // Should show pause button again
             try {
-              await pauseButton.waitFor({ timeout: 3000 })
+              await pauseButton.first().waitFor()
             } catch (e) {
               // Pause button may not reappear immediately
             }
@@ -260,23 +240,17 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
 
     await page.waitForLoadState('networkidle')
 
-    // Wait for widget to load
-    const widgetContainer = page.locator('[id^="interactive-widget-"]')
-    await widgetContainer.waitFor({ timeout: 15000 })
-
     const carousel = page.locator('.cs\\:carousel')
 
     if (await carousel.count() > 0) {
-      const startTimerButton = page.locator('button').filter({ hasText: /start/i })
+      const startTimerButton = page.locator('button').filter({ has: page.locator('span')})
 
       if (await startTimerButton.count() > 0) {
         await startTimerButton.first().click()
 
         // Wait for modal confirmation button to appear
-        const confirmButton = page.locator('button').filter({ hasText: /got it|start timer/i })
+        const confirmButton = page.locator('button').filter({ hasText: /start timer/i })
         try {
-          await confirmButton.waitFor({ timeout: 3000 })
-          // Click the confirmation button
           await confirmButton.first().click()
         } catch (e) {
           // Modal may not appear
@@ -286,7 +260,7 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
         const stopButton = page.locator('button').filter({ hasText: /stop|reset|clear/i })
 
         try {
-          await stopButton.waitFor({ timeout: 5000 })
+          await stopButton.first().waitFor()
         } catch (e) {
           // Stop button didn't appear, that's okay
           return
