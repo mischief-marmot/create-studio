@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll } from 'vitest'
 import { createPage, setup } from '@nuxt/test-utils/e2e'
 
-const BASE_URL = 'http://localhost:3001'
+// Note: baseUrl is configured in vitest.config.ts as http://localhost:3001
 
 /**
  * E2E Tests for Interactive Mode - Timer Behaviors
@@ -12,6 +12,9 @@ beforeAll(async () => {
   await setup({
     browser: true,
     browserOptions: {
+      launch: {
+        baseURL: 'http://localhost:3001'
+      },
       type: 'chromium'
     }
   })
@@ -20,7 +23,7 @@ beforeAll(async () => {
 describe('Interactive Mode - Timer Behaviors', () => {
 
   test('finds and displays a timer in recipe steps', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -44,7 +47,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('starts a timer when start button is clicked', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -91,7 +94,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('pauses a running timer', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -145,7 +148,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('adds 1 minute to a timer', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -195,7 +198,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('resumes a paused timer', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -249,7 +252,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('stops/resets a timer', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -300,7 +303,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('timer shows alarming state when complete', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -323,7 +326,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('stops alarm when STOP button is clicked', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -339,7 +342,7 @@ describe('Interactive Mode - Timer Behaviors', () => {
   })
 
   test('displays multiple active timers simultaneously', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)

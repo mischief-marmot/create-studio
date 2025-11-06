@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeAll } from 'vitest'
 import { createPage, setup } from '@nuxt/test-utils/e2e'
 
-const BASE_URL = 'http://localhost:3001'
+// Note: baseUrl is configured in vitest.config.ts as http://localhost:3001
 
 /**
  * E2E Tests for Interactive Mode - Review Screen
@@ -11,6 +11,9 @@ beforeAll(async () => {
   await setup({
     browser: true,
     browserOptions: {
+      launch: {
+        baseURL: 'http://localhost:3001'
+      },
       type: 'chromium'
     }
   })
@@ -19,7 +22,7 @@ beforeAll(async () => {
 describe('Interactive Mode - Review Screen', () => {
 
   test('navigates to review screen at end of recipe', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -45,7 +48,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('displays star rating component on review screen', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -71,7 +74,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('can select a star rating', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -113,7 +116,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('shows rating submitted message after high rating', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -150,7 +153,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('shows low rating prompt after low rating', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -193,7 +196,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('displays review form with required fields', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -242,7 +245,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('can fill out review form', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -298,7 +301,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('submit button is enabled when form is valid', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -352,7 +355,7 @@ describe('Interactive Mode - Review Screen', () => {
   })
 
   test('displays completion image/emoji on review screen', async () => {
-    const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)

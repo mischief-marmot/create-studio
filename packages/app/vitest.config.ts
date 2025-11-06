@@ -18,5 +18,19 @@ export default defineVitestConfig({
     // Increase timeouts for e2e tests
     hookTimeout: 300000, // 5 minutes
     testTimeout: 60000, // 1 minute per test
+    // E2E test browser configuration
+    browser: {
+      provider: "playwright",
+      enabled: false, // Disabled globally, enabled per test file
+      instances: [
+        {
+          browser: "chromium",
+        },
+      ],
+      fileParallelism: 1,
+      launch: {
+        baseURL: "http://localhost:3001", // Base URL for Playwright
+      },
+    },
   },
 });
