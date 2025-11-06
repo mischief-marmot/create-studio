@@ -19,5 +19,19 @@ export default defineContentConfig({
         }).optional(),
       }),
     }),
+    features: defineCollection({
+      type: 'page',
+      source: 'features/**',
+      schema: z.object({
+        '_published': z.boolean().optional(),
+        title: z.string(),
+        description: z.string(),
+        icon: z.string().optional(),
+        category: z.string().optional(),
+        image: z.string().optional(),
+        videoUrl: z.string().optional(),
+        lastUpdated: z.string().optional(),
+      }),
+    }),
   },
 })

@@ -123,8 +123,24 @@ See [deployment documentation](https://nuxt.com/docs/getting-started/deployment)
 
 The project is configured for Cloudflare Pages deployment via NuxtHub.
 
+## Content Management
+
+Create Studio uses **Nuxt Studio** (self-hosted) for visual content management:
+
+```bash
+# Start the CMS interface
+npm run studio
+```
+
+This launches a visual editor at `http://localhost:4000` for managing:
+- **News**: Blog posts and announcements at `/news`
+- **Features**: Feature documentation at `/features`
+
+See [docs/NUXT_STUDIO.md](docs/NUXT_STUDIO.md) for complete documentation.
+
 ## Documentation
 
 - [CLAUDE.md](CLAUDE.md) - Development guidelines and project overview
 - [MONOREPO_MIGRATION.md](MONOREPO_MIGRATION.md) - Monorepo migration guide
 - [SUBSCRIPTION_IMPLEMENTATION.md](SUBSCRIPTION_IMPLEMENTATION.md) - Subscription system details
+- [docs/NUXT_STUDIO.md](docs/NUXT_STUDIO.md) - Content management with Nuxt Studio

@@ -1,16 +1,23 @@
 <script lang="ts" setup>
 const route = useRoute()
-const slug = `/news${route.path}`
+
+// Determine collection based on route path
+const isFeature = route.path.startsWith('/features/')
+const collection = isFeature ? 'features' : 'news'
+const slug = isFeature ? route.path : `/news${route.path}`
 
 const { data: page } = await useAsyncData(route.path, () => {
-  return queryCollection('news').path(slug).first()
+  return queryCollection(collection).path(slug).first()
 })
 
-// Get surrounding posts for navigation
+// Get surrounding posts for navigation (only for news)
 const { data: surroundings } = await useAsyncData('surround', () => {
-  return queryCollectionItemSurroundings('news', slug)
-  .where('_published', '=', true)
-  .order('date', 'DESC')
+  if (!isFeature) {
+    return queryCollectionItemSurroundings('news', slug)
+      .where('_published', '=', true)
+      .order('date', 'DESC')
+  }
+  return null
 })
 const [prev, next] = surroundings?.value || []
 
@@ -40,14 +47,17 @@ useHead({
         <!-- Breadcrumbs -->
         <div class="breadcrumbs text-sm mb-8">
           <ul>
-            <li><NuxtLink to="/news">News</NuxtLink></li>
+            <li><NuxtLink :to="isFeature ? '/features' : '/news'">{{ isFeature ? 'Features' : 'News' }}</NuxtLink></li>
             <li>{{ page.title }}</li>
           </ul>
         </div>
 
         <!-- Header -->
-        <h2 class="text-xs/5 text-base-content/60 mt-8 font-mono font-semibold tracking-widest uppercase">
+        <h2 v-if="!isFeature && page.date" class="text-xs/5 text-base-content/60 mt-8 font-mono font-semibold tracking-widest uppercase">
           {{ formatDate(page.date) }}
+        </h2>
+        <h2 v-if="isFeature && page.lastUpdated" class="text-xs/5 text-base-content/60 mt-8 font-mono font-semibold tracking-widest uppercase">
+          Last Updated: {{ formatDate(page.lastUpdated) }}
         </h2>
         <h1 class="text-pretty text-base-content sm:text-6xl mt-2 text-4xl font-medium tracking-tighter">
           {{ page.title }}
@@ -57,14 +67,19 @@ useHead({
         <div class="mt-16 grid grid-cols-1 gap-8 pb-24 lg:grid-cols-[15rem_1fr] xl:grid-cols-[15rem_1fr_15rem]">
           <!-- Sidebar -->
           <div class="max-lg:justify-between lg:flex-col lg:items-start flex flex-wrap items-center gap-8">
-            <!-- Author -->
-            <div v-if="page.author" class="flex items-center gap-3">
+            <!-- Author (News only) -->
+            <div v-if="!isFeature && page.author" class="flex items-center gap-3">
               <img
                 :alt="page.author.name"
                 class="aspect-square size-10 bg-base-200 object-cover rounded-full"
                 :src="page.author.imageUrl"
               />
               <div class="text-sm/5 text-base-content">{{ page.author.name }}</div>
+            </div>
+
+            <!-- Icon (Features only) -->
+            <div v-if="isFeature && page.icon" class="text-6xl">
+              {{ page.icon }}
             </div>
 
             <!-- Category -->
@@ -144,10 +159,10 @@ useHead({
                 </NuxtLink>
               </div>
 
-              <!-- Back to News (fallback if no surrounding posts) -->
-              <div v-else class="mt-10">
+              <!-- Back to list (fallback if no surrounding posts or for features) -->
+              <div v-if="isFeature || (!prev && !next)" class="mt-10">
                 <NuxtLink
-                  to="/news"
+                  :to="isFeature ? '/features' : '/news'"
                   class="border-base-300 ring-1 ring-base-content/10 whitespace-nowrap text-base-content hover:bg-base-200 inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium transition-colors border rounded-lg shadow-sm"
                 >
                   <svg
@@ -162,7 +177,7 @@ useHead({
                       clip-rule="evenodd"
                     />
                   </svg>
-                  Back to News
+                  {{ isFeature ? 'Back to Features' : 'Back to News' }}
                 </NuxtLink>
               </div>
             </div>
