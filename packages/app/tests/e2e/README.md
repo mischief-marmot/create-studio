@@ -109,6 +109,17 @@ Comprehensive browser-based end-to-end tests for Create Studio application.
 
 ## Running Tests
 
+### Prerequisites
+E2E tests require a running dev server on port 3001:
+
+```bash
+# Terminal 1: Start dev server
+npm run dev
+
+# Terminal 2: Run tests
+npm run test:e2e
+```
+
 ### All E2E Tests
 ```bash
 npm run test:e2e
@@ -124,6 +135,11 @@ npm run test:e2e -- tests/e2e/auth-screens.test.ts
 NODE_OPTIONS="--max-old-space-size=4096" npm run test:e2e
 ```
 
+### Run Tests in Watch Mode
+```bash
+npm run test:e2e -- --watch
+```
+
 ## Test Configuration
 
 Tests use:
@@ -136,25 +152,37 @@ Configuration is in `/packages/app/vitest.config.ts`
 
 ## Known Issues & Considerations
 
-### 1. Memory Usage
+### 1. Dev Server Required
+E2E tests require a running dev server on port 3001. Without it, tests will fail with "Cannot navigate to invalid URL" errors. The browser automation (Playwright) needs an actual HTTP server to connect to.
+
+### 2. CSS @property Warning
+DaisyUI includes CSS `@property` rules that some CSS optimizers don't recognize:
+```
+[2m│[22m   @property --radialprogress {
+[2m┆[22m            [33m[2m^--[22m Unknown at rule: @property[39m
+```
+This is **non-fatal** and can be safely ignored. It's a known issue with CSS tooling compatibility and doesn't affect functionality.
+
+### 3. Memory Usage
 Browser-based E2E tests are memory-intensive. When running all tests together, you may need to increase Node's memory:
 ```bash
 NODE_OPTIONS="--max-old-space-size=4096" npm run test:e2e
 ```
 
-### 2. Environment Setup
+### 4. Environment Setup
 Tests require:
 - Built `@create-studio/shared` package
 - Installed dependencies (`npm install`)
 - Proper environment variables (NUXT_SESSION_PASSWORD, etc.)
+- **Running dev server on port 3001**
 
-### 3. Test Isolation
+### 5. Test Isolation
 Tests run in browser contexts and may have timing dependencies. Some tests include `waitForTimeout()` to allow for:
 - Widget SDK loading
 - Animations completing
 - Network requests resolving
 
-### 4. Widget Loading
+### 6. Widget Loading
 The Interactive Mode tests interact with widgets loaded via external SDK. Tests include appropriate wait times for:
 - SDK initialization (5000ms)
 - Modal/iframe loading (2000ms)

@@ -1,20 +1,23 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, beforeAll } from 'vitest'
 import { createPage, setup, url } from '@nuxt/test-utils/e2e'
 
 /**
  * E2E Tests for Interactive Mode - Slide Navigation
  * Tests slide-based scrolling and carousel navigation
  */
-describe('Interactive Mode - Slide Navigation', async () => {
+beforeAll(async () => {
   await setup({
     browser: true,
     browserOptions: {
       type: 'chromium'
     }
   })
+})
+
+describe('Interactive Mode - Slide Navigation', () => {
 
   test('loads interactive mode page with demo recipe', async () => {
-    const page = await createPage(url('/demo/raspberry-swirl-pineapple-mango-margaritas'))
+    const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
     // Wait for page to load
     await page.waitForLoadState('networkidle')
@@ -29,7 +32,7 @@ describe('Interactive Mode - Slide Navigation', async () => {
   })
 
   test('opens interactive mode modal when button is clicked', async () => {
-    const page = await createPage(url('/demo/raspberry-swirl-pineapple-mango-margaritas'))
+    const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
     await page.waitForLoadState('networkidle')
 
     // Click the "Try Interactive Mode" button
@@ -48,7 +51,7 @@ describe('Interactive Mode - Slide Navigation', async () => {
 
   test('navigates through slides in direct interactive page', async () => {
     // Use the direct interactive page URL with creation key
-    const page = await createPage(url('/creations/thesweetestoccasion.com-50/interactive'))
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     // Wait for page to load and widget to initialize
     await page.waitForLoadState('networkidle')
@@ -61,7 +64,7 @@ describe('Interactive Mode - Slide Navigation', async () => {
   })
 
   test('slide navigation with carousel elements', async () => {
-    const page = await createPage(url('/creations/thesweetestoccasion.com-50/interactive'))
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -102,7 +105,7 @@ describe('Interactive Mode - Slide Navigation', async () => {
   })
 
   test('displays recipe title and description on intro slide', async () => {
-    const page = await createPage(url('/creations/thesweetestoccasion.com-50/interactive'))
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -117,7 +120,7 @@ describe('Interactive Mode - Slide Navigation', async () => {
   })
 
   test('navigates to completion/review slide', async () => {
-    const page = await createPage(url('/creations/thesweetestoccasion.com-50/interactive'))
+    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)

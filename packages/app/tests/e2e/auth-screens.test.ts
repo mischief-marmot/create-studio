@@ -1,21 +1,24 @@
-import { describe, test, expect } from 'vitest'
-import { createPage, setup, url } from '@nuxt/test-utils/e2e'
+import { describe, test, expect, beforeAll } from 'vitest'
+import { createPage, setup } from '@nuxt/test-utils/e2e'
 
 /**
  * E2E Tests for Authentication Screens
  * Tests login, password reset request, and other auth flows
  */
-describe('Authentication Screens', async () => {
+beforeAll(async () => {
   await setup({
     browser: true,
     browserOptions: {
       type: 'chromium'
     }
   })
+})
+
+describe('Authentication Screens', () => {
 
   describe('Login Page', () => {
     test('loads login page', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -32,7 +35,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('displays email and password fields', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -48,7 +51,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('displays login button', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -60,7 +63,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('shows error for invalid credentials', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -89,7 +92,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('displays reset password link', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -101,7 +104,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('can navigate to password reset page', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -120,7 +123,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('validates required fields', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -137,7 +140,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('displays loading state when submitting', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -163,7 +166,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('email field has proper validation', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -188,7 +191,7 @@ describe('Authentication Screens', async () => {
 
   describe('Request Password Reset Page', () => {
     test('loads password reset request page', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -202,7 +205,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('displays email input field', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -212,7 +215,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('displays send reset link button', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -224,7 +227,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('displays back to login link', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -234,7 +237,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('can navigate back to login page', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -249,7 +252,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('can submit reset request', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -274,7 +277,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('shows success message after submission', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -295,7 +298,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('disables button after successful submission', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -315,7 +318,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('validates email format', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -330,7 +333,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('shows loading state during submission', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -354,7 +357,7 @@ describe('Authentication Screens', async () => {
 
   describe('Auth Layout and Styling', () => {
     test('login page uses auth layout', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -369,7 +372,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('reset page uses auth layout', async () => {
-      const page = await createPage(url('/auth/request-reset'))
+      const page = await createPage('/auth/request-reset')
 
       await page.waitForLoadState('networkidle')
 
@@ -382,7 +385,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('forms are properly styled with fieldsets', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 
@@ -401,7 +404,7 @@ describe('Authentication Screens', async () => {
     })
 
     test('inputs have proper icons', async () => {
-      const page = await createPage(url('/auth/login'))
+      const page = await createPage('/auth/login')
 
       await page.waitForLoadState('networkidle')
 

@@ -15,5 +15,8 @@ export default defineVitestConfig({
       NUXT_PUBLIC_SITE_URL: "http://localhost:3000",
       NUXT_SERVICES_API_JWT_SECRET: "test-secret-key-for-unit-tests-only-not-for-production",
     },
+    // Increase timeouts for e2e tests
+    hookTimeout: 300000, // 5 minutes
+    testTimeout: 60000, // 1 minute per test
   },
 });
