@@ -1,28 +1,13 @@
-import { describe, test, expect, beforeAll } from 'vitest'
-import { createPage, setup } from '@nuxt/test-utils/e2e'
-
-// Note: baseUrl is configured in vitest.config.ts as http://localhost:3001
+import { test, expect } from '@playwright/test'
 
 /**
  * E2E Tests for Interactive Mode - Review Screen
  * Tests the completion/review slide functionality including star ratings
  */
-beforeAll(async () => {
-  await setup({
-    browser: true,
-    browserOptions: {
-      launch: {
-        baseURL: 'http://localhost:3001'
-      },
-      type: 'chromium'
-    }
-  })
-})
 
-describe('Interactive Mode - Review Screen', () => {
-
-  test('navigates to review screen at end of recipe', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+test.describe('Interactive Mode - Review Screen', () => {
+  test('navigates to review screen at end of recipe', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -47,8 +32,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('displays star rating component on review screen', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('displays star rating component on review screen', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -73,8 +58,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('can select a star rating', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('can select a star rating', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -115,8 +100,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('shows rating submitted message after high rating', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('shows rating submitted message after high rating', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -152,8 +137,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('shows low rating prompt after low rating', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('shows low rating prompt after low rating', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -195,8 +180,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('displays review form with required fields', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('displays review form with required fields', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -244,8 +229,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('can fill out review form', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('can fill out review form', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -300,8 +285,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('submit button is enabled when form is valid', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('submit button is enabled when form is valid', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -354,8 +339,8 @@ describe('Interactive Mode - Review Screen', () => {
     }
   })
 
-  test('displays completion image/emoji on review screen', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('displays completion image/emoji on review screen', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)

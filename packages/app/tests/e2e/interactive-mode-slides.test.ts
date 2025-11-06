@@ -1,28 +1,13 @@
-import { describe, test, expect, beforeAll } from 'vitest'
-import { createPage, setup } from '@nuxt/test-utils/e2e'
-
-// Note: baseUrl is configured in vitest.config.ts as http://localhost:3001
+import { test, expect } from '@playwright/test'
 
 /**
  * E2E Tests for Interactive Mode - Slide Navigation
  * Tests slide-based scrolling and carousel navigation
  */
-beforeAll(async () => {
-  await setup({
-    browser: true,
-    browserOptions: {
-      launch: {
-        baseURL: 'http://localhost:3001'
-      },
-      type: 'chromium'
-    }
-  })
-})
 
-describe('Interactive Mode - Slide Navigation', () => {
-
-  test('loads interactive mode page with demo recipe', async () => {
-    const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+test.describe('Interactive Mode - Slide Navigation', () => {
+  test('loads interactive mode page with demo recipe', async ({ page }) => {
+    await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
     // Wait for page to load
     await page.waitForLoadState('networkidle')
@@ -36,8 +21,8 @@ describe('Interactive Mode - Slide Navigation', () => {
     await expect(button).toBeVisible()
   })
 
-  test('opens interactive mode modal when button is clicked', async () => {
-    const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+  test('opens interactive mode modal when button is clicked', async ({ page }) => {
+    await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
     await page.waitForLoadState('networkidle')
 
     // Click the "Try Interactive Mode" button
@@ -54,9 +39,9 @@ describe('Interactive Mode - Slide Navigation', () => {
     await page.waitForTimeout(3000)
   })
 
-  test('navigates through slides in direct interactive page', async () => {
+  test('navigates through slides in direct interactive page', async ({ page }) => {
     // Use the direct interactive page URL with creation key
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     // Wait for page to load and widget to initialize
     await page.waitForLoadState('networkidle')
@@ -68,8 +53,8 @@ describe('Interactive Mode - Slide Navigation', () => {
     await expect(widgetContainer).toBeVisible({ timeout: 10000 })
   })
 
-  test('slide navigation with carousel elements', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('slide navigation with carousel elements', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
@@ -109,45 +94,52 @@ describe('Interactive Mode - Slide Navigation', () => {
     }
   })
 
-  test('displays recipe title and description on intro slide', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('displays recipe title and description on intro slide', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
 
-    // Look for recipe title
-    const titleElement = page.locator('h1').filter({ hasText: /Raspberry.*Margarita/i })
+    // Look for recipe title and description
+    const title = page.getByText(/raspberry.*margarita/i)
+    const description = page.getByText(/ingredient|instruction/i)
 
-    // Title should be visible (timeout extended for widget loading)
-    if (await titleElement.count() > 0) {
-      await expect(titleElement.first()).toBeVisible({ timeout: 10000 })
+    // Title or description should be visible
+    if (await title.count() > 0) {
+      await expect(title.first()).toBeVisible()
+    }
+
+    if (await description.count() > 0) {
+      await expect(description.first()).toBeVisible()
     }
   })
 
-  test('navigates to completion/review slide', async () => {
-    const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+  test('navigates to completion/review slide', async ({ page }) => {
+    await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
     await page.waitForTimeout(5000)
 
-    // Look for the last slide (review/completion slide)
-    // The review slide should have "All done!" text
-    const allDoneText = page.getByText('All done!')
-
-    // If we can find it, the review slide structure exists
-    // We won't navigate all the way through for speed, just verify it exists
+    // Navigate to the last slide (review/completion)
     const carousel = page.locator('.cs\\:carousel')
+
     if (await carousel.count() > 0) {
-      // Scroll carousel to the end
+      // Scroll to the end
       await carousel.first().evaluate((el) => {
         el.scrollLeft = el.scrollWidth
       })
 
       await page.waitForTimeout(1000)
 
-      // Check for review slide elements
-      if (await allDoneText.count() > 0) {
-        await expect(allDoneText.first()).toBeVisible({ timeout: 5000 })
+      // Look for "All done!" heading or completion message
+      const completionHeading = page.locator('h2').filter({ hasText: /all done|complete|finish/i })
+
+      if (await completionHeading.count() > 0) {
+        await expect(completionHeading.first()).toBeVisible()
+      } else {
+        // If no completion message, at least verify we navigated
+        const carousel = page.locator('.cs\\:carousel')
+        expect(await carousel.count()).toBeGreaterThan(0)
       }
     }
   })

@@ -1,40 +1,21 @@
-import { describe, test, expect, beforeAll } from 'vitest'
-import { createPage, setup } from '@nuxt/test-utils/e2e'
-
-// Note: baseUrl is configured in vitest.config.ts as http://localhost:3001
+import { test, expect } from '@playwright/test'
 
 /**
  * E2E Tests for Landing Page and Demo Pages
  * Tests the public-facing pages and navigation
  */
-beforeAll(async () => {
-  await setup({
-    browser: true,
-    browserOptions: {
-      launch: {
-        baseURL: 'http://localhost:3001'
-      },
-      type: 'chromium'
-    }
-  })
-})
 
-describe('Landing Page and Demos', () => {
-
-  describe('Landing Page', () => {
-    test('loads landing page', async () => {
-      const page = await createPage('/')
-
-      await page.waitForLoadState('networkidle')
+test.describe('Landing Page and Demos', () => {
+  test.describe('Landing Page', () => {
+    test('loads landing page', async ({ page }) => {
+      await page.goto('/')
 
       // Page should load successfully
       expect(page.url()).toContain('http://localhost:3001/')
     })
 
-    test('displays interactive mode section', async () => {
-      const page = await createPage('/')
-
-      await page.waitForLoadState('networkidle')
+    test('displays interactive mode section', async ({ page }) => {
+      await page.goto('/')
 
       // Look for Interactive Mode section
       const interactiveModeSection = page.locator('#interactive-mode')
@@ -44,10 +25,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('has Try Interactive Mode button on landing', async () => {
-      const page = await createPage('/')
-
-      await page.waitForLoadState('networkidle')
+    test('has Try Interactive Mode button on landing', async ({ page }) => {
+      await page.goto('/')
 
       // Look for the interactive mode button
       const tryButton = page.getByText(/try.*interactive.*mode/i)
@@ -57,10 +36,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('can open interactive mode demo from landing page', async () => {
-      const page = await createPage('/')
-
-      await page.waitForLoadState('networkidle')
+    test('can open interactive mode demo from landing page', async ({ page }) => {
+      await page.goto('/')
 
       // Find and click the Try Interactive Mode button
       const tryButton = page.getByText(/try.*interactive.*mode/i)
@@ -79,10 +56,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('displays feature list on landing page', async () => {
-      const page = await createPage('/')
-
-      await page.waitForLoadState('networkidle')
+    test('displays feature list on landing page', async ({ page }) => {
+      await page.goto('/')
 
       // Look for feature descriptions
       const features = [
@@ -103,11 +78,9 @@ describe('Landing Page and Demos', () => {
     })
   })
 
-  describe('Demo Recipes Page', () => {
-    test('loads demo recipes listing page', async () => {
-      const page = await createPage('/demos')
-
-      await page.waitForLoadState('networkidle')
+  test.describe('Demo Recipes Page', () => {
+    test('loads demo recipes listing page', async ({ page }) => {
+      await page.goto('/demos')
 
       // Check for heading
       const heading = page.locator('h2').filter({ hasText: /interactive.*recipe.*demo/i })
@@ -117,10 +90,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('displays multiple recipe cards', async () => {
-      const page = await createPage('/demos')
-
-      await page.waitForLoadState('networkidle')
+    test('displays multiple recipe cards', async ({ page }) => {
+      await page.goto('/demos')
 
       // Look for recipe articles
       const recipeArticles = page.locator('article')
@@ -130,10 +101,8 @@ describe('Landing Page and Demos', () => {
       expect(count).toBeGreaterThan(0)
     })
 
-    test('recipe cards display images', async () => {
-      const page = await createPage('/demos')
-
-      await page.waitForLoadState('networkidle')
+    test('recipe cards display images', async ({ page }) => {
+      await page.goto('/demos')
 
       // Check for recipe images
       const recipeImages = page.locator('article img')
@@ -147,10 +116,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('recipe cards display metadata', async () => {
-      const page = await createPage('/demos')
-
-      await page.waitForLoadState('networkidle')
+    test('recipe cards display metadata', async ({ page }) => {
+      await page.goto('/demos')
 
       // Look for metadata like prep time, total time, category
       const metadata = page.getByText(/prep:|total:|mins/i)
@@ -160,10 +127,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('can click recipe card to view details', async () => {
-      const page = await createPage('/demos')
-
-      await page.waitForLoadState('networkidle')
+    test('can click recipe card to view details', async ({ page }) => {
+      await page.goto('/demos')
 
       // Find first recipe link
       const firstRecipeLink = page.locator('article a').first()
@@ -181,10 +146,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('displays Try Interactive Mode button on recipe cards', async () => {
-      const page = await createPage('/demos')
-
-      await page.waitForLoadState('networkidle')
+    test('displays Try Interactive Mode button on recipe cards', async ({ page }) => {
+      await page.goto('/demos')
 
       // Look for Try Interactive Mode buttons
       const tryButtons = page.locator('a').filter({ hasText: /try.*interactive.*mode/i })
@@ -194,20 +157,16 @@ describe('Landing Page and Demos', () => {
     })
   })
 
-  describe('Individual Demo Recipe Page', () => {
-    test('loads individual recipe demo page', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
-
-      await page.waitForLoadState('networkidle')
+  test.describe('Individual Demo Recipe Page', () => {
+    test('loads individual recipe demo page', async ({ page }) => {
+      await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
       // Page should load
       expect(page.url()).toContain('/demo/raspberry-swirl-pineapple-mango-margaritas')
     })
 
-    test('displays recipe title', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
-
-      await page.waitForLoadState('networkidle')
+    test('displays recipe title', async ({ page }) => {
+      await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
       // Look for recipe title
       const title = page.getByText(/raspberry.*margarita/i)
@@ -217,20 +176,16 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('has Try Interactive Mode button', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
-
-      await page.waitForLoadState('networkidle')
+    test('has Try Interactive Mode button', async ({ page }) => {
+      await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
       const tryButton = page.getByText(/try.*interactive.*mode/i)
 
       await expect(tryButton.first()).toBeVisible()
     })
 
-    test('displays recipe card widget', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
-
-      await page.waitForLoadState('networkidle')
+    test('displays recipe card widget', async ({ page }) => {
+      await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
       // Look for embedded widget or card
       const widget = page.locator('[id^="create-studio-"]').or(
@@ -242,10 +197,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('can open interactive mode from recipe page', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
-
-      await page.waitForLoadState('networkidle')
+    test('can open interactive mode from recipe page', async ({ page }) => {
+      await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
       // Click Try Interactive Mode button
       const tryButton = page.getByText(/try.*interactive.*mode/i).first()
@@ -262,13 +215,11 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('displays recipe source attribution', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
-
-      await page.waitForLoadState('networkidle')
+    test('displays recipe source attribution', async ({ page }) => {
+      await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
       // Look for source link
-      const sourceLink = page.locator('a').filter({ hasText: /thesweetestoccasion\.com/i })
+      const sourceLink = page.locator('a').filter({ hasText: /thesweetestoccasion\\.com/i })
 
       if (await sourceLink.count() > 0) {
         await expect(sourceLink.first()).toBeVisible()
@@ -276,11 +227,9 @@ describe('Landing Page and Demos', () => {
     })
   })
 
-  describe('Navigation and Routing', () => {
-    test('can navigate from landing to demos page', async () => {
-      const page = await createPage('/')
-
-      await page.waitForLoadState('networkidle')
+  test.describe('Navigation and Routing', () => {
+    test('can navigate from landing to demos page', async ({ page }) => {
+      await page.goto('/')
 
       // Look for link to demos
       const demosLink = page.locator('a').filter({ hasText: /demo/i })
@@ -295,10 +244,8 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('can navigate from demos to individual recipe', async () => {
-      const page = await createPage('/demos')
-
-      await page.waitForLoadState('networkidle')
+    test('can navigate from demos to individual recipe', async ({ page }) => {
+      await page.goto('/demos')
 
       // Click first recipe
       const firstRecipe = page.locator('article a').first()
@@ -310,10 +257,8 @@ describe('Landing Page and Demos', () => {
       expect(page.url()).toContain('/demo/')
     })
 
-    test('can navigate from recipe to interactive mode', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
-
-      await page.waitForLoadState('networkidle')
+    test('can navigate from recipe to interactive mode', async ({ page }) => {
+      await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
       // Get Try Interactive Mode button
       const tryButton = page.getByText(/try.*interactive.*mode/i).first()
@@ -329,10 +274,8 @@ describe('Landing Page and Demos', () => {
       expect(hasModal || urlChanged).toBeTruthy()
     })
 
-    test('page has proper meta tags', async () => {
-      const page = await createPage('/')
-
-      await page.waitForLoadState('networkidle')
+    test('page has proper meta tags', async ({ page }) => {
+      await page.goto('/')
 
       // Check for title tag
       const title = await page.title()
@@ -341,14 +284,11 @@ describe('Landing Page and Demos', () => {
     })
   })
 
-  describe('Responsive Design', () => {
-    test('landing page is responsive on mobile', async () => {
-      const page = await createPage('/')
-
+  test.describe('Responsive Design', () => {
+    test('landing page is responsive on mobile', async ({ page }) => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 })
-
-      await page.waitForLoadState('networkidle')
+      await page.goto('/')
 
       // Page should still load and display content
       const heading = page.locator('h1, h2, h3').first()
@@ -358,13 +298,10 @@ describe('Landing Page and Demos', () => {
       }
     })
 
-    test('demo recipes are responsive on mobile', async () => {
-      const page = await createPage('/demos')
-
+    test('demo recipes are responsive on mobile', async ({ page }) => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 })
-
-      await page.waitForLoadState('networkidle')
+      await page.goto('/demos')
 
       // Recipe cards should still be visible
       const recipes = page.locator('article')
@@ -373,11 +310,10 @@ describe('Landing Page and Demos', () => {
       expect(count).toBeGreaterThan(0)
     })
 
-    test('interactive mode works on mobile viewport', async () => {
-      const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
-
+    test('interactive mode works on mobile viewport', async ({ page }) => {
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 })
+      await page.goto(`/creations/${creationKey}/interactive`)
 
       await page.waitForLoadState('networkidle')
       await page.waitForTimeout(5000)
