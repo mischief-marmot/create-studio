@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 const route = useRoute()
-const slug = `/news${route.path}`
+const slug = route.path
 
 const { data: page } = await useAsyncData(route.path, () => {
   return queryCollection('news').path(slug).first()
@@ -98,7 +98,7 @@ useHead({
                 <!-- Previous Post -->
                 <NuxtLink
                   v-if="prev"
-                  :to="`/${prev.stem.split('/').pop()}`"
+                  :to="`/news/${prev.stem.split('/').pop()}`"
                   class="border-base-300 ring-1 ring-base-content/10 text-base-content hover:bg-base-200 flex items-center flex-1 gap-2 px-4 py-3 text-sm font-medium transition-colors border rounded-lg shadow-sm"
                 >
                   <svg
@@ -122,7 +122,7 @@ useHead({
                 <!-- Next Post -->
                 <NuxtLink
                   v-if="next"
-                  :to="`/${next.stem.split('/').pop()}`"
+                  :to="`/news/${next.stem.split('/').pop()}`"
                   class="border-base-300 ring-1 ring-base-content/10 text-base-content hover:bg-base-200 flex items-center justify-end flex-1 gap-2 px-4 py-3 text-sm font-medium transition-colors border rounded-lg shadow-sm"
                 >
                   <div class="text-right">
