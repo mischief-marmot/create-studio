@@ -20,7 +20,7 @@ describe('Landing Page and Demos', () => {
 
   describe('Landing Page', () => {
     test('loads landing page', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       await page.waitForLoadState('networkidle')
 
@@ -29,7 +29,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('displays interactive mode section', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       await page.waitForLoadState('networkidle')
 
@@ -42,7 +42,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('has Try Interactive Mode button on landing', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       await page.waitForLoadState('networkidle')
 
@@ -55,7 +55,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('can open interactive mode demo from landing page', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       await page.waitForLoadState('networkidle')
 
@@ -77,7 +77,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('displays feature list on landing page', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       await page.waitForLoadState('networkidle')
 
@@ -102,7 +102,7 @@ describe('Landing Page and Demos', () => {
 
   describe('Demo Recipes Page', () => {
     test('loads demo recipes listing page', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       await page.waitForLoadState('networkidle')
 
@@ -115,7 +115,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('displays multiple recipe cards', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       await page.waitForLoadState('networkidle')
 
@@ -128,7 +128,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('recipe cards display images', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       await page.waitForLoadState('networkidle')
 
@@ -145,7 +145,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('recipe cards display metadata', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       await page.waitForLoadState('networkidle')
 
@@ -158,7 +158,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('can click recipe card to view details', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       await page.waitForLoadState('networkidle')
 
@@ -179,7 +179,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('displays Try Interactive Mode button on recipe cards', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       await page.waitForLoadState('networkidle')
 
@@ -193,7 +193,7 @@ describe('Landing Page and Demos', () => {
 
   describe('Individual Demo Recipe Page', () => {
     test('loads individual recipe demo page', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      const page = await createPage(`${BASE_URL}/demo/raspberry-swirl-pineapple-mango-margaritas`)
 
       await page.waitForLoadState('networkidle')
 
@@ -202,7 +202,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('displays recipe title', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      const page = await createPage(`${BASE_URL}/demo/raspberry-swirl-pineapple-mango-margaritas`)
 
       await page.waitForLoadState('networkidle')
 
@@ -215,7 +215,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('has Try Interactive Mode button', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      const page = await createPage(`${BASE_URL}/demo/raspberry-swirl-pineapple-mango-margaritas`)
 
       await page.waitForLoadState('networkidle')
 
@@ -225,7 +225,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('displays recipe card widget', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      const page = await createPage(`${BASE_URL}/demo/raspberry-swirl-pineapple-mango-margaritas`)
 
       await page.waitForLoadState('networkidle')
 
@@ -240,7 +240,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('can open interactive mode from recipe page', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      const page = await createPage(`${BASE_URL}/demo/raspberry-swirl-pineapple-mango-margaritas`)
 
       await page.waitForLoadState('networkidle')
 
@@ -260,7 +260,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('displays recipe source attribution', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      const page = await createPage(`${BASE_URL}/demo/raspberry-swirl-pineapple-mango-margaritas`)
 
       await page.waitForLoadState('networkidle')
 
@@ -275,7 +275,7 @@ describe('Landing Page and Demos', () => {
 
   describe('Navigation and Routing', () => {
     test('can navigate from landing to demos page', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       await page.waitForLoadState('networkidle')
 
@@ -293,7 +293,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('can navigate from demos to individual recipe', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       await page.waitForLoadState('networkidle')
 
@@ -308,7 +308,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('can navigate from recipe to interactive mode', async () => {
-      const page = await createPage('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      const page = await createPage(`${BASE_URL}/demo/raspberry-swirl-pineapple-mango-margaritas`)
 
       await page.waitForLoadState('networkidle')
 
@@ -327,7 +327,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('page has proper meta tags', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       await page.waitForLoadState('networkidle')
 
@@ -340,7 +340,7 @@ describe('Landing Page and Demos', () => {
 
   describe('Responsive Design', () => {
     test('landing page is responsive on mobile', async () => {
-      const page = await createPage('/')
+      const page = await createPage(`${BASE_URL}/`)
 
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 })
@@ -356,7 +356,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('demo recipes are responsive on mobile', async () => {
-      const page = await createPage('/demos')
+      const page = await createPage(`${BASE_URL}/demos`)
 
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 })
@@ -371,7 +371,7 @@ describe('Landing Page and Demos', () => {
     })
 
     test('interactive mode works on mobile viewport', async () => {
-      const page = await createPage('/creations/thesweetestoccasion.com-50/interactive')
+      const page = await createPage(`${BASE_URL}/creations/thesweetestoccasion.com-50/interactive`)
 
       // Set mobile viewport
       await page.setViewportSize({ width: 375, height: 667 })
