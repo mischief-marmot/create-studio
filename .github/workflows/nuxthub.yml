@@ -26,6 +26,15 @@ jobs:
       - name: Build shared package
         run: npm run build:shared
 
+      - name: Cache dependencies and build
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+            packages/shared/dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
+
   test:
     name: "Test"
     needs: build
@@ -40,13 +49,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build shared package
-        run: npm run build:shared
+      - name: Restore dependencies and build
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+            packages/shared/dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
 
       - name: Run tests
         run: npm run test
@@ -65,13 +76,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build shared package
-        run: npm run build:shared
+      - name: Restore dependencies and build
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+            packages/shared/dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
 
       - name: Install Playwright browsers
         run: npx playwright install chromium firefox --with-deps
@@ -97,13 +110,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build shared package
-        run: npm run build:shared
+      - name: Restore dependencies and build
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+            packages/shared/dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
 
       - name: Ensure NuxtHub module is installed
         run: npx nuxthub@latest ensure
