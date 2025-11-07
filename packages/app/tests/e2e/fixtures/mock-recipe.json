@@ -1,0 +1,281 @@
+{
+  "id": 123,
+  "created": "2024-01-15 12:00:00",
+  "modified": "2024-01-15 12:00:00",
+  "object_id": "123",
+  "type": "recipe",
+  "title": "Test Chocolate Chip Cookies",
+  "author": "Test Chef",
+  "description": "<p><em>Delicious homemade chocolate chip cookies perfect for testing. These cookies are soft, chewy, and loaded with chocolate chips!</em></p>",
+  "instructions": "<ol><li>Preheat your oven to 350°F (175°C). Line baking sheets with parchment paper.</li><li>In a large bowl, cream together the butter and sugars until light and fluffy, about 3-4 minutes.</li><li>Beat in the eggs one at a time, then stir in the vanilla extract. Let rest for 3 seconds.</li><li>In a separate bowl, whisk together flour, baking soda, and salt.</li><li>Gradually blend the dry ingredients into the creamed mixture.</li><li>Stir in the chocolate chips until evenly distributed.</li><li>Drop rounded tablespoons of dough onto the prepared baking sheets, spacing them 2 inches apart.</li><li>Bake for 20-25 minutes, or until the edges are golden brown.</li><li>Remove from oven and let cool on the baking sheet for 5 minutes before transferring to a wire rack.</li><li>Allow to cool completely for 10-15 minutes before serving.</li></ol>",
+  "instructions_with_ads": "<ol><li>Preheat your oven to 350°F (175°C). Line baking sheets with parchment paper.</li><li>In a large bowl, cream together the butter and sugars until light and fluffy, about 3-4 minutes.</li><li>Beat in the eggs one at a time, then stir in the vanilla extract. Let rest for 3 seconds.</li><li>In a separate bowl, whisk together flour, baking soda, and salt.</li><li>Gradually blend the dry ingredients into the creamed mixture.</li><li>Stir in the chocolate chips until evenly distributed.</li><li>Drop rounded tablespoons of dough onto the prepared baking sheets, spacing them 2 inches apart.</li><li>Bake for 20-25 minutes, or until the edges are golden brown.</li><li>Remove from oven and let cool on the baking sheet for 5 minutes before transferring to a wire rack.</li><li>Allow to cool completely for 10-15 minutes before serving.</li></ol>",
+  "notes": "<p>For extra chewy cookies, slightly underbake them and let them finish cooking on the hot baking sheet.</p>",
+  "schema_display": "1",
+  "suitable_for_diet": "VegetarianDiet",
+  "difficulty": null,
+  "estimated_cost": null,
+  "original_post_id": "123",
+  "canonical_post_id": "123",
+  "category": "10001",
+  "secondary_term": "10002",
+  "tags": null,
+  "thumbnail_id": "123",
+  "prep_time": "900",
+  "active_time": "1500",
+  "additional_time": "900",
+  "total_time": "3300",
+  "prep_time_label": "Prep Time",
+  "active_time_label": "Cook Time",
+  "additional_time_label": "Cool Time",
+  "time_display": "prep_time,active_time,additional_time",
+  "yield": "24 cookies",
+  "pinterest_url": null,
+  "pinterest_description": null,
+  "pinterest_img_id": null,
+  "video": null,
+  "external_video": null,
+  "keywords": "chocolate chip cookies, homemade cookies, baking",
+  "associated_posts": "[\"123\"]",
+  "rating": "5.0",
+  "rating_count": "42",
+  "metadata": "{\"slug_repaired\":true}",
+  "custom_fields": [],
+  "original_object_id": null,
+  "layout": null,
+  "title_hide": "0",
+  "description_hide": "0",
+  "relations": [],
+  "canonical_post_permalink": "https://fakedomain.com/2024/01/test-chocolate-chip-cookies/",
+  "supplies": [
+    {
+      "id": "1001",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "2 1/4 cups all-purpose flour",
+      "note": null,
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "0",
+      "amount": "2.25",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1002",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "1 cup (2 sticks) unsalted butter, softened",
+      "note": "softened",
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "1",
+      "amount": "1",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1003",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "3/4 cup granulated sugar",
+      "note": null,
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "2",
+      "amount": "0.75",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1004",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "3/4 cup packed brown sugar",
+      "note": "packed",
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "3",
+      "amount": "0.75",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1005",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "2 large eggs",
+      "note": null,
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "4",
+      "amount": "2",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1006",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "2 teaspoons vanilla extract",
+      "note": null,
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "5",
+      "amount": "2",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1007",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "1 teaspoon baking soda",
+      "note": null,
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "6",
+      "amount": "1",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1008",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "1 teaspoon salt",
+      "note": null,
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "7",
+      "amount": "1",
+      "max_amount": null,
+      "nofollow": "1"
+    },
+    {
+      "id": "1009",
+      "created": "2024-01-15 12:00:00",
+      "modified": "2024-01-15 12:00:00",
+      "type": "ingredients",
+      "creation": "123",
+      "original_text": "2 cups chocolate chips",
+      "note": null,
+      "link": null,
+      "group": "mv-has-no-group",
+      "position": "8",
+      "amount": "2",
+      "max_amount": null,
+      "nofollow": "1"
+    }
+  ],
+  "nutrition": [],
+  "products": [],
+  "thumbnail_uri": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=800",
+  "category_name": "Dessert",
+  "secondary_term_name": "Cookies",
+  "posts": [
+    {
+      "id": "123",
+      "title": "Test Chocolate Chip Cookies"
+    }
+  ],
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "text": "Preheat your oven to 350°F (175°C). Line baking sheets with parchment paper."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "text": "In a large bowl, cream together the butter and sugars until light and fluffy, about 3-4 minutes."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "text": "Beat in the eggs one at a time, then stir in the vanilla extract. Let rest for 3 seconds."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "text": "In a separate bowl, whisk together flour, baking soda, and salt."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "text": "Gradually blend the dry ingredients into the creamed mixture."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 6,
+      "text": "Stir in the chocolate chips until evenly distributed."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 7,
+      "text": "Drop rounded tablespoons of dough onto the prepared baking sheets, spacing them 2 inches apart."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 8,
+      "text": "Bake for 20-25 minutes, or until the edges are golden brown."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 9,
+      "text": "Remove from oven and let cool on the baking sheet for 5 minutes before transferring to a wire rack."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 10,
+      "text": "Allow to cool completely for 10-15 minutes before serving."
+    }
+  ],
+  "links": {
+    "first": {
+      "id": "1",
+      "object_id": "100",
+      "title": "First Recipe",
+      "type": "recipe"
+    },
+    "last": {
+      "id": "200",
+      "object_id": "999",
+      "title": "Last Recipe",
+      "type": "recipe"
+    },
+    "current": {
+      "id": "123",
+      "object_id": "123",
+      "title": "Test Chocolate Chip Cookies",
+      "type": "recipe"
+    },
+    "previous": {
+      "id": "122",
+      "object_id": "122",
+      "title": "Previous Recipe",
+      "type": "recipe"
+    },
+    "next": {
+      "id": "124",
+      "object_id": "124",
+      "title": "Next Recipe",
+      "type": "recipe"
+    }
+  }
+}

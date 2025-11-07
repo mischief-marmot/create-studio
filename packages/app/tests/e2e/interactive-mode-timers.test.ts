@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { createCreationKey } from '@create-studio/shared'
+import { mockWordPressAPI } from './helpers/api-mocks'
 
-const creationKey = createCreationKey('thesweetestoccasion.com', 81)
+const creationKey = createCreationKey('fakedomain.com', 123)
 
 /**
  * E2E Tests for Interactive Mode - Timer Behaviors
@@ -10,6 +11,10 @@ const creationKey = createCreationKey('thesweetestoccasion.com', 81)
  */
 
 test.describe('Interactive Mode - Timer Behaviors', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockWordPressAPI(page)
+  })
+
   test('finds and displays a timer in recipe steps', async ({ page }) => {
     await page.goto(`/creations/${creationKey}/interactive`)
     await page.waitForLoadState('networkidle')
@@ -229,39 +234,77 @@ test.describe('Interactive Mode - Timer Behaviors', () => {
     }
   })
 
-  test.skip('timer shows alarming state when complete', async ({ page }) => {
+  test('timer shows alarming state when complete', async ({ page }) => {
     await page.goto(`/creations/${creationKey}/interactive`)
-
     await page.waitForLoadState('networkidle')
 
-    // Wait for widget to load
-    const widgetContainer = page.locator('[id^="interactive-widget-"]')
+    // Find and start the 3-second timer
+    const startButton = page.locator('button[data-role="start"]').first()
 
-    // Look for any timer alarm or completion state indicators
-    const alarmState = page.locator('[class*="alarm"]').or(
-      page.locator('[class*="complete"]').or(
-        page.getByText(/time.*up|alarm/i)
-      )
-    )
+    if (await startButton.count() > 0) {
+      await startButton.click()
 
-    // If page has timer functionality, it might show alarm state
-    // This is optional depending on recipe content
-    const hasAlarmIndicator = await alarmState.count() > 0
-    expect(hasAlarmIndicator || true).toBeTruthy()
+      // Wait for modal confirmation button to appear
+      const confirmButton = page.locator('button').filter({ hasText: /start timer/i })
+      try {
+        await confirmButton.first().click({ timeout: 2000 })
+      } catch (e) {
+        // Modal may not appear
+      }
+
+      // Wait for timer to complete (3 seconds + 1 second buffer)
+      await page.waitForTimeout(4000)
+
+      // Look for timer alarm using data-role attribute
+      const timerAlarm = page.locator('[data-role="timer-alarm"]')
+
+      // Timer should show alarm state
+      await expect(timerAlarm).toBeVisible({ timeout: 2000 })
+
+      // Should also show the STOP button
+      const stopButton = page.locator('button[data-role="stop"]')
+      await expect(stopButton).toBeVisible()
+
+      // Should display "Timer ended!" text
+      const timerEndedText = page.getByText('Timer ended!')
+      await expect(timerEndedText).toBeVisible()
+    }
   })
 
   test('stops alarm when STOP button is clicked', async ({ page }) => {
     await page.goto(`/creations/${creationKey}/interactive`)
     await page.waitForLoadState('networkidle')
 
-    // Look for stop alarm button (appears when timer is in alarming state)
-    const stopAlarmButton = page.locator('button[data-role="stop"]')
+    // Find and start the 3-second timer
+    const startButton = page.locator('button[data-role="start"]').first()
 
-    if (await stopAlarmButton.count() > 0) {
-      await stopAlarmButton.first().click()
+    if (await startButton.count() > 0) {
+      await startButton.click()
 
-      // Verify button is no longer visible or alarm is dismissed
-      expect(true).toBeTruthy() // Test passed if button exists and is clickable
+      // Wait for modal confirmation button to appear
+      const confirmButton = page.locator('button').filter({ hasText: /start timer/i })
+      try {
+        await confirmButton.first().click({ timeout: 2000 })
+      } catch (e) {
+        // Modal may not appear
+      }
+
+      // Wait for timer to complete (3 seconds + 1 second buffer)
+      await page.waitForTimeout(4000)
+
+      // Look for stop alarm button (appears when timer is in alarming state)
+      const stopAlarmButton = page.locator('button[data-role="stop"]')
+      await expect(stopAlarmButton).toBeVisible({ timeout: 2000 })
+
+      // Click the STOP button
+      await stopAlarmButton.click()
+
+      // Verify alarm is dismissed - the timer-alarm element should no longer be visible
+      const timerAlarm = page.locator('[data-role="timer-alarm"]')
+      await expect(timerAlarm).not.toBeVisible({ timeout: 2000 })
+
+      // The stop button should also be gone
+      await expect(stopAlarmButton).not.toBeVisible()
     }
   })
 

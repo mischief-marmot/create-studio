@@ -1,27 +1,31 @@
 import { test, expect } from '@playwright/test'
 import { createCreationKey } from '@create-studio/shared'
+import { mockWordPressAPI } from './helpers/api-mocks'
 
-const creationKey = createCreationKey('thesweetestoccasion.com', 50)
+const creationKey = createCreationKey('fakedomain.com', 123)
 
 /**
  * E2E Tests for Interactive Mode - Slide Navigation
  * Tests slide-based carousel navigation using button controls
- * The interactive mode has 12 slides total:
- *  - slide0: intro/title
- *  - slide1-slide10: step-by-step instructions
- *  - slide11: completion/review
+ *
+ * NOTE: WordPress API calls are mocked using fixtures to avoid external dependencies.
  */
 
 test.describe('Interactive Mode - Slide Navigation', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockWordPressAPI(page)
+  })
+
   test('loads interactive mode page with demo recipe', async ({ page }) => {
     await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
     // Wait for page to load
     await page.waitForLoadState('networkidle')
 
-    // Check page title
+    // Check page loaded successfully - title will be from demo data (hardcoded)
+    // but the interactive widget inside should use mocked data
     const title = await page.title()
-    expect(title).toContain('Raspberry Swirl Pineapple Mango Margaritas')
+    expect(title).toContain('Create Studio')
   })
 
   test('opens interactive mode modal when button is clicked', async ({ page }) => {
@@ -69,8 +73,8 @@ test.describe('Interactive Mode - Slide Navigation', () => {
     const carousel = page.locator('.cs\\:carousel')
     await expect(carousel.first()).toBeVisible()
 
-    // Look for recipe title
-    const title = page.getByText(/raspberry.*margarita/i)
+    // Look for mocked recipe title
+    const title = page.getByText(/chocolate chip cookies/i)
 
     // Title should be visible on intro slide
     if (await title.count() > 0) {

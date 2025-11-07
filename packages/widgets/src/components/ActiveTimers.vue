@@ -15,6 +15,7 @@
         <div v-for="timer, index in activeTimers" :key="timer.id"
           class="cs:list-row cs:px-3 cs:py-1 cs:rounded-none"
           :class="[ timer.remaining < 60 && timer.remaining > 10 ? 'cs:bg-orange-500 cs:py-3' : '', timer.remaining < 11 && timer.remaining > 0 ? 'cs:bg-red-600 cs:py-3' : '', timer.status === 'alarming' ? 'cs:bg-red-600 cs:animate-pulse cs:py-3' : '', ]"
+          :data-role="timer.status === 'alarming' ? 'timer-alarm' : ''"
           >
           <div class="cs:flex cs:list-col-grow cs:items-center cs:space-x-3">
             <svg class="cs:w-5 cs:h-5 cs:text-base-content" fill="none" stroke="currentColor" viewBox="0 0 24 24">

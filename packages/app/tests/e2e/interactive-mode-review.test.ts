@@ -1,61 +1,24 @@
 import { test, expect } from '@playwright/test'
 import { createCreationKey } from '@create-studio/shared'
+import { mockWordPressAPI } from './helpers/api-mocks'
 
-const creationKey = createCreationKey('thesweetestoccasion.com', 81)
+const creationKey = createCreationKey('fakedomain.com', 123)
 
 /**
  * E2E Tests for Interactive Mode - Review Screen
  * Tests the completion/review slide functionality including star ratings
  *
- * NOTE: Review API calls are mocked to prevent saving test data to the real site.
- * This allows us to test the review flow without affecting production ratings/reviews.
+ * NOTE: WordPress API calls are mocked using fixtures to avoid external dependencies.
+ * This includes both creation data and review API endpoints.
  */
 
-// Fixture: Mock the review API endpoint to prevent saving test data
-const mockReviewAPI = async (page: any) => {
-  // Intercept POST requests to the review API and return a mock response
-  await page.route('**/wp-json/mv-create/v1/reviews**', async (route: any) => {
-    const request = route.request()
-
-    // Only mock POST requests (creation or updates of reviews)
-    if (request.method() === 'POST') {
-      // Extract the request body to get the review data
-      let body: any = {}
-      try {
-        body = JSON.parse(request.postDataBuffer()?.toString() || '{}')
-      } catch (e) {
-        // If body parsing fails, continue anyway
-      }
-
-      // Return a mock successful response without actually submitting
-      // The widget checks for response.id, so we provide that
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          id: Math.random().toString().slice(2), // Mock ID
-          creation: body?.creation,
-          rating: body?.rating,
-          review_content: body?.review_content || null,
-          review_title: body?.review_title || null,
-          author_name: body?.author_name || null,
-          author_email: body?.author_email || null,
-          handshake: body?.handshake,
-          created: Math.floor(Date.now() / 1000),
-          modified: Math.floor(Date.now() / 1000)
-        })
-      })
-    } else {
-      // Allow GET requests through normally
-      await route.continue()
-    }
-  })
-}
-
 test.describe('Interactive Mode - Review Screen', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockWordPressAPI(page)
+  })
+
   test('navigates to review screen at end of recipe', async ({ page }) => {
     await page.goto(`/creations/${creationKey}/interactive`)
-
     await page.waitForLoadState('networkidle')
 
     // Navigate to the last slide (review/completion)
@@ -107,9 +70,6 @@ test.describe('Interactive Mode - Review Screen', () => {
   })
 
   test('can select a star rating', async ({ page }) => {
-    // Mock the review API to prevent saving test data to the real site
-    await mockReviewAPI(page)
-
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
@@ -147,9 +107,6 @@ test.describe('Interactive Mode - Review Screen', () => {
   })
 
   test('shows rating submitted message after high rating', async ({ page }) => {
-    // Mock the review API to prevent saving test data to the real site
-    await mockReviewAPI(page)
-
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
@@ -185,9 +142,6 @@ test.describe('Interactive Mode - Review Screen', () => {
   })
 
   test('shows low rating prompt after low rating', async ({ page }) => {
-    // Mock the review API to prevent saving test data to the real site
-    await mockReviewAPI(page)
-
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
@@ -228,9 +182,6 @@ test.describe('Interactive Mode - Review Screen', () => {
   })
 
   test('displays review form with required fields', async ({ page }) => {
-    // Mock the review API to prevent saving test data to the real site
-    await mockReviewAPI(page)
-
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
@@ -283,9 +234,6 @@ test.describe('Interactive Mode - Review Screen', () => {
   })
 
   test('can fill out review form', async ({ page }) => {
-    // Mock the review API to prevent saving test data to the real site
-    await mockReviewAPI(page)
-
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
@@ -347,9 +295,6 @@ test.describe('Interactive Mode - Review Screen', () => {
   })
 
   test('submit button is enabled when form is valid', async ({ page }) => {
-    // Mock the review API to prevent saving test data to the real site
-    await mockReviewAPI(page)
-
     await page.goto(`/creations/${creationKey}/interactive`)
 
     await page.waitForLoadState('networkidle')
