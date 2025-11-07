@@ -5,28 +5,17 @@ import mockRecipeData from '../fixtures/mock-recipe.json' with { type: 'json' }
  * Mock WordPress API endpoints for testing
  *
  * This intercepts requests to /api/v2/fetch-creation (our proxy endpoint)
- * and wp-json/mv-create/v1 endpoints, returning fixture data instead of
- * making real API calls to WordPress sites.
+ * and returns the transformed HowTo data (including step array).
+ *
+ * NOTE: We mock /api/v2/fetch-creation instead of the WordPress API directly
+ * because Playwright's browser-context mocking doesn't intercept server-side
+ * HTTP requests made by our Nuxt server.
  */
 export async function mockWordPressAPI(page: Page) {
   // Mock the app's fetch-creation API endpoint (used by widgets)
   await page.route('**/api/v2/fetch-creation', async (route) => {
-    // Return mock recipe data for ANY creation request
-    // This ensures NO real WordPress API calls are made during tests
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      },
-      body: JSON.stringify(mockRecipeData)
-    })
-  })
-
-  // Also mock direct WordPress API calls (fallback)
-  await page.route('**/wp-json/mv-create/v1/creations/**', async (route) => {
+    // Return transformed mock recipe data (with step array)
+    // This simulates what the real endpoint returns after transformation
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
