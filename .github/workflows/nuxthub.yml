@@ -64,6 +64,10 @@ jobs:
             packages/shared/dist
           key: ${{ runner.os }}-build-${{ github.sha }}
 
+      - name: Prepare Nuxt for testing
+        run: npx nuxi prepare
+        working-directory: packages/app
+
       - name: Run tests
         run: npm run test
 
