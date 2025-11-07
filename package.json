@@ -20,6 +20,7 @@
     "test:widgets": "npm run test --workspace=@create-studio/widgets",
     "test:app": "npm run test --workspace=@create-studio/app",
     "test:docs": "npm run test --workspace=@create-studio/docs",
+    "test:e2e": "npm run test:e2e --workspace=@create-studio/app",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
