@@ -286,22 +286,69 @@ await carouselElement.evaluate((el) => {
 ```
 
 ### API Mocking Pattern
-Review tests intercept API calls to prevent production data pollution:
+
+#### Why We Mock `/api/v2/fetch-creation` Instead of WordPress API
+
+All interactive mode tests use API mocking to prevent external dependencies. **Importantly, we mock the internal `/api/v2/fetch-creation` endpoint, NOT the external WordPress API directly.**
+
+**Why this approach is necessary:**
+
+1. **Browser-Context Limitation**: Playwright's `page.route()` only intercepts HTTP requests made from the browser context
+2. **Server-Side Fetching**: The `/api/v2/fetch-creation` endpoint runs on the Nuxt server (Node.js) and makes its own HTTP requests to WordPress
+3. **Server Requests Bypass Mocks**: Server-side HTTP calls are NOT intercepted by browser-context mocking
+4. **Result**: We must mock the internal endpoint that the browser actually calls
+
+**Mock Data Structure:**
+
+Since we're mocking `/api/v2/fetch-creation` (which returns transformed data), our mock must include:
+- The complete HowTo schema format
+- The `step` array with HowToStep objects (generated from HTML instructions)
+- All transformed fields that the real endpoint would return
+
+The real WordPress API only returns HTML `instructions`, but the `/api/v2/fetch-creation` endpoint transforms this into structured `step` arrays using `transformCreationToHowTo()`.
+
+**Implementation:**
+
 ```typescript
-const mockReviewAPI = async (page: any) => {
-  await page.route('**/wp-json/mv-create/v1/reviews**', async (route: any) => {
+// tests/e2e/helpers/api-mocks.ts
+export async function mockWordPressAPI(page: Page) {
+  // Mock the internal endpoint (what browser calls)
+  await page.route('**/api/v2/fetch-creation', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockRecipeData) // Includes step array
+    })
+  })
+
+  // Also mock review submissions
+  await page.route('**/wp-json/mv-create/v1/reviews**', async (route) => {
     if (route.request().method() === 'POST') {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({ id: 'mock-id', ...data })
       })
-    } else {
-      await route.continue()
     }
   })
 }
 ```
+
+**Test Usage:**
+
+```typescript
+test.describe('Interactive Mode Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockWordPressAPI(page) // Apply mocking before each test
+  })
+
+  test('example test', async ({ page }) => {
+    // Test runs with mocked data
+  })
+})
+```
+
+See [tests/e2e/helpers/api-mocks.ts](helpers/api-mocks.ts) and [tests/e2e/fixtures/mock-recipe.json](fixtures/mock-recipe.json) for the complete implementation.
 
 ## Future Improvements
 

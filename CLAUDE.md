@@ -197,20 +197,70 @@ describe('MyComponent', () => {
 
 **E2E Tests with Playwright**:
 ```typescript
-import { describe, test, expect } from 'vitest'
-import { createPage, setup, url } from '@nuxt/test-utils/e2e'
+import { test, expect } from '@playwright/test'
+import { mockWordPressAPI } from './helpers/api-mocks'
 
-describe('App E2E', async () => {
-  await setup()
+test.describe('Feature Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    // Apply API mocking before each test
+    await mockWordPressAPI(page)
+  })
 
-  test('loads home page', async () => {
-    const page = await createPage(url('/'))
+  test('loads page correctly', async ({ page }) => {
+    await page.goto('/some-page')
+    await page.waitForLoadState('networkidle')
+
     const heading = page.locator('h1')
-    const headingText = await heading.textContent()
-    expect(headingText).toBe('Welcome')
+    await expect(heading).toBeVisible()
   })
 })
 ```
+
+**Writing E2E Tests - Critical Guidelines**:
+
+1. **Always Mock External APIs**: Never use real external data in e2e tests. Use the `mockWordPressAPI()` helper in `test.beforeEach()`:
+   ```typescript
+   test.describe('My Tests', () => {
+     test.beforeEach(async ({ page }) => {
+       await mockWordPressAPI(page)  // Mocks all WordPress API calls
+     })
+   })
+   ```
+
+2. **Understanding API Mocking Architecture**:
+   - E2E tests mock `/api/v2/fetch-creation` (the internal Nuxt endpoint)
+   - **NOT** the WordPress API directly (`wp-json/mv-create/v1/creations/*`)
+   - This is because Playwright's `page.route()` only intercepts browser requests, not server-side HTTP calls
+   - The Nuxt server endpoint makes its own HTTP requests that bypass browser mocking
+   - See `tests/e2e/README.md` for detailed explanation
+
+3. **Mock Data Structure**:
+   - Mock data must include the **transformed** HowTo format with `step` array
+   - WordPress API returns HTML in `instructions` field
+   - `/api/v2/fetch-creation` transforms this into structured `step` objects
+   - See `tests/e2e/fixtures/mock-recipe.json` for example structure
+
+4. **Adding New Mocks**:
+   - Edit `tests/e2e/helpers/api-mocks.ts` to add new route interceptions
+   - Create fixture files in `tests/e2e/fixtures/` for mock data
+   - Import fixtures using: `import data from './fixtures/file.json' with { type: 'json' }`
+
+5. **Using Data-Role Attributes**:
+   - Add `data-role` attributes to components for reliable test selectors
+   - Example: `<button data-role="submit">Submit</button>`
+   - Locate in tests: `page.locator('button[data-role="submit"]')`
+
+6. **Test Organization**:
+   - Group related tests in `test.describe()` blocks
+   - Use `test.beforeEach()` for setup that applies to all tests
+   - Use graceful fallbacks for conditional elements:
+     ```typescript
+     if (await element.count() > 0) {
+       await expect(element.first()).toBeVisible()
+     }
+     ```
+
+See `tests/e2e/README.md` for comprehensive e2e testing documentation and patterns.
 
 #### Test Utilities
 - `mountSuspended()` - Mount components in Nuxt environment

@@ -1,4 +1,5 @@
 {
+  "_comment": "Mock Recipe Data for E2E Testing - This represents TRANSFORMED data returned by /api/v2/fetch-creation (NOT raw WordPress API response). The WordPress API only returns HTML in the 'instructions' field, but /api/v2/fetch-creation transforms it into a structured 'step' array of HowToStep objects. E2E tests mock /api/v2/fetch-creation (not WordPress API) because Playwright's browser-context mocking cannot intercept server-side HTTP requests. See tests/e2e/README.md for detailed explanation of this mocking strategy.",
   "id": 123,
   "created": "2024-01-15 12:00:00",
   "modified": "2024-01-15 12:00:00",
