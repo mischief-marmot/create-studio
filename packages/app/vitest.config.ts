@@ -15,22 +15,6 @@ export default defineVitestConfig({
       NUXT_PUBLIC_SITE_URL: "http://localhost:3001",
       NUXT_SERVICES_API_JWT_SECRET: "test-secret-key-for-unit-tests-only-not-for-production",
     },
-    // Increase timeouts for e2e tests
-    hookTimeout: 300000, // 5 minutes
-    testTimeout: 60000, // 1 minute per test
-    // E2E test browser configuration
-    browser: {
-      provider: "playwright",
-      enabled: false, // Disabled globally, enabled per test file
-      instances: [
-        {
-          browser: "chromium",
-        },
-      ],
-      fileParallelism: 1,
-      launch: {
-        baseURL: "http://localhost:3001", // Base URL for Playwright
-      },
-    },
+    testTimeout: 30000, // 1 minute per test
   },
 });
