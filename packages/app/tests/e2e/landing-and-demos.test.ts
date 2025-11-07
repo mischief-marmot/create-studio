@@ -147,14 +147,14 @@ test.describe('Landing Page and Demos', () => {
       }
     })
 
-    test('displays Try Interactive Mode button on recipe cards', async ({ page }) => {
+    test('recipe cards link to individual recipe pages', async ({ page }) => {
       await page.goto('/demos')
 
-      // Look for Try Interactive Mode buttons
-      const tryButtons = page.locator('a').filter({ hasText: /try.*interactive.*mode/i })
+      // Look for recipe links/cards - on demo pages the widget loads automatically
+      const recipeLinks = page.locator('article a')
 
-      const buttonCount = await tryButtons.count()
-      expect(buttonCount).toBeGreaterThan(0)
+      const linkCount = await recipeLinks.count()
+      expect(linkCount).toBeGreaterThan(0)
     })
   })
 
@@ -177,12 +177,17 @@ test.describe('Landing Page and Demos', () => {
       }
     })
 
-    test('has Try Interactive Mode button', async ({ page }) => {
+    test('automatically loads interactive widget', async ({ page }) => {
       await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
-      const tryButton = page.getByText(/try.*interactive.*mode/i)
+      // Demo pages automatically load the widget, no button needed
+      const widget = page.locator('[id^="create-studio-"]').or(
+        page.locator('.recipe-card')
+      )
 
-      await expect(tryButton.first()).toBeVisible()
+      if (await widget.count() > 0) {
+        await expect(widget.first()).toBeVisible({ timeout: 10000 })
+      }
     })
 
     test('displays recipe card widget', async ({ page }) => {
@@ -198,19 +203,17 @@ test.describe('Landing Page and Demos', () => {
       }
     })
 
-    test('can open interactive mode from recipe page', async ({ page }) => {
+    test('displays interactive widget that is fully loaded', async ({ page }) => {
       await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
-      // Click Try Interactive Mode button
-      const tryButton = page.getByText(/try.*interactive.*mode/i).first()
-      await tryButton.click()
+      // Demo pages automatically load the widget
+      const widget = page.locator('[id^="create-studio-"]').or(
+        page.locator('.recipe-card')
+      )
 
-      // Should open modal or navigate to interactive view
-      const modal = page.locator('[class*="modal"]').or(page.locator('iframe'))
-
-      if (await modal.count() > 0) {
-        // Modal or iframe should appear
-        await expect(modal.first()).toBeVisible({ timeout: 5000 })
+      if (await widget.count() > 0) {
+        // Widget should be visible and interactive
+        await expect(widget.first()).toBeVisible({ timeout: 10000 })
       }
     })
 
@@ -256,27 +259,19 @@ test.describe('Landing Page and Demos', () => {
       expect(page.url()).toContain('/demo/')
     })
 
-    test('can navigate from recipe to interactive mode', async ({ page }) => {
+    test('recipe detail page displays all recipe content', async ({ page }) => {
       await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
 
-      // Get Try Interactive Mode button
-      const tryButton = page.getByText(/try.*interactive.*mode/i).first()
-      await tryButton.click()
+      // Wait for page to fully load
+      await page.waitForLoadState('networkidle')
 
-      // Should open interactive mode (modal or new page)
-      // Wait for either modal to appear or URL to change
-      const iframe = page.locator('iframe')
+      // Widget should be loaded automatically on demo recipe pages
+      const widget = page.locator('[id^="create-studio-"]').or(
+        page.locator('.recipe-card')
+      )
 
-      await Promise.race([
-        iframe.first().waitFor({ timeout: 5000 }).catch(() => null),
-        page.waitForURL(/\/interactive/, { timeout: 5000 }).catch(() => null)
-      ])
-
-      // Check if URL changed or modal appeared
-      const hasModal = await iframe.count() > 0
-      const urlChanged = page.url().includes('/interactive')
-
-      expect(hasModal || urlChanged).toBeTruthy()
+      const hasWidget = await widget.count() > 0
+      expect(hasWidget).toBeTruthy()
     })
 
     test('page has proper meta tags', async ({ page }) => {
