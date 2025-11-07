@@ -12,20 +12,22 @@ Create Studio is an application that allows publishers and bloggers to create st
 
 ```bash
 # Development
-npm run dev          # Start development server (http://localhost:3000)
+npm run dev          # Start development server (http://localhost:3001)
 npm run dev:setup    # Copy .env.example to .env (run once after cloning)
 
 # Build & Deploy
 npm run build        # Build for production
 npm run generate     # Generate static site
 npm run preview      # Preview production build
+npm run build:shared # Build shared package (required before testing)
 
 # Testing
-npm test             # Run all tests with Vitest
+npm run build:shared # MUST run before testing (see Testing section)
+npm test             # Run unit and component tests
+npm run test:e2e     # Run E2E tests with Playwright
 npm run test:ui      # Run tests with Vitest UI
-npm run test:e2e     # Run E2E tests with Vitest
-npm run test:unit    # Run Unit tests with Vitest
-npm run test:components     # Run Component tests with Vitest
+npm run test:unit    # Run Unit tests only
+npm run test:components     # Run Component tests only
 
 # Run specific test files
 npm test tests/unit/nutrition-api.test.ts
@@ -123,13 +125,47 @@ export default defineEventHandler(() => {
 
 ### Testing
 
-The project uses a comprehensive testing strategy:
+The project uses a comprehensive testing strategy with Vitest and Playwright.
+
+#### Critical Build Requirement
+
+**⚠️ IMPORTANT:** Before running any tests, the shared package MUST be built first:
+
+```bash
+npm run build:shared
+npm test
+```
+
+The app package imports from `@create-studio/shared`, so tests will fail with module resolution errors if the shared package hasn't been compiled. This requirement is enforced in CI/CD (see workflow below).
 
 #### Test Organization
 - `tests/unit/` - Unit tests for utilities and functions
 - `tests/components/` - Component tests using Vue Test Utils
-- `tests/e2e/` - End-to-end tests using Playwright or Nuxt test utils
+- `tests/e2e/` - End-to-end tests using Playwright
 - `pages/*.test.ts` - Page-specific tests can live alongside pages
+
+#### Test Commands
+```bash
+# Must build shared first
+npm run build:shared
+
+# Run unit and component tests (excludes e2e)
+npm test
+
+# Run e2e tests separately (requires playwright browsers)
+npx playwright install  # First time only
+npm run test:e2e
+
+# Run specific test type
+npm run test:unit       # Unit tests only
+npm run test:components # Component tests only
+
+# Run specific test file
+npm test tests/unit/nutrition-api.test.ts
+
+# Watch mode
+npm run test:watch
+```
 
 #### Writing Tests
 
@@ -159,14 +195,14 @@ describe('MyComponent', () => {
 })
 ```
 
-**E2E Tests with Nuxt Test Utils**:
+**E2E Tests with Playwright**:
 ```typescript
 import { describe, test, expect } from 'vitest'
 import { createPage, setup, url } from '@nuxt/test-utils/e2e'
 
 describe('App E2E', async () => {
   await setup()
-  
+
   test('loads home page', async () => {
     const page = await createPage(url('/'))
     const heading = page.locator('h1')
@@ -181,12 +217,18 @@ describe('App E2E', async () => {
 - `mockNuxtImport()` - Mock auto-imported composables
 - `mockComponent()` - Mock child components
 - `$fetch` - Test API endpoints
-- `createPage()` - Create browser page for E2E testing
+- `createPage()` - Create Playwright page for E2E testing
 
-#### E2E Testing Setup
-```
-1. **Nuxt Test Utils** (`@nuxt/test-utils/playwright`) - Integrated with Nuxt, auto-handles build/server
-```
+#### CI/CD Testing Pipeline
+
+The GitHub Actions workflow (`nuxthub.yml`) enforces proper test execution:
+
+1. **build** job - Builds `@create-studio/shared`
+2. **test** job - Runs unit/component tests (depends on build)
+3. **e2e** job - Runs Playwright e2e tests (depends on build)
+4. **deploy** job - Only runs if test AND e2e jobs pass
+
+All test jobs build the shared package independently to ensure tests can run with proper dependencies.
 
 ## Feature Development Guidelines
 
