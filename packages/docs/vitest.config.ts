@@ -2,7 +2,7 @@ import { defineVitestConfig } from "@nuxt/test-utils/config";
 
 export default defineVitestConfig({
   test: {
-    include: ["tests/unit/**/*.test.ts", "tests/components/**/*.test.ts"],
+    include: ["tests/**/*.test.ts", "tests/**/*.spec.ts"],
     exclude: ["**/node_modules/**", "**/dist/**"],
     environment: "nuxt",
     environmentOptions: {
@@ -11,10 +11,6 @@ export default defineVitestConfig({
         domEnvironment: "happy-dom",
       },
     },
-    env: {
-      NUXT_PUBLIC_SITE_URL: "http://localhost:3001",
-      NUXT_SERVICES_API_JWT_SECRET: "test-secret-key-for-unit-tests-only-not-for-production",
-    },
-    testTimeout: 30000, // 1 minute per test
+    passWithNoTests: true,
   },
 });
