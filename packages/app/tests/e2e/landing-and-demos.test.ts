@@ -171,12 +171,11 @@ test.describe('Landing Page and Demos', () => {
       await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
       await page.waitForLoadState('networkidle')
 
-      // Look for recipe title
-      const title = page.getByText(/raspberry.*margarita/i)
+      // Look for recipe title in the page
+      const title = page.locator('h1').filter({ hasText: /raspberry.*margarita/i })
 
-      if (await title.count() > 0) {
-        await expect(title.first()).toBeVisible({ timeout: 10000 })
-      }
+      // Verify the title exists in the DOM
+      expect(await title.count()).toBeGreaterThan(0)
     })
 
     test('automatically loads interactive widget', async ({ page }) => {
