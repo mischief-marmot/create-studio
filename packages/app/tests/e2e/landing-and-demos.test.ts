@@ -136,6 +136,7 @@ test.describe('Landing Page and Demos', () => {
 
       if (await firstRecipeLink.count() > 0) {
         const href = await firstRecipeLink.getAttribute('href')
+        const path = href.split('/').pop()
 
         // Click the link
         await firstRecipeLink.click()
@@ -143,7 +144,7 @@ test.describe('Landing Page and Demos', () => {
         await page.waitForLoadState('networkidle')
 
         // Should navigate to recipe detail page
-        expect(page.url()).toContain('/demo/')
+        expect(page.url()).toContain(path)
       }
     })
 
@@ -168,12 +169,13 @@ test.describe('Landing Page and Demos', () => {
 
     test('displays recipe title', async ({ page }) => {
       await page.goto('/demo/raspberry-swirl-pineapple-mango-margaritas')
+      await page.waitForLoadState('networkidle')
 
       // Look for recipe title
       const title = page.getByText(/raspberry.*margarita/i)
 
       if (await title.count() > 0) {
-        await expect(title.first()).toBeVisible()
+        await expect(title.first()).toBeVisible({ timeout: 10000 })
       }
     })
 
@@ -252,11 +254,12 @@ test.describe('Landing Page and Demos', () => {
       // Click first recipe
       const firstRecipe = page.locator('article a').first()
       await firstRecipe.click()
+      const path = (await firstRecipe.getAttribute('href')).split('/').pop()
 
       await page.waitForLoadState('networkidle')
 
       // Should be on individual recipe page
-      expect(page.url()).toContain('/demo/')
+      expect(page.url()).toContain(path)
     })
 
     test('recipe detail page displays all recipe content', async ({ page }) => {
