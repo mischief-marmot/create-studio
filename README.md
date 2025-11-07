@@ -77,19 +77,48 @@ npm run preview
 
 ## Testing
 
-Run all tests:
+### Running Tests Locally
+
+Run all tests (unit and component tests only):
 
 ```bash
 npm test
 ```
 
-Run tests for specific package:
+This command runs unit and component tests across all packages. It excludes e2e tests, which are run separately.
+
+Run e2e tests:
 
 ```bash
-npm run test:shared
-npm run test:widgets
-npm run test:app
+npm run test:e2e
 ```
+
+This runs Playwright-based e2e tests for the app package. Ensure Playwright browsers are installed first:
+
+```bash
+npx playwright install
+```
+
+### Build Requirements for Testing
+
+**Important:** Before running tests, the shared package must be built first:
+
+```bash
+npm run build:shared
+npm test
+```
+
+The app package depends on `@create-studio/shared` being built, so tests will fail with module resolution errors if the shared package hasn't been compiled.
+
+### CI/CD Pipeline
+
+The GitHub Actions workflow enforces this build-before-test requirement:
+
+1. **build** - Builds `@create-studio/shared`
+2. **test** and **e2e** (run in parallel) - Both depend on the build step completing
+3. **deploy** - Only runs after both test and e2e jobs pass
+
+This ensures that deployments only proceed when all tests pass with properly built dependencies.
 
 ## Widget Embedding
 
