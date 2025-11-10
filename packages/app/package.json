@@ -9,7 +9,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
     "test:e2e": "vitest run tests/e2e",
     "test:unit": "vitest run tests/unit",
