@@ -25,6 +25,12 @@ export async function sendMail(envelope: EmailEnvelope): Promise<void> {
   const config = useRuntimeConfig();
   const logger = useLogger("Mailer", config.debug);
 
+  // Mock email sending in test/development mode to avoid using Postmark credits
+  if (process.env.NODE_ENV === 'test') {
+    logger.info("🚀 [MOCK EMAIL] Would send email to", { to: envelope.to, subject: envelope.subject });
+    return;
+  }
+
   if (!config.postmarkKey) {
     logger.error("Postmark API key not configured");
     throw new Error("Postmark API key not configured");

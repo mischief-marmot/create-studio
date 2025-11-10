@@ -12,7 +12,7 @@
     "dev": "node scripts/watch.mjs",
     "build": "vite build && node scripts/upload.mjs",
     "clean": "rm -rf dist",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "typecheck": "vue-tsc --noEmit"
   },

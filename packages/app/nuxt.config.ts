@@ -22,6 +22,11 @@ export default defineNuxtConfig({
     rollupConfig: {
       plugins: [vue()]
     },
+    cors: {
+      origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:8074", "http://localhost:8081", "http://localhost:8083"],
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      credentials: true,
+    },
     cloudflare: {
       pages: {
         routes: {
@@ -97,7 +102,17 @@ export default defineNuxtConfig({
       },
     ],
     server: {
-      allowedHosts: ["host.docker.internal", "localhost", "7823d21b31b9.ngrok-free.app"],
+      allowedHosts: ["host.docker.internal", "localhost", "127.0.0.1", "7823d21b31b9.ngrok-free.app"],
+      middlewareMode: true,
+      hmr: {
+        host: "localhost",
+        port: 3001,
+      },
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
     },
   },
   css: ["./app/assets/main.css"],
@@ -121,7 +136,7 @@ export default defineNuxtConfig({
   hub: {
     blob: true,
     kv: true,
-    database: true,
+    database: process.env.NODE_ENV === 'test' ? 'TEST_DB' : true,
     cache: true,
     bindings: {
       observability: {
