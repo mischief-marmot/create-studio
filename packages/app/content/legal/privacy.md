@@ -7,7 +7,7 @@ type: privacy
 
 ## 1. INTRODUCTION
 
-This Privacy Policy describes how Mischief Marmot LLC ("Company," "we," "us," or "our") collects, uses, and shares information when you use Create, our WordPress plugin and related services (collectively, the "Service"), including the WordPress plugin available at https://wordpress.org/plugins/mediavine-create and Create Studio available at https://create.studio.
+This Privacy Policy describes how Mischief Marmot LLC ("Company," "we," "us," or "our") collects, uses, and shares information when you use Create, our WordPress plugin and related services (collectively, the "Service"), including the WordPress plugin available at [WordPress repository listing](https://wordpress.org/plugins/mediavine-create) and Create Studio available at https://create.studio.
 
 By using our Service, you agree to the collection and use of information in accordance with this Privacy Policy. If you do not agree with this policy, please do not use our Service.
 
