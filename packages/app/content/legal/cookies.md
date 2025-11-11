@@ -38,8 +38,6 @@ With your consent, we use analytics cookies to understand how visitors interact 
 | *ga** | Google Analytics | Maintains session state | 2 years | Third-party |
 | _gid | Google Analytics | Distinguishes unique users | 24 hours | Third-party |
 
-**Google Analytics ID:** G-Q7YTD7XTY0
-
 ## 4. COOKIES WE DO NOT USE
 
 We want to be transparent about what we DON'T collect:
