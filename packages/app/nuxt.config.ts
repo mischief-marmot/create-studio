@@ -145,11 +145,20 @@ export default defineNuxtConfig({
   },
 
   scripts: {
-    registry: process.env.NODE_ENV === 'production' ?{
+    registry: {
       googleAnalytics:  {
-        id: "G-Q7YTD7XTY0"
+        id: '', // NUXT_PUBLIC_SCRIPTS_REGISTRY_GOOGLE_ANALYTICS_ID
+        consent: 'analytics', // Require analytics consent before loading
+        anonymizeIp: true, // GDPR-friendly
       },
-    } : {},
+    },
+  },
+  $development: {
+    scripts: {
+      registry: {
+        googleAnalytics: "mock",
+      },
+    },
   },
 
   runtimeConfig: {
