@@ -66,7 +66,7 @@
 					</nav>
 					<nav></nav>
 				</footer>
-				<footer class="footer bg-base-200 text-base-content border-base-300 px-10 py-4 border-t">
+				<footer class="footer bg-base-200 text-base-content border-base-300 sm:flex-row flex flex-col items-center justify-between gap-4 px-10 py-4 border-t">
 					<aside class="items-center grid-flow-col">
 						<LogoSolo class="size-16" />
 						<p>
@@ -77,6 +77,17 @@
 							Established 2025
 						</p>
 					</aside>
+
+					<!-- Legal Links -->
+					<nav class="flex flex-wrap justify-center gap-4 text-sm">
+						<NuxtLink to="/legal/privacy" class="link link-hover">Privacy Policy</NuxtLink>
+						<NuxtLink to="/legal/cookies" class="link link-hover">Cookies</NuxtLink>
+						<NuxtLink to="/legal/terms" class="link link-hover">Terms</NuxtLink>
+						<button @click="openCookieSettings" class="link link-hover cursor-pointer">
+							Cookie Settings
+						</button>
+					</nav>
+
 					<nav class="md:place-self-center md:justify-self-end">
 						<div class="grid grid-flow-col gap-4">
 							<a class="twitter hidden">
@@ -120,6 +131,7 @@
 import { ArrowUpIcon } from '@heroicons/vue/20/solid'
 import Solo from '../components/Logo/Solo.vue'
 import Full from '../components/Logo/Full.vue'
+import { useConsentStore } from '~/stores/consent'
 
 interface NavLinksMap {
   [href: string]: string
@@ -131,6 +143,11 @@ const navLinks = computed(() => attrs.navLinks as NavLinksMap | undefined)
 const scrollPosition = ref(0)
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const openCookieSettings = () => {
+  const consentStore = useConsentStore()
+  consentStore.openCustomizeModal()
 }
 
 onMounted(() => {

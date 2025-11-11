@@ -19,5 +19,15 @@ export default defineContentConfig({
         }).optional(),
       }),
     }),
+    legal: defineCollection({
+      type: 'page',
+      source: 'legal/**',
+      schema: z.object({
+        title: z.string(),
+        description: z.string(),
+        lastUpdated: z.string(),
+        type: z.enum(['privacy', 'cookies', 'terms']),
+      }),
+    }),
   },
 })
