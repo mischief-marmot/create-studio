@@ -7,7 +7,7 @@ type: terms
 
 ## ACCEPTANCE OF TERMS
 
-These Terms of Service ("Terms," "Terms of Service," or "Agreement") govern your use of Create, a WordPress plugin and related services (collectively, the "Service") operated by Mischief Marmot LLC, a South Carolina limited liability company ("Company," "we," "us," or "our"). Create includes the WordPress plugin ("Plugin") available at https://wordpress.org/plugins/mediavine-create and Create Studio, our cloud-based service platform available at https://create.studio ("Create Studio").
+These Terms of Service ("Terms," "Terms of Service," or "Agreement") govern your use of Create, a WordPress plugin and related services (collectively, the "Service") operated by Mischief Marmot LLC, a South Carolina limited liability company ("Company," "we," "us," or "our"). Create includes the WordPress plugin ("Plugin") available on the [WordPress repository listing](https://wordpress.org/plugins/mediavine-create) and Create Studio, our cloud-based service platform available at https://create.studio ("Create Studio").
 
 By accessing or using our Service, you agree to be bound by these Terms. If you disagree with any part of these Terms, then you may not access or use the Service.
 
