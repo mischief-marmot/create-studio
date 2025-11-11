@@ -11,6 +11,10 @@
     scroll-padding-top: 5rem;
   }
 
+  a {
+    color: var(--color-secondary);
+  }
+
   /* Remove backtick pseudo-elements from inline code */
   .prose :where(code):not(:where([class~="not-prose"] *))::before,
   .prose :where(code):not(:where([class~="not-prose"] *))::after {
