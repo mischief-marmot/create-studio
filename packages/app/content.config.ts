@@ -29,5 +29,15 @@ export default defineContentConfig({
         type: z.enum(['privacy', 'cookies', 'terms']),
       }),
     }),
+    features: defineCollection({
+      type: 'page',
+      source: 'features/**',
+      schema: z.object({
+        title: z.string(),
+        description: z.string(),
+        icon: z.string().optional(),
+        image: z.string().optional(),
+      }),
+    }),
   },
 })
