@@ -57,8 +57,12 @@
 					</nav>
 					<nav>
 						<h6 class="footer-title">Features</h6>
-						<NuxtLink class="link link-hover" href="/#features">Overview</NuxtLink>
-						<NuxtLink class="link link-hover" href="/#interactive-mode">Interactive Mode</NuxtLink>
+						<!-- <NuxtLink class="link link-hover" href="/#features">Overview</NuxtLink> -->
+						<!-- <NuxtLink class="link link-hover" href="/features/interactive-mode">Interactive Mode</NuxtLink> -->
+						<NuxtLink class="link link-hover" href="/features/recipe-cards">Recipe Card Schema</NuxtLink>
+						<NuxtLink class="link link-hover" href="/features/how-to-cards">HowTo Card Schema</NuxtLink>
+						<NuxtLink class="link link-hover" href="/features/lists-and-roundups">Lists & Roundups Schema</NuxtLink>
+						<NuxtLink class="link link-hover" href="/features/nutrition-calculation">Automatic Nutrition Calculation</NuxtLink>
 					</nav>
 					<nav>
 						<h6 class="footer-title">Company</h6>
