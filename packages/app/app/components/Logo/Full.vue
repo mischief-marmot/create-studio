@@ -50,7 +50,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  width: 'auto',
+  width: '150',
   height: '40',
   className: ''
 })
