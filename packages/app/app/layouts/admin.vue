@@ -1,19 +1,19 @@
 <template>
 
-  <div class="min-h-screen bg-base-100">
+  <div class="bg-base-100 min-h-screen">
     <!-- Sidebar -->
-    <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-      <aside class="flex grow flex-col gap-y-5 overflow-y-auto bg-base-200 border-r border-base-300">
+    <div class="lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col hidden">
+      <aside class="grow gap-y-5 bg-base-200 border-base-300 flex flex-col overflow-y-auto border-r">
         <!-- Logo -->
-        <div class="flex h-16 shrink-0 items-center px-6 border-b border-base-300">
+        <div class="shrink-0 border-base-300 flex items-center h-16 px-6 border-b">
           <NuxtLink to="/" class="flex items-center gap-2">
-            <h1 class="text-2xl font-bold text-primary">Create Studio</h1>
+            <LogoFull />
           </NuxtLink>
         </div>
 
         <!-- Sidebar Content -->
-        <nav class="flex flex-1 flex-col px-6">
-          <ul role="list" class="flex flex-1 flex-col gap-y-7">
+        <nav class="flex flex-col flex-1 px-6">
+          <ul role="list" class="gap-y-7 flex flex-col flex-1">
             <li>
               <!-- Sites Dropdown -->
               <div class="form-control">
@@ -31,13 +31,13 @@
 
             <li>
               <!-- Navigation Menu -->
-              <div class="text-xs font-semibold text-base-content/70 mb-2">Navigation</div>
+              <div class="text-base-content/70 mb-2 text-xs font-semibold">Navigation</div>
               <ul role="list" class="space-y-1">
                 <li v-for="item in navigation" :key="item.name">
                   <NuxtLink :to="item.href"
-                    class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold hover:bg-base-200"
+                    class="group gap-x-3 hover:bg-base-200 flex p-2 text-sm font-semibold rounded-md"
                     active-class="bg-base-200 text-primary">
-                    <component :is="item.icon" class="h-5 w-5 shrink-0" />
+                    <component :is="item.icon" class="shrink-0 w-5 h-5" />
                     {{ item.name }}
                   </NuxtLink>
                 </li>
@@ -47,9 +47,9 @@
             <!-- User Profile Section (bottom) -->
             <li class="mt-auto -mx-6">
               <NuxtLink to="/admin/account"
-                class="flex items-center gap-x-4 px-6 py-3 text-sm font-semibold hover:bg-base-200">
+                class="gap-x-4 hover:bg-base-200 flex items-center px-6 py-3 text-sm font-semibold">
                 <div class="avatar">
-                  <div class="w-8 rounded-full bg-base-300">
+                  <div class="bg-base-300 w-8 rounded-full">
                     <img v-if="avatarUrl" :src="avatarUrl" :alt="`${user?.firstname || 'User'} avatar`" />
                     <div v-else class="flex items-center justify-center h-full text-xs font-semibold">
                       {{ initials }}
@@ -71,18 +71,18 @@
     <div class="lg:pl-72">
       <!-- Sticky search header -->
       <div
-        class=" lg:hidden sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-6 border-b border-base-300 bg-base-100 px-4 shadow-sm sm:px-6 lg:px-8">
+        class=" lg:hidden shrink-0 gap-x-6 border-base-300 bg-base-100 sm:px-6 lg:px-8 sticky top-0 z-40 flex items-center h-16 px-4 border-b shadow-sm">
         <button type="button" class="btn btn-square btn-ghost lg:hidden" @click="sidebarOpen = true">
           <span class="sr-only">Open sidebar</span>
-          <Bars3Icon class="h-6 w-6" />
+          <Bars3Icon class="w-6 h-6" />
         </button>
 
-        <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6  lg:hidden">
+        <div class="gap-x-4 lg:gap-x-6 lg:hidden flex self-stretch flex-1">
           <!-- User avatar dropdown (mobile) -->
           <div class="flex items-center">
             <div class="dropdown dropdown-end">
               <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-                <div class="w-10 rounded-full bg-base-300">
+                <div class="bg-base-300 w-10 rounded-full">
                   <img v-if="avatarUrl" :src="avatarUrl" :alt="`${user?.firstname || 'User'} avatar`" />
                   <div v-else class="flex items-center justify-center h-full text-sm font-semibold">
                     {{ initials }}
@@ -108,13 +108,13 @@
 
         <!-- Sticky search header -->
         <div
-          class="hidden sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-6 border-b border-base-300 bg-base-100 px-4 shadow-sm sm:px-6 lg:px-8">
-          <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+          class="shrink-0 gap-x-6 border-base-300 bg-base-100 sm:px-6 lg:px-8 sticky top-0 z-40 flex items-center hidden h-16 px-4 border-b shadow-sm">
+          <div class="gap-x-4 lg:gap-x-6 flex self-stretch flex-1">
             <form class="grid flex-1 grid-cols-1" @submit.prevent>
-              <input name="search" aria-label="Search" class="input input-ghost col-start-1 row-start-1 w-full pl-10"
+              <input name="search" aria-label="Search" class="input input-ghost w-full col-start-1 row-start-1 pl-10"
                 placeholder="Search settings..." />
               <MagnifyingGlassIcon
-                class="pointer-events-none col-start-1 row-start-1 h-5 w-5 self-center ml-3 opacity-50"
+                class="self-center w-5 h-5 col-start-1 row-start-1 ml-3 opacity-50 pointer-events-none"
                 aria-hidden="true" />
             </form>
           </div>
@@ -127,28 +127,28 @@
     </div>
 
     <!-- Mobile sidebar overlay -->
-    <div v-if="sidebarOpen" class="relative z-50 lg:hidden">
-      <div class="fixed inset-0 bg-base-300/80" @click="sidebarOpen = false"></div>
+    <div v-if="sidebarOpen" class="lg:hidden relative z-50">
+      <div class="bg-base-300/80 fixed inset-0" @click="sidebarOpen = false"></div>
 
       <div class="fixed inset-0 flex">
-        <div class="relative mr-16 flex w-full max-w-xs flex-1">
-          <div class="absolute left-full top-0 flex w-16 justify-center pt-5">
+        <div class="relative flex flex-1 w-full max-w-xs mr-16">
+          <div class="left-full absolute top-0 flex justify-center w-16 pt-5">
             <button type="button" class="btn btn-sm btn-circle btn-ghost" @click="sidebarOpen = false">
               <span class="sr-only">Close sidebar</span>
-              <XMarkIcon class="h-6 w-6" />
+              <XMarkIcon class="w-6 h-6" />
             </button>
           </div>
 
           <!-- Mobile sidebar content (same as desktop) -->
-          <aside class="flex grow flex-col gap-y-5 overflow-y-auto bg-base-100 border-r border-base-300">
-            <div class="flex h-16 shrink-0 items-center px-6 border-b border-base-300">
+          <aside class="grow gap-y-5 bg-base-100 border-base-300 flex flex-col overflow-y-auto border-r">
+            <div class="shrink-0 border-base-300 flex items-center h-16 px-6 border-b">
               <NuxtLink to="/" class="flex items-center gap-2">
-                <h1 class="text-2xl font-bold text-primary">Create Studio</h1>
+                <h1 class="text-primary text-2xl font-bold">Create Studio</h1>
               </NuxtLink>
             </div>
 
-            <nav class="flex flex-1 flex-col px-6">
-              <ul role="list" class="flex flex-1 flex-col gap-y-7">
+            <nav class="flex flex-col flex-1 px-6">
+              <ul role="list" class="gap-y-7 flex flex-col flex-1">
                 <li>
                   <div class="form-control">
                     <label class="label">
@@ -165,13 +165,13 @@
                 </li>
 
                 <li>
-                  <div class="text-xs font-semibold text-base-content/70 mb-2">Navigation</div>
+                  <div class="text-base-content/70 mb-2 text-xs font-semibold">Navigation</div>
                   <ul role="list" class="space-y-1">
                     <li v-for="item in navigation" :key="item.name">
                       <NuxtLink :to="item.href"
-                        class="group flex gap-x-3 rounded-md p-2 text-sm font-semibold hover:bg-base-200"
+                        class="group gap-x-3 hover:bg-base-200 flex p-2 text-sm font-semibold rounded-md"
                         active-class="bg-base-200 text-primary" @click="sidebarOpen = false">
-                        <component :is="item.icon" class="h-5 w-5 shrink-0" />
+                        <component :is="item.icon" class="shrink-0 w-5 h-5" />
                         {{ item.name }}
                       </NuxtLink>
                     </li>
@@ -180,10 +180,10 @@
 
                 <li class="mt-auto -mx-6">
                   <NuxtLink to="/admin/account"
-                    class="flex items-center gap-x-4 px-6 py-3 text-sm font-semibold hover:bg-base-200"
+                    class="gap-x-4 hover:bg-base-200 flex items-center px-6 py-3 text-sm font-semibold"
                     @click="sidebarOpen = false">
                     <div class="avatar">
-                      <div class="w-8 rounded-full bg-base-300">
+                      <div class="bg-base-300 w-8 rounded-full">
                         <img v-if="avatarUrl" :src="avatarUrl" :alt="`${user?.firstname || 'User'} avatar`" />
                         <div v-else class="flex items-center justify-center h-full text-xs font-semibold">
                           {{ initials }}

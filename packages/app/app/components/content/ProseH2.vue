@@ -4,7 +4,7 @@
       v-if="props.id && generate"
       :href="`#${props.id}`"
     >
-      <span class=" md:mr-2 inline-block mr-1">#</span><slot />
+      <slot />
     </a>
     <slot v-else />
   </h2>
