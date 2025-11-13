@@ -2,8 +2,8 @@
   <div>
     <!-- Banner -->
     <div v-if="shouldShowBanner" class="fixed bottom-0 left-0 right-0 z-50">
-      <div class="bg-base-200 border-base-300 border-t shadow-2xl">
-        <div class="max-w-7xl sm:px-6 lg:px-8 sm:py-6 px-4 py-4 mx-auto">
+      <div class="bg-base-300 border-base-300 border-t shadow-2xl">
+        <div class="max-w-7xl sm:px-6 lg:px-8 sm:py-6 p-8 mx-auto">
           <div class="sm:flex-row sm:items-center flex flex-col items-start justify-between gap-4">
             <!-- Content -->
             <div class="flex-1">
@@ -23,7 +23,7 @@
               <button
                 type="button"
                 @click="rejectAll"
-                class="btn btn-outline btn-sm sm:btn-md sm:order-1 sm:flex-none flex-1 order-2"
+                class="btn btn-outline btn-md sm:btn-md sm:order-1 order-2"
                 aria-label="Reject all cookies except necessary"
               >
                 Reject
@@ -31,7 +31,7 @@
               <button
                 type="button"
                 @click="showCustomize"
-                class="btn btn-secondary btn-sm sm:btn-md sm:order-2 sm:flex-none flex-1 order-3"
+                class="btn btn-secondary btn-md sm:btn-md sm:order-2 order-3"
                 aria-label="Customize cookie preferences"
               >
                 Customize
@@ -39,7 +39,7 @@
               <button
                 type="button"
                 @click="acceptAll"
-                class="btn btn-primary btn-sm sm:btn-md sm:order-3 sm:flex-none flex-1 order-1"
+                class="btn btn-primary btn-md sm:btn-md order-1"
                 aria-label="Accept all cookies"
               >
                 Accept All

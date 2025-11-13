@@ -7,8 +7,6 @@ image: /img/features/recipe-cards-hero.jpg
 
 ## Create gorgeous Recipe cards in no time
 
-![Recipe Cards Hero](/img/features/recipe-cards-hero.jpg)
-
 Built from the ground up with Schema benefit, performance, and optimal user experience in mind, Create Recipe Cards are ad-ready, easy to use, and optimized for SEO.
 
 ### Start with Create
