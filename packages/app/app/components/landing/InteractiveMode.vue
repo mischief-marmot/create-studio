@@ -37,7 +37,7 @@
                     </div>
 
                     <!-- Iframe loads on button click -->
-                    <iframe v-if="showIframe" :src="demoRecipeUrl" class="md:aspect-video rounded-xl relative z-10 w-full h-full overflow-hidden border-0"
+                    <iframe v-if="showIframe" :src="demoRecipeUrlWithDisableRating" class="md:aspect-video rounded-xl relative z-10 w-full h-full overflow-hidden border-0"
                         frameborder="0"
                         allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         title="Interactive Mode Demo" loading="lazy" />
@@ -104,9 +104,18 @@ interface Props {
     demoRecipeUrl?: string
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
     screenshotAlt: 'App screenshot'
 })
 
 const showIframe = ref(false)
+
+// Add disableRatingSubmission and cache_bust parameters to demo URL
+const demoRecipeUrlWithDisableRating = computed(() => {
+    if (!props.demoRecipeUrl) return ''
+    const url = new URL(props.demoRecipeUrl)
+    url.searchParams.set('disableRatingSubmission', 'true')
+    url.searchParams.set('cache_bust', 'true')
+    return url.toString()
+})
 </script>

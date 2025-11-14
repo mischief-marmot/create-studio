@@ -45,8 +45,13 @@ useHead({
 });
 
 
+const route = useRoute();
+
+// Add version query param for cache busting in development
+const widgetVersion = route.query.cache_bust === 'true' ? `?v=${Date.now()}` : ''
+
 useScript({
-   src: '/embed/main.js',
+   src: `/embed/main.js${widgetVersion}`,
     type: 'module',
     id: 'create-studio-embed',
     crossorigin: 'anonymous',
@@ -54,8 +59,6 @@ useScript({
     defer: false,
     fetchPriority: 'high',
 })
-
-const route = useRoute();
 const creationKey = route.params.creationKey as string;
 
 // Parse creation key to get domain and creation ID
@@ -68,6 +71,7 @@ if (!creationInfo) {
 }
 
 const cacheBust = route.query.cache_bust === 'true';
+const disableRatingSubmission = route.query.disableRatingSubmission === 'true';
 
 onMounted(async () => {
     if (!creationInfo) return;
@@ -104,7 +108,8 @@ onMounted(async () => {
             creationId: creationInfo.creationId,
             domain: creationInfo.domain,
             baseUrl: window.location.origin,
-            hideAttribution: true
+            hideAttribution: true,
+            disableRatingSubmission
         });
         targetElement.style.height = '100%'
     }

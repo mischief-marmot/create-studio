@@ -301,7 +301,7 @@ import { createCreationKey } from '@create-studio/shared';
 
 const config = useRuntimeConfig().public
 // Randomly select a demo recipe on page load
-const demoRecipes = [81, 59]
+const demoRecipes = [44, 59, 55]
 const randomRecipeId = demoRecipes[Math.floor(Math.random() * demoRecipes.length)]
 const creationKey = createCreationKey('thesweetestoccasion.com', randomRecipeId)
 const demoRecipeUrl = `${config.rootUrl}/creations/${creationKey}/interactive`

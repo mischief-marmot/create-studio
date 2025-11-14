@@ -15,6 +15,7 @@ export interface AnalyticsConfig {
   domain: string
   creationId: string
   baseUrl?: string
+  isDemo?: boolean
 }
 
 export interface SessionData {
@@ -28,6 +29,7 @@ export interface SessionData {
   pagesViewed: number
   totalPages: number
   events: AnalyticsEvent[]
+  isDemo?: boolean
 }
 
 const STORAGE_KEY = 'create-studio-analytics-id'
@@ -160,7 +162,8 @@ export function useAnalytics(config: AnalyticsConfig) {
         totalDuration: activeTime,
         pagesViewed: pagesViewed.value.size,
         totalPages: totalPages.value,
-        events: events.value
+        events: events.value,
+        isDemo: config.isDemo || false
       }
     } catch (error) {
       console.error('[Analytics] Error building session data:', error)

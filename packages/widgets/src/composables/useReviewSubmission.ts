@@ -1,4 +1,5 @@
 import { ref, readonly } from 'vue'
+import { getInitialState, saveReviewData } from './useReviewStorage'
 
 interface ReviewSubmissionData {
   creation: number | string
@@ -41,7 +42,6 @@ export const submitReview = async (
     }
 
     // Get existing review data from localStorage
-    const { getInitialState, saveReviewData } = useReviewStorage()
     const prevReview = getInitialState(data.creation)
 
     // Add random handshake if we don't have one from previous review

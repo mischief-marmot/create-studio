@@ -102,7 +102,7 @@ export default defineNuxtConfig({
       },
     ],
     server: {
-      allowedHosts: ["host.docker.internal", "localhost", "127.0.0.1", "7823d21b31b9.ngrok-free.app"],
+      allowedHosts: ["host.docker.internal", "localhost:3000", "localhost:8074", "localhost:8081", "localhost:8084", "7823d21b31b9.ngrok-free.app"],
       middlewareMode: true,
       hmr: {
         host: "localhost",
