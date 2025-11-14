@@ -165,22 +165,24 @@ function parseInstructions(instructionsHtml: string): {
     // Process list items
     matches.forEach((match, index) => {
       const itemContent = match[1]
-      // Remove nested HTML tags
-      const cleanText = itemContent.replace(/<[^>]*>/g, ' ').trim()
-      
-      const { text, imageId } = extractImageFromText(cleanText)
+
+      // Extract image shortcode BEFORE removing HTML tags
+      const { text: textWithoutShortcode, imageId } = extractImageFromText(itemContent)
       if (imageId) {
         stepImageMap.set(index, imageId) // Map this step index to its image ID
       }
-      
+
+      // Now remove HTML tags from the text that has shortcode already removed
+      const cleanText = textWithoutShortcode.replace(/<[^>]*>/g, ' ').trim()
+
       const step: HowToStep = {
         '@type': 'HowToStep',
-        text: text.trim(),
+        text: cleanText,
         position: index + 1
       }
-      
+
       // Parse timer from text using enhanced detection
-      const timerInfo = parseTimerFromText(text)
+      const timerInfo = parseTimerFromText(cleanText)
       if (timerInfo && timerInfo.duration) {
         step.timer = {
           duration: timerInfo.duration,

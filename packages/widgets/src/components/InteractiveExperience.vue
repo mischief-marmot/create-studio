@@ -310,9 +310,9 @@ import LogoSolo from './Logo/Solo.vue';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { SharedStorageManager } from '@create-studio/shared';
-import { useSharedTimerManager } from '../composables/useSharedTimerManager.js';
-import { useReviewStorage } from '../composables/useReviewStorage.js';
-import { useReviewSubmission } from '../composables/useReviewSubmission.js';
+import { useSharedTimerManager } from '../composables/useSharedTimerManager';
+import { getInitialState as getInitialReviewState } from '../composables/useReviewStorage';
+import { useReviewSubmission } from '../composables/useReviewSubmission';
 import TimerWarningModal from './TimerWarningModal.vue';
 import { HowTo, HowToStep } from '@create-studio/shared';
 import { useAnalytics } from '../composables/useAnalytics';
@@ -323,6 +323,7 @@ interface Props {
   baseUrl?: string
   hideAttribution?: boolean
   cacheBust?: boolean
+  disableRatingSubmission?: boolean
   // Support SDK mounting with config wrapper
   config?: {
     creationId: string
@@ -330,13 +331,15 @@ interface Props {
     baseUrl?: string
     hideAttribution?: boolean
     cacheBust?: boolean
+    disableRatingSubmission?: boolean
   }
 }
 
 const props = withDefaults(defineProps<Props>(), {
   baseUrl: '',
   hideAttribution: false,
-  cacheBust: false
+  cacheBust: false,
+  disableRatingSubmission: false
 })
 
 // Use config wrapper if provided (from SDK), otherwise use direct props
@@ -345,12 +348,14 @@ const finalDomain = computed(() => props.config?.domain || props.domain || '')
 const finalBaseUrl = computed(() => props.config?.baseUrl || props.baseUrl || '')
 const finalHideAttribution = computed(() => props.config?.hideAttribution ?? props.hideAttribution ?? false)
 const finalCacheBust = computed(() => props.config?.cacheBust ?? props.cacheBust ?? false)
+const finalDisableRatingSubmission = computed(() => props.config?.disableRatingSubmission ?? props.disableRatingSubmission ?? false)
 
 // Initialize analytics
 const analytics = useAnalytics({
   baseUrl: finalBaseUrl.value,
   domain: finalDomain.value,
-  creationId: finalCreationId.value
+  creationId: finalCreationId.value,
+  isDemo: finalDisableRatingSubmission.value
 })
 
 // Initialize shared storage manager
@@ -1135,13 +1140,12 @@ const form = reactive({
 })
 
 // Initialize review system
-const { getInitialState } = useReviewStorage()
 const reviewSubmission = useReviewSubmission()
 
 // Check for existing review on mount and when form appears
 const loadExistingReview = () => {
     if (finalCreationId.value) {
-        const existing = getInitialState(finalCreationId.value)
+        const existing = getInitialReviewState(finalCreationId.value)
         if (existing) {
             existingReview.value = existing
             currentRating.value = parseInt(existing.rating.toString())
@@ -1237,6 +1241,12 @@ const handleRatingSelect = async (rating: number) => {
     // Track rating submission in analytics
     analytics.trackRatingEvent('submitted', rating)
 
+    // Skip actual submission if disabled (e.g., for demos)
+    if (finalDisableRatingSubmission.value) {
+        hasSubmittedRating.value = true
+        return
+    }
+
     // For high ratings, auto-submit rating
     if (rating >= ratingThreshold && finalCreationId.value && !hasSubmittedRating.value) {
         const result = await reviewSubmission.submit({
@@ -1256,6 +1266,13 @@ const handleRatingSelect = async (rating: number) => {
 const handleFormSubmit = async () => {
     if (!finalCreationId.value) {
         console.warn('Cannot submit review: missing creation ID')
+        return
+    }
+
+    // Skip actual submission if disabled (e.g., for demos)
+    if (finalDisableRatingSubmission.value) {
+        hasSubmittedReview.value = true
+        hasSubmittedRating.value = true
         return
     }
 

@@ -45,6 +45,7 @@
               :creation-id="config.creationId"
               :domain="domain"
               :base-url="baseUrl"
+              :disable-rating-submission="config.disableRatingSubmission"
               hide-attribution
               class="cs:w-full cs:h-full"
             />
@@ -77,9 +78,10 @@ interface Props {
     creationId: string
     creationName?: string
     buttonText?: string
-    siteUrl?: string 
+    siteUrl?: string
     embedUrl?: string
     theme?: Record<string, string>
+    disableRatingSubmission?: boolean
   }
   storage?: any
 }

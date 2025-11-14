@@ -21,9 +21,10 @@ export interface TokenGenerationData {
  */
 function getSecret(): Uint8Array {
   const config = useRuntimeConfig()
+  console.log('jwtsecret', config.servicesApiJwtSecret)
   // In test environment, use process.env directly
-  const secret = (typeof useRuntimeConfig !== 'undefined' ? useRuntimeConfig().servicesApiJWTSecret : '') || process.env.NUXT_SERVICES_API_JWT_SECRET
-                  
+  const secret = (typeof useRuntimeConfig !== 'undefined' ? config.servicesApiJWTSecret : '') || process.env.NUXT_SERVICES_API_JWT_SECRET
+
 
   if (!secret) {
     throw new Error('JWT secret is not configured')

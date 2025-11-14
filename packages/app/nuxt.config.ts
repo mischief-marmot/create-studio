@@ -97,7 +97,7 @@ export default defineNuxtConfig({
       },
     ],
     server: {
-      allowedHosts: ["host.docker.internal", "localhost", "7823d21b31b9.ngrok-free.app"],
+      allowedHosts: ["host.docker.internal", "localhost:3000", "localhost:8074", "localhost:8081", "localhost:8084", "7823d21b31b9.ngrok-free.app"],
     },
   },
   css: ["./app/assets/main.css"],
