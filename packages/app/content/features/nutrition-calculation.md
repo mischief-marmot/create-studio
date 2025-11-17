@@ -39,6 +39,6 @@ Create will send your ingredients and servings information to the Create Studio 
 Once you’re done calculating, you can go back into your ingredients list and add any extra information you want to be there for your readers - such as alternative measurements, substitutions, or other extra detailed wording.
 
 
-::callout{title="Get Create-ing!"}
+::callout{type="info" title="Get Create-ing"}
 Less time calculating nutrition means more time for new content!
 ::

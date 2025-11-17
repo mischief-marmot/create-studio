@@ -66,6 +66,7 @@
 					</nav>
 					<nav>
 						<h6 class="footer-title">Company</h6>
+						<NuxtLink class="link link-hover" href="/about">About</NuxtLink>
 						<NuxtLink class="link link-hover" href="/news">News</NuxtLink>
 					</nav>
 					<nav></nav>

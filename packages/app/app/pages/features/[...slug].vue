@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 const route = useRoute()
-const slug = route.path
+const slug = route.params.slug.join('/')
 
 const { data: page } = await useAsyncData(route.path, () => {
   return queryCollection('features').path(slug).first()
