@@ -7,6 +7,7 @@
 import { defineStore } from 'pinia'
 import { useStorage } from '@vueuse/core'
 import { useAuthFetch } from '~/composables/useAuthFetch'
+import { deleteAnalyticsCookies as deleteAnalyticsCookiesUtil } from '~/utils/cookies'
 
 export interface ConsentState {
   analytics: boolean | null // null = not asked, true/false = answered
@@ -101,25 +102,17 @@ export const useConsentStore = defineStore('consent', {
     },
 
     /**
-     * Delete analytics cookies
+     * Delete analytics cookies using utility function
      */
     deleteAnalyticsCookies() {
       if (process.client) {
-        // Delete Google Analytics cookies
-        const patterns = [/^_ga/, /^_gid/, /^_ga_/]
-        document.cookie.split(';').forEach((cookie) => {
-          const name = cookie.split('=')[0].trim()
-          patterns.forEach((pattern) => {
-            if (pattern.test(name)) {
-              document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`
-            }
-          })
-        })
+        deleteAnalyticsCookiesUtil()
       }
     },
 
     /**
      * Sync consent to database for authenticated users (optional)
+     * Throws error if sync fails, allowing caller to handle it
      */
     async syncToDatabase() {
       try {
@@ -135,6 +128,8 @@ export const useConsentStore = defineStore('consent', {
         }
       } catch (error) {
         console.error('Failed to sync consent to database:', error)
+        // Re-throw error so component can handle it and provide user feedback
+        throw error
       }
     },
   },

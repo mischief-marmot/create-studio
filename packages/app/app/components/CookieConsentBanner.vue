@@ -146,6 +146,8 @@ const customizeDialogRef = ref<HTMLDialogElement | null>(null)
 const customAnalytics = ref(false)
 const customMarketing = ref(false)
 const isHydrated = ref(false)
+const syncError = ref<string | null>(null)
+const isSyncing = ref(false)
 
 // Compute banner visibility based on store state
 // Hide banner until hydrated to prevent flash of unsaved consent state
@@ -172,6 +174,13 @@ watch(
     if (shouldShow) {
       await nextTick()
       customizeDialogRef.value?.showModal()
+      // Move focus to the first focusable element in the modal
+      setTimeout(() => {
+        const firstFocusable = customizeDialogRef.value?.querySelector(
+          'button:not([aria-label="Close modal"]), input, a'
+        ) as HTMLElement
+        firstFocusable?.focus()
+      }, 0)
     }
   }
 )
@@ -183,46 +192,74 @@ const closeCustomizeModal = () => {
 }
 
 const acceptAll = async () => {
-  consentStore.acceptAll()
-  triggerConsent('analytics')
-  triggerConsent('marketing')
-  // Sync consent to user account if authenticated
-  await consentStore.syncToDatabase()
+  syncError.value = null
+  isSyncing.value = true
+  try {
+    consentStore.acceptAll()
+    triggerConsent('analytics')
+    triggerConsent('marketing')
+    // Sync consent to user account if authenticated
+    await consentStore.syncToDatabase()
+  } catch (error) {
+    console.error('Error accepting all consent:', error)
+    syncError.value = 'Failed to save consent preferences. Please try again.'
+  } finally {
+    isSyncing.value = false
+  }
 }
 
 const rejectAll = async () => {
-  consentStore.rejectAll()
-  consentStore.deleteAnalyticsCookies()
-  // Sync consent to user account if authenticated
-  await consentStore.syncToDatabase()
+  syncError.value = null
+  isSyncing.value = true
+  try {
+    consentStore.rejectAll()
+    consentStore.deleteAnalyticsCookies()
+    // Sync consent to user account if authenticated
+    await consentStore.syncToDatabase()
+  } catch (error) {
+    console.error('Error rejecting all consent:', error)
+    syncError.value = 'Failed to save consent preferences. Please try again.'
+  } finally {
+    isSyncing.value = false
+  }
 }
 
 const showCustomize = () => {
   initializeCustomPreferences()
+  syncError.value = null
   consentStore.showCustomizeModal = true
 }
 
 const saveCustomize = async () => {
-  consentStore.setConsent({
-    analytics: customAnalytics.value,
-    marketing: customMarketing.value,
-  })
+  syncError.value = null
+  isSyncing.value = true
+  try {
+    consentStore.setConsent({
+      analytics: customAnalytics.value,
+      marketing: customMarketing.value,
+    })
 
-  // Trigger consent for enabled categories
-  if (customAnalytics.value) {
-    triggerConsent('analytics')
-  } else {
-    consentStore.deleteAnalyticsCookies()
+    // Trigger consent for enabled categories
+    if (customAnalytics.value) {
+      triggerConsent('analytics')
+    } else {
+      consentStore.deleteAnalyticsCookies()
+    }
+
+    if (customMarketing.value) {
+      triggerConsent('marketing')
+    }
+
+    // Sync consent to user account if authenticated
+    await consentStore.syncToDatabase()
+
+    closeCustomizeModal()
+  } catch (error) {
+    console.error('Error saving consent preferences:', error)
+    syncError.value = 'Failed to save consent preferences. Your preferences are saved locally, but were not synced to your account.'
+  } finally {
+    isSyncing.value = false
   }
-
-  if (customMarketing.value) {
-    triggerConsent('marketing')
-  }
-
-  // Sync consent to user account if authenticated
-  await consentStore.syncToDatabase()
-
-  closeCustomizeModal()
 }
 
 const triggerConsent = (category: 'analytics' | 'marketing') => {
