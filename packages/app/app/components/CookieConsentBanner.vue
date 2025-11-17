@@ -166,7 +166,6 @@ onMounted(() => {
   // Mark component as hydrated after mount (pinia persisted state is ready)
   isHydrated.value = true
   // Reset modal flag so it can be triggered again
-  console.log('[Banner Mount] Resetting showCustomizeModal to false')
   consentStore.showCustomizeModal = false
 })
 
@@ -174,23 +173,18 @@ onMounted(() => {
 watch(
   () => consentStore.showCustomizeModal,
   async (shouldShow) => {
-    console.log('[Banner Watch] showCustomizeModal changed to:', shouldShow)
-    console.log('[Banner Watch] customizeDialogRef.value:', customizeDialogRef.value)
     if (shouldShow) {
-      console.log('[Banner Watch] Opening modal...')
+      // Initialize preferences from current store state
+      initializeCustomPreferences()
       await nextTick()
-      console.log('[Banner Watch] Calling showModal()')
       customizeDialogRef.value?.showModal()
-      console.log('[Banner Watch] showModal() called')
       // Move focus to the first focusable element in the modal
       await nextTick()
       const firstFocusable = customizeDialogRef.value?.querySelector(
         'button:not([aria-label="Close modal"]), input, a'
       ) as HTMLElement
-      console.log('[Banner Watch] First focusable element:', firstFocusable)
       firstFocusable?.focus()
     } else {
-      console.log('[Banner Watch] Closing modal...')
       // Close the modal if flag is set to false
       customizeDialogRef.value?.close()
     }
