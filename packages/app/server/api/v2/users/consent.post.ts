@@ -12,6 +12,11 @@
  *
  * This endpoint allows authenticated users to sync their browser-side
  * consent preferences to the database for cross-device persistence.
+ *
+ * Note: Consent preferences map to database fields as follows:
+ * - analytics: controls consent_cookies_accepted_at (analytics cookies consent)
+ * - marketing: controls marketing cookie consent (for future use)
+ * - TOS and Privacy consent are tracked separately during registration
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
@@ -37,19 +42,39 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { analytics, marketing } = body
 
+    // Validate input types
+    if (analytics !== undefined && typeof analytics !== 'boolean') {
+      setResponseStatus(event, 400)
+      return {
+        success: false,
+        error: 'Invalid analytics value - must be a boolean',
+      }
+    }
+
+    if (marketing !== undefined && typeof marketing !== 'boolean') {
+      setResponseStatus(event, 400)
+      return {
+        success: false,
+        error: 'Invalid marketing value - must be a boolean',
+      }
+    }
+
     const userRepo = new UserRepository()
     const now = new Date().toISOString()
 
     // Update consent timestamps based on what was accepted or rejected
+    // NOTE: analytics controls consent_cookies_accepted_at for analytics cookie consent
+    // marketing preference is stored for future use (currently no dedicated field)
     const updates: any = {}
 
     if (analytics !== undefined) {
       updates.consent_cookies_accepted_at = analytics ? now : null
     }
 
+    // Marketing consent is noted but not persisted to database yet
+    // This can be extended when a dedicated marketing consent field is added
     if (marketing !== undefined) {
-      updates.consent_tos_accepted_at = marketing ? now : null
-      updates.consent_privacy_accepted_at = marketing ? now : null
+      logger.debug('Marketing consent received', { userId: session.user.id, marketing })
     }
 
     // Only update if there are changes
