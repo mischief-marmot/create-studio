@@ -151,8 +151,13 @@ const scrollToTop = () => {
 }
 
 const openCookieSettings = () => {
+  console.log('[Cookie Settings] Button clicked')
   const consentStore = useConsentStore()
+  console.log('[Cookie Settings] Before: showCustomizeModal =', consentStore.showCustomizeModal)
+  console.log('[Cookie Settings] Before: bannerDismissed =', consentStore.bannerDismissed)
   consentStore.openCustomizeModal()
+  console.log('[Cookie Settings] After: showCustomizeModal =', consentStore.showCustomizeModal)
+  console.log('[Cookie Settings] After: bannerDismissed =', consentStore.bannerDismissed)
 }
 
 onMounted(() => {
