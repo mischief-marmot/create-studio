@@ -51,7 +51,7 @@
     </div>
 
     <!-- Customize Modal (rendered outside banner visibility check) -->
-    <dialog ref="customizeDialogRef" class="modal">
+    <dialog ref="customizeDialogRef" class="modal z-[60]">
       <div class="modal-box w-full">
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-xl font-bold">Cookie Preferences</h3>
@@ -175,12 +175,14 @@ watch(
       await nextTick()
       customizeDialogRef.value?.showModal()
       // Move focus to the first focusable element in the modal
-      setTimeout(() => {
-        const firstFocusable = customizeDialogRef.value?.querySelector(
-          'button:not([aria-label="Close modal"]), input, a'
-        ) as HTMLElement
-        firstFocusable?.focus()
-      }, 0)
+      await nextTick()
+      const firstFocusable = customizeDialogRef.value?.querySelector(
+        'button:not([aria-label="Close modal"]), input, a'
+      ) as HTMLElement
+      firstFocusable?.focus()
+    } else {
+      // Close the modal if flag is set to false
+      customizeDialogRef.value?.close()
     }
   }
 )
