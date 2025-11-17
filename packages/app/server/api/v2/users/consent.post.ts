@@ -79,11 +79,8 @@ export default defineEventHandler(async (event) => {
 
     // Only update if there are changes
     if (Object.keys(updates).length > 0) {
-      logger.debug('updates', updates)
       await userRepo.update(session.user.id, updates)
     }
-
-    logger.debug('User consent synced', session.user.id)
 
     setResponseStatus(event, 200)
     return {

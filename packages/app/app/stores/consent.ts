@@ -85,10 +85,16 @@ export const useConsentStore = defineStore('consent', {
 
     /**
      * Open the customize modal
+     * Resets the flag to false first to ensure watcher fires
      */
     openCustomizeModal() {
       this.bannerDismissed = false
-      this.showCustomizeModal = true
+      // Reset flag to false first to ensure the watcher fires when we set it to true
+      this.showCustomizeModal = false
+      // Use nextTick-like behavior to ensure state updates before setting true
+      Promise.resolve().then(() => {
+        this.showCustomizeModal = true
+      })
     },
 
     /**
