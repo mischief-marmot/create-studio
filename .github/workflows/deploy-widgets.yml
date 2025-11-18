@@ -1,8 +1,9 @@
 name: Deploy Widgets
 on:
-  push:
-    paths:
-      - packages/widgets/**
+  workflow_run:
+    workflows: ["Deploy Create Studio"]
+    types: [completed]
+    branches: [main]
 
 jobs:
   deploy:

@@ -18,6 +18,9 @@ export interface User {
   mediavine_publisher?: boolean
   validEmail?: boolean
   marketing_opt_in?: boolean
+  consent_tos_accepted_at?: string
+  consent_privacy_accepted_at?: string
+  consent_cookies_accepted_at?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -41,6 +44,9 @@ export interface CreateUserData {
   avatar?: string
   mediavine_publisher?: boolean
   marketing_opt_in?: boolean
+  consent_tos_accepted_at?: string
+  consent_privacy_accepted_at?: string
+  consent_cookies_accepted_at?: string
 }
 
 export interface CreateSiteData {
@@ -236,6 +242,21 @@ export class UserRepository {
     if (updates.marketing_opt_in !== undefined) {
       updateFields.push('marketing_opt_in = ?')
       values.push(updates.marketing_opt_in ? 1 : 0)
+    }
+
+    if (updates.consent_tos_accepted_at !== undefined) {
+      updateFields.push('consent_tos_accepted_at = ?')
+      values.push(updates.consent_tos_accepted_at || null)
+    }
+
+    if (updates.consent_privacy_accepted_at !== undefined) {
+      updateFields.push('consent_privacy_accepted_at = ?')
+      values.push(updates.consent_privacy_accepted_at || null)
+    }
+
+    if (updates.consent_cookies_accepted_at !== undefined) {
+      updateFields.push('consent_cookies_accepted_at = ?')
+      values.push(updates.consent_cookies_accepted_at || null)
     }
 
     if (updateFields.length === 0) {
