@@ -144,7 +144,7 @@
             <hr />
             <div class="timeline-start">
               <time class="font-mono italic">2021-2024</time>
-              <div class="mb-2 text-lg font-black">Leadership & Longing</div>
+              <div class="mb-2 text-lg font-black">Change</div>
               <div class="card bg-base-200 shadow-xl">
                 <div class="card-body text-md">
                   <p>When Create entered maintenance mode in 2021, I moved into management at Mediavine. My family tried our hand at raising sheep, breeding chickens, and lived a life that was full and rich. But, as time went on, I missed building products.</p>
@@ -165,7 +165,7 @@
             <hr />
             <div class="timeline-end">
               <time class="font-mono italic">2025</time>
-              <div class="mb-2 text-lg font-black">A New Chapter</div>
+              <div class="mb-2 text-lg font-black">Back to the Future</div>
               <div class="card bg-gradient-to-br to-amber-300/20 from-accent/20 border-accent border-2 shadow-xl">
                 <figure class="flex justify-center px-4 pt-4">
                   <LogoFull height="80" />
