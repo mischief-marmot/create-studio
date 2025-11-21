@@ -23,7 +23,7 @@ import { parseCreationKey } from '@create-studio/shared';
 import { onMounted } from 'vue';
 
 useScript({
-    src: 'https://scripts.mediavine.com/tags/aj-test-2026.js',
+    src: 'https://scripts.mediavine.com/tags/create-studio-1.js',
     async: true,
     fetchpriority: 'high',
     crossorigin: 'anonymous',
