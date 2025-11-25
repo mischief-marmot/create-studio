@@ -1,27 +1,27 @@
 <template>
-  <div>
+  <div class="cs-interactive-mode">
     <button
-      class="cs:inline-flex cs:items-center cs:justify-center cs:px-4 cs:py-2 cs:text-sm cs:font-medium cs:rounded-md cs:border-none cs:cursor-pointer cs:transition-all cs:duration-200 cs:bg-primary cs:text-primary-content cs:hover:opacity-90"
+      class="cs-interactive-mode-btn"
       @click="openModal"
     >
       {{ buttonText }}
     </button>
 
-    <Teleport to="body">
+    <Teleport :to="teleportTarget">
       <!-- Side-by-side Modal Container -->
       <div
         v-if="showModal"
-        class="cs:fixed cs:top-0 cs:left-0 cs:h-screen cs:flex cs:z-[1000000000] cs:font-sans"
+        ref="modalContainer"
+        id="create-studio-interactive-mode"
+        class="cs-interactive-mode-modal cs:fixed cs:top-0 cs:left-0 cs:h-screen cs:flex cs:z-[1000000000] cs:font-sans"
+        tabindex="-1"
+        @keydown.esc="closeModal"
       >
-        <!-- Original Content Area -->
-        <!-- <div class="cs:w-screen cs:h-full cs:overflow-auto"> -->
-          <!-- This div serves as a placeholder for the original viewport content -->
-        <!-- </div> -->
-
         <!-- Modal Content Area -->
         <div class="cs:w-screen cs:h-full cs:bg-gray-100 cs:relative cs:flex cs:items-center cs:justify-center">
           <button
-            class="cs:absolute cs:top-4 cs:right-4 cs:p-2 cs:rounded-full cs:bg-gray-200 cs:transition-all cs:duration-200 cs:cursor-pointer cs:border-none cs:flex cs:items-center cs:justify-center cs:z-10 cs:hover:bg-gray-300"
+            class="cs:absolute cs:top-4 cs:right-4 cs:p-2 cs:rounded-full cs:transition-all cs:duration-200 cs:cursor-pointer cs:border-none cs:flex cs:items-center cs:justify-center cs:z-10 cs:hover:bg-gray-300"
+            style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
             @click="closeModal"
             aria-label="Close"
           >
@@ -70,8 +70,7 @@ import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/s
 import { createCreationKey, normalizeDomain } from '@create-studio/shared/utils/domain'
 import { useLogger } from '@create-studio/shared/utils/logger'
 import InteractiveExperience from '../InteractiveExperience.vue'
-
-const logger = useLogger('InteractiveModeWidget')
+import { log } from 'console'
 
 interface Props {
   config: {
@@ -89,7 +88,8 @@ interface Props {
 const props = defineProps<Props>()
 
 const globalConfig = inject<any>('widgetConfig')
-const theme = inject<any>('widgetTheme')
+console.log('🚀 globalConfig', globalConfig)
+const logger = useLogger('InteractiveModeWidget', globalConfig?.debug || true)
 
 // Check if in-DOM rendering is enabled (Pro tier feature)
 const inDomRendering = computed(() => {
@@ -99,6 +99,7 @@ const inDomRendering = computed(() => {
 const showModal = ref(false)
 const scrollPosition = ref(0)
 const viewportWidth = ref(window.innerWidth)
+const modalContainer = ref<HTMLElement | null>(null)
 
 // Mobile detection
 const isMobile = ref(false)
@@ -144,6 +145,9 @@ const iframeSrc = computed(() => {
   return `${baseUrl.value}/creations/${creationKey.value}/interactive`
 })
 
+// Teleport target - will be set after component mounts
+const teleportTarget = ref<string | HTMLElement>('body')
+
 function openModal() {
   logger.info('🎬 Opening modal', {
     inDomRendering: inDomRendering.value,
@@ -174,6 +178,11 @@ function openModal() {
   const domain = normalizeDomain(siteUrl)
   storageManager.initializeCreation(domain, props.config.creationId)
 
+  // Focus the modal container after it's rendered
+  setTimeout(() => {
+    modalContainer.value?.focus()
+  }, 0)
+
   if (globalConfig?._meta?.debug) {
     logger.debug('Create Studio Interactive mode opened for creation:', props.config.creationId)
     logger.debug('Creation key:', creationKey.value)
@@ -190,6 +199,23 @@ function closeModal() {
 
   // Restore body overflow
   document.body.style.overflow = ''
+
+  // Notify iframe to show Grow widget again (if using iframe mode)
+  if (!inDomRendering.value) {
+    const iframe = document.querySelector(`#create-studio-modal-${props.config.creationId} iframe`) as HTMLIFrameElement
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage({
+        type: 'CREATE_STUDIO_INTERACTIVE_UNMOUNTED',
+        action: 'show-grow-widget'
+      }, '*')
+    }
+  }
+
+  // Show Grow widget directly (when using in-DOM rendering)
+  const growRoot = document.getElementById('grow-me-root')
+  if (growRoot) {
+    growRoot.style.display = ''
+  }
 }
 
 function handleOverlayClick(event: MouseEvent) {
@@ -202,6 +228,17 @@ function handleOverlayClick(event: MouseEvent) {
 
 function handleEscKey(event: KeyboardEvent) {
   if (event.key === 'Escape' && showModal.value) {
+    logger.debug('🔑 Escape key pressed, closing modal')
+    event.preventDefault()
+    event.stopPropagation()
+    closeModal()
+  }
+}
+
+// Listen for messages from iframe requesting to close
+function handleIframeCloseRequest(event: MessageEvent) {
+  if (event.data?.type === 'CREATE_STUDIO_CLOSE_MODAL') {
+    logger.info('📨 Received close request from iframe')
     closeModal()
   }
 }
@@ -211,6 +248,13 @@ function handleResize() {
   // Update scroll position if modal is open to maintain alignment
   if (showModal.value) {
     scrollPosition.value = -viewportWidth.value
+  }
+}
+
+function handleVisibilityChange() {
+  // Refocus modal when user returns to the tab
+  if (!document.hidden && showModal.value) {
+    modalContainer.value?.focus()
   }
 }
 
@@ -229,9 +273,24 @@ onMounted(() => {
   window.addEventListener('resize', handleResize)
 
   document.addEventListener('keydown', handleEscKey)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 
   // Add message listener for notification permission requests from iframe
   window.addEventListener('message', handleNotificationPermissionRequest)
+  window.addEventListener('message', handleGrowWidgetToggle)
+  window.addEventListener('message', handleIframeCloseRequest)
+
+  // Find the Create card to teleport into
+  const button = document.querySelector('.cs-interactive-mode-btn')
+  const card = button?.closest('.mv-create-card')
+
+  if (card) {
+    logger.info('✅ Found Create card, teleporting to:', card)
+    teleportTarget.value = card as HTMLElement
+  } else {
+    logger.info('ℹ️  No Create card found, teleporting to body')
+    teleportTarget.value = 'body'
+  }
 
   // Cleanup function for media query listener
   onBeforeUnmount(() => {
@@ -274,10 +333,35 @@ async function handleNotificationPermissionRequest(event: MessageEvent) {
   }
 }
 
+// Handle Grow widget toggle request from iframe
+function handleGrowWidgetToggle(event: MessageEvent) {
+  // Only process our specific message type
+  if (event.data?.type !== 'CREATE_STUDIO_INTERACTIVE_MOUNTED') {
+    return
+  }
+
+  logger.info('📨 Received Grow widget toggle request from iframe')
+
+  const growRoot = document.getElementById('grow-me-root')
+
+  if (growRoot) {
+    if (event.data.action === 'hide-grow-widget') {
+      logger.info('🙈 Hiding Grow widget')
+      growRoot.style.display = 'none'
+    } else if (event.data.action === 'show-grow-widget') {
+      logger.info('👁️ Showing Grow widget')
+      growRoot.style.display = ''
+    }
+  }
+}
+
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleEscKey)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('message', handleNotificationPermissionRequest)
+  window.removeEventListener('message', handleGrowWidgetToggle)
+  window.removeEventListener('message', handleIframeCloseRequest)
 })
 </script>
 

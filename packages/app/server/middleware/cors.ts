@@ -10,6 +10,8 @@ export default defineEventHandler((event) => {
     /^\/api\/v2\/auth\/request-password-reset/,
     /^\/api\/v2\/timers/,
     /^\/api\/v2\/users\/.*/,
+    /^\/api\/analytics\/.*/,
+    /^\/api\/analytics\/events/,
   ]
   const path = event.node.req.url || '';
 
@@ -18,13 +20,11 @@ export default defineEventHandler((event) => {
   });
   if (!isMatch) return;
 
-  // Only apply CORS to /api/v1/* routes
-
   // Configure CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*', // Allow all origins
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cache-Control',
     'Access-Control-Max-Age': '86400', // 24 hours
     'Access-Control-Allow-Credentials': 'true'
   }

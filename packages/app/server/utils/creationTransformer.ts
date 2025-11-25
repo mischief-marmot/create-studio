@@ -78,7 +78,8 @@ export async function transformCreationToHowTo(
   
   // Parse ingredients from description or a dedicated field
   const ingredients = parseIngredients(creation)
-  
+  const ingredientsWithGroups = parseIngredientsWithGroups(creation)
+
   // Build the HowTo object
   const howTo: HowTo = {
     '@context': 'https://schema.org',
@@ -91,6 +92,7 @@ export async function transformCreationToHowTo(
     interactiveMode: true,
     step: stepsWithImages,
     recipeIngredient: ingredients,
+    recipeIngredientGroups: ingredientsWithGroups, // Add grouped ingredients
     supply: ingredients.map(ing => ({
       '@type': 'HowToSupply' as const,
       name: ing
@@ -308,7 +310,7 @@ function formatTimerDuration(seconds: number): string {
 
 function parseIngredients(creation: WPCreationResponse): string[] {
   const ingredients: string[] = []
-  
+
   // Get ingredients from the supplies array
   if (creation.supplies && Array.isArray(creation.supplies) && creation.supplies.length > 0) {
     creation.supplies.forEach((supply: any) => {
@@ -319,8 +321,30 @@ function parseIngredients(creation: WPCreationResponse): string[] {
       }
     })
   }
-  
+
   return ingredients
+}
+
+// Parse ingredients with their groups preserved
+function parseIngredientsWithGroups(creation: WPCreationResponse): Record<string, string[]> {
+  const groups: Record<string, string[]> = {}
+
+  // Get ingredients from the supplies array
+  if (creation.supplies && Array.isArray(creation.supplies) && creation.supplies.length > 0) {
+    creation.supplies.forEach((supply: any) => {
+      const groupName = supply.group || '' // Empty string for ungrouped items
+      const ingredientText = supply.original_text || supply.title || supply.name
+
+      if (ingredientText) {
+        if (!groups[groupName]) {
+          groups[groupName] = []
+        }
+        groups[groupName].push(ingredientText)
+      }
+    })
+  }
+
+  return groups
 }
 
 function cleanHtml(html: string): string {
