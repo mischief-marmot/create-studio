@@ -2,7 +2,8 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SubscriptionRepository } from '~~/server/utils/database'
 
 export default defineEventHandler(async (event) => {
-  const logger = useLogger('SiteConfig')
+  const runtimeConfig = useRuntimeConfig()
+  const logger = useLogger('SiteConfig', runtimeConfig.debug)
 
   // Set CORS headers to allow cross-origin requests from embedded scripts
   setResponseHeaders(event, {
@@ -34,16 +35,15 @@ export default defineEventHandler(async (event) => {
       const subscriptionRepo = new SubscriptionRepository()
       subscriptionTier = await subscriptionRepo.getActiveTier(siteResult.id as number)
 
-      // Pro tier gets in-DOM rendering
-      if (subscriptionTier === 'pro') {
-        renderMode = 'in-dom'
-      }
-
       logger.debug(`Site ${siteUrl} has tier: ${subscriptionTier}, render mode: ${renderMode}`)
     }
   } catch (error) {
     logger.error('Error looking up site subscription:', error)
     // Continue with free tier defaults
+  }
+  // Pro tier gets in-DOM rendering
+  if (subscriptionTier === "pro") {
+    renderMode = "in-dom";
   }
 
   const config = {
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Log for debugging
-  logger.debug(`Site config requested for: ${siteUrl}`)
+  logger.debug(`Site config requested for: ${siteUrl}`, config)
 
   return {
     success: true,

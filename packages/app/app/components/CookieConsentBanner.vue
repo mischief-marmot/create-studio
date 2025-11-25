@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Banner -->
-    <div v-if="shouldShowBanner" class="fixed bottom-0 left-0 right-0 z-50">
+    <div v-if="shouldShowBanner" class="fixed bottom-0 left-0 right-0 z-[2147483647]">
       <div class="bg-base-300 border-base-300 border-t shadow-2xl">
         <div class="max-w-7xl sm:px-6 lg:px-8 sm:py-6 p-8 mx-auto">
           <div class="sm:flex-row sm:items-center flex flex-col items-start justify-between gap-4">

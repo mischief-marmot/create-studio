@@ -146,7 +146,8 @@ export type HowTo = {
     nutrition?: NutritionInformation;
     recipeCategory?: string;
     recipeCuisine?: string;
-    recipeIngredient?: string[]; // for recipes
+    recipeIngredient?: string[]; // for recipes (flat list)
+    recipeIngredientGroups?: Record<string, string[]>; // for recipes (grouped by category)
     recipeInstructions?: HowToStep[] | HowToSection[];
     // Custom fields for interactive features
     difficulty?: 'easy' | 'medium' | 'hard';

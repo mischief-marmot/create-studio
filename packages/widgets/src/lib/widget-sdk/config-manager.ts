@@ -72,7 +72,7 @@ export class ConfigManager {
       this.logger.info('No siteUrl or apiKey provided, using defaults')
       this.siteConfig = {
         accountId: 'default',
-        features: ['interactive-mode']
+        features: ['interactive-mode', 'servings-adjuster']
       }
       return
     }
@@ -97,6 +97,7 @@ export class ConfigManager {
       }
 
       const result = await response.json()
+      this.logger.debug('📋 Site config loaded:', result)
       this.siteConfig = result.config || result
 
       this.logger.debug('📋 Site config loaded:', this.siteConfig)

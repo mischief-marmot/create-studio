@@ -48,6 +48,11 @@ export default defineEventHandler(async (event) => {
   const startTime = performance.now()
   const checkpoints: Record<string, number> = {}
 
+  // Set CORS headers
+  setHeader(event, 'Access-Control-Allow-Origin', '*')
+  setHeader(event, 'Access-Control-Allow-Methods', 'POST, OPTIONS')
+  setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control')
+
   // Set cache control headers - 30 days to match HubKV TTL
   setHeader(event, 'Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400')
 

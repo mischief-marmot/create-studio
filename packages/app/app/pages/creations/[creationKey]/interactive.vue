@@ -1,10 +1,11 @@
 <template>
-    <div class="h-dvh w-full">
+    <div class="h-dvh flex flex-col w-full">
         <div
             v-if="creationInfo"
             :id="`interactive-widget-${creationInfo.creationId}`"
+            class="flex-1 min-h-0"
         />
-        <div v-else class="bg-base-300 flex items-center justify-center w-full h-full">
+        <div v-else class="bg-base-300 flex items-center justify-center flex-1 w-full">
             <div class="p-8 text-center">
                 <h2 class="text-error mb-4 text-2xl font-bold">Invalid Creation</h2>
                 <p class="text-base-content mb-4">The creation key provided is not valid.</p>
@@ -12,7 +13,7 @@
             </div>
         </div>
         <!-- ad slot -->
-        <div class="hidden flex-shrink-0 bg-base-300 text-base-content h-[50px] w-full p-2 md:hidden">
+        <div :class="['flex-shrink-0 bg-base-300 text-base-content h-[54px] w-full p-2 md:hidden', hasAdhesionWrapper ? 'hidden' : '']">
             <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="320x50"></div>
         </div>
     </div>
@@ -20,7 +21,10 @@
 
 <script setup lang="ts">
 import { parseCreationKey } from '@create-studio/shared';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
+
+// Track if adhesion mobile wrapper exists
+const hasAdhesionWrapper = ref(false);
 
 useScript({
     src: 'https://scripts.mediavine.com/tags/create-studio-1.js',
@@ -48,10 +52,10 @@ useHead({
 const route = useRoute();
 
 // Add version query param for cache busting in development
-const widgetVersion = route.query.cache_bust === 'true' ? `?v=${Date.now()}` : ''
+const cacheBust = route.query.cache_bust === 'true' ? `?v=${Date.now()}` : ''
 
 useScript({
-   src: `/embed/main.js${widgetVersion}`,
+   src: `/embed/main.js${cacheBust}`,
     type: 'module',
     id: 'create-studio-embed',
     crossorigin: 'anonymous',
@@ -70,11 +74,41 @@ if (!creationInfo) {
     });
 }
 
-const cacheBust = route.query.cache_bust === 'true';
 const disableRatingSubmission = route.query.disableRatingSubmission === 'true';
 
 onMounted(async () => {
     if (!creationInfo) return;
+
+    // Listen for Escape key to close modal (when in iframe)
+    const handleEscKey = (event: KeyboardEvent) => {
+        if (event.key === 'Escape' && window.parent !== window) {
+            console.log('🔑 Escape pressed in iframe, sending close message to parent');
+            window.parent.postMessage({
+                type: 'CREATE_STUDIO_CLOSE_MODAL'
+            }, '*');
+        }
+    };
+    document.addEventListener('keydown', handleEscKey);
+
+    // Notify parent window to hide Grow widget (when in iframe)
+    if (window.parent !== window) {
+        window.parent.postMessage({
+            type: 'CREATE_STUDIO_INTERACTIVE_MOUNTED',
+            action: 'hide-grow-widget'
+        }, '*');
+    }
+
+    // Check if adhesion mobile wrapper exists
+    const checkAdhesionWrapper = () => {
+        hasAdhesionWrapper.value = !!document.getElementById('adhesion_mobile_wrapper');
+    };
+
+    // Check immediately
+    checkAdhesionWrapper();
+
+    // Also check after a delay in case ads load asynchronously
+    setTimeout(checkAdhesionWrapper, 1000);
+    setTimeout(checkAdhesionWrapper, 3000);
 
     // Wait for CreateStudio SDK to be available
     const waitForSDK = () => {
