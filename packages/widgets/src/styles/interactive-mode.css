@@ -7,7 +7,14 @@
 
 /* Default styles (when NOT inside .mv-create-card) */
 .cs-interactive-mode-btn {
-  @apply cs:inline-flex cs:items-center cs:justify-center cs:px-4 cs:py-2 cs:text-sm cs:font-medium cs:rounded-md cs:border-none cs:cursor-pointer cs:transition-all cs:duration-200 cs:bg-primary cs:text-primary-content cs:hover:opacity-90;
+  @apply cs:inline-flex cs:items-center cs:justify-center cs:px-4 cs:py-2 cs:text-sm cs:font-medium cs:rounded-md cs:border-none cs:cursor-pointer cs:transition-all cs:duration-200;
+  background-color: var(--mv-create-base, var(--color-primary));
+  color: var(--mv-create-text, var(--color-primary-content));
+  transition: transform .2s ease-in-out;
+}
+.cs-interactive-mode-btn:hover {
+  transform: scale(1.01);
+  @apply cs:shadow-sm;
 }
 
 .cs-interactive-nav-btn {

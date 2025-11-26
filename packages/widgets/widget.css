@@ -20,7 +20,9 @@
 /* Interactive Mode Styles */
 @import "./src/styles/interactive-mode.css" layer(components) important;
 
-input {
+#create-studio-interactive-mode input,
+.cs-interactive-mode input,
+ {
   background-color: initial !important;
 }
 

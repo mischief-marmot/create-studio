@@ -87,7 +87,7 @@
 					<nav class="flex flex-wrap justify-center gap-4 text-sm">
 						<NuxtLink to="/legal/privacy" class="link link-hover">Privacy Policy</NuxtLink>
 						<NuxtLink to="/legal/cookies" class="link link-hover">Cookies</NuxtLink>
-						<NuxtLink to="/legal/terms" class="link link-hover">Terms</NuxtLink>
+						<NuxtLink to="/legal/terms" class="link link-hover">Terms of Service</NuxtLink>
 						<button @click="openCookieSettings" class="link link-hover cursor-pointer">
 							Cookie Settings
 						</button>

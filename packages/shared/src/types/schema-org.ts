@@ -121,6 +121,12 @@ export type NutritionInformation = {
     [key: string]: any;
 };
 
+export type RecipeIngredient = {
+    original_text: string;
+    link?: string;
+    nofollow?: boolean;
+};
+
 export type HowTo = {
     '@context': 'https://schema.org';
     '@type': 'HowTo' | 'Recipe';
@@ -146,8 +152,8 @@ export type HowTo = {
     nutrition?: NutritionInformation;
     recipeCategory?: string;
     recipeCuisine?: string;
-    recipeIngredient?: string[]; // for recipes (flat list)
-    recipeIngredientGroups?: Record<string, string[]>; // for recipes (grouped by category)
+    recipeIngredient?: (string | RecipeIngredient)[]; // for recipes (flat list) - supports both strings and objects with links
+    recipeIngredientGroups?: Record<string, (string | RecipeIngredient)[]>; // for recipes (grouped by category) - supports both strings and objects with links
     recipeInstructions?: HowToStep[] | HowToSection[];
     // Custom fields for interactive features
     difficulty?: 'easy' | 'medium' | 'hard';

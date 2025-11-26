@@ -59,9 +59,6 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // Log for debugging
-  logger.debug(`Site config requested for: ${siteUrl}`, config)
-
   return {
     success: true,
     config,
