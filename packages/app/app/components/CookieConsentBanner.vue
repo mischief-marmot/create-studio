@@ -202,8 +202,6 @@ const acceptAll = async () => {
   isSyncing.value = true
   try {
     consentStore.acceptAll()
-    triggerConsent('analytics')
-    triggerConsent('marketing')
     // Sync consent to user account if authenticated
     await consentStore.syncToDatabase()
   } catch (error) {
@@ -245,15 +243,9 @@ const saveCustomize = async () => {
       marketing: customMarketing.value,
     })
 
-    // Trigger consent for enabled categories
-    if (customAnalytics.value) {
-      triggerConsent('analytics')
-    } else {
+    // Delete analytics cookies if user disabled analytics
+    if (!customAnalytics.value) {
       consentStore.deleteAnalyticsCookies()
-    }
-
-    if (customMarketing.value) {
-      triggerConsent('marketing')
     }
 
     // Sync consent to user account if authenticated
@@ -265,17 +257,6 @@ const saveCustomize = async () => {
     syncError.value = 'Failed to save consent preferences. Your preferences are saved locally, but were not synced to your account.'
   } finally {
     isSyncing.value = false
-  }
-}
-
-const triggerConsent = (category: 'analytics' | 'marketing') => {
-  try {
-    const { useScriptTriggerConsent } = useNuxtApp()
-    if (useScriptTriggerConsent) {
-      useScriptTriggerConsent(category)
-    }
-  } catch (error) {
-    console.error(`Failed to trigger ${category} consent:`, error)
   }
 }
 </script>

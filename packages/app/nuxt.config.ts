@@ -144,21 +144,8 @@ export default defineNuxtConfig({
     },
   },
 
-  scripts: {
-    registry: {
-      googleAnalytics:  {
-        consent: 'analytics', // Require analytics consent before loading
-        anonymizeIp: true, // GDPR-friendly
-      },
-    },
-  },
-  $development: {
-    scripts: {
-      registry: {
-        googleAnalytics: "mock",
-      },
-    },
-  },
+  // Note: Google Analytics mock mode for development is handled in
+  // plugins/consent.client.ts using import.meta.dev check
 
   runtimeConfig: {
     debug: false,
