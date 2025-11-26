@@ -93,9 +93,8 @@
                                         <h4 v-if="groupName && groupName !== 'mv-has-no-group'" class="cs:text-base cs:font-semibold cs:mb-2">{{ groupName }}</h4>
                                         <ul class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
                                             <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`"
-                                                class="cs:flex cs:items-start cs:space-x-2">
-                                                <span class="cs-interactive-custom-bullet cs:w-1.5 cs:h-1.5 cs:rounded-full cs:mt-1.5 cs:flex-shrink-0"
-                                                style="background-color: var(--mv-create-base-secondary);"
+                                                class="cs:flex cs:items-center cs:space-x-2">
+                                                <span class="cs-interactive-custom-bullet"
                                                 ></span>
                                                 <IngredientText :ingredient="supply" class="cs:text-sm" />
                                             </li>
@@ -106,9 +105,8 @@
                                 <!-- Fallback to flat list if no groups -->
                                 <ul v-else class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
                                     <li v-for="(supply, idx) in adjustedIngredients" :key="`supply-${idx}`"
-                                        class="cs:flex cs:items-start cs:space-x-2">
-                                        <span class="cs-interactive-custom-bullet cs:w-1.5 cs:h-1.5 cs:rounded-full cs:mt-1.5 cs:flex-shrink-0"
-                                        style="background-color: var(--mv-create-base-secondary);"
+                                        class="cs:flex cs:items-center cs:space-x-2">
+                                        <span class="cs-interactive-custom-bullet"
                                         ></span>
                                         <IngredientText :ingredient="supply" class="cs:text-sm" />
                                     </li>
@@ -128,7 +126,7 @@
                                     {{ index + 1 }}
                                 </div>
 
-                                <div class="cs:text-lg cs:leading-tight" v-html="step.text"></div>
+                                <StepText :text="step.text || ''" :links="step.links" class="cs:text-lg cs:leading-tight" />
                             </div>
 
                             <!-- Step-specific supplies -->
@@ -278,7 +276,19 @@
                                 <XMarkIcon class="cs:w-5 cs:h-5" />
                             </button>
                         </div>
-                        <ul class="cs:space-y-1">
+                        <!-- Render grouped ingredients if available -->
+                        <template v-if="adjustedIngredientsGroups">
+                            <div v-for="(ingredients, groupName) in adjustedIngredientsGroups" :key="groupName" class="cs:mb-3 last:cs:mb-0">
+                                <h4 v-if="groupName && groupName !== 'mv-has-no-group'" class="cs:text-sm cs:font-semibold cs:mb-1">{{ groupName }}</h4>
+                                <ul class="cs:space-y-1">
+                                    <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`">
+                                        <IngredientText :ingredient="supply" />
+                                    </li>
+                                </ul>
+                            </div>
+                        </template>
+                        <!-- Fallback to flat list if no groups -->
+                        <ul v-else class="cs:space-y-1">
                             <li v-for="(supply, idx) in adjustedIngredients" :key="`sup-${idx}`">
                                 <IngredientText :ingredient="supply" />
                             </li>
@@ -341,6 +351,7 @@ import { getInitialState as getInitialReviewState } from '../composables/useRevi
 import { useReviewSubmission } from '../composables/useReviewSubmission';
 import TimerWarningModal from './TimerWarningModal.vue';
 import IngredientText from './IngredientText.vue';
+import StepText from './StepText.vue';
 import { HowTo, HowToStep } from '@create-studio/shared';
 import { useAnalytics } from '../composables/useAnalytics';
 

@@ -73,6 +73,16 @@
 }
 
 /*
+ * Custom bullet for supplies list (iframe mode)
+ * Shows a small colored circle as a bullet point
+ */
+.cs-interactive-custom-bullet {
+  @apply cs:size-1.5 cs:inline-block cs:rounded-full cs:flex-shrink-0;
+  /* margin-top: 0.375rem; */
+  background-color: var(--mv-create-secondary, var(--color-base-content));
+}
+
+/*
  * Hide our custom bullet span when inside .mv-create-card (in-DOM mode)
  * This allows publisher's li::before or mv-create-ingredients styling to show instead
  * Our custom bullet is only needed in iframe mode where there's no parent styling

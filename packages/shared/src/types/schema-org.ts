@@ -53,6 +53,13 @@ export type HowToTip = {
     text: string;
 };
 
+export type StepLink = {
+    text: string;
+    href: string;
+    target?: string;
+    rel?: string;
+};
+
 export type HowToStep = {
     '@type': 'HowToStep';
     name?: string;
@@ -74,6 +81,7 @@ export type HowToStep = {
         type: 'tip' | 'warning' | 'info';
         text: string;
     }[];
+    links?: StepLink[]; // Links extracted from step HTML
 };
 
 export type HowToSection = {
