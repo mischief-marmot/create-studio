@@ -308,14 +308,24 @@ function formatTimerDuration(seconds: number): string {
 }
 
 
-function parseIngredients(creation: WPCreationResponse): string[] {
-  const ingredients: string[] = []
+function parseIngredients(creation: WPCreationResponse): (string | import('~/types/schema-org').RecipeIngredient)[] {
+  const ingredients: (string | import('~/types/schema-org').RecipeIngredient)[] = []
 
   // Get ingredients from the supplies array
   if (creation.supplies && Array.isArray(creation.supplies) && creation.supplies.length > 0) {
     creation.supplies.forEach((supply: any) => {
       if (supply.original_text) {
-        ingredients.push(supply.original_text)
+        // If there's a link, preserve it as an object
+        if (supply.link) {
+          ingredients.push({
+            original_text: supply.original_text,
+            link: supply.link,
+            nofollow: supply.nofollow || false
+          })
+        } else {
+          // Otherwise just use the text
+          ingredients.push(supply.original_text)
+        }
       } else if (supply.title || supply.name) {
         ingredients.push(supply.title || supply.name)
       }
@@ -326,8 +336,8 @@ function parseIngredients(creation: WPCreationResponse): string[] {
 }
 
 // Parse ingredients with their groups preserved
-function parseIngredientsWithGroups(creation: WPCreationResponse): Record<string, string[]> {
-  const groups: Record<string, string[]> = {}
+function parseIngredientsWithGroups(creation: WPCreationResponse): Record<string, (string | import('~/types/schema-org').RecipeIngredient)[]> {
+  const groups: Record<string, (string | import('~/types/schema-org').RecipeIngredient)[]> = {}
 
   // Get ingredients from the supplies array
   if (creation.supplies && Array.isArray(creation.supplies) && creation.supplies.length > 0) {
@@ -339,7 +349,18 @@ function parseIngredientsWithGroups(creation: WPCreationResponse): Record<string
         if (!groups[groupName]) {
           groups[groupName] = []
         }
-        groups[groupName].push(ingredientText)
+
+        // If there's a link, preserve it as an object
+        if (supply.link) {
+          groups[groupName].push({
+            original_text: ingredientText,
+            link: supply.link,
+            nofollow: supply.nofollow || false
+          })
+        } else {
+          // Otherwise just use the text
+          groups[groupName].push(ingredientText)
+        }
       }
     })
   }

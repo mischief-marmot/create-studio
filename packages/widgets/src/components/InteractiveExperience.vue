@@ -90,14 +90,14 @@
                                 <!-- Render grouped ingredients if available -->
                                 <template v-if="adjustedIngredientsGroups">
                                     <div v-for="(ingredients, groupName) in adjustedIngredientsGroups" :key="groupName" class="cs:mb-4">
-                                        <h4 v-if="groupName" class="cs:text-base cs:font-semibold cs:mb-2">{{ groupName }}</h4>
+                                        <h4 v-if="groupName && groupName !== 'mv-has-no-group'" class="cs:text-base cs:font-semibold cs:mb-2">{{ groupName }}</h4>
                                         <ul class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
-                                            <li v-for="supply in ingredients" :key="supply"
+                                            <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`"
                                                 class="cs:flex cs:items-start cs:space-x-2">
                                                 <span class="cs-interactive-custom-bullet cs:w-1.5 cs:h-1.5 cs:rounded-full cs:mt-1.5 cs:flex-shrink-0"
                                                 style="background-color: var(--mv-create-base-secondary);"
                                                 ></span>
-                                                <span class="cs:text-sm">{{ supply }}</span>
+                                                <IngredientText :ingredient="supply" class="cs:text-sm" />
                                             </li>
                                         </ul>
                                     </div>
@@ -105,12 +105,12 @@
 
                                 <!-- Fallback to flat list if no groups -->
                                 <ul v-else class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
-                                    <li v-for="supply in adjustedIngredients" :key="supply"
+                                    <li v-for="(supply, idx) in adjustedIngredients" :key="`supply-${idx}`"
                                         class="cs:flex cs:items-start cs:space-x-2">
                                         <span class="cs-interactive-custom-bullet cs:w-1.5 cs:h-1.5 cs:rounded-full cs:mt-1.5 cs:flex-shrink-0"
                                         style="background-color: var(--mv-create-base-secondary);"
                                         ></span>
-                                        <span class="cs:text-sm">{{ supply }}</span>
+                                        <IngredientText :ingredient="supply" class="cs:text-sm" />
                                     </li>
                                 </ul>
                             </div>
@@ -280,7 +280,7 @@
                         </div>
                         <ul class="cs:space-y-1">
                             <li v-for="(supply, idx) in adjustedIngredients" :key="`sup-${idx}`">
-                                {{ supply }}
+                                <IngredientText :ingredient="supply" />
                             </li>
                         </ul>
                     </div>
@@ -340,6 +340,7 @@ import { useSharedTimerManager } from '../composables/useSharedTimerManager';
 import { getInitialState as getInitialReviewState } from '../composables/useReviewStorage';
 import { useReviewSubmission } from '../composables/useReviewSubmission';
 import TimerWarningModal from './TimerWarningModal.vue';
+import IngredientText from './IngredientText.vue';
 import { HowTo, HowToStep } from '@create-studio/shared';
 import { useAnalytics } from '../composables/useAnalytics';
 
@@ -578,10 +579,24 @@ const adjustedYield = computed(() => {
 });
 
 // Helper function to adjust ingredient amounts
-function adjustIngredientAmount(ingredient: string, multiplier: number): string {
+function adjustIngredientAmount(ingredient: string | any, multiplier: number): string | any {
+    // If it's an object with link, adjust the original_text and return the whole object
+    if (typeof ingredient === 'object' && ingredient.original_text) {
+        const adjustedText = adjustIngredientAmountText(ingredient.original_text, multiplier);
+        return {
+            ...ingredient,
+            original_text: adjustedText
+        };
+    }
+
+    // If it's a string, adjust it directly
+    return adjustIngredientAmountText(ingredient, multiplier);
+}
+
+function adjustIngredientAmountText(ingredientText: string, multiplier: number): string {
     // Extract amount from ingredient text
-    const amountMatch = ingredient.match(/^([\d\s\/\.\-]+)(.*)$/);
-    if (!amountMatch) return ingredient;
+    const amountMatch = ingredientText.match(/^([\d\s\/\.\-]+)(.*)$/);
+    if (!amountMatch) return ingredientText;
 
     const numericPart = amountMatch[1].trim();
     const restOfIngredient = amountMatch[2].trim();
@@ -591,7 +606,7 @@ function adjustIngredientAmount(ingredient: string, multiplier: number): string 
         return `${adjustedAmount} ${restOfIngredient}`;
     }
 
-    return ingredient;
+    return ingredientText;
 }
 
 // Calculate adjusted amount (reusing logic from ServingsAdjuster)

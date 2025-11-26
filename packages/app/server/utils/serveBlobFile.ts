@@ -147,8 +147,6 @@ export async function serveBlobFile(
     // Set all response headers
     setResponseHeaders(event, headers)
 
-    logger.debug(`Successfully serving: ${pathname} (${contentType})`)
-
     // Return the blob stream
     return blob.stream()
   } catch (error) {

@@ -2,7 +2,7 @@
   <NuxtLayout name="main">
   <div class="min-h-screen">
     <!-- Hero Section with Introduction -->
-    <section class="hero min-h-[60vh] bg-gradient-to-b from-success via-success/65 to-success/45">
+    <section class="hero min-h-[60vh] bg-base-100">
       <div class="hero-content text-center">
         <div class="max-w-3xl">
           <div class="avatar mb-6">
@@ -35,7 +35,7 @@
     </section>
 
     <!-- Journey Timeline -->
-    <section class="bg-gradient-to-b from-success/45 to-base-100 px-4 py-16">
+    <section class="bg-base-100 px-4 py-16">
       <div class="container max-w-6xl mx-auto">
         <h2 class="mb-12 text-4xl font-bold text-center">My Journey</h2>
 
@@ -188,7 +188,7 @@
     </section>
 
     <!-- Vision Section -->
-    <section class="bg-gradient-to-b from-base-100 to-success px-4 py-16">
+    <section class="bg-base-100 px-4 py-16">
       <div class="container max-w-6xl mx-auto">
         <div class="mb-12">
           <img src="/img/misc/mountain-top.jpg" alt="Mountain top - new perspective" class="aspect-video shadow-3xl object-cover w-full rounded-lg" />
@@ -272,7 +272,7 @@
         </div>
 
         <!-- Call to Action -->
-        <div class="text-success-content mt-12 text-center">
+        <div class="text-base-content mt-12 text-center">
           <h3 class="mb-6 text-2xl font-bold">Join the Journey</h3>
           <p class="max-w-2xl mx-auto mb-8 text-lg">
             Whether you're a longtime Create user or discovering us for the first time,

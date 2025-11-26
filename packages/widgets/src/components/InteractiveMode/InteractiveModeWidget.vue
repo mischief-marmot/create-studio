@@ -1,7 +1,11 @@
 <template>
-  <div class="cs-interactive-mode">
+  <div class="cs-interactive-mode"
+    :class="[inDomRendering ? 'cs-interactive-mode-pro' : 'cs-interactive-mode-free']"
+  >
     <button
+      ref="interactiveButton"
       class="cs-interactive-mode-btn"
+      :style="shouldBounce ? {animation: 'bounce 1s 5'} : {}"
       @click="openModal"
     >
       {{ buttonText }}
@@ -70,7 +74,6 @@ import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/s
 import { createCreationKey, normalizeDomain } from '@create-studio/shared/utils/domain'
 import { useLogger } from '@create-studio/shared/utils/logger'
 import InteractiveExperience from '../InteractiveExperience.vue'
-import { log } from 'console'
 
 interface Props {
   config: {
@@ -88,7 +91,6 @@ interface Props {
 const props = defineProps<Props>()
 
 const globalConfig = inject<any>('widgetConfig')
-console.log('🚀 globalConfig', globalConfig)
 const logger = useLogger('InteractiveModeWidget', globalConfig?.debug || true)
 
 // Check if in-DOM rendering is enabled (Pro tier feature)
@@ -100,9 +102,13 @@ const showModal = ref(false)
 const scrollPosition = ref(0)
 const viewportWidth = ref(window.innerWidth)
 const modalContainer = ref<HTMLElement | null>(null)
+const interactiveButton = ref<HTMLElement | null>(null)
 
 // Mobile detection
 const isMobile = ref(false)
+
+// Bounce animation state
+const shouldBounce = ref(false)
 
 // Initialize shared storage manager
 const storageManager = new SharedStorageManager()
@@ -285,11 +291,34 @@ onMounted(() => {
   const card = button?.closest('.mv-create-card')
 
   if (card) {
-    logger.info('✅ Found Create card, teleporting to:', card)
     teleportTarget.value = card as HTMLElement
   } else {
-    logger.info('ℹ️  No Create card found, teleporting to body')
     teleportTarget.value = 'body'
+  }
+
+  // Setup intersection observer for bounce animation (only for free tier)
+  if (interactiveButton.value && !inDomRendering.value) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && !shouldBounce.value) {
+            logger.debug('🎯 Button came into view, starting bounce animation')
+            shouldBounce.value = true
+          }
+        })
+      },
+      {
+        threshold: 1, // Trigger when 100% of button is visible
+        rootMargin: '0px'
+      }
+    )
+
+    observer.observe(interactiveButton.value)
+
+    // Cleanup observer
+    onBeforeUnmount(() => {
+      observer.disconnect()
+    })
   }
 
   // Cleanup function for media query listener
