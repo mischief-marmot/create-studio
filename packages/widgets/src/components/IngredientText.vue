@@ -13,7 +13,8 @@
       :href="parsedIngredient.link"
       :rel="parsedIngredient.nofollow ? 'nofollow' : undefined"
       :target="isExternalLink ? '_blank' : undefined"
-      class="cs:underline cs:text-primary hover:cs:text-primary-focus"
+      class="cs:text-primary"
+      style="color: var(--mv-create-base, var(--color-primary));"
     >{{ parsedIngredient.text }}</a>
   </span>
   <span v-else>{{ parsedIngredient.text }}</span>
