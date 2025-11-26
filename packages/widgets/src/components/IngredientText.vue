@@ -5,7 +5,8 @@
         :href="parsedIngredient.link"
         :rel="parsedIngredient.nofollow ? 'nofollow' : undefined"
         :target="isExternalLink ? '_blank' : undefined"
-        class="cs:underline cs:text-primary hover:cs:text-primary-focus"
+        class="cs:text-secondary cs:underline"
+        style="color: var(--mv-create-base, var(--color-primary));"
       >{{ parsedIngredient.parts.linkText }}</a>{{ parsedIngredient.parts.after }}
     </template>
     <a
@@ -13,7 +14,7 @@
       :href="parsedIngredient.link"
       :rel="parsedIngredient.nofollow ? 'nofollow' : undefined"
       :target="isExternalLink ? '_blank' : undefined"
-      class="cs:text-primary"
+      class="cs:text-secondary cs:underline"
       style="color: var(--mv-create-base, var(--color-primary));"
     >{{ parsedIngredient.text }}</a>
   </span>

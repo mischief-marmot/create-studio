@@ -158,11 +158,11 @@ function parseInstructions(instructionsHtml: string): {
 } {
   const stepImageMap = new Map<number, number>()
   const steps: HowToStep[] = []
-  
+
   // Extract list items using regex (works in server environment)
   const listItemRegex = /<li[^>]*>(.*?)<\/li>/gis
   const matches = Array.from(instructionsHtml.matchAll(listItemRegex))
-  
+
   if (matches.length > 0) {
     // Process list items
     matches.forEach((match, index) => {
@@ -174,13 +174,21 @@ function parseInstructions(instructionsHtml: string): {
         stepImageMap.set(index, imageId) // Map this step index to its image ID
       }
 
+      // Extract links BEFORE removing HTML tags
+      const links = extractLinksFromHtml(textWithoutShortcode)
+
       // Now remove HTML tags from the text that has shortcode already removed
-      const cleanText = textWithoutShortcode.replace(/<[^>]*>/g, ' ').trim()
+      const cleanText = textWithoutShortcode.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 
       const step: HowToStep = {
         '@type': 'HowToStep',
         text: cleanText,
         position: index + 1
+      }
+
+      // Add links if any were found
+      if (links.length > 0) {
+        step.links = links
       }
 
       // Parse timer from text using enhanced detection
@@ -192,7 +200,7 @@ function parseInstructions(instructionsHtml: string): {
           autoStart: false
         }
       }
-      
+
       steps.push(step)
     })
   } else {
@@ -201,19 +209,19 @@ function parseInstructions(instructionsHtml: string): {
       .replace(/<[^>]*>/g, '\n')
       .split(/\n+/)
       .filter(line => line.trim())
-    
+
     lines.forEach((line, index) => {
       const { text, imageId } = extractImageFromText(line)
       if (imageId) {
         stepImageMap.set(index, imageId) // Map this step index to its image ID
       }
-      
+
       const step: HowToStep = {
         '@type': 'HowToStep',
         text: text.trim(),
         position: index + 1
       }
-      
+
       // Parse timer from text using enhanced detection
       const timerInfo = parseTimerFromText(text)
       if (timerInfo && timerInfo.duration) {
@@ -223,12 +231,51 @@ function parseInstructions(instructionsHtml: string): {
           autoStart: false
         }
       }
-      
+
       steps.push(step)
     })
   }
-  
+
   return { steps, stepImageMap }
+}
+
+// Extract links from HTML content
+function extractLinksFromHtml(html: string): { text: string; href: string; target?: string; rel?: string }[] {
+  const links: { text: string; href: string; target?: string; rel?: string }[] = []
+
+  // Match anchor tags with their attributes and content
+  const linkRegex = /<a\s+([^>]*)>(.*?)<\/a>/gi
+  let match
+
+  while ((match = linkRegex.exec(html)) !== null) {
+    const attributes = match[1]
+    const linkText = match[2].replace(/<[^>]*>/g, '').trim() // Remove any nested tags
+
+    // Extract href
+    const hrefMatch = attributes.match(/href=["']([^"']*)["']/i)
+    if (hrefMatch) {
+      const link: { text: string; href: string; target?: string; rel?: string } = {
+        text: linkText,
+        href: hrefMatch[1]
+      }
+
+      // Extract target if present
+      const targetMatch = attributes.match(/target=["']([^"']*)["']/i)
+      if (targetMatch) {
+        link.target = targetMatch[1]
+      }
+
+      // Extract rel if present
+      const relMatch = attributes.match(/rel=["']([^"']*)["']/i)
+      if (relMatch) {
+        link.rel = relMatch[1]
+      }
+
+      links.push(link)
+    }
+  }
+
+  return links
 }
 
 function extractImageFromText(text: string): {
