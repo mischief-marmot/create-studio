@@ -147,7 +147,6 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       googleAnalytics:  {
-        id: '', // NUXT_PUBLIC_SCRIPTS_REGISTRY_GOOGLE_ANALYTICS_ID
         consent: 'analytics', // Require analytics consent before loading
         anonymizeIp: true, // GDPR-friendly
       },
@@ -177,6 +176,12 @@ export default defineNuxtConfig({
       productName: "Create Studio",
       rootUrl: "https://create.studio",
       supportEmail: "support@create.studio",
+      loadAds: false,
+      scripts: {
+        googleAnalytics: {
+          id: '', // NUXT_PUBLIC_SCRIPTS_REGISTRY_GOOGLE_ANALYTICS_ID
+        }
+      },
       stripePublishableKey: "",
       stripePrice: {
         monthly: "",
