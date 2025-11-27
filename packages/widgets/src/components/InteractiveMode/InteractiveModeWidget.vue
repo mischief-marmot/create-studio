@@ -5,7 +5,7 @@
     <button
       ref="interactiveButton"
       class="cs-interactive-mode-btn"
-      :style="shouldBounce ? {animation: 'bounce 1s 5'} : {}"
+      :style="shouldBounce ? {animation: 'bounce 1s 3'} : {}"
       @click="openModal"
     >
       {{ buttonText }}

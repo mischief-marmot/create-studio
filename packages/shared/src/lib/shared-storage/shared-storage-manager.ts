@@ -68,40 +68,34 @@ export class SharedStorageManager {
   /**
    * Setup cross-window storage synchronization
    * Listens for storage events (same-origin) and postMessage (cross-origin)
+   *
+   * Uses lastUpdated timestamps to merge state - newer data wins per creation.
    */
   private setupStorageSync(): void {
     if (typeof window === 'undefined') return
 
+    const isInIframe = window.parent !== window
 
     // Same-origin sync via storage event
     window.addEventListener('storage', (event) => {
-
-
       if (event.key === SharedStorageManager.STORAGE_KEY && event.newValue) {
         try {
           const newStorage = JSON.parse(event.newValue)
-          this.storage = {
-            id: newStorage.id || this.storage.id,
-            preferences: newStorage.preferences || {},
-            state: newStorage.state || {}
-          }
+          this.mergeStorage(newStorage)
         } catch (error) {
+          // Silent fail
         }
       }
     })
 
     // Cross-origin sync via postMessage
     window.addEventListener('message', (event) => {
-
-      // Handle storage sync messages
+      // Handle storage sync messages - merge based on timestamps
       if (event.data?.type === 'CREATE_STUDIO_STORAGE_SYNC' && event.data?.storage) {
         try {
-          this.storage = {
-            id: event.data.storage.id || this.storage.id,
-            preferences: event.data.storage.preferences || {},
-            state: event.data.storage.state || {}
-          }
+          this.mergeStorage(event.data.storage)
         } catch (error) {
+          // Silent fail
         }
       }
 
@@ -111,11 +105,52 @@ export class SharedStorageManager {
       }
     })
 
-    // If we're in an iframe, request initial storage from parent
-    if (window.parent !== window) {
+    // If we're in an iframe, send our storage to parent and request theirs
+    // Both sides will merge based on timestamps
+    if (isInIframe) {
+      // Send our storage to parent first
+      window.parent.postMessage({
+        type: 'CREATE_STUDIO_STORAGE_SYNC',
+        storage: this.storage
+      }, '*')
+      // Then request parent's storage to merge
       window.parent.postMessage({
         type: 'CREATE_STUDIO_STORAGE_REQUEST'
       }, '*')
+    }
+  }
+
+  /**
+   * Merge incoming storage with current storage based on lastUpdated timestamps
+   * Newer data wins per creation key
+   */
+  private mergeStorage(incoming: CreateStudioStorage): void {
+    // Keep our ID
+    const mergedState: Record<string, CreationState> = { ...this.storage.state }
+
+    // Merge each creation state based on lastUpdated
+    for (const [key, incomingState] of Object.entries(incoming.state || {})) {
+      const currentState = mergedState[key]
+
+      if (!currentState) {
+        // We don't have this creation, take incoming
+        mergedState[key] = incomingState
+      } else {
+        // Compare timestamps - newer wins
+        const currentTime = new Date(currentState.lastUpdated || 0).getTime()
+        const incomingTime = new Date(incomingState.lastUpdated || 0).getTime()
+
+        if (incomingTime > currentTime) {
+          mergedState[key] = incomingState
+        }
+        // else: keep current state as it's newer or equal
+      }
+    }
+
+    this.storage = {
+      id: this.storage.id,
+      preferences: { ...this.storage.preferences, ...incoming.preferences },
+      state: mergedState
     }
   }
 
