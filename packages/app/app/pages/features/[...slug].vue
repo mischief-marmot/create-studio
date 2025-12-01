@@ -5,6 +5,9 @@ const slug = route.params.slug.join('/')
 const { data: page } = await useAsyncData(route.path, () => {
   return queryCollection('features').path(slug).first()
 })
+if (!page.value) {
+  throw createError({ statusCode: 404, fatal: true });
+}
 
 // Get surrounding features for navigation
 const { data: surroundings } = await useAsyncData('surround', () => {

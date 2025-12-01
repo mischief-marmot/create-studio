@@ -141,6 +141,18 @@ export default defineNuxtConfig({
             "Create structured data cards for recipes, how-to guides, and FAQs with automatic JSON-LD generation",
         },
       ],
+       link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Fraunces:wght@200;300;400;500;600;700&family=Lexend:ital,wght@0,400..900;1,400..900&display=swap',
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://cdn.fontshare.com/css?f[]=satoshi@300,400,500,700&display=swap',
+        },
+      ],
     },
   },
 

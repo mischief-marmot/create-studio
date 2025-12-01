@@ -2,9 +2,12 @@
 @plugin "@tailwindcss/typography";
 @plugin "daisyui" {
   themes: false;
-};
+}
 
 @theme {
+  --default-font-family:
+    "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", Times, serif;
   --text-xs: 0.9rem;
   --text-sm: 0.975rem;
   --text-md: 1.2rem;
@@ -12,11 +15,11 @@
   --text-xl: 1.675rem;
 
   --color-dark-accent: oklch(39.211% 0.07401 338.439);
-  --color-dark-accent-content: oklch(85.908% 0.04116 336.013); 
+  --color-dark-accent-content: oklch(85.908% 0.04116 336.013);
 
   /* Deep Navy */
   --color-deep-navy: oklch(34.283% 0.039 235.109);
-  --color-deep-navy-content: oklch(98% 0 0);  /* Near white for contrast */
+  --color-deep-navy-content: oklch(98% 0 0); /* Near white for contrast */
 
   /* Plum */
   --color-plum: oklch(0.3921 0.074 338.47);
@@ -27,60 +30,65 @@
   --color-coral-content: oklch(0.8236 0.0853 24.42);
 }
 
-
 @plugin "daisyui/theme" {
   name: "dark";
   default: false;
   prefersdark: true;
   color-scheme: "dark";
-  
+
   /* Base colors - Dark backgrounds */
-  --color-base-100: oklch(22% 0.015 248.190);      /* Very dark blue-gray (main bg) */
-  --color-base-200: oklch(26% 0.015 248.190);      /* Dark blue-gray (cards) */
-  --color-base-300: oklch(30% 0.015 248.190);      /* Slightly lighter (borders/hover) */
-  --color-base-content: oklch(94% 0.002 247.839);  /* Light text on dark backgrounds */
-  
-  /* Primary - Deep Navy */
-  --color-primary: oklch(0.456 0.0462 235.11);
-  --color-primary-content: oklch(98% 0 0);  /* Near white for contrast */
-  
-  /* Secondary - Sky Blue */
-  --color-secondary: oklch(55.278% 0.098 266.660);
-  --color-secondary-content: oklch(98% 0 0);  /* White text */
-  
-  /* Accent - Sunburst Gold */
-  --color-accent: oklch(88.235% 0.134 86.553);
-  --color-accent-content: oklch(0.38 0.07 89.6);  /* Dark text for contrast */
-  
+  --color-base-100: oklch(22% 0.015 248.19); /* Very dark blue-gray (main bg) */
+  --color-base-200: oklch(26% 0.015 248.19); /* Dark blue-gray (cards) */
+  --color-base-300: oklch(
+    30% 0.015 248.19
+  ); /* Slightly lighter (borders/hover) */
+  --color-base-content: oklch(
+    94% 0.002 247.839
+  ); /* Light text on dark backgrounds */
+
+  /* Primary - Honey Gold */
+  --color-primary: oklch(0.8647 0.1557 86.553);
+  --color-primary-content: oklch(
+    0.4071 0.1055 94.61
+  ); /* Dark text for contrast */
+
+  /* Secondary - Deep Navy */
+  --color-secondary: oklch(0.456 0.0462 235.11);
+  --color-secondary-content: oklch(98% 0 0); /* White text */
+
+  /* Accent - Sky Blue */
+  --color-accent: oklch(0.68 0.1207 267.2);
+  --color-accent-content: oklch(98% 0 0); /* White text */
+
   /* Neutral - Mid Gray */
   --color-neutral: oklch(55.754% 0.016 244.893);
-  --color-neutral-content: oklch(98% 0 0);  /* White text */
-  
+  --color-neutral-content: oklch(98% 0 0); /* White text */
+
   /* Info - Soft Purple */
   --color-info: oklch(60.014% 0.056 294.558);
-  --color-info-content: oklch(98% 0 0);  /* White text */
-  
+  --color-info-content: oklch(98% 0 0); /* White text */
+
   /* Success - Vibrant Teal-Green */
   --color-success: oklch(76.5% 0.177 163.223);
-  --color-success-content: oklch(15% 0 0);  /* Dark text for contrast */
-  
+  --color-success-content: oklch(15% 0 0); /* Dark text for contrast */
+
   /* Warning - Amber (similar to accent but more orange) */
   --color-warning: oklch(79.718% 0.164 69.616);
-  --color-warning-content: oklch(20% 0 0);  /* Dark text */
-  
+  --color-warning-content: oklch(20% 0 0); /* Dark text */
+
   /* Error - Coral Red */
   --color-error: oklch(61.671% 0.179 29.576);
-  --color-error-content: oklch(98% 0 0);  /* White text */
-  
+  --color-error-content: oklch(98% 0 0); /* White text */
+
   /* Border Radius - same as light theme */
   --radius-selector: 0.5rem;
   --radius-field: 0.375rem;
   --radius-box: 0.75rem;
-  
+
   /* Component Sizing - same as light theme */
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
-  
+
   /* Visual Properties */
   --border: 1px;
   --depth: 1;
@@ -92,54 +100,58 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
-  
+
   /* Base colors for backgrounds */
-  --color-base-100: oklch(98.164% 0.002 247.839);  /* Off-white background */
-  --color-base-200: oklch(94.165% 0.005 247.879);  /* Light gray */
-  --color-base-300: oklch(91.087% 0.007 247.901);  /* Soft gray */
-  --color-base-content: oklch(26.209% 0.009 248.190);  /* Dark text for base backgrounds */
-  
-  /* Primary - Deep Navy */
-  --color-primary: oklch(0.456 0.0462 235.11);
-  --color-primary-content: oklch(98% 0 0);  /* Near white for contrast */
-  
-  /* Secondary - Sky Blue */
-  --color-secondary: oklch(55.278% 0.098 266.660);
-  --color-secondary-content: oklch(98% 0 0);  /* White text */
-  
-  /* Accent - Sunburst Gold */
-  --color-accent: oklch(88.235% 0.134 86.553);
-  --color-accent-content: oklch(0.38 0.07 89.6);  /* Dark text for contrast */
-  
+  --color-base-100: oklch(98.164% 0.002 247.839); /* Off-white background */
+  --color-base-200: oklch(94.165% 0.005 247.879); /* Light gray */
+  --color-base-300: oklch(91.087% 0.007 247.901); /* Soft gray */
+  --color-base-content: oklch(
+    26.209% 0.009 248.19
+  ); /* Dark text for base backgrounds */
+
+  /* Primary - Honey Gold */
+  --color-primary: oklch(0.8647 0.1557 86.553);
+  --color-primary-content: oklch(
+    0.4071 0.1055 94.61
+  ); /* Dark text for contrast */
+
+  /* Secondary - Deep Navy */
+  --color-secondary: oklch(0.456 0.0462 235.11);
+  --color-secondary-content: oklch(98% 0 0); /* White text */
+
+  /* Accent - Sky Blue */
+  --color-accent: oklch(0.68 0.1207 267.2);
+  --color-accent-content: oklch(98% 0 0); /* White text */
+
   /* Neutral - Mid Gray */
   --color-neutral: oklch(55.754% 0.016 244.893);
-  --color-neutral-content: oklch(98% 0 0);  /* White text */
-  
+  --color-neutral-content: oklch(98% 0 0); /* White text */
+
   /* Info - Soft Purple */
   --color-info: oklch(60.014% 0.056 294.558);
-  --color-info-content: oklch(98% 0 0);  /* White text */
-  
+  --color-info-content: oklch(98% 0 0); /* White text */
+
   /* Success - Vibrant Teal-Green */
   --color-success: oklch(76.5% 0.177 163.223);
-  --color-success-content: oklch(15% 0 0);  /* Dark text for contrast */
-  
+  --color-success-content: oklch(15% 0 0); /* Dark text for contrast */
+
   /* Warning - Amber (similar to accent but more orange) */
   --color-warning: oklch(79.718% 0.164 69.616);
-  --color-warning-content: oklch(20% 0 0);  /* Dark text */
-  
+  --color-warning-content: oklch(20% 0 0); /* Dark text */
+
   /* Error - Coral Red */
   --color-error: oklch(61.671% 0.179 29.576);
-  --color-error-content: oklch(98% 0 0);  /* White text */
-  
+  --color-error-content: oklch(98% 0 0); /* White text */
+
   /* Border Radius */
   --radius-selector: 0.5rem;
   --radius-field: 0.375rem;
   --radius-box: 0.75rem;
-  
+
   /* Component Sizing */
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
-  
+
   /* Visual Properties */
   --border: 1px;
   --depth: 1;
@@ -151,7 +163,7 @@
     --fontsize: var(--text-xl);
     --btn-p: var(--text-xl);
     --size: calc(var(--size-field, 0.25rem) * 18);
-}
+  }
 }
 
 /* Smooth Scroll */
@@ -161,10 +173,9 @@ html {
 
 /* Text selection styling */
 ::selection {
-  background: var(--color-success);
-  color: var(--color-success-content);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
 }
-
 
 .font-sigmar {
   font-family: "Sigmar One", sans-serif;
@@ -179,8 +190,9 @@ html {
 }
 
 .brand-gradient {
-  background: linear-gradient(115deg, 
-   var(--color-primary) 0%,
+  background: linear-gradient(
+    115deg,
+    var(--color-primary) 0%,
     var(--color-primary) 16.67%,
     var(--color-neutral) 36.67%,
     var(--color-error) 50%,
@@ -190,7 +202,8 @@ html {
 }
 
 .brand-gradient-text {
-  background: linear-gradient(115deg, 
+  background: linear-gradient(
+    115deg,
     var(--color-primary) 0%,
     var(--color-primary) 16.67%,
     var(--color-neutral) 36.67%,
@@ -212,21 +225,29 @@ html {
   font-size: var(--text-base);
 }
 
-
 .validator-hint {
   display: none;
 }
 
 .validator {
-    &:user-invalid, &:has(:user-invalid), &[aria-invalid]:not([aria-invalid="false"]) {
-        & ~ .validator-hint {
-            display: block;
-            color: var(--color-error);
-        }
+  &:user-invalid,
+  &:has(:user-invalid),
+  &[aria-invalid]:not([aria-invalid="false"]) {
+    & ~ .validator-hint {
+      display: block;
+      color: var(--color-error);
     }
+  }
 }
 
 .animate-spin-slow {
   animation: spin 10s linear infinite;
 }
 
+@media (prefers-color-scheme: dark) {
+  .glow-primary {
+    text-shadow:
+      0 0 10px color-mix(in oklab, var(--color-primary) 50%, transparent),
+      0 0 30px color-mix(in oklab, var(--color-primary) 20%, transparent);
+  }
+}
