@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
   const config = {
     showInteractiveMode: true,
     buttonText: "Try Interactive Mode!",
-    baseUrl: process.env.CREATE_STUDIO_BASE_URL || 'https://create.studio',
+    baseUrl: useRuntimeConfig().public.rootUrl,
     subscriptionTier,
     renderMode,
     features: {
