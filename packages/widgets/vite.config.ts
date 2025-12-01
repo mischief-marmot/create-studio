@@ -73,5 +73,6 @@ export default defineConfig(({ mode }) => ({
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
     '__VUE_OPTIONS_API__': 'true',
     '__VUE_PROD_DEVTOOLS__': 'false',
+    '__CREATE_STUDIO_BASE_URL__': JSON.stringify(process.env.NUXT_PUBLIC_ROOT_URL || 'http://localhost:3001'),
   }
 }))
