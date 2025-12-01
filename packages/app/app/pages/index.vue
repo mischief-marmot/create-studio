@@ -19,185 +19,190 @@
         <div class="absolute inset-0 bg-[linear-gradient(90deg,transparent_24%,rgba(var(--primary-rgb),.15)_25%,rgba(var(--primary-rgb),.15)_26%,transparent_27%,transparent_74%,rgba(var(--primary-rgb),.15)_75%,rgba(var(--primary-rgb),.15)_76%,transparent_77%,transparent)_0_60px] bg-[length:60px_60px]" />
       </div>
 
-      <div class="max-w-7xl relative mx-auto text-center">
+      <div class="max-w-7xl relative mx-auto">
         <!-- Badge -->
         <div class="bg-base-100 border-base-100 text-base-content animate-fade-in inline-flex items-center gap-2 px-4 py-2 mb-8 text-sm font-medium border rounded-full">
           <div class="size-2 bg-primary animate-pulse rounded-full" />
           Free WordPress Plugin
         </div>
 
-        <!-- Title -->
-        <h1 class="sm:text-7xl lg:text-8xl animate-fade-in-up lg:max-w-3xl max-w-xl mx-auto mb-8 font-serif text-6xl font-light tracking-tight" style="animation-delay: 0.1s">
-          Transform your <span class="text-primary sm:min-w-[172px] md:min-w-[208px] lg:min-w-[277px] text-left inline-block italic transition-opacity duration-500 glow-primary">{{ rotatingWords[currentWordIndex] }}</span>
-          <br />
-          into rich results
-        </h1>
+        <div class="lg:grid-cols-2 grid items-center gap-12">
+          <!-- Left Content -->
+          <div class="lg:text-left text-center">
+            <!-- Title -->
+            <h1 class="sm:text-7xl lg:text-7xl animate-fade-in-up mb-8 font-serif text-6xl font-light tracking-tight" style="animation-delay: 0.1s">
+              Transform your <span class="text-primary glow-primary inline-block italic transition-opacity duration-500">{{ rotatingWords[currentWordIndex] }}</span>
+              <br />
+              into rich results
+            </h1>
 
-        <!-- Subtitle -->
-        <p class="sm:text-xl text-base-content animate-fade-in-up max-w-2xl mx-auto mb-10 text-lg leading-relaxed" style="animation-delay: 0.2s">
-          Help readers discover your recipes, how-tos, and lists on Google. Automatic JSON-LD schema, free nutrition facts, user ratings, and the industry's first <strong>interactive mode</strong>.
-        </p>
+            <!-- Subtitle -->
+            <p class="sm:text-xl text-base-content animate-fade-in-up mb-10 text-lg leading-relaxed" style="animation-delay: 0.2s">
+              Help readers discover your recipes, how-tos, and lists on Google. Automatic JSON-LD schema, free nutrition facts, user ratings, and the industry's first <strong>interactive mode</strong>.
+            </p>
 
-        <!-- CTA Buttons -->
-        <div class="animate-fade-in-up flex flex-wrap items-center justify-center gap-4" style="animation-delay: 0.3s">
-          <a href="/plugin" class="btn btn-primary btn-lg rounded-xl gap-2">
-            <ArrowDownTrayIcon class="size-5" />
-            Install Create Free
-          </a>
-          <button @click="scrollToSection('features')" class="btn btn-ghost btn-lg border-base-100 hover:bg-base-100 rounded-xl border">
-            Explore Features
-          </button>
-        </div>
-      </div>
-
-      <!-- Hero Visual -->
-      <div class="animate-fade-in-up relative mx-auto mt-20" style="animation-delay: 0.5s">
-        <!-- Mobile Phone View -->
-        <div class="md:hidden max-w-sm mx-auto">
-          <div class="bg-base-100 rounded-[2.5rem] p-2 shadow-xl ring-1 ring-base-300">
-            <!-- Notch -->
-            <div class="flex justify-center mb-2">
-              <div class="bg-base-content min-w-24 h-6 rounded-full" />
-            </div>
-            <!-- Screen -->
-            <div class="bg-base-200 rounded-[2rem] p-4 min-h-[660px] flex flex-col">
-              <div class="text-base-content pl-2 mb-3 text-xs italic">1.8B+ search results</div>
-              <!-- Recipe Card -->
-              <div class="bg-gradient-to-br from-base-200 to-base-100 dark:border-base-200 rounded-xl flex flex-col gap-4 p-6 mb-4 border border-none">
-                <div class="bg-base-100 flex items-center justify-center w-full h-40 overflow-hidden rounded-lg">
-                  <img class="size-full object-cover" src="/img/screenshots/chocolate-cake.jpg" alt="" />
-                </div>
-                <div>
-                  <h3 class="font-serif text-lg font-medium">Best Ever Chocolate Cake</h3>
-                  <div class="text-base-content flex mb-4 text-sm">
-                    Your Site
-                  </div>
-                  <div class="text-base-content flex items-center gap-2 text-xs">
-                    <span>5.0</span>
-                    <span class="flex gap-0.5">
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                    </span>
-                    <span class="italic">(3.9k)</span>
-                  </div>
-                  <div class="mt-2 text-xs">45 min</div>
-                  <p class="mt-2 text-xs">Cocoa powder, coconut oil, butter</p>
-                </div>
-              </div>
-              <div class="flex-1 space-y-2">
-                <div class="bg-base-100 border-base-100 p-3 border rounded-lg">
-                  <div class="text-base-content text-xs font-semibold">Best Ever Chocolate Cake Recipe</div>
-                  <div class="text-base-content/60 mb-1 text-xs italic">yoursite.com/chocolate-cake</div>
-                  <div class="text-base-content flex items-center gap-1 text-xs">
-                    <span class="flex gap-0.5">
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                    </span>
-                    <span>5.0</span>
-                  </div>
-                </div>
-                <div class="bg-base-100 border-base-100 p-3 border rounded-lg">
-                  <div class="text-base-content text-xs font-semibold">How to Make Chocolate Frosting</div>
-                  <div class="text-base-content/60 mb-1 text-xs italic">yoursite.com/chocolate-frosting</div>
-                  <div class="text-base-content flex items-center gap-1 text-xs">
-                    <span class="flex gap-0.5">
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                    </span>
-                    <span>4.7</span>
-                  </div>
-                </div>
-              </div>
+            <!-- CTA Buttons -->
+            <div class="animate-fade-in-up lg:justify-start flex flex-wrap items-center justify-center gap-4" style="animation-delay: 0.3s">
+              <a href="/plugin" class="btn btn-primary btn-lg rounded-xl gap-2">
+                <ArrowDownTrayIcon class="size-5" />
+                Install Create Free
+              </a>
+              <button @click="scrollToSection('features')" class="btn btn-ghost btn-lg border-base-100 hover:bg-base-100 rounded-xl border">
+                Explore Features
+              </button>
             </div>
           </div>
-        </div>
 
-        <!-- Desktop Browser View -->
-        <div class="md:block w-fit hidden max-w-3xl mx-auto">
-          <div class="bg-base-100 border-base-content/20 rounded-2xl overflow-hidden border shadow-2xl">
-            <!-- Browser Header -->
-            <div class="bg-base-200 border-base-300 flex items-center gap-2 px-4 py-3 border-b">
-              <div class="flex gap-1.5">
-                <div class="size-3 bg-red-500 rounded-full" />
-                <div class="size-3 bg-yellow-500 rounded-full" />
-                <div class="size-3 bg-green-500 rounded-full" />
+          <!-- Right Visual -->
+          <div class="animate-fade-in-up" style="animation-delay: 0.5s">
+            <!-- Mobile Phone View -->
+            <div class="md:hidden max-w-sm mx-auto">
+              <div class="bg-base-100 rounded-[2.5rem] p-2 shadow-xl ring-1 ring-base-300">
+                <!-- Notch -->
+                <div class="flex justify-center mb-2">
+                  <div class="bg-base-content min-w-24 h-6 rounded-full" />
+                </div>
+                <!-- Screen -->
+                <div class="bg-base-200 rounded-[2rem] p-4 min-h-[660px] flex flex-col">
+                  <div class="text-base-content pl-2 mb-3 text-xs italic">1.8B+ search results</div>
+                  <!-- Recipe Card -->
+                  <div class="bg-gradient-to-br from-base-200 to-base-100 dark:border-base-200 rounded-xl flex flex-col gap-4 p-6 mb-4 border border-none">
+                    <div class="bg-base-100 flex items-center justify-center w-full h-40 overflow-hidden rounded-lg">
+                      <img class="size-full object-cover" src="/img/screenshots/chocolate-cake.jpg" alt="" />
+                    </div>
+                    <div>
+                      <h3 class="font-serif text-lg font-medium">Best Ever Chocolate Cake</h3>
+                      <div class="text-base-content flex mb-4 text-sm">
+                        Your Site
+                      </div>
+                      <div class="text-base-content flex items-center gap-2 text-xs">
+                        <span>5.0</span>
+                        <span class="flex gap-0.5">
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                        </span>
+                        <span class="italic">(3.9k)</span>
+                      </div>
+                      <div class="mt-2 text-xs">45 min</div>
+                      <p class="mt-2 text-xs">Cocoa powder, coconut oil, butter</p>
+                    </div>
+                  </div>
+                  <div class="flex-1 space-y-2">
+                    <div class="bg-base-100 border-base-100 p-3 border rounded-lg">
+                      <div class="text-base-content text-xs font-semibold">Best Ever Chocolate Cake Recipe</div>
+                      <div class="text-base-content/60 mb-1 text-xs italic">yoursite.com/chocolate-cake</div>
+                      <div class="text-base-content flex items-center gap-1 text-xs">
+                        <span class="flex gap-0.5">
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                        </span>
+                        <span>5.0</span>
+                      </div>
+                    </div>
+                    <div class="bg-base-100 border-base-100 p-3 border rounded-lg">
+                      <div class="text-base-content text-xs font-semibold">How to Make Chocolate Frosting</div>
+                      <div class="text-base-content/60 mb-1 text-xs italic">yoursite.com/chocolate-frosting</div>
+                      <div class="text-base-content flex items-center gap-1 text-xs">
+                        <span class="flex gap-0.5">
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                        </span>
+                        <span>4.7</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Content -->
-            <div class="space-between md:flex-row lg:min-w-3xl flex flex-col-reverse gap-8 p-8">
-              <!-- Search Results -->
-              <div class="grow-1 space-y-2">
-                <div class="text-base-content pl-4 mb-2 text-xs italic">1.8B+ search results</div>
-                <div class="bg-base-100 border-base-100 p-4 border rounded-lg">
-                  <div class="text-base-content text-sm font-semibold">Best Ever Chocolate Cake Recipe</div>
-                  <div class="text-base-content/60 mb-2 text-sm italic">yoursite.com/chocolate-cake</div>
-                  <div class="text-base-content flex items-center gap-2 text-xs">
-                    <span class="flex gap-0.5">
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                    </span>
-                    <span>4.9</span>
-                    <span>45 min</span>
-                    <span>324 cal</span>
+            <!-- Desktop Browser View -->
+            <div class="md:block w-fit hidden max-w-3xl mx-auto">
+              <div class="bg-base-100 border-base-content/20 rounded-2xl overflow-hidden border shadow-2xl">
+                <!-- Browser Header -->
+                <div class="bg-base-200 border-base-300 flex items-center gap-2 px-4 py-3 border-b">
+                  <div class="flex gap-1.5">
+                    <div class="size-3 bg-red-500 rounded-full" />
+                    <div class="size-3 bg-yellow-500 rounded-full" />
+                    <div class="size-3 bg-green-500 rounded-full" />
                   </div>
                 </div>
-                <div class="bg-base-100 border-base-100 p-4 border rounded-lg">
-                  <div class="text-base-content text-sm font-semibold">How to Make Chocolate Frosting</div>
-                  <div class="text-base-content/60 mb-2 text-sm italic">yoursite.com/chocolate-frosting</div>
-                  <div class="text-base-content flex items-center gap-2 text-xs">
-                    <span class="flex gap-0.5">
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                    </span>
-                    <span>4.7</span>
-                    <span>7 steps</span>
-                  </div>
-                </div>
-                <div class="bg-base-100 border-base-100 p-4 border rounded-lg">
-                  <div class="text-base-content/60 text-sm font-semibold">Mediocre Chocolate Cake</div>
-                  <div class="text-base-content/40 mb-2 text-sm italic">someoneelse.com/why-bother</div>
-                </div>
-              </div>
 
-              <!-- Recipe Card -->
-              <div class="bg-gradient-to-br from-base-200 to-base-100 border-base-100 rounded-xl flex flex-col max-w-xs gap-4 p-6 border">
-                <div class="bg-base-100 flex items-center justify-center w-56 h-40 overflow-hidden rounded-lg">
-                  <img class="size-full object-cover" src="/img/screenshots/chocolate-cake.jpg" alt="" />
-                </div>
-                <div>
-                  <h3 class="font-serif text-lg font-medium">Best Ever Chocolate Cake</h3>
-                  <div class="text-base-content flex mb-4 text-sm">
-                    Your Site
+                <!-- Content -->
+                <div class="space-between md:flex-row lg:min-w-3xl flex flex-col-reverse gap-8 p-8">
+                  <!-- Search Results -->
+                  <div class="grow-1 space-y-2">
+                    <div class="text-base-content pl-4 mb-2 text-xs italic">1.8B+ search results</div>
+                    <div class="bg-base-100 border-base-100 p-4 border rounded-lg">
+                      <div class="text-base-content text-sm font-semibold">Best Ever Chocolate Cake Recipe</div>
+                      <div class="text-base-content/60 mb-2 text-sm italic">yoursite.com/chocolate-cake</div>
+                      <div class="text-base-content flex items-center gap-2 text-xs">
+                        <span class="flex gap-0.5">
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                        </span>
+                        <span>4.9</span>
+                        <span>45 min</span>
+                        <span>324 cal</span>
+                      </div>
+                    </div>
+                    <div class="bg-base-100 border-base-100 p-4 border rounded-lg">
+                      <div class="text-base-content text-sm font-semibold">How to Make Chocolate Frosting</div>
+                      <div class="text-base-content/60 mb-2 text-sm italic">yoursite.com/chocolate-frosting</div>
+                      <div class="text-base-content flex items-center gap-2 text-xs">
+                        <span class="flex gap-0.5">
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                        </span>
+                        <span>4.7</span>
+                        <span>7 steps</span>
+                      </div>
+                    </div>
+                    <div class="bg-base-100 border-base-100 p-4 border rounded-lg">
+                      <div class="text-base-content/60 text-sm font-semibold">Mediocre Chocolate Cake</div>
+                      <div class="text-base-content/40 mb-2 text-sm italic">someoneelse.com/why-bother</div>
+                    </div>
                   </div>
-                  <div class="text-base-content flex items-center gap-2 text-xs">
-                    <span>5.0</span>
-                    <span class="flex gap-0.5">
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                      <span class="text-primary">★</span>
-                    </span>
-                    <span class="italic">(3.9k)</span>
+
+                  <!-- Recipe Card -->
+                  <div class="bg-gradient-to-br from-base-200 to-base-100 border-base-100 rounded-xl flex flex-col max-w-xs gap-4 p-6 border">
+                    <div class="bg-base-100 flex items-center justify-center w-56 h-40 overflow-hidden rounded-lg">
+                      <img class="size-full object-cover" src="/img/screenshots/chocolate-cake.jpg" alt="" />
+                    </div>
+                    <div>
+                      <h3 class="font-serif text-lg font-medium">Best Ever Chocolate Cake</h3>
+                      <div class="text-base-content flex mb-4 text-sm">
+                        Your Site
+                      </div>
+                      <div class="text-base-content flex items-center gap-2 text-xs">
+                        <span>5.0</span>
+                        <span class="flex gap-0.5">
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                          <span class="text-primary">★</span>
+                        </span>
+                        <span class="italic">(3.9k)</span>
+                      </div>
+                      <div class="mt-2 text-xs">45 min</div>
+                      <p class="mt-2 text-xs">Cocoa powder, coconut oil, butter</p>
+                    </div>
                   </div>
-                  <div class="mt-2 text-xs">45 min</div>
-                  <p class="mt-2 text-xs">Cocoa powder, coconut oil, butter</p>
                 </div>
               </div>
             </div>
@@ -268,14 +273,14 @@
         <div class="space-y-16">
           <!-- Feature 1: Rich Results -->
           <div class="lg:grid-cols-2 grid items-center gap-12">
-            <div>
+            <div class="text-left">
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 Rich Results
               </div>
-              <h3 class="mb-4 font-serif text-3xl">Show up in search with eye-catching cards</h3>
+              <h3 class="mb-4 font-serif text-3xl">Transform your recipes into rich results</h3>
               <p class=" mb-6 text-lg">Your readers see beautiful recipe cards, star ratings, and cooking times right in Google search results. Stand out and drive more clicks.</p>
               <div class="bg-base-300 border-base-content/30 p-4 border rounded-lg">
                 <p class=" mb-2 text-sm font-semibold">How it works</p>
