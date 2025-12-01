@@ -4,6 +4,14 @@ import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import autoprefixer from 'autoprefixer'
 import { minify as minifyPlugin } from 'rollup-plugin-esbuild'
+import { config as loadEnv } from 'dotenv'
+import { readFileSync } from 'fs'
+
+// Load environment variables from root .env file
+loadEnv({ path: resolve(__dirname, '../app/.env'), override: false })
+
+// Read package.json for version
+const packageJson = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'))
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -74,5 +82,7 @@ export default defineConfig(({ mode }) => ({
     '__VUE_OPTIONS_API__': 'true',
     '__VUE_PROD_DEVTOOLS__': 'false',
     '__CREATE_STUDIO_BASE_URL__': JSON.stringify(process.env.NUXT_PUBLIC_ROOT_URL || 'http://localhost:3001'),
+    '__BUILD_TIME__': JSON.stringify(new Date().toISOString()),
+    '__CREATE_STUDIO_VERSION__': JSON.stringify(packageJson.version),
   }
 }))

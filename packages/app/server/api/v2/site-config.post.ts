@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
   const config = {
     showInteractiveMode: true,
     buttonText: "Try Interactive Mode!",
-    baseUrl: useRuntimeConfig().public.rootUrl,
+    baseUrl: runtimeConfig.public.rootUrl,
     subscriptionTier,
     renderMode,
     features: {

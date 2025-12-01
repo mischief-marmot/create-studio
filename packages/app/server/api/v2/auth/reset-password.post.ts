@@ -1,9 +1,9 @@
 /**
- * POST /api/v1/auth/reset-password
- * Reset password using token
+ * POST /api/v2/auth/reset-password
+ * Reset password using token and automatically authenticate the user
  *
  * Request body: { token: string, password: string }
- * Response: { success: boolean, error?: string }
+ * Response: { success: boolean, user?: { id, email }, error?: string }
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
@@ -68,10 +68,22 @@ export default defineEventHandler(async (event) => {
     // Clear reset token
     await userRepo.clearPasswordResetToken(user.id!)
 
-    logger.debug('Password reset successfully for user', user.id)
+    // Automatically authenticate the user after password reset
+    await setUserSession(event, {
+      user: {
+        id: user.id,
+        email: user.email
+      }
+    })
+
+    logger.debug('Password reset successfully and user authenticated for user', user.id)
 
     return {
-      success: true
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email
+      }
     }
 
   } catch (error: any) {

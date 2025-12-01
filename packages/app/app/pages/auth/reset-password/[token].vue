@@ -45,7 +45,7 @@
           </div>
 
           <div v-if="success" class="alert alert-success">
-            <span>Password reset successfully! Redirecting to login...</span>
+            <span>Password reset successfully! Redirecting to dashboard...</span>
           </div>
 
           <div class="form-control mt-8 text-center">
@@ -115,9 +115,9 @@ const handleSubmit = async () => {
 
     if (response.success) {
       success.value = true
-      // Redirect to login after 2 seconds
+      // Redirect to dashboard after 2 seconds (user is now authenticated)
       setTimeout(() => {
-        router.push('/auth/login')
+        router.push('/admin')
       }, 2000)
     } else {
       errors.value.general = response.error || 'Failed to reset password'
