@@ -7,7 +7,7 @@
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { UserRepository} from '~~/server/utils/database'
+import { UserRepository, SiteRepository } from '~~/server/utils/database'
 import { verifyPasswordResetToken, hashUserPassword } from '~~/server/utils/auth'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
@@ -67,6 +67,16 @@ export default defineEventHandler(async (event) => {
 
     // Clear reset token
     await userRepo.clearPasswordResetToken(user.id!)
+
+    // Link user to all their sites in SiteUsers
+    const siteRepo = new SiteRepository()
+    const userSitesData = await userRepo.findByIdWithSites(user.id!)
+
+    if (userSitesData?.Sites) {
+      for (const site of userSitesData.Sites) {
+        await siteRepo.addUserToSite(site.id!, user.id!, 'admin')
+      }
+    }
 
     // Automatically authenticate the user after password reset
     await setUserSession(event, {
