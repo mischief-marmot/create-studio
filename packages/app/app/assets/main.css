@@ -7,6 +7,8 @@
 @theme {
   --default-font-family:
     "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-serif: "Instrument Serif", Georgia, "Times New Roman", Times, serif;
   --text-xs: 0.9rem;
   --text-sm: 0.975rem;
@@ -37,11 +39,9 @@
   color-scheme: "dark";
 
   /* Base colors - Dark backgrounds */
-  --color-base-100: oklch(22% 0.015 248.19); /* Very dark blue-gray (main bg) */
-  --color-base-200: oklch(26% 0.015 248.19); /* Dark blue-gray (cards) */
-  --color-base-300: oklch(
-    30% 0.015 248.19
-  ); /* Slightly lighter (borders/hover) */
+  --color-base-100: oklch(0.2282 0.0018 98.5);
+  --color-base-200: oklch(0.2685 0.0035 106.6); 
+  --color-base-300: oklch(0.3032 0.0067 106.6); 
   --color-base-content: oklch(
     94% 0.002 247.839
   ); /* Light text on dark backgrounds */
@@ -102,12 +102,10 @@
   color-scheme: "light";
 
   /* Base colors for backgrounds */
-  --color-base-100: oklch(98.164% 0.002 247.839); /* Off-white background */
-  --color-base-200: oklch(94.165% 0.005 247.879); /* Light gray */
-  --color-base-300: oklch(91.087% 0.007 247.901); /* Soft gray */
-  --color-base-content: oklch(
-    26.209% 0.009 248.19
-  ); /* Dark text for base backgrounds */
+  --color-base-100: oklch(0.9741 0.0074 80.72);
+  --color-base-200: oklch(0.9473 0.0103 81.79);
+  --color-base-300: oklch(0.9409 0.0111 63.36);
+  --color-base-content: oklch(0.21 0.006 285.885); /* Dark text for base backgrounds */
 
   /* Primary - Honey Gold */
   --color-primary: oklch(0.8647 0.1557 86.553);
@@ -124,8 +122,8 @@
   --color-accent-content: oklch(98% 0 0); /* White text */
 
   /* Neutral - Mid Gray */
-  --color-neutral: oklch(55.754% 0.016 244.893);
-  --color-neutral-content: oklch(98% 0 0); /* White text */
+  --color-neutral: oklch(37% 0.01 67.558);
+  --color-neutral-content: oklch(92% 0.003 48.717);
 
   /* Info - Soft Purple */
   --color-info: oklch(60.014% 0.056 294.558);
@@ -169,6 +167,7 @@
 /* Smooth Scroll */
 html {
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Text selection styling */

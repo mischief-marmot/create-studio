@@ -1,216 +1,312 @@
 <template>
-  <div class="p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
-      <!-- Header -->
-      <div>
-        <h1 class="text-3xl font-bold">Dashboard</h1>
-        <p class="text-base-content/70 mt-1">Overview of your Create Studio sites</p>
+  <div class="min-h-screen">
+    <!-- Page Header -->
+    <header class="backdrop-blur-xl border-base-300 sticky top-0 z-10 border-b">
+      <div class="max-w-[1400px] flex items-end justify-between gap-6 mx-auto px-6 py-8"
+          :class="scrollPosition > 0 ? 'lg:py-4 lg:px-6' : 'lg:px-12 lg:py-10 '"
+      >
+        <div class="flex-1 min-w-0">
+          <h1 class=" text-base-content font-extralight font-serif text-3xl leading-none tracking-tight"
+          :class="scrollPosition > 0 ? '' : 'lg:text-5xl'"
+          >
+            {{ greeting }}, <span class="text-primary ml-2 italic font-thin">{{ user?.firstname || 'friend' }}</span>
+          </h1>
+        </div>
+        <div class="flex items-center hidden gap-3"
+        :class="scrollPosition > 0 ? 'hidden' : ''">
+          <div class="bg-success/10 border border-success/30 text-success rounded-full px-5 py-2.5 flex items-center gap-2.5 shadow-sm">
+            <span class="relative flex w-2 h-2">
+              <span class="animate-ping bg-success absolute inline-flex w-full h-full rounded-full opacity-75"></span>
+              <span class="bg-success relative inline-flex w-2 h-2 rounded-full"></span>
+            </span>
+            <span class="text-sm">{{ sites.length }} {{ sites.length === 1 ? 'Site' : 'Sites' }}</span>
+          </div>
+        </div>
       </div>
+    </header>
 
-      <!-- Stats Cards -->
-      <div class="md:grid-cols-3 grid grid-cols-1 gap-6">
-        <div class="card bg-base-200 shadow-xl">
-          <div class="card-body">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-base-content/70 text-sm">Total Sites</p>
-                <p class="text-3xl font-bold">{{ sites.length }}</p>
+    <!-- Main Content -->
+    <div class="lg:px-12 max-w-[1400px] px-6 py-10 mx-auto space-y-14">
+      <!-- Stats Overview - Editorial Cards -->
+      <section class="w-full font-sans">
+        <div class="lg:grid-cols-4 grid grid-cols-2 gap-5">
+          <!-- Total Sites -->
+          <div class="bg-base-100 border-base-300 border-1 rounded-3xl p-6">
+            <div class="flex items-center h-full space-x-2">
+              <div class="rounded-2xl bg-gradient-to-br from-primary/5 via-primary-35 to-primary/35 text-amber-600 size-12 flex items-center justify-center mb-4 transition-transform duration-500">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="size-6">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <path d="M3 9h18"/>
+              <path d="M9 21V9"/>
+            </svg>
               </div>
-              <ServerIcon class="text-primary w-12 h-12" />
+              <div class="flex flex-col">
+                <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ sites.length }}</span>
+                <p class="text-base-content/70 text-sm font-thin">Total Sites</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pro Sites -->
+          <div class="bg-base-100 border-base-300 border-1 rounded-3xl p-6">
+            <div class="flex items-center h-full space-x-2">
+              <div class="rounded-2xl bg-gradient-to-br from-success/5 via-success-35 to-success/35 size-12 flex items-center justify-center mb-4 transition-transform duration-500">
+                <SparklesIcon class="text-success size-6" />
+              </div>
+              <div class="flex flex-col">
+                <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ proSitesCount }}</span>
+                <p class="text-base-content/70 text-sm">Pro Sites</p>
+              </div>
+            </div>
+            <div v-if="proSitesCount > 0" class="mt-auto">
+              <div class="bg-base-300 h-2 overflow-hidden rounded-full">
+                  <div class="bg-success h-full transition-all duration-700 rounded-full" :style="`width: ${(proSitesCount / sites.length) * 100}%`"></div>
+                </div>
+            </div>
+          </div>
+
+          <!-- Team Members -->
+          <div class="bg-base-100 border-base-300 border-1 rounded-3xl hidden p-6">
+            <div class="flex items-center h-full space-x-2">
+              <div class="rounded-2xl bg-gradient-to-br from-accent/5 via-accent-35 to-accent/35 size-12 flex items-center justify-center mb-4 transition-transform duration-500">
+                <UsersIcon class="text-accent size-6" />
+              </div>
+              <div class="flex flex-col">
+
+              <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ totalTeamMembers }}</span>
+              <p class="text-base-content/70 text-sm">Team Members</p>
+            </div>
+            </div>
+          </div>
+
+          <!-- Account Age -->
+          <div class="bg-base-100 border-base-300 border-1 rounded-3xl p-6">
+            <div class="flex items-center h-full space-x-2">
+              <div class="rounded-2xl bg-gradient-to-br from-secondary/5 via-secondary-35 to-secondary/35 size-12 flex items-center justify-center mb-4 transition-transform duration-500">
+                <CalendarDaysIcon class="text-secondary size-6" />
+              </div>
+              
+              <div class="flex flex-col">
+              <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ accountAgeDays }}</span>
+              <p class="text-base-content/70 text-sm">Days with Create</p>
+            </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="card bg-base-200 shadow-xl">
-          <div class="card-body">
-            <div class="flex items-center justify-between">
+      <!-- Active Site Card (if selected) -->
+      <section v-if="selectedSite" class="w-full">
+        <h3 class="mb-6 font-serif text-2xl">Selected Site</h3>
+        <div class="bg-gradient-to-br from-base-100 via-base-200 to-base-200 border-base-300 rounded-3xl border-1 p-16">
+          <div class="sm:flex-row sm:items-center flex flex-col justify-between gap-6 mb-8">
+            <div class="flex items-center gap-5">
               <div>
-                <p class="text-base-content/70 text-sm">Selected Site</p>
-                <p class="text-xl font-bold truncate">
-                  {{ selectedSite?.name || selectedSite?.url || 'None' }}
-                </p>
+                <div class="mb-1">
+                  <h3 class="text-base-content font-serif text-2xl italic">{{ selectedSite.name || selectedSite.url }}</h3>
+                </div>
+                <a
+                  :href="`https://${selectedSite.url}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-base-content/60 flex items-center gap-1.5 text-xs font-light"
+                >
+                  {{ selectedSite.url }}
+                  <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" />
+                </a>
               </div>
-              <GlobeAltIcon class="text-success w-12 h-12" />
+            </div>
+            <div class=" flex items-center justify-end gap-2">
+              <button @click="navigateTo('/admin/settings')" class="btn btn-md btn-circle btn-ghost text-base-content/70 font-normal uppercase">
+                <Cog6ToothIcon class="size-6" />
+              </button>
+              <div class="badge badge-md bg-amber-700 text-amber-50 border-amber-700 font-sans uppercase rounded-full">
+                {{ getSiteTier(selectedSite.id) === 'pro' ? 'Pro' : 'Free' }}
+              </div>
             </div>
           </div>
-        </div>
 
-        
-      </div>
+          <!-- Site Stats Row -->
+          <div v-if="selectedSiteStats" class="sm:grid-cols-4 border-base-300 grid grid-cols-2 gap-6 pt-8 border-t-2">
+            <div>
+              <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">Subscription</p>
+              <p class="text-base-content">
+                <span :class="getSiteTier(selectedSiteId) === 'pro' ? 'inline-flex size-2 rounded-full bg-success animate-pulse' : 'hidden'"></span>
+                {{ getSiteTier(selectedSiteId) === 'pro' ? 'Active' : 'Free' }}</p>
+            </div>
+            <div>
+              <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">WordPress</p>
+              <p class="text-base-content">{{ selectedSite.wp_version || '—' }}</p>
+            </div>
+            <div>
+              <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">PHP</p>
+              <p class="text-base-content">{{ selectedSite.php_version || '—' }}</p>
+            </div>
+            <div>
+              <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">Create Version</p>
+              <p class="text-base-content">{{ selectedSite.create_version || '—' }}</p>
+            </div>
+            <!-- <div>
+              <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">Team Size</p>
+              <p class="text-base-content text-lg">{{ selectedSiteStats.teamCount }} {{ selectedSiteStats.teamCount === 1 ? 'member' : 'members' }}</p>
+            </div> -->
+          </div>
+        </div>
+      </section>
 
       <!-- Sites List -->
-      <div class="card bg-base-200">
-        <div class="card-body">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="card-title">Your Sites</h2>
-            <!-- <button class="btn btn-primary btn-sm">
-              <PlusIcon class="w-5 h-5 mr-1" />
-              Add Site
-            </button> -->
+      <section class="space-y-8">
+        <div class="flex items-end justify-between">
+          <div class="flex flex-col gap-2">
+            <h2 class="text-base-content font-serif text-2xl leading-none">Your Sites</h2>
+            <p class="text-base-content/70 text-base font-medium">Select a site to manage its settings</p>
           </div>
+        </div>
 
-          <div v-if="loading" class="flex justify-center py-8">
-            <span class="loading loading-spinner loading-lg"></span>
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center py-20">
+          <div class="relative">
+            <div class="border-base-300 border-t-primary animate-spin w-16 h-16 border-4 rounded-full"></div>
           </div>
+        </div>
 
-          <div v-else-if="sites.length === 0" class="py-8 text-center">
-            <ServerIcon class="text-base-content/30 w-16 h-16 mx-auto mb-4" />
-            <p class="mb-2 text-lg font-semibold">No sites yet</p>
-            <!-- <p class="text-base-content/70 mb-4">Get started by adding your first site</p>
-            <button class="btn btn-primary">
-              <PlusIcon class="w-5 h-5 mr-1" />
-              Add Your First Site
-            </button> -->
+        <!-- Empty State -->
+        <div v-else-if="sites.length === 0" class="bg-base-100 border-base-300 rounded-3xl flex flex-col items-center justify-center px-6 py-20 text-center border-2 border-dashed">
+          <div class="rounded-3xl bg-base-200 flex items-center justify-center w-24 h-24 mb-6">
+            <ServerIcon class="text-base-content/50 w-12 h-12" />
           </div>
+          <h3 class="text-base-content mb-3 font-serif text-2xl">No sites yet</h3>
+          <p class="text-base-content/70 max-w-md text-base leading-relaxed">
+            Sites are automatically added when you register in the Create plugin on your WordPress site.
+          </p>
+        </div>
 
-          <ul v-else role="list" class="divide-base-300 bg-base-200 rounded-xl px-3 overflow-hidden divide-y">
-            <li v-for="site in sites" :key="site.id" class="gap-x-6 flex items-center justify-between py-5">
-              <div class="min-w-0">
-                <div class="gap-x-3 flex items-start">
-                  <p class="grow-0 text-sm font-semibold">{{ site.name || site.url }}</p>
-                  <span v-if="getSiteTier(site.id) === 'pro'" class="badge-md badge-success badge">
-                    Pro
-                  </span>
-                  <span v-else class="badge badge-md badge-warning">
-                    Free
-                  </span>
+        <!-- Sites Grid -->
+        <div v-else class="flex gap-8">
+          <article
+            v-for="site in siteList"
+            :key="site.id"
+            class="bg-base-100 rounded-2xl border-base-300 w-70 border-1 overflow-hidden cursor-pointer"
+            :class="selectedSiteId === site.id ? 'border-primary' : ''"
+            @click="selectSite(site.id)"
+          >
+            <div class="p-7">
+              <!-- Site Header -->
+              <div class="flex items-start justify-between gap-4 mb-6">
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-col gap-2">
+                    <div class="badge badge-sm bg-amber-700 text-amber-50 border-amber-700 uppercase rounded-sm">
+                      {{ getSiteTier(site.id) === 'pro' ? 'Pro' : 'Free' }}
+                    </div>
+                    <h3 class="text-base-content text-md font-serif italic truncate">
+                      {{ site.name || site.url }}
+                    </h3>
+                  </div>
+                  <a
+                    :href="`https://${site.url}`"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-base-content/70 font-light flex items-center gap-1.5 text-xs transition-colors duration-300"
+                    @click.stop
+                  >
+                    {{ site.url }}
+                    <ArrowTopRightOnSquareIcon class="w-3.5 h-3.5" />
+                  </a>
                 </div>
-                <div class="gap-x-2 text-xs/5 text-base-content flex items-center mt-1">
-                  <p class="whitespace-nowrap">
-                    <a :href="`https://${site.url}`" target="_blank" class="link link-secondary">
-                      {{ site.url }}
-                    </a>
-                  </p>
-                </div>
+
               </div>
-              <div class="gap-x-4 flex items-center flex-none">
+
+              <!-- Site Meta -->
+              <div class="text-base-content/70 border-base-300 flex items-center gap-5 py-4 text-xs border-t-2 border-b-2">
+                <span class="flex items-center gap-1.5">
+                  <CodeBracketIcon class="size-3" />
+                  Create {{ site.create_version ? site.create_version : 'Version Unknown' }}
+                </span>
+              </div>
+
+              <!-- Site Actions -->
+              <div class="flex items-center gap-3 mt-6">
                 <button
                   v-if="getSiteTier(site.id) === 'free'"
-                  @click="selectSite(site.id); openModal()"
-                  class="btn btn-primary btn-sm"
+                  @click.stop="selectSite(site.id); openModal()"
+                  class="btn btn-primary"
                 >
+                  <SparklesIcon class="w-4 h-4" />
                   Upgrade
                 </button>
-                <button @click="selectAndNavigate(site.id)"
-                  class=" btn btn-neutral">
-                  <Cog6ToothIcon class="size-5" aria-hidden="true" /> Manage<span class="sr-only">, {{ site.name || site.url }}</span>
-                </button>
-                <Menu as="div" class="relative flex-none hidden">
-                  <MenuButton
-                    class="hover:text-gray-900 dark:text-gray-400 dark:hover:text-white relative block text-gray-500">
-                    <span class="absolute -inset-2.5" />
-                    <span class="sr-only">Open options</span>
-                    <EllipsisVerticalIcon class="size-5" aria-hidden="true" />
-                  </MenuButton>
-                  <transition enter-active-class="transition duration-100 ease-out"
-                    enter-from-class="transform scale-95 opacity-0" enter-to-class="transform scale-100"
-                    leave-active-class="transition duration-75 ease-in" leave-from-class="transform scale-100"
-                    leave-to-class="transform scale-95 opacity-0">
-                    <MenuItems
-                      class="outline-1 outline-gray-900/5 dark:bg-gray-800 dark:shadow-none dark:-outline-offset-1 dark:outline-white/10 absolute right-0 z-10 w-32 py-2 mt-2 origin-top-right bg-white rounded-md shadow-lg">
-                      <MenuItem v-slot="{ active }">
-                      <a href="#"
-                        :class="[active ? 'bg-gray-50 outline-hidden dark:bg-white/5' : '', 'block px-3 py-1 text-sm/6 text-gray-900 dark:text-white']">Edit<span
-                          class="sr-only"> {{ site.name }}</span></a>
-                      </MenuItem>
-                      <MenuItem v-slot="{ active }">
-                      <a href="#"
-                        :class="[active ? 'bg-gray-50 outline-hidden dark:bg-white/5' : '', 'block px-3 py-1 text-sm/6 text-gray-900 dark:text-white']">Move<span
-                          class="sr-only">, {{ site.name }}</span></a>
-                      </MenuItem>
-                      <MenuItem v-slot="{ active }">
-                      <a href="#"
-                        :class="[active ? 'bg-gray-50 outline-hidden dark:bg-white/5' : '', 'block px-3 py-1 text-sm/6 text-gray-900 dark:text-white']">Delete<span
-                          class="sr-only">, {{ site.name }}</span></a>
-                      </MenuItem>
-                    </MenuItems>
-                  </transition>
-                </Menu>
               </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div v-show="false" class="md:grid-cols-2 grid grid-cols-1 gap-6">
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h3 class="card-title text-lg">Quick Actions</h3>
-            <div class="space-y-2">
-              <NuxtLink to="/admin/settings" class="btn btn-ghost btn-sm justify-start w-full">
-                <Cog6ToothIcon class="w-5 h-5 mr-2" />
-                Site Settings
-              </NuxtLink>
-              <NuxtLink to="/admin/account" class="btn btn-ghost btn-sm justify-start w-full">
-                <UserCircleIcon class="w-5 h-5 mr-2" />
-                Account Settings
-              </NuxtLink>
             </div>
-          </div>
+          </article>
         </div>
-
-        <div class="card bg-base-100 shadow-xl">
-          <div class="card-body">
-            <h3 class="card-title text-lg">Resources</h3>
-            <div class="space-y-2">
-              <a href="#" class="btn btn-ghost btn-sm justify-start w-full">
-                <DocumentTextIcon class="w-5 h-5 mr-2" />
-                Documentation
-              </a>
-              <a href="#" class="btn btn-ghost btn-sm justify-start w-full">
-                <QuestionMarkCircleIcon class="w-5 h-5 mr-2" />
-                Support
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
 import {
   ServerIcon,
-  GlobeAltIcon,
   SparklesIcon,
-  PlusIcon,
   Cog6ToothIcon,
-  UserCircleIcon,
-  DocumentTextIcon,
-  QuestionMarkCircleIcon,
+  ArrowTopRightOnSquareIcon,
+  UsersIcon,
+  CalendarDaysIcon,
+  CodeBracketIcon,
 } from '@heroicons/vue/24/outline'
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
-
-import { EllipsisVerticalIcon } from '@heroicons/vue/20/solid'
-import { useSiteContext } from '~/composables/useSiteContext.js'
-import { useAuthFetch } from '~/composables/useAuthFetch.js'
-import { useUpgradeModal } from '~/composables/useUpgradeModal.js'
+import { useSiteContext } from '~/composables/useSiteContext'
+import { useAuthFetch } from '~/composables/useAuthFetch'
+import { useUpgradeModal } from '~/composables/useUpgradeModal'
+import { useAuth } from '~/composables/useAuth'
 
 definePageMeta({
   middleware: 'auth',
   layout: 'admin'
 })
 
-const router = useRouter()
 const { selectedSiteId, selectedSite, sites, loadSites, selectSite } = useSiteContext()
 const { openModal } = useUpgradeModal()
+const { user } = useAuth()
 
+const siteList = ref<Array<any>>([])
 const loading = ref(true)
-const subscriptionTier = ref('Free')
 const siteTiers = ref<Record<number, string>>({})
+const siteTeamCounts = ref<Record<number, number>>({})
+const scrollPosition = ref(0)
 
-const formatDate = (dateString: string) => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
-}
+
+
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  if (hour < 22) return 'Good evening'
+  return 'Working late'
+})
+
+const proSitesCount = computed(() => {
+  return Object.values(siteTiers.value).filter(tier => tier === 'pro').length
+})
+
+const totalTeamMembers = computed(() => {
+  return Object.values(siteTeamCounts.value).reduce((sum, count) => sum + count, 0)
+})
+
+const accountAgeDays = computed(() => {
+  if (!user.value?.createdAt) return 0
+  const created = new Date(user.value.createdAt)
+  const now = new Date()
+  const diffTime = Math.abs(now.getTime() - created.getTime())
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+})
+
+const selectedSiteStats = computed(() => {
+  if (!selectedSite.value) return null
+  return {
+    teamCount: siteTeamCounts.value[selectedSite.value.id] || 1
+  }
+})
 
 const selectAndNavigate = async (siteId: number) => {
   selectSite(siteId)
@@ -221,8 +317,15 @@ const loadDashboardData = async () => {
   try {
     await loadSites()
 
-    // Load subscription info for all sites
-    const tierPromises = sites.value.map(async (site) => {
+    siteList.value = sites.value.map((site) => {
+      site.url = site.url.replace('https://', '')
+      site.url = site.url.replace('http://', '')
+      return site
+    })
+
+    // Load subscription info and team counts for all sites in parallel
+    const dataPromises = sites.value.map(async (site) => {
+      // Load subscription tier
       try {
         const response = await useAuthFetch(`/api/v2/subscriptions/status/${site.id}`)
         if (response.success) {
@@ -232,14 +335,20 @@ const loadDashboardData = async () => {
         console.error(`Failed to load subscription for site ${site.id}:`, error)
         siteTiers.value[site.id] = 'free'
       }
+
+      // Load team members count
+      try {
+        const teamResponse = await useAuthFetch(`/api/v2/sites/${site.id}/users`)
+        if (teamResponse.success && teamResponse.users) {
+          siteTeamCounts.value[site.id] = teamResponse.users.length
+        }
+      } catch (error) {
+        console.error(`Failed to load team for site ${site.id}:`, error)
+        siteTeamCounts.value[site.id] = 1
+      }
     })
 
-    await Promise.all(tierPromises)
-
-    // Load subscription info for selected site if available
-    if (selectedSiteId.value) {
-      subscriptionTier.value = siteTiers.value[selectedSiteId.value] === 'pro' ? 'Pro' : 'Free'
-    }
+    await Promise.all(dataPromises)
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
   } finally {
@@ -253,6 +362,12 @@ const getSiteTier = (siteId: number) => {
 
 onMounted(() => {
   loadDashboardData()
+  scrollPosition.value = window.scrollY
+	
+  const handleScroll = () => {
+    scrollPosition.value = window.scrollY
+  }
+  window.addEventListener('scroll', handleScroll)
 })
 
 useHead({

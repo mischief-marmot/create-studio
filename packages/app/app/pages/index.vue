@@ -31,7 +31,7 @@
           <div class="lg:text-left text-center">
             <!-- Title -->
             <h1 class="sm:text-7xl lg:text-7xl animate-fade-in-up mb-8 font-serif text-6xl font-light tracking-tight" style="animation-delay: 0.1s">
-              Transform your <span class="text-primary glow-primary inline-block italic transition-opacity duration-500">{{ rotatingWords[currentWordIndex] }}</span>
+              Transform your <span class="text-primary inline-block italic transition-opacity duration-500">{{ rotatingWords[currentWordIndex] }}</span>
               <br />
               into rich results
             </h1>
@@ -220,19 +220,19 @@
           <p class="text-base-content text-3xl">See how Create compares to other popular recipe plugins</p>
         </div>
 
-        <!-- Comparison Table -->
-        <div class="overflow-x-auto">
+        <!-- Desktop Comparison Table -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-base-300 border-b">
                 <th class="text-base-content px-4 py-4 font-semibold text-left">Feature</th>
-                <th class="text-base-content px-4 py-4 font-semibold text-center">
-                  WP Recipe Maker
-                  <div class="text-base-content text-xs font-normal">$49+/year</div>
-                </th>
                 <th class="text-primary-content bg-primary/80 dark:bg-primary px-4 py-4 font-semibold text-center">
                   Create
                   <div class="text-primary-content text-xs font-normal">Free forever</div>
+                </th>
+                <th class="text-base-content px-4 py-4 font-semibold text-center">
+                  WP Recipe Maker
+                  <div class="text-base-content text-xs font-normal">$49+/year</div>
                 </th>
                 <th class="text-base-content px-4 py-4 font-semibold text-center">
                   Tasty Recipes
@@ -243,13 +243,13 @@
             <tbody class="divide-base-300 divide-y">
               <tr v-for="feature in comparisonFeatures" :key="feature.name" class="hover:bg-base-100/50">
                 <td class="text-base-content px-4 py-4">{{ feature.name }}</td>
-                <td class="px-4 py-4 text-center">
-                  <span v-if="feature.wprm === 'check'" class="text-base-content">✓</span>
-                  <span v-else class="text-error">{{ feature.wprm }}</span>
-                </td>
                 <td class="bg-base-100 px-4 py-4 text-center">
                   <span v-if="feature.create === 'check'" class="text-success font-semibold">✓</span>
                   <span v-else class="text-success font-semibold">{{ feature.create }}</span>
+                </td>
+                <td class="px-4 py-4 text-center">
+                  <span v-if="feature.wprm === 'check'" class="text-base-content">✓</span>
+                  <span v-else class="text-error">{{ feature.wprm }}</span>
                 </td>
                 <td class="px-4 py-4 text-center">
                   <span v-if="feature.tasty === 'check'" class="text-base-content">✓</span>
@@ -258,6 +258,123 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Mobile Collapsible Comparison -->
+        <div class="md:hidden space-y-4">
+          <!-- Create Card -->
+          <div class="border-primary bg-primary/5 rounded-xl border-2 p-6">
+            <button
+              @click="expandedProduct = expandedProduct === 'create' ? null : 'create'"
+              class="w-full flex items-center justify-between"
+            >
+              <div class="text-left">
+                <h3 class="text-lg font-bold text-primary">Create</h3>
+                <p class="text-sm text-base-content/60">Free forever</p>
+              </div>
+              <svg
+                :class="['w-5 h-5 text-primary transition-transform', expandedProduct === 'create' ? 'rotate-180' : '']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </button>
+
+            <transition
+              enter-active-class="transition-all duration-200"
+              leave-active-class="transition-all duration-200"
+              enter-from-class="max-h-0 opacity-0"
+              enter-to-class="max-h-screen opacity-100"
+              leave-from-class="max-h-screen opacity-100"
+              leave-to-class="max-h-0 opacity-0"
+            >
+              <div v-if="expandedProduct === 'create'" class="mt-4 space-y-3 pt-4 border-t border-primary/20">
+                <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
+                  <span class="text-sm text-base-content">{{ feature.name }}</span>
+                  <span v-if="feature.create === 'check'" class="text-success font-bold text-lg flex-shrink-0">✓</span>
+                  <span v-else class="text-success font-semibold text-sm flex-shrink-0">{{ feature.create }}</span>
+                </div>
+              </div>
+            </transition>
+          </div>
+
+          <!-- WP Recipe Maker Card -->
+          <div class="border-base-300 bg-base-100 rounded-xl border-2 p-6">
+            <button
+              @click="expandedProduct = expandedProduct === 'wprm' ? null : 'wprm'"
+              class="w-full flex items-center justify-between"
+            >
+              <div class="text-left">
+                <h3 class="text-lg font-bold text-base-content">WP Recipe Maker</h3>
+                <p class="text-sm text-base-content/60">$49+/year</p>
+              </div>
+              <svg
+                :class="['w-5 h-5 text-base-content/60 transition-transform', expandedProduct === 'wprm' ? 'rotate-180' : '']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </button>
+
+            <transition
+              enter-active-class="transition-all duration-200"
+              leave-active-class="transition-all duration-200"
+              enter-from-class="max-h-0 opacity-0"
+              enter-to-class="max-h-screen opacity-100"
+              leave-from-class="max-h-screen opacity-100"
+              leave-to-class="max-h-0 opacity-0"
+            >
+              <div v-if="expandedProduct === 'wprm'" class="mt-4 space-y-3 pt-4 border-t border-base-300">
+                <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
+                  <span class="text-sm text-base-content">{{ feature.name }}</span>
+                  <span v-if="feature.wprm === 'check'" class="text-base-content font-bold text-lg flex-shrink-0">✓</span>
+                  <span v-else class="text-error font-semibold text-sm flex-shrink-0">{{ feature.wprm }}</span>
+                </div>
+              </div>
+            </transition>
+          </div>
+
+          <!-- Tasty Recipes Card -->
+          <div class="border-base-300 bg-base-100 rounded-xl border-2 p-6">
+            <button
+              @click="expandedProduct = expandedProduct === 'tasty' ? null : 'tasty'"
+              class="w-full flex items-center justify-between"
+            >
+              <div class="text-left">
+                <h3 class="text-lg font-bold text-base-content">Tasty Recipes</h3>
+                <p class="text-sm text-base-content/60">$49-299/year</p>
+              </div>
+              <svg
+                :class="['w-5 h-5 text-base-content/60 transition-transform', expandedProduct === 'tasty' ? 'rotate-180' : '']"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </button>
+
+            <transition
+              enter-active-class="transition-all duration-200"
+              leave-active-class="transition-all duration-200"
+              enter-from-class="max-h-0 opacity-0"
+              enter-to-class="max-h-screen opacity-100"
+              leave-from-class="max-h-screen opacity-100"
+              leave-to-class="max-h-0 opacity-0"
+            >
+              <div v-if="expandedProduct === 'tasty'" class="mt-4 space-y-3 pt-4 border-t border-base-300">
+                <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
+                  <span class="text-sm text-base-content">{{ feature.name }}</span>
+                  <span v-if="feature.tasty === 'check'" class="text-base-content font-bold text-lg flex-shrink-0">✓</span>
+                  <span v-else class="text-error font-semibold text-sm flex-shrink-0">{{ feature.tasty }}</span>
+                </div>
+              </div>
+            </transition>
+          </div>
         </div>
       </div>
     </section>
@@ -451,7 +568,7 @@
     <section id="pricing" class="bg-base-100 lg:py-24 lg:px-8 border-base-100 px-6 py-16 border-t">
       <div class="max-w-4xl mx-auto">
         <div class="mb-16 text-center">
-          <span class="text-primary text-sm font-semibold tracking-wide uppercase">Simple Pricing</span>
+          <span class="text-primary-content dark:text-primary text-sm font-semibold tracking-wide uppercase">Simple Pricing</span>
           <h2 class="lg:text-5xl mt-2 font-serif text-4xl">Start free, upgrade when you're ready</h2>
         </div>
 
@@ -561,6 +678,9 @@ onMounted(() => {
 // Servings multiplier state
 const servingsMultiplier = ref(1)
 
+// Comparison state
+const expandedProduct = ref<'create' | 'wprm' | 'tasty' | null>(null)
+
 // Helper function to scale ingredient amounts
 const getScaledAmount = (baseAmount: string, unit: string) => {
   const base = parseFloat(baseAmount)
@@ -656,5 +776,27 @@ definePageMeta({
   .btn-ghost {
     @apply transition-colors;
   }
+}
+
+/* Transition animations */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 </style>

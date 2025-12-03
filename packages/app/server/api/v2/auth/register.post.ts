@@ -93,6 +93,7 @@ export default defineEventHandler(async (event) => {
         firstname: newUser.firstname,
         lastname: newUser.lastname,
         avatar: newUser.avatar,
+        createdAt: newUser.createdAt,
       },
     })
 

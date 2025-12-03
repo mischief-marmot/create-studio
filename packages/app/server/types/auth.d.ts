@@ -9,6 +9,7 @@ declare module '#auth-utils' {
     firstname?: string
     lastname?: string
     avatar?: string
+    createdAt?: string
   }
 
   interface UserSession {

@@ -161,7 +161,7 @@ export default defineNuxtConfig({
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
           rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Fraunces:wght@200;300;400;500;600;700&family=Lexend:ital,wght@0,400..900;1,400..900&display=swap',
+          href: 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Fraunces:wght@200;300;400;500;600;700;800;900&family=Satoshi:ital,wght@0,400..900;1,400..900&display=swap',
         },
         {
           rel: 'stylesheet',

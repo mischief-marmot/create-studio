@@ -61,7 +61,8 @@ export default defineEventHandler(async (event) => {
         validEmail: Boolean(user.validEmail),
         firstname: user.firstname,
         lastname: user.lastname,
-        avatar: user.avatar
+        avatar: user.avatar,
+        createdAt: user.createdAt
       }
     })
 

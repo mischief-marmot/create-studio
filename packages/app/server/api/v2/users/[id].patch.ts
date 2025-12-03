@@ -95,7 +95,8 @@ export default defineEventHandler(async (event) => {
         validEmail: Boolean(updatedUser.validEmail),
         firstname: updatedUser.firstname,
         lastname: updatedUser.lastname,
-        avatar: updatedUser.avatar
+        avatar: updatedUser.avatar,
+        createdAt: updatedUser.createdAt
       }
     })
 
