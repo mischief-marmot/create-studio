@@ -40,20 +40,21 @@
             <!-- Mobile: Accordion Layout -->
             <div class="lg:hidden collapse rounded-2xl overflow-hidden" :class="getFeatureColors()">
               <input
+              class="p-0"
                 type="checkbox"
                 :checked="activeFeature === index"
                 @change="activeFeature = activeFeature === index ? null : index"
               />
-              <div class="collapse-title flex items-center justify-between gap-4 p-5 text-sm font-semibold">
+              <div class="collapse-title lg:gap-4 lg:p-5 flex items-center justify-between gap-0 px-5 text-sm font-semibold">
                 <span class="flex-1 min-w-0">{{ feature.name }}</span>
                 <span class="text-primary flex-shrink-0 font-mono text-xl font-light">
                   {{ String(index + 1).padStart(2, '0') }}
                 </span>
               </div>
-              <div class="collapse-content min-w-0 p-5 pt-0">
-                <p class="text-base-content/80 text-xs leading-relaxed break-words">
-                  {{ feature.description }}
-                </p>
+              <div class="collapse-content lg:p-5 lg:pt-0 min-w-0 px-5 pt-0">
+                <p
+                v-html="feature.description"
+                 class="text-base-content/80 text-xs leading-relaxed break-words" />
               </div>
             </div>
           </div>
@@ -150,7 +151,8 @@ import {
   CodeBracketIcon,
   BellAlertIcon,
   WindowIcon,
-  DevicePhoneMobileIcon
+  DevicePhoneMobileIcon,
+  ComputerDesktopIcon
 } from '@heroicons/vue/20/solid'
 
 interface Props {
@@ -190,6 +192,11 @@ const features = [
     name: 'Longer site visits',
     description: 'Readers stay engaged with your content throughout the entire cooking process, increasing time on site and reducing bounce rates.',
     icon: ClockIcon
+  },
+  {
+    name: 'Ad-supported experience',
+    description: 'Create 2.0 Free plan: Create shows ads in Interactive Mode while your site ads run elsewhere. <br/>Create 2.0 Pro plan: Use your own ad network or disable Interactive Mode entirely for complete control.',
+    icon: ComputerDesktopIcon
   },
 ]
 

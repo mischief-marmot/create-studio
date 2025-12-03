@@ -418,8 +418,8 @@
           </div>
 
           <!-- Feature 2: Nutrition -->
-          <div class="lg:grid-cols-2 lg:grid-flow-dense grid items-center gap-12">
-            <div class="bg-base-300 border-base-content/10 rounded-xl p-6 border">
+          <div class="lg:grid-cols-2 sm:p-6 lg:grid-flow-dense grid items-center gap-12 p-3">
+            <div class="bg-base-300 border-base-content/10 rounded-xl order-2 p-6 border">
               <div class="space-y-3">
                 <div class="mb-4 text-sm font-semibold">Nutrition Facts</div>
                 <div class="space-y-2 text-sm">
@@ -442,7 +442,7 @@
                 </div>
               </div>
             </div>
-            <div>
+            <div class="lg:order-1">
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <BoltIcon class="size-4" />
                 Nutrition Facts
@@ -482,8 +482,8 @@
           </div>
 
           <!-- Feature 4: Servings -->
-          <div class="lg:grid-cols-2 lg:grid-flow-dense grid items-center gap-12">
-            <div class="bg-base-300 border-base-content/30 rounded-xl p-6 border">
+          <div class="lg:grid-cols-2 sm:p-6 lg:grid-flow-dense grid items-center gap-12 p-3">
+            <div class="bg-base-300 border-base-content/30 rounded-xl lg:order-1 order-2 p-6 border">
               <div class="flex items-center justify-center mb-8">
                 <button
                   @click="servingsMultiplier = 1"
@@ -519,7 +519,7 @@
                 </div>
               </div>
             </div>
-            <div>
+            <div class="order-1">
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <span class="text-xs italic">1x</span>
                 Servings Adjustments
@@ -534,8 +534,8 @@
           </div>
 
           <!-- Feature 5: Interactive Mode -->
-          <div class=" flex flex-col items-center">
-            <div class="border-base-content/20 rounded-2xl sm:p-6 sm:mx-0 max-w-2xl gap-12 p-3 -mx-3 border">
+          <div class="flex flex-col items-center">
+            <div class="border-base-content/20 rounded-2xl sm:p-6 sm:mx-0 hidden max-w-2xl gap-12 p-3 -mx-3 border">
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <PlayIcon class="size-4" />
                 Interactive Mode
