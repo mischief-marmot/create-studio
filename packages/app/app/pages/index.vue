@@ -559,72 +559,161 @@
 
     <!-- Pricing Section -->
     <section id="pricing" class="bg-base-100 lg:py-24 lg:px-8 border-base-100 px-6 py-16 border-t">
-      <div class="max-w-4xl mx-auto">
+      <div class="max-w-6xl mx-auto">
         <div class="mb-16 text-center">
           <span class="text-primary-content dark:text-primary text-sm font-semibold tracking-wide uppercase">Simple Pricing</span>
-          <h2 class="lg:text-5xl mt-2 font-serif text-4xl">Start free, upgrade for full ads control</h2>
+          <h2 class="lg:text-5xl mt-2 font-serif text-4xl">The right plan for every publisher</h2>
         </div>
 
-        <div class="md:grid-cols-2 grid gap-6">
-          <!-- Free Plan -->
-          <div class="bg-base-100/50 border-base-300 md:border-none rounded-2xl p-8 border">
-            <h3 class="mb-2 font-serif text-2xl">Free Forever</h3>
-            <p class="text-base-content mb-6">Ad-supported Interactive Mode</p>
+        <div class="lg:grid-cols-3 grid gap-6">
+          <!-- Create 1.0 Plan -->
+          <div class="bg-base-100/50 border-base-300 rounded-2xl p-8 border">
+            <h3 class="mb-2 font-serif text-2xl">Create 1.0</h3>
+            <p class="text-base-content/70 mb-6 text-sm">Legacy version</p>
             <div class="mb-8">
               <span class="text-5xl font-bold">$0</span>
               <span class="text-base-content ml-2">forever</span>
             </div>
-            <p class="text-base-content mb-8">Keep 100% of your site's ad revenue while giving readers an amazing experience at zero cost.</p>
+            <p class="text-base-content mb-8 text-sm">The original Create plugin with core recipe functionality. Completely free, not ad-supported, but does not include updates, support, or new features.</p>
             <div class="mb-8 space-y-3">
-              <p class="text-base-content text-sm font-semibold">How it works</p>
+              <p class="text-base-content opacity-70 text-xs font-semibold tracking-wide uppercase">Features</p>
               <ul class="space-y-2">
                 <li class="text-base-content flex items-start gap-3 text-sm">
-                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Your site's ads stay 100% yours
+                  <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
+                  JSON-LD Schema Generation
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
-                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Readers access Interactive Mode with our ads
+                  <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
+                  Beautiful Cards
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
-                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  All features free forever
+                  <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
+                  Recipes, How-Tos, & Lists
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
+                  Automatic Nutrition Calculation
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
+                  User Ratings & Reviews
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <span class="text-error flex-shrink-0 ml-1.5">✕</span>
+                  Interactive Mode
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <span class="text-error flex-shrink-0 ml-1.5">✕</span>
+                  Support
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <span class="text-error flex-shrink-0 ml-1.5">✕</span>
+                  Updates
                 </li>
               </ul>
             </div>
-            <a href="/plugin" class="btn btn-ghost btn-block border-base-100 hover:bg-base-100 border">Get Started Free</a>
           </div>
 
-          <!-- Pro Plan -->
-          <div class="bg-gradient-to-br from-base-100 to-base-100 border-primary rounded-2xl relative p-8 border">
-            <div class="-top-4 right-8 bg-gradient-to-r from-primary to-primary/80 text-primary-content absolute px-4 py-1 text-sm font-bold rounded-lg">
-              Maximize Earnings
+          <!-- Create 2.0 Free Plan (Recommended) -->
+          <div class="bg-gradient-to-br from-base-100 to-base-100 border-primary rounded-2xl lg:scale-105 relative p-8 border-2">
+            <div class="-top-4 left-1/2 bg-gradient-to-r from-primary to-primary/80 text-primary-content absolute px-4 py-1 text-sm font-bold -translate-x-1/2 rounded-lg">
+              Most Popular
             </div>
-            <h3 class="mb-2 font-serif text-2xl">Create Pro</h3>
-            <p class="text-base-content mb-6">Your ads, your way</p>
+            <h3 class="mb-2 font-serif text-4xl">Create 2.0</h3>
+            <p class="text-base-content mb-6 text-sm">Ad-supported</p>
             <div class="mb-8">
-              <span class="text-5xl font-bold">$15</span>
-              <span class="text-base-content ml-2">/month</span>
+              <span class="text-5xl font-bold">$0</span>
             </div>
-            <p class="text-base-content mb-8">Use your own ad network in Interactive Mode and boost your revenue while keeping the amazing reader experience.</p>
+            <p class="text-base-content mb-8 text-sm">Support, updates, and all the new features including Interactive Mode with Create's ads (your ads run everywhere else).</p>
             <div class="mb-8 space-y-3">
-              <p class="text-sm font-semibold">How it works</p>
+              <p class="text-sm font-semibold">What's included</p>
               <ul class="space-y-2">
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Interactive Mode on your page with your ads
+                  Interactive Mode (ad-supported)
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Full control over the experience
+                  Recipes, How-Tos & Lists
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Earn more from engaged readers
+                  Automatic Nutrition Calculation
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  New Themes
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Serving Adjustments
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Review Responses
                 </li>
               </ul>
             </div>
-            <a href="#" class="btn btn-primary btn-block rounded-xl">Upgrade Now</a>
+            <a href="/plugin" class="btn btn-primary btn-block rounded-xl ">Get Started Free</a>
+          </div>
+
+          <!-- Create 2.0 Pro Plan -->
+          <div class="bg-base-100/50 border-base-300 rounded-2xl p-8 border">
+            <h3 class="mb-2 font-serif text-3xl">Create 2.0 Pro</h3>
+            <p class="text-base-content/70 mb-4 text-sm">Maximize revenue</p>
+
+            <!-- Billing Toggle -->
+            <div class="bg-base-100 border-primary flex items-center gap-3 p-2 mb-4 border rounded-lg">
+              <button
+                @click="proBillingPeriod = 'monthly'"
+                :class="['cursor-pointer flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors', proBillingPeriod === 'monthly' ? 'bg-primary/70 text-primary-content' : 'text-base-content hover:bg-base-200']"
+              >
+                Monthly
+              </button>
+              <button
+                @click="proBillingPeriod = 'annual'"
+                :class="['cursor-pointer flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors', proBillingPeriod === 'annual' ? 'bg-primary/70 text-primary-content' : 'text-base-content hover:bg-base-200']"
+              >
+                Annual
+              </button>
+            </div>
+
+            <div class="mb-8">
+              <div class="flex flex-col items-baseline gap-1">
+                <div>
+                  <span class="font-serif text-4xl font-semibold tracking-wider">{{ proBillingPeriod === 'annual' ? '$12.50' : '$15' }}</span>
+                  <span class="text-base-content ml-2">/month</span>
+                </div>
+              </div>
+              <p class="text-base-content/60 mt-2 text-xs">{{ proBillingPeriod === 'annual' ? 'billed $150/year' : 'billed monthly' }}</p>
+            </div>
+            <p class="text-base-content mb-8 text-sm">Everything in Create 2.0 Free, plus control your own ad network. No Create ads, full customization.</p>
+            <div class="mb-8 space-y-3">
+              <p class="text-sm font-semibold">Pro features</p>
+              <ul class="space-y-2">
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Your Ads, All The Way
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Zero Create ads
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Disable Interactive Mode
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Priority support
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Future Pro Features
+                </li>
+              </ul>
+            </div>
+            <a href="#" class="btn bg-base-100/50 btn-block">Upgrade Now</a>
           </div>
         </div>
       </div>
@@ -670,6 +759,9 @@ onMounted(() => {
 
 // Servings multiplier state
 const servingsMultiplier = ref(1)
+
+// Pro billing period state
+const proBillingPeriod = ref<'annual' | 'monthly'>('annual')
 
 // Comparison state
 const expandedProduct = ref<'create' | 'wprm' | 'tasty' | null>(null)
