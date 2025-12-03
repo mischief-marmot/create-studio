@@ -382,7 +382,7 @@
 
         <div class="space-y-16">
           <!-- Feature 1: Rich Results -->
-          <div class="lg:grid-cols-2 grid items-center gap-12">
+          <div class="lg:grid-cols-2 border-base-content/20 rounded-2xl sm:p-6 sm:mx-0 grid items-center gap-12 p-3 -mx-3 border">
             <div class="text-left">
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -392,14 +392,14 @@
               </div>
               <h3 class="mb-4 font-serif text-3xl">Transform your recipes into rich results</h3>
               <p class=" mb-6 text-lg">Your readers see beautiful recipe cards, star ratings, and cooking times right in Google search results. Stand out and drive more clicks.</p>
-              <div class="bg-base-300 border-base-content/30 p-4 border rounded-lg">
+              <div class="bg-base-300 border-base-content/10 p-4 border rounded-lg">
                 <p class=" mb-2 text-sm font-semibold">How it works</p>
                 <p class=" text-sm">We automatically generate proper <strong class="">JSON-LD schema</strong> for every card you create. One-button validation ensures correct markup.</p>
               </div>
             </div>
-            <div class="bg-base-300 border-base-content/30 rounded-xl p-6 border">
+            <div class="bg-base-300 border-base-content/10 rounded-xl p-6 border">
               <div class="space-y-3">
-                <div class="bg-base-200 border-base-100/50 p-4 border rounded-lg">
+                <div class="bg-base-100 p-4 rounded-lg shadow-xs">
                   <div class=" mb-2 text-xs">yourblog.com › recipes</div>
                   <div class="mb-2 text-sm font-semibold">Easy Lemon Bars Recipe</div>
                   <div class=" flex items-center gap-2 text-xs">
@@ -409,7 +409,7 @@
                     <span>280 cal</span>
                   </div>
                 </div>
-                <div class="bg-base-200 border-base-100/50 p-4 border rounded-lg">
+                <div class="bg-base-100 p-4 rounded-lg shadow-xs">
                   <div class=" mb-1 text-xs">yourblog.com › desserts</div>
                   <div class=" text-sm">Chocolate Brownies</div>
                 </div>
@@ -419,7 +419,7 @@
 
           <!-- Feature 2: Nutrition -->
           <div class="lg:grid-cols-2 lg:grid-flow-dense grid items-center gap-12">
-            <div class="bg-base-300 border-base-content/30 rounded-xl p-6 border">
+            <div class="bg-base-300 border-base-content/10 rounded-xl p-6 border">
               <div class="space-y-3">
                 <div class="mb-4 text-sm font-semibold">Nutrition Facts</div>
                 <div class="space-y-2 text-sm">
@@ -449,7 +449,7 @@
               </div>
               <h3 class="mb-4 font-serif text-3xl">Give readers accurate nutrition info</h3>
               <p class=" mb-6 text-lg">Save hours of manual work while helping health-conscious readers make informed choices.</p>
-              <div class="bg-base-300 border-base-content/30 p-4 border rounded-lg">
+              <div class="bg-base-300 border-base-content/10 p-4 border rounded-lg">
                 <p class=" mb-2 text-sm font-semibold">How it works</p>
                 <p class=" text-sm">Our <strong class="">free API</strong> calculates nutrition facts automatically from your ingredient list. Scientifically accurate and ready to go.</p>
               </div>
@@ -457,7 +457,7 @@
           </div>
 
           <!-- Feature 3: Ratings -->
-          <div class="lg:grid-cols-2 grid items-center gap-12">
+          <div class="lg:grid-cols-2 border-base-content/20 rounded-2xl sm:p-6 sm:mx-0 grid items-center gap-12 p-3 -mx-3 border">
             <div>
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <StarIcon class="size-4" />
@@ -534,8 +534,8 @@
           </div>
 
           <!-- Feature 5: Interactive Mode -->
-          <div class="flex flex-col items-center gap-12">
-            <div class="max-w-2xl">
+          <div class=" flex flex-col items-center">
+            <div class="border-base-content/20 rounded-2xl sm:p-6 sm:mx-0 max-w-2xl gap-12 p-3 -mx-3 border">
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <PlayIcon class="size-4" />
                 Interactive Mode
@@ -562,7 +562,7 @@
       <div class="max-w-4xl mx-auto">
         <div class="mb-16 text-center">
           <span class="text-primary-content dark:text-primary text-sm font-semibold tracking-wide uppercase">Simple Pricing</span>
-          <h2 class="lg:text-5xl mt-2 font-serif text-4xl">Start free, upgrade when you're ready</h2>
+          <h2 class="lg:text-5xl mt-2 font-serif text-4xl">Start free, upgrade for full ads control</h2>
         </div>
 
         <div class="md:grid-cols-2 grid gap-6">

@@ -1,9 +1,9 @@
 <template>
   <section id="interactive-mode" class="bg-base-100 sm:py-24 py-16">
-    <div class="max-w-7xl lg:px-8 px-6 mx-auto">
+    <div class="max-w-7xl lg:px-8 sm:px-6 mx-auto">
       <!-- Header -->
       <div class="max-w-3xl mx-auto text-center">
-        <span class="badge badge-primary badge-lg mb-4">Coming Soon</span>
+        <span class="badge badge-primary badge-lg mb-4 font-bold">All-New Feature!</span>
         <span v-if="eyebrow" class="text-primary-content dark:text-primary block mb-2 text-sm font-semibold tracking-wider uppercase">{{ eyebrow }}</span>
         <h2 class="sm:text-5xl lg:text-6xl text-base-content font-serif text-4xl">{{ title }}</h2>
         <p v-if="description" class="text-base-content mt-6 text-lg leading-relaxed">{{ description }}</p>
@@ -20,18 +20,18 @@
             :style="{ animationDelay: `${index * 0.1}s` }"
           >
             <!-- Desktop: Content + Number Layout -->
-            <div class="hidden lg:flex lg:gap-6 p-6 rounded-2xl transition-all duration-300 hover:shadow-md items-center justify-between" :class="getFeatureColors()">
+            <div class="lg:flex lg:gap-6 rounded-2xl hover:shadow-sm hover:-mx-2 hover:px-8 items-center justify-between hidden p-6 transition-all duration-300" :class="getFeatureColors()">
               <!-- Content -->
               <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-base-content mb-2 group-hover:text-primary transition-colors">{{ feature.name }}</h3>
-                <p class="text-sm leading-relaxed text-base-content/80">
+                <h3 class="text-primary-content group-hover:text-primary-content/70 dark:group-hover:text-primary dark:text-primary/70 mb-2 font-serif text-3xl tracking-wider transition-colors">{{ feature.name }}</h3>
+                <p class="text-base-content/80 text-sm leading-relaxed">
                   {{ feature.description }}
                 </p>
               </div>
 
               <!-- Number Badge -->
               <div class="flex-shrink-0 text-right">
-                <span class="font-mono text-3xl font-light text-primary group-hover:text-primary/80 transition-colors">
+                <span class="text-primary-content group-hover:text-primary-content/70 dark:text-primary/70 dark:group-hover:text-primary font-serif text-3xl font-light transition-colors">
                   {{ String(index + 1).padStart(2, '0') }}
                 </span>
               </div>
@@ -44,14 +44,14 @@
                 :checked="activeFeature === index"
                 @change="activeFeature = activeFeature === index ? null : index"
               />
-              <div class="collapse-title flex items-center justify-between p-5 font-semibold text-sm gap-4">
+              <div class="collapse-title flex items-center justify-between gap-4 p-5 text-sm font-semibold">
                 <span class="flex-1 min-w-0">{{ feature.name }}</span>
-                <span class="font-mono text-xl font-light text-primary flex-shrink-0">
+                <span class="text-primary flex-shrink-0 font-mono text-xl font-light">
                   {{ String(index + 1).padStart(2, '0') }}
                 </span>
               </div>
-              <div class="collapse-content p-5 pt-0 min-w-0">
-                <p class="text-xs leading-relaxed text-base-content/80 break-words">
+              <div class="collapse-content min-w-0 p-5 pt-0">
+                <p class="text-base-content/80 text-xs leading-relaxed break-words">
                   {{ feature.description }}
                 </p>
               </div>
@@ -62,14 +62,14 @@
         <!-- Demo Area -->
         <div class="lg:mt-0 mt-12">
           <div
-            class="rounded-3xl shadow-base-300 ring-1 ring-base-300 relative overflow-hidden shadow-2xl"
-            :class="showIframe ? 'h-[915px] w-[415px] mx-auto' : 'p-3'"
+            class="rounded-3xl shadow-base-300 relative overflow-hidden"
+            :class="showIframe ? 'h-[915px] w-[415px] mx-auto' : 'p-1 sm:p-3'"
           >
             <AbsoluteGradient v-if="!showIframe" />
             <!-- Placeholder -->
-            <div v-if="!showIframe" class="bg-gradient-to-br rounded-2xl from-base-200 to-base-300 relative p-8">
+            <div v-if="!showIframe" class="bg-gradient-to-br rounded-2xl from-base-200 to-base-300 sm:p-8 min-h-80 relative p-3">
               <!-- Phone Mockup -->
-              <div class="max-w-[415px] mx-auto">
+              <div class="sm:block hidden max-w-[415px] mx-auto">
                 <div class="bg-base-100 rounded-[2.5rem] p-2 shadow-xl ring-1 ring-base-300">
                   <!-- Notch -->
                   <div class="flex justify-center mb-2">
@@ -99,10 +99,13 @@
               </div>
 
               <!-- CTA Button -->
-              <div class="mt-8 text-center">
+              <div class="h-80 sm:h-auto sm:mt-8 flex flex-col items-center justify-center gap-4 text-center">
+                <div class="sm:hidden font-serif text-xl tracking-wide">
+                  Click the button below to try Interactive Mode for yourself!
+                </div>
                 <button
                   @click="showIframe = true"
-                  class="btn btn-primary btn-lg gap-3"
+                  class="btn btn-primary btn-lg w-fit gap-3"
                 >
                   <PlayIcon class="size-5" />
                   Try Interactive Mode
@@ -111,16 +114,16 @@
             </div>
 
             <!-- Iframe -->
-            <div v-else class="size-full relative max-w-[415px] mx-auto">
+            <div v-else class="size-full relative max-w-[415px] mx-auto px-5">
               <button
                 @click="showIframe = false"
-                class="top-4 right-4 btn btn-circle btn-sm bg-base-100/80 backdrop-blur absolute z-10"
+                class="top-6 right-10 btn btn-circle btn-md bg-base-100/80 backdrop-blur z-100 absolute"
               >
-                <XMarkIcon class="size-5" />
+                <XMarkIcon class="size-7" />
               </button>
               <iframe
                 :src="demoRecipeUrlWithParams"
-                class="w-full h-full border-0"
+                class="border-base-content/20 rounded-2xl w-full h-full border shadow-sm"
                 frameborder="0"
                 allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 title="Interactive Mode Demo"
