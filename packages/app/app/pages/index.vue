@@ -125,7 +125,7 @@
             </div>
 
             <!-- Desktop Browser View -->
-            <div class="md:block w-fit hidden max-w-3xl mx-auto">
+            <div class="md:block lg:w-fit hidden w-full max-w-3xl mx-auto">
               <div class="bg-base-100 border-base-content/20 rounded-2xl overflow-hidden border shadow-2xl">
                 <!-- Browser Header -->
                 <div class="bg-base-200 border-base-300 flex items-center gap-2 px-4 py-3 border-b">
@@ -137,9 +137,9 @@
                 </div>
 
                 <!-- Content -->
-                <div class="space-between md:flex-row lg:min-w-3xl flex flex-col-reverse gap-8 p-8">
+                <div class="space-between md:flex-row lg:min-w-2xl flex flex-col-reverse p-8">
                   <!-- Search Results -->
-                  <div class="grow-1 space-y-2">
+                  <div class="space-y-2">
                     <div class="text-base-content pl-4 mb-2 text-xs italic">1.8B+ search results</div>
                     <div class="bg-base-100 border-base-100 p-4 border rounded-lg">
                       <div class="text-base-content text-sm font-semibold">Best Ever Chocolate Cake Recipe</div>
@@ -179,7 +179,8 @@
                   </div>
 
                   <!-- Recipe Card -->
-                  <div class="bg-gradient-to-br from-base-200 to-base-100 border-base-100 rounded-xl flex flex-col max-w-xs gap-4 p-6 border">
+                  <div class="grow-1 flex justify-end">
+                    <div class="bg-gradient-to-br from-base-200 to-base-100 border-base-100 rounded-xl flex flex-col max-w-xs gap-4 p-6 border">
                     <div class="bg-base-100 flex items-center justify-center w-56 h-40 overflow-hidden rounded-lg">
                       <img class="size-full object-cover" src="/img/screenshots/chocolate-cake.jpg" alt="" />
                     </div>
@@ -203,6 +204,7 @@
                       <p class="mt-2 text-xs">Cocoa powder, coconut oil, butter</p>
                     </div>
                   </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -221,7 +223,7 @@
         </div>
 
         <!-- Desktop Comparison Table -->
-        <div class="hidden md:block overflow-x-auto">
+        <div class="md:block hidden overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-base-300 border-b">
@@ -261,25 +263,16 @@
         </div>
 
         <!-- Mobile Collapsible Comparison -->
-        <div class="md:hidden space-y-4">
+        <div class="md:hidden space-y-2">
           <!-- Create Card -->
-          <div class="border-primary bg-primary/5 rounded-xl border-2 p-6">
+          <div class="border-primary bg-primary/5 rounded-xl px-4 py-6 border">
             <button
-              @click="expandedProduct = expandedProduct === 'create' ? null : 'create'"
-              class="w-full flex items-center justify-between"
+              class="flex items-center justify-between w-full"
             >
               <div class="text-left">
-                <h3 class="text-lg font-bold text-primary">Create</h3>
-                <p class="text-sm text-base-content/60">Free forever</p>
+                <h3 class="text-primary-content dark:text-primary font-serif text-2xl font-bold">Create</h3>
+                <p class="text-base-content/60 text-sm">Free</p>
               </div>
-              <svg
-                :class="['w-5 h-5 text-primary transition-transform', expandedProduct === 'create' ? 'rotate-180' : '']"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
             </button>
 
             <transition
@@ -290,25 +283,25 @@
               leave-from-class="max-h-screen opacity-100"
               leave-to-class="max-h-0 opacity-0"
             >
-              <div v-if="expandedProduct === 'create'" class="mt-4 space-y-3 pt-4 border-t border-primary/20">
+              <div class="border-primary/20 pt-4 mt-4 space-y-3 border-t">
                 <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
-                  <span class="text-sm text-base-content">{{ feature.name }}</span>
-                  <span v-if="feature.create === 'check'" class="text-success font-bold text-lg flex-shrink-0">✓</span>
-                  <span v-else class="text-success font-semibold text-sm flex-shrink-0">{{ feature.create }}</span>
+                  <span class="text-base-content text-sm">{{ feature.name }}</span>
+                  <span v-if="feature.create === 'check'" class="text-success flex-shrink-0 text-lg font-bold">✓</span>
+                  <span v-else class="text-success flex-shrink-0 text-sm font-semibold">{{ feature.create }}</span>
                 </div>
               </div>
             </transition>
           </div>
 
           <!-- WP Recipe Maker Card -->
-          <div class="border-base-300 bg-base-100 rounded-xl border-2 p-6">
+          <div class="border-base-content/10 bg-base-200 rounded-xl px-4 py-6 border">
             <button
               @click="expandedProduct = expandedProduct === 'wprm' ? null : 'wprm'"
-              class="w-full flex items-center justify-between"
+              class="flex items-center justify-between w-full"
             >
               <div class="text-left">
-                <h3 class="text-lg font-bold text-base-content">WP Recipe Maker</h3>
-                <p class="text-sm text-base-content/60">$49+/year</p>
+                <h3 class="text-base-content text-lg font-bold">WP Recipe Maker</h3>
+                <p class="text-base-content/60 text-sm">$49+/year</p>
               </div>
               <svg
                 :class="['w-5 h-5 text-base-content/60 transition-transform', expandedProduct === 'wprm' ? 'rotate-180' : '']"
@@ -328,25 +321,25 @@
               leave-from-class="max-h-screen opacity-100"
               leave-to-class="max-h-0 opacity-0"
             >
-              <div v-if="expandedProduct === 'wprm'" class="mt-4 space-y-3 pt-4 border-t border-base-300">
+              <div v-if="expandedProduct === 'wprm'" class="border-base-300 pt-4 mt-4 space-y-3 border-t">
                 <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
-                  <span class="text-sm text-base-content">{{ feature.name }}</span>
-                  <span v-if="feature.wprm === 'check'" class="text-base-content font-bold text-lg flex-shrink-0">✓</span>
-                  <span v-else class="text-error font-semibold text-sm flex-shrink-0">{{ feature.wprm }}</span>
+                  <span class="text-base-content text-sm">{{ feature.name }}</span>
+                  <span v-if="feature.wprm === 'check'" class="text-base-content flex-shrink-0 text-lg font-bold">✓</span>
+                  <span v-else class="text-error flex-shrink-0 text-sm font-semibold">{{ feature.wprm }}</span>
                 </div>
               </div>
             </transition>
           </div>
 
           <!-- Tasty Recipes Card -->
-          <div class="border-base-300 bg-base-100 rounded-xl border-2 p-6">
+          <div class="border-base-content/10 bg-base-200 rounded-xl px-4 py-6 border">
             <button
               @click="expandedProduct = expandedProduct === 'tasty' ? null : 'tasty'"
-              class="w-full flex items-center justify-between"
+              class="flex items-center justify-between w-full"
             >
               <div class="text-left">
-                <h3 class="text-lg font-bold text-base-content">Tasty Recipes</h3>
-                <p class="text-sm text-base-content/60">$49-299/year</p>
+                <h3 class="text-base-content text-lg font-bold">Tasty Recipes</h3>
+                <p class="text-base-content/60 text-sm">$49-299/year</p>
               </div>
               <svg
                 :class="['w-5 h-5 text-base-content/60 transition-transform', expandedProduct === 'tasty' ? 'rotate-180' : '']"
@@ -366,11 +359,11 @@
               leave-from-class="max-h-screen opacity-100"
               leave-to-class="max-h-0 opacity-0"
             >
-              <div v-if="expandedProduct === 'tasty'" class="mt-4 space-y-3 pt-4 border-t border-base-300">
+              <div v-if="expandedProduct === 'tasty'" class="border-base-300 pt-4 mt-4 space-y-3 border-t">
                 <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
-                  <span class="text-sm text-base-content">{{ feature.name }}</span>
-                  <span v-if="feature.tasty === 'check'" class="text-base-content font-bold text-lg flex-shrink-0">✓</span>
-                  <span v-else class="text-error font-semibold text-sm flex-shrink-0">{{ feature.tasty }}</span>
+                  <span class="text-base-content text-sm">{{ feature.name }}</span>
+                  <span v-if="feature.tasty === 'check'" class="text-base-content flex-shrink-0 text-lg font-bold">✓</span>
+                  <span v-else class="text-error flex-shrink-0 text-sm font-semibold">{{ feature.tasty }}</span>
                 </div>
               </div>
             </transition>
