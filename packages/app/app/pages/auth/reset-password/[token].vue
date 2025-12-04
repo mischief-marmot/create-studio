@@ -51,7 +51,7 @@
           <div class="form-control mt-8 text-center">
             <button
               type="submit"
-              class="btn btn-accent btn-xl"
+              class="btn btn-primary btn-xl"
               :disabled="loading || success"
             >
               <span v-if="loading" class="loading loading-spinner"></span>

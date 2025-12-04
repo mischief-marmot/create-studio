@@ -123,7 +123,7 @@
           <button
             type="button"
             @click="saveCustomize"
-            class="btn btn-accent"
+            class="btn btn-primary"
           >
             Save Preferences
           </button>

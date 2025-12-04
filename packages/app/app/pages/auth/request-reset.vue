@@ -31,50 +31,21 @@
             <span>{{ successMessage }}</span>
           </div>
 
-          <!-- Consent Checkboxes -->
-          <div v-if="!success" class="border-base-300 pt-4 space-y-3 border-t">
-            <h3 class="text-base-content text-sm font-semibold">Required Agreements</h3>
-
-            <!-- TOS Checkbox -->
-            <label class="label justify-start gap-3 p-0 cursor-pointer">
-              <input
-                v-model="consentTos"
-                type="checkbox"
-                class="checkbox checkbox-sm"
-                required
-              />
-              <span class="label-text text-sm">
-                I agree to the
-                <a href="/terms" target="_blank" class="link link-secondary">
-                  Terms of Service
-                </a>
-                <span class="text-error">*</span>
-              </span>
-            </label>
-
-            <!-- Privacy Checkbox -->
-            <label class="label justify-start gap-3 p-0 cursor-pointer">
-              <input
-                v-model="consentPrivacy"
-                type="checkbox"
-                class="checkbox checkbox-sm"
-                required
-              />
-              <span class="label-text text-sm">
-                I agree to the
-                <a href="/privacy" target="_blank" class="link link-secondary">
-                  Privacy Policy
-                </a>
-                <span class="text-error">*</span>
-              </span>
-            </label>
-          </div>
+         <!-- Agreement Notice -->
+        <div class="border-base-300 pt-4 border-t">
+          <p class="text-base-content text-sm leading-relaxed">
+            By registering, you agree to our
+            <NuxtLink to="/legal/terms" target="_blank" class="link link-secondary">Terms of Service</NuxtLink>,
+            <NuxtLink to="/legal/privacy" target="_blank" class="link link-secondary">Privacy Policy</NuxtLink>, and
+            <NuxtLink to="/legal/cookies" target="_blank" class="link link-secondary">Cookies Policy</NuxtLink>.
+          </p>
+        </div>
 
           <div class="form-control mt-8 text-center">
             <button
               type="submit"
-              class="btn btn-accent btn-xl"
-              :disabled="loading || success || !consentTos || !consentPrivacy"
+              class="btn btn-primary btn-xl"
+              :disabled="loading || success"
             >
               <span v-if="loading" class="loading loading-spinner"></span>
               {{ loading ? 'Sending...' : 'Send Reset Link' }}

@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col space-y-4">
     <div>
-      <h2 class="font-serif text-4xl text-center">Create Account</h2>
+      <h2 class="font-serif text-4xl text-center">Register for Create</h2>
       <p class="text-md mb-4 text-center">
-        Sign up to start creating schema cards
+        Sign up to use all of Create's features—for free!
       </p>
     </div>
 
@@ -24,33 +24,37 @@
         <div v-if="errors.email" class="error">{{ errors.email }}</div>
       </fieldset>
 
-      <!-- First Name -->
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend">First Name</legend>
-        <label class="input input-lg validator w-full">
-          <UserIcon class="h-8 opacity-50" />
-          <input
-            v-model="firstName"
-            type="text"
-            placeholder="John"
-          />
-        </label>
-        <div v-if="errors.firstName" class="error">{{ errors.firstName }}</div>
-      </fieldset>
+      <!-- First and Last Name (Side by Side) -->
+      <div class="grid grid-cols-2 gap-4">
+        <!-- First Name -->
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">First Name</legend>
+          <label class="input input-lg validator w-full">
+            <UserIcon class="h-8 opacity-50" />
+            <input
+              v-model="firstName"
+              type="text"
+              placeholder="John"
+              required
+            />
+          </label>
+          <div v-if="errors.firstName" class="error">{{ errors.firstName }}</div>
+        </fieldset>
 
-      <!-- Last Name -->
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend">Last Name</legend>
-        <label class="input input-lg validator w-full">
-          <UserIcon class="h-8 opacity-50" />
-          <input
-            v-model="lastName"
-            type="text"
-            placeholder="Doe"
-          />
-        </label>
-        <div v-if="errors.lastName" class="error">{{ errors.lastName }}</div>
-      </fieldset>
+        <!-- Last Name -->
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Last Name</legend>
+          <label class="input input-lg validator w-full">
+            <UserIcon class="h-8 opacity-50" />
+            <input
+              v-model="lastName"
+              type="text"
+              placeholder="Doe"
+            />
+          </label>
+          <div v-if="errors.lastName" class="error">{{ errors.lastName }}</div>
+        </fieldset>
+      </div>
 
       <!-- Password -->
       <fieldset class="fieldset">
@@ -88,92 +92,35 @@
         <span>{{ errors.general }}</span>
       </div>
 
-      <!-- Consent Checkboxes -->
-      <div class="border-base-300 pt-4 space-y-3 border-t">
-        <h3 class="text-base-content text-sm font-semibold">Required Agreements</h3>
-
-        <!-- TOS Checkbox -->
-        <label class="label justify-start gap-3 p-0 cursor-pointer">
-          <input
-            v-model="consentTos"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-            required
-          />
-          <span class="label-text text-sm">
-            I agree to the
-            <NuxtLink to="/terms" target="_blank" class="link link-secondary">
-              Terms of Service
-            </NuxtLink>
-            <span class="text-error">*</span>
-          </span>
-        </label>
-
-        <!-- Privacy Checkbox -->
-        <label class="label justify-start gap-3 p-0 cursor-pointer">
-          <input
-            v-model="consentPrivacy"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-            required
-          />
-          <span class="label-text text-sm">
-            I agree to the
-            <NuxtLink to="/privacy" target="_blank" class="link link-secondary">
-              Privacy Policy
-            </NuxtLink>
-            <span class="text-error">*</span>
-          </span>
-        </label>
-
-        <!-- Cookies Checkbox -->
-        <label class="label justify-start gap-3 p-0 cursor-pointer">
-          <input
-            v-model="consentCookies"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-            required
-          />
-          <span class="label-text text-sm">
-            I agree to the
-            <NuxtLink to="/cookies" target="_blank" class="link link-secondary">
-              Cookie Policy
-            </NuxtLink>
-            <span class="text-error">*</span>
-          </span>
-        </label>
-
-        <!-- Marketing Checkbox (Optional) -->
-        <label class="label justify-start gap-3 p-0 cursor-pointer">
-          <input
-            v-model="consentMarketing"
-            type="checkbox"
-            class="checkbox checkbox-sm"
-          />
-          <span class="label-text text-sm">
-            I want to receive marketing emails about new features and updates
-          </span>
-        </label>
+      <!-- Agreement Notice -->
+      <div class="border-base-300 pt-4 border-t">
+        <p class="text-base-content text-sm leading-relaxed">
+          By registering, you agree to our
+          <NuxtLink to="/legal/terms" target="_blank" class="link link-info">Terms of Service</NuxtLink>,
+          <NuxtLink to="/legal/privacy" target="_blank" class="link link-info">Privacy Policy</NuxtLink>, and
+          <NuxtLink to="/legal/cookies" target="_blank" class="link link-info">Cookies Policy</NuxtLink>.
+        </p>
       </div>
 
       <!-- Submit Button -->
       <div class="form-control mt-8 text-center">
         <button
           type="submit"
-          class="btn btn-accent btn-xl"
-          :disabled="loading || !consentTos || !consentPrivacy || !consentCookies"
+          class="btn btn-primary btn-xl"
+          :disabled="loading"
         >
           <span v-if="loading" class="loading loading-spinner"></span>
           {{ loading ? 'Creating Account...' : 'Create Account' }}
         </button>
       </div>
 
-      <!-- Login Link -->
-      <div class="divider pt-8 pb-3 text-sm">Already have an account?</div>
-
-      <div class="text-center">
-        <NuxtLink to="/auth/login" class="link link-base-content text-sm">
-          Sign in here
+      <div class="flex items-center justify-center gap-4 mt-6 text-sm">
+        <NuxtLink to="/auth/login" class="link link-base-content">
+          Login
+        </NuxtLink>
+        <span class="text-base-content/20">•</span>
+        <NuxtLink to="/auth/request-reset" class="link link-base-content">
+          Forgot password?
         </NuxtLink>
       </div>
     </form>
@@ -201,20 +148,8 @@ const confirmPassword = ref('')
 const loading = ref(false)
 const errors = ref<Record<string, string>>({})
 
-// Consent flags
-const consentTos = ref(false)
-const consentPrivacy = ref(false)
-const consentCookies = ref(false)
-const consentMarketing = ref(false)
-
 const handleSubmit = async () => {
   errors.value = {}
-
-  // Validate required consents
-  if (!consentTos.value || !consentPrivacy.value || !consentCookies.value) {
-    errors.value.general = 'You must agree to all required terms to create an account'
-    return
-  }
 
   // Validate password match
   if (password.value !== confirmPassword.value) {
@@ -238,7 +173,7 @@ const handleSubmit = async () => {
         firstname: firstName.value,
         lastname: lastName.value,
         password: password.value,
-        marketing_opt_in: consentMarketing.value,
+        marketing_opt_in: true,
       },
     })
 

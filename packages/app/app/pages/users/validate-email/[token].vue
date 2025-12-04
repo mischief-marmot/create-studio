@@ -20,7 +20,7 @@
       </div>
 
       <div v-if="!pending" class="card-actions justify-end">
-        <button class="btn btn-accent"
+        <button class="btn btn-primary"
         :class="[
           success ? 'btn-success' : '',
           error ? 'btn-error' : '',
