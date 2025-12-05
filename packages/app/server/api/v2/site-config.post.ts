@@ -25,6 +25,8 @@ export default defineEventHandler(async (event) => {
   // Look up site and subscription tier
   let subscriptionTier = 'free'
   let renderMode: 'iframe' | 'in-dom' = 'iframe'
+  let showInteractiveMode = true
+  let buttonText = 'Try Interactive Mode!'
 
   try {
     // Find site by URL - need to look up across all users
@@ -35,20 +37,33 @@ export default defineEventHandler(async (event) => {
       const subscriptionRepo = new SubscriptionRepository()
       subscriptionTier = await subscriptionRepo.getActiveTier(siteResult.id as number)
 
-      logger.debug(`Site ${siteUrl} has tier: ${subscriptionTier}, render mode: ${renderMode}`)
+      // Pro sites can customize Interactive Mode settings
+      if (subscriptionTier === 'pro') {
+        // Check if Interactive Mode is disabled (0 means disabled, 1 or null means enabled)
+        if (siteResult.interactive_mode_enabled === 0) {
+          showInteractiveMode = false
+        }
+        // Use custom button text if set
+        if (siteResult.interactive_mode_button_text) {
+          buttonText = siteResult.interactive_mode_button_text as string
+        }
+      }
+
+      logger.debug(`Site ${siteUrl} has tier: ${subscriptionTier}, interactive mode: ${showInteractiveMode}`)
     }
   } catch (error) {
     logger.error('Error looking up site subscription:', error)
     // Continue with free tier defaults
   }
+
   // Pro tier gets in-DOM rendering
-  if (subscriptionTier === "pro") {
-    renderMode = "in-dom";
+  if (subscriptionTier === 'pro') {
+    renderMode = 'in-dom'
   }
 
   const config = {
-    showInteractiveMode: true,
-    buttonText: "Try Interactive Mode!",
+    showInteractiveMode,
+    buttonText,
     baseUrl: runtimeConfig.public.rootUrl,
     subscriptionTier,
     renderMode,

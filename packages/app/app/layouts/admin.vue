@@ -107,7 +107,7 @@
       <!-- Sidebar Footer -->
       <div class="border-base-300 px-6 pt-6 pb-8 mt-auto space-y-4 border-t">
         <!-- Pro Badge (if applicable) -->
-        <div v-if="tier === 'pro'" class="bg-primary/10 border border-primary/30 text-primary flex items-center gap-2 px-4 py-2.5 text-xs font-bold tracking-wider uppercase rounded-full">
+        <div v-if="tier === 'pro'" class="badge badge-primary badge-xl">
           <SparklesIcon class="w-4 h-4" />
           <span>Pro Member</span>
         </div>
@@ -298,7 +298,7 @@
           <!-- Mobile Sidebar Footer -->
           <div class="border-base-300 px-6 pt-6 pb-8 mt-auto space-y-4 border-t">
             <!-- Pro Badge (if applicable) -->
-            <div v-if="tier === 'pro'" class="bg-primary/10 border border-primary/30 text-primary flex items-center gap-2 px-4 py-2.5 text-xs font-bold tracking-wider uppercase rounded-full">
+            <div v-if="tier === 'pro'" class="badge badge-primary badge-xl">
               <SparklesIcon class="w-4 h-4" />
               <span>Pro Member</span>
             </div>

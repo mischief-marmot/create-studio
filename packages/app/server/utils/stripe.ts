@@ -93,19 +93,24 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
       }
 
       // Determine tier from price ID
-      const priceId = subscription.items.data[0]?.price.id
+      const subscriptionItem = subscription.items.data[0]
+      const priceId = subscriptionItem?.price.id
       const tier = determineTierFromPriceId(priceId)
+
+      // Get period dates from subscription item
+      const periodStart = subscriptionItem?.current_period_start
+      const periodEnd = subscriptionItem?.current_period_end
 
       const subscriptionData = {
         stripe_customer_id: subscription.customer as string,
         stripe_subscription_id: subscription.id,
         status: subscription.status,
         tier,
-        current_period_start: subscription.current_period_start
-          ? new Date(subscription.current_period_start * 1000).toISOString()
+        current_period_start: periodStart
+          ? new Date(periodStart * 1000).toISOString()
           : new Date().toISOString(),
-        current_period_end: subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000).toISOString()
+        current_period_end: periodEnd
+          ? new Date(periodEnd * 1000).toISOString()
           : new Date().toISOString(),
         cancel_at_period_end: subscription.cancel_at_period_end || false,
       }
@@ -141,7 +146,10 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
 
     case 'invoice.payment_succeeded': {
       const invoice = event.data.object as Stripe.Invoice
-      const subscriptionId = invoice.subscription as string
+      // In newer API versions, subscription ID is in parent.subscription_details.subscription
+      // It can be a string ID or a Subscription object
+      const subRef = invoice.parent?.subscription_details?.subscription
+      const subscriptionId = typeof subRef === 'string' ? subRef : subRef?.id
 
       if (subscriptionId) {
         const subscription = await subscriptionRepo.getByStripeSubscriptionId(subscriptionId)
@@ -158,7 +166,10 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
 
     case 'invoice.payment_failed': {
       const invoice = event.data.object as Stripe.Invoice
-      const subscriptionId = invoice.subscription as string
+      // In newer API versions, subscription ID is in parent.subscription_details.subscription
+      // It can be a string ID or a Subscription object
+      const subRef = invoice.parent?.subscription_details?.subscription
+      const subscriptionId = typeof subRef === 'string' ? subRef : subRef?.id
 
       if (subscriptionId) {
         const subscription = await subscriptionRepo.getByStripeSubscriptionId(subscriptionId)

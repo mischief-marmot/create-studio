@@ -7,7 +7,7 @@
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SiteRepository } from '~~/server/utils/database'
+import { SiteRepository, SubscriptionRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
@@ -31,15 +31,18 @@ export default defineEventHandler(async (event) => {
 
     // Read body
     const body = await readBody(event)
-    const { name, url } = body
+    const { name, url, interactive_mode_enabled, interactive_mode_button_text } = body
 
-    // Validate input
-    if (!name && !url) {
+    // Validate input - at least one field must be provided
+    const hasGeneralFields = name !== undefined || url !== undefined
+    const hasProFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
+
+    if (!hasGeneralFields && !hasProFields) {
       setResponseStatus(event, 400)
       logger.debug('No fields to update')
       return {
         success: false,
-        error: 'At least one field (name or url) must be provided'
+        error: 'At least one field must be provided'
       }
     }
 
@@ -77,11 +80,45 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Build update object
+    const updateData: Record<string, unknown> = {}
+
+    // General fields (always allowed)
+    if (name !== undefined) updateData.name = name
+    if (url !== undefined) updateData.url = url
+
+    // Pro fields - require Pro subscription
+    if (hasProFields) {
+      const subscriptionRepo = new SubscriptionRepository()
+      const tier = await subscriptionRepo.getActiveTier(siteId)
+
+      if (tier !== 'pro') {
+        setResponseStatus(event, 403)
+        logger.debug('Pro subscription required for interactive mode settings', { siteId, tier })
+        return {
+          success: false,
+          error: 'Pro subscription required for these settings'
+        }
+      }
+
+      if (interactive_mode_enabled !== undefined) {
+        updateData.interactive_mode_enabled = interactive_mode_enabled ? 1 : 0
+      }
+      if (interactive_mode_button_text !== undefined) {
+        // Validate button text length (max 50 chars)
+        if (interactive_mode_button_text && interactive_mode_button_text.length > 50) {
+          setResponseStatus(event, 400)
+          return {
+            success: false,
+            error: 'Button text must be 50 characters or less'
+          }
+        }
+        updateData.interactive_mode_button_text = interactive_mode_button_text || null
+      }
+    }
+
     // Update site
-    const updatedSite = await siteRepo.update(siteId, {
-      name: name !== undefined ? name : existingSite.name,
-      url: url !== undefined ? url : existingSite.url
-    })
+    const updatedSite = await siteRepo.update(siteId, updateData)
 
     // Return response
     setResponseStatus(event, 200)

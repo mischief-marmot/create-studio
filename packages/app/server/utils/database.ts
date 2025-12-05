@@ -33,6 +33,8 @@ export interface Site {
   create_version?: string
   wp_version?: string
   php_version?: string
+  interactive_mode_enabled?: boolean
+  interactive_mode_button_text?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -369,6 +371,16 @@ export class SiteRepository {
     if (updates.create_version !== undefined) {
       updateFields.push('create_version = ?')
       values.push(updates.create_version || null)
+    }
+
+    if (updates.interactive_mode_enabled !== undefined) {
+      updateFields.push('interactive_mode_enabled = ?')
+      values.push(updates.interactive_mode_enabled)
+    }
+
+    if (updates.interactive_mode_button_text !== undefined) {
+      updateFields.push('interactive_mode_button_text = ?')
+      values.push(updates.interactive_mode_button_text || null)
     }
 
     if (updateFields.length === 0) {
