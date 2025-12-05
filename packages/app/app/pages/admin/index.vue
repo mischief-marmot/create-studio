@@ -161,6 +161,10 @@
             <h2 class="text-base-content font-serif text-2xl leading-none">Your Sites</h2>
             <p class="text-base-content/70 text-base font-medium">Select a site to manage its settings</p>
           </div>
+          <button @click="openAddSiteModal()" class="btn btn-primary">
+            <PlusIcon class="size-5" />
+            Add Site
+          </button>
         </div>
 
         <!-- Loading State -->
@@ -177,25 +181,31 @@
           </div>
           <h3 class="text-base-content mb-3 font-serif text-2xl">No sites yet</h3>
           <p class="text-base-content/70 max-w-md text-base leading-relaxed">
-            Sites are automatically added when you register in the Create plugin on your WordPress site.
+            Sites are automatically added when you register in the Create plugin on your WordPress site, or you can add them from here!
           </p>
         </div>
 
         <!-- Sites Grid -->
-        <div v-else class="flex gap-8">
+        <div v-else class="flex flex-wrap gap-8">
           <article
             v-for="site in siteList"
             :key="site.id"
             class="bg-base-100 rounded-2xl border-base-300 w-70 border-1 overflow-hidden cursor-pointer"
-            :class="selectedSiteId === site.id ? 'border-primary' : ''"
-            @click="selectSite(site.id)"
+            :class="[
+              selectedSiteId === site.id ? 'border-primary' : '',
+              site.pending ? 'opacity-75' : ''
+            ]"
+            @click="site.pending ? openVerifyModal(site) : selectSite(site.id)"
           >
             <div class="p-7">
               <!-- Site Header -->
               <div class="flex items-start justify-between gap-4 mb-6">
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-col gap-2">
-                    <div class="badge badge-sm bg-amber-700 text-amber-50 border-amber-700 uppercase rounded-sm">
+                    <div v-if="site.pending" class="badge badge-sm badge-warning uppercase rounded-sm">
+                      Pending
+                    </div>
+                    <div v-else class="badge badge-sm bg-amber-700 text-amber-50 border-amber-700 uppercase rounded-sm">
                       {{ getSiteTier(site.id) === 'pro' ? 'Pro' : 'Free' }}
                     </div>
                     <h3 class="text-base-content text-md font-serif italic truncate">
@@ -216,8 +226,14 @@
 
               </div>
 
-              <!-- Site Meta -->
-              <div class="text-base-content/70 border-base-300 flex items-center gap-5 py-4 text-xs border-t-2 border-b-2">
+              <!-- Pending Verification Notice -->
+              <div v-if="site.pending" class="bg-warning/10 border-warning/20 rounded-xl p-4 mb-4 text-sm border">
+                <p class="text-warning mb-2 font-medium">Verification Required</p>
+                <p class="text-base-content/70 text-xs">Click to complete site verification</p>
+              </div>
+
+              <!-- Site Meta (only for verified sites) -->
+              <div v-if="!site.pending" class="text-base-content/70 border-base-300 flex items-center gap-5 py-4 text-xs border-t-2 border-b-2">
                 <span class="flex items-center gap-1.5">
                   <CodeBracketIcon class="size-3" />
                   Create {{ site.create_version ? site.create_version : 'Version Unknown' }}
@@ -227,7 +243,14 @@
               <!-- Site Actions -->
               <div class="flex items-center gap-3 mt-6">
                 <button
-                  v-if="getSiteTier(site.id) === 'free'"
+                  v-if="site.pending"
+                  @click.stop="openVerifyModal(site)"
+                  class="btn btn-warning btn-sm"
+                >
+                  Verify Now
+                </button>
+                <button
+                  v-else-if="getSiteTier(site.id) === 'free'"
                   @click.stop="selectSite(site.id); openModal()"
                   class="btn btn-primary"
                 >
@@ -240,6 +263,22 @@
         </div>
       </section>
     </div>
+
+    <!-- Add Site Modal -->
+    <AddSiteModal
+      :is-open="showAddSiteModal"
+      :initial-url="initialSiteUrl || undefined"
+      @close="closeAddSiteModal"
+      @site-added="handleSiteAdded"
+    />
+
+    <!-- Verify Site Modal -->
+    <VerifySiteModal
+      :is-open="showVerifyModal"
+      :site="pendingVerifySite"
+      @close="showVerifyModal = false; pendingVerifySite = null"
+      @verified="handleSiteVerified"
+    />
   </div>
 </template>
 
@@ -253,11 +292,13 @@ import {
   UsersIcon,
   CalendarDaysIcon,
   CodeBracketIcon,
+  PlusIcon,
 } from '@heroicons/vue/24/outline'
 import { useSiteContext } from '~/composables/useSiteContext'
 import { useAuthFetch } from '~/composables/useAuthFetch'
 import { useUpgradeModal } from '~/composables/useUpgradeModal'
 import { useAuth } from '~/composables/useAuth'
+import { useAddSiteModal } from '~/composables/useAddSiteModal'
 
 definePageMeta({
   middleware: 'auth',
@@ -267,12 +308,31 @@ definePageMeta({
 const { selectedSiteId, selectedSite, sites, loadSites, selectSite } = useSiteContext()
 const { openModal } = useUpgradeModal()
 const { user } = useAuth()
+const { showAddSiteModal, initialSiteUrl, closeAddSiteModal, openAddSiteModal } = useAddSiteModal()
 
 const siteList = ref<Array<any>>([])
 const loading = ref(true)
 const siteTiers = ref<Record<number, string>>({})
 const siteTeamCounts = ref<Record<number, number>>({})
 const scrollPosition = ref(0)
+const showVerifyModal = ref(false)
+const pendingVerifySite = ref<{ id: number; url: string; name?: string } | null>(null)
+
+const handleSiteAdded = async (site: { id: number; url: string; name?: string }) => {
+  // Reload sites to include the new verified site
+  closeAddSiteModal()
+  await loadDashboardData()
+}
+
+const openVerifyModal = (site: { id: number; url: string; name?: string }) => {
+  pendingVerifySite.value = site
+  showVerifyModal.value = true
+}
+
+const handleSiteVerified = async (site: { id: number; url: string; name?: string }) => {
+  // Reload sites to update the verified status
+  await loadDashboardData()
+}
 
 
 

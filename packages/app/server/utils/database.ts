@@ -58,6 +58,15 @@ export interface CreateSiteData {
   php_version?: string
 }
 
+export interface SiteUser {
+  id?: number
+  site_id: number
+  user_id: number
+  role: 'owner' | 'admin' | 'editor'
+  verified_at?: string | null
+  joined_at?: string
+}
+
 export interface Subscription {
   id?: number
   site_id: number
@@ -381,13 +390,63 @@ export class SiteRepository {
   /**
    * V2 API: Find canonical site by URL
    * Canonical sites have canonical_site_id = NULL
+   * Matches by host (hostname + port), ignoring protocol differences
    */
   async findCanonicalSite(url: string): Promise<Site | null> {
+    // Extract host from URL for flexible matching
+    let host: string
+    try {
+      const parsed = new URL(url)
+      host = parsed.host // includes port if non-default
+    } catch {
+      // If URL parsing fails, try exact match
+      const result = await this.db.prepare(`
+        SELECT * FROM Sites
+        WHERE url = ? AND canonical_site_id IS NULL
+      `).bind(url).first() as Site
+      return result || null
+    }
+
+    // Try to find by host pattern (matches http:// or https://)
     const result = await this.db.prepare(`
       SELECT * FROM Sites
-      WHERE url = ? AND canonical_site_id IS NULL
-    `).bind(url).first() as Site
+      WHERE (url = ? OR url = ? OR url = ? OR url LIKE ?)
+        AND canonical_site_id IS NULL
+      ORDER BY id ASC
+      LIMIT 1
+    `).bind(
+      url,                           // exact match
+      `https://${host}`,             // https version
+      `http://${host}`,              // http version
+      `%://${host}%`                 // any protocol with this host
+    ).first() as Site
     return result || null
+  }
+
+  /**
+   * V2 API: Find or create canonical site by URL
+   * Creates a new canonical site if one doesn't exist for this URL
+   */
+  async findOrCreateCanonicalSite(url: string, userId: number): Promise<Site> {
+    // Try to find existing canonical site
+    const existing = await this.findCanonicalSite(url)
+    if (existing) {
+      return existing
+    }
+
+    // Create new canonical site (user_id is NULL for canonical sites - ownership via SiteUsers)
+    const now = new Date().toISOString()
+    const result = await this.db.prepare(`
+      INSERT INTO Sites (url, user_id, canonical_site_id, createdAt, updatedAt)
+      VALUES (?, ?, NULL, ?, ?)
+      RETURNING *
+    `).bind(url, userId, now, now).first() as Site
+
+    if (!result) {
+      throw new Error('Failed to create canonical site')
+    }
+
+    return result
   }
 
   /**
@@ -590,6 +649,140 @@ export class SubscriptionRepository {
     return {
       ...row,
       cancel_at_period_end: Boolean(row.cancel_at_period_end)
+    }
+  }
+}
+
+/**
+ * SiteUser database operations
+ * Manages the many-to-many relationship between users and canonical sites
+ */
+export class SiteUserRepository {
+  private db = hubDatabase()
+
+  /**
+   * Find a SiteUser record by user and site
+   */
+  async findByUserAndSite(userId: number, siteId: number): Promise<SiteUser | null> {
+    const result = await this.db.prepare(`
+      SELECT rowid as id, site_id, user_id, role, verified_at, joined_at
+      FROM SiteUsers
+      WHERE user_id = ? AND site_id = ?
+    `).bind(userId, siteId).first()
+
+    return result ? this.normalizeSiteUser(result) : null
+  }
+
+  /**
+   * Create a pending (unverified) site-user connection
+   */
+  async createPending(userId: number, siteId: number, role: 'owner' | 'admin' | 'editor' = 'owner'): Promise<SiteUser> {
+    const now = new Date().toISOString()
+
+    // Check if already exists
+    const existing = await this.findByUserAndSite(userId, siteId)
+    if (existing) {
+      return existing
+    }
+
+    await this.db.prepare(`
+      INSERT INTO SiteUsers (site_id, user_id, role, verified_at, joined_at)
+      VALUES (?, ?, ?, NULL, ?)
+    `).bind(siteId, userId, role, now).run()
+
+    const created = await this.findByUserAndSite(userId, siteId)
+    if (!created) {
+      throw new Error('Failed to create SiteUser record')
+    }
+
+    return created
+  }
+
+  /**
+   * Mark a site-user connection as verified
+   */
+  async markVerified(userId: number, siteId: number): Promise<SiteUser | null> {
+    const now = new Date().toISOString()
+
+    await this.db.prepare(`
+      UPDATE SiteUsers
+      SET verified_at = ?
+      WHERE user_id = ? AND site_id = ?
+    `).bind(now, userId, siteId).run()
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
+   * Get all pending (unverified) connections for a user
+   */
+  async getUserPendingConnections(userId: number): Promise<SiteUser[]> {
+    const results = await this.db.prepare(`
+      SELECT rowid as id, site_id, user_id, role, verified_at, joined_at
+      FROM SiteUsers
+      WHERE user_id = ? AND verified_at IS NULL
+    `).bind(userId).all()
+
+    return results.results.map(row => this.normalizeSiteUser(row))
+  }
+
+  /**
+   * Get all verified connections for a user
+   */
+  async getUserVerifiedConnections(userId: number): Promise<SiteUser[]> {
+    const results = await this.db.prepare(`
+      SELECT rowid as id, site_id, user_id, role, verified_at, joined_at
+      FROM SiteUsers
+      WHERE user_id = ? AND verified_at IS NOT NULL
+    `).bind(userId).all()
+
+    return results.results.map(row => this.normalizeSiteUser(row))
+  }
+
+  /**
+   * Get all connections for a user (both verified and pending)
+   */
+  async getUserConnections(userId: number): Promise<SiteUser[]> {
+    const results = await this.db.prepare(`
+      SELECT rowid as id, site_id, user_id, role, verified_at, joined_at
+      FROM SiteUsers
+      WHERE user_id = ?
+      ORDER BY joined_at DESC
+    `).bind(userId).all()
+
+    return results.results.map(row => this.normalizeSiteUser(row))
+  }
+
+  /**
+   * Check if a user has verified access to a site
+   */
+  async isUserVerified(userId: number, siteId: number): Promise<boolean> {
+    const result = await this.db.prepare(`
+      SELECT 1 FROM SiteUsers
+      WHERE user_id = ? AND site_id = ? AND verified_at IS NOT NULL
+    `).bind(userId, siteId).first()
+
+    return !!result
+  }
+
+  /**
+   * Delete a site-user connection
+   */
+  async delete(userId: number, siteId: number): Promise<void> {
+    await this.db.prepare(`
+      DELETE FROM SiteUsers
+      WHERE user_id = ? AND site_id = ?
+    `).bind(userId, siteId).run()
+  }
+
+  private normalizeSiteUser(row: any): SiteUser {
+    return {
+      id: row.id,
+      site_id: row.site_id,
+      user_id: row.user_id,
+      role: row.role,
+      verified_at: row.verified_at || null,
+      joined_at: row.joined_at
     }
   }
 }

@@ -46,7 +46,7 @@
           <div>
             <h2 class="font-serif text-3xl italic font-light">{{ user.firstname }} {{ user.lastname }}</h2>
             <p class="text-base-content/70 text-sm">{{ user.email }}</p>
-            <div class="sm:justify-center flex flex-wrap gap-2 mt-4">
+            <div class="sm:justify-center flex flex-wrap gap-4 mt-4">
               <!-- <span v-if="user.validEmail"
                 class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-green-700 bg-green-100 rounded-md">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3 h-3">
@@ -55,10 +55,15 @@
                 </svg>
                 Verified
               </span> -->
+              
               <span
                 class="inline-flex items-center gap-1 px-3 py-1 text-xs font-medium text-gray-500 bg-white border border-gray-200 rounded-md">
                 Registered {{ formatDate(user.createdAt) }}
               </span>
+              <span v-if="!user?.validEmail" class="text-warning flex items-center gap-1.5 text-sm font-medium">
+                          <ExclamationTriangleIcon class="size-5" />
+                          Email not verified
+                        </span>
             </div>
           </div>
         </div>
@@ -120,14 +125,27 @@
                           <CheckCircleIcon class="w-4 h-4" />
                           Verified
                         </span>
-                        <span v-else class="text-warning flex items-center gap-1.5 text-sm font-medium">
-                          <ExclamationTriangleIcon class="w-4 h-4" />
-                          Email not verified
-                        </span>
+                        <template v-else>
+                          <span class="text-warning flex items-center gap-1.5 text-sm font-medium">
+                            <ExclamationTriangleIcon class="w-4 h-4" />
+                            Email not verified
+                          </span>
+                          <button
+                            type="button"
+                            @click="handleResendVerification"
+                            :disabled="sendingVerification || verificationSent"
+                            class="text-primary hover:text-primary-focus disabled:opacity-50 text-sm font-medium underline"
+                          >
+                            <span v-if="sendingVerification">Sending...</span>
+                            <span v-else-if="verificationSent" class="text-success">Email sent!</span>
+                            <span v-else>Resend verification</span>
+                          </button>
+                        </template>
                       </span>
                     </label>
                     <input v-model="profileForm.email" type="email" class="bg-base-200 input"
                       placeholder="you@example.com" />
+                    <p v-if="verificationError" class="text-error text-sm">{{ verificationError }}</p>
                   </div>
 
                   <!-- Alerts -->
@@ -355,6 +373,36 @@ const profileSuccess = ref(false)
 const passwordError = ref('')
 const passwordSuccess = ref(false)
 const avatarError = ref('')
+const sendingVerification = ref(false)
+const verificationSent = ref(false)
+const verificationError = ref('')
+
+const handleResendVerification = async () => {
+  if (sendingVerification.value) return
+
+  sendingVerification.value = true
+  verificationError.value = ''
+  verificationSent.value = false
+
+  try {
+    const response = await useAuthFetch('/api/v2/auth/resend-verification', {
+      method: 'POST'
+    })
+
+    if (response.success) {
+      verificationSent.value = true
+      setTimeout(() => {
+        verificationSent.value = false
+      }, 5000)
+    } else {
+      verificationError.value = response.error || 'Failed to send verification email'
+    }
+  } catch (error: any) {
+    verificationError.value = error.data?.error || 'Failed to send verification email'
+  } finally {
+    sendingVerification.value = false
+  }
+}
 
 const loadUserData = () => {
   if (user.value) {

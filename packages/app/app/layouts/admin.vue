@@ -350,12 +350,14 @@ import { useAuth } from '~/composables/useAuth.js'
 import { useSiteContext } from '~/composables/useSiteContext.js'
 import { useAvatar } from '~/composables/useAvatar.js'
 import { useUpgradeModal } from '~/composables/useUpgradeModal.js'
+import { useAddSiteModal } from '~/composables/useAddSiteModal.js'
 
 const router = useRouter()
 const route = useRoute()
 const { logout, user } = useAuth()
 const { selectedSiteId, sites: sitesList, loadSites, selectSite } = useSiteContext()
 const { showUpgradeModal, openModal } = useUpgradeModal()
+const { openAddSiteModal } = useAddSiteModal()
 
 const sidebarOpen = ref(false)
 const siteSelectorOpen = ref(false)
@@ -363,10 +365,20 @@ const localSelectedSiteId = ref<number | null>(null)
 const tier = ref('free')
 const bannerDismissed = ref(true)
 
-const navigation = [
-  { name: 'Dashboard', href: '/admin', icon: HomeIcon },
-  { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
-]
+// Navigation items - Settings only shown when user has sites
+const navigation = computed(() => {
+  const items = [
+    { name: 'Dashboard', href: '/admin', icon: HomeIcon },
+  ]
+
+  // Only show Settings when there are verified (non-pending) sites
+  const hasVerifiedSites = sitesList.value.some(site => !site.pending)
+  if (hasVerifiedSites) {
+    items.push({ name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon })
+  }
+
+  return items
+})
 
 const isActiveRoute = (href: string) => {
   if (href === '/admin') {
@@ -414,7 +426,14 @@ watch(selectedSiteId, (newId) => {
 }, { immediate: true })
 
 onMounted(async () => {
-  await loadSites()
+  // Check for site_url query parameter to auto-select a site
+  const siteUrlParam = route.query.site_url as string | undefined
+  const result = await loadSites(siteUrlParam)
+
+  // If a site_url was provided but no matching site was found, open the Add Site modal
+  if (siteUrlParam && !result.matched) {
+    openAddSiteModal(siteUrlParam)
+  }
 
   if (typeof window !== 'undefined') {
     bannerDismissed.value = false
