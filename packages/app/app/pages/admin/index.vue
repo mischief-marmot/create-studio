@@ -42,7 +42,7 @@
               </div>
               <div class="flex flex-col">
                 <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ sites.length }}</span>
-                <p class="text-base-content/70 text-sm font-thin">Total Sites</p>
+                <p class="text-base-content/70 text-sm">Total Sites</p>
               </div>
             </div>
           </div>
@@ -55,7 +55,7 @@
               </div>
               <div class="flex flex-col">
                 <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ proSitesCount }}</span>
-                <p class="text-base-content/70 text-sm">Pro Sites</p>
+                <p class="text-base-content/70 text-sm">Pro Site{{ proSitesCount > 1 ? 's' : '' }}</p>
               </div>
             </div>
             <div v-if="proSitesCount > 0" class="mt-auto">

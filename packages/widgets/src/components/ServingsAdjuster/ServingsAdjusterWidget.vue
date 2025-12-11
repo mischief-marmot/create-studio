@@ -1,10 +1,10 @@
 <template>
   <div class="cs-servings-adjuster">
     <div class="cs-servings-adjuster-inner">
-      <span class="cs-servings-adjuster-label">Adjust Servings:</span>
+      <span class="cs-servings-adjuster-label">Adjust Servings</span>
       <div class="cs-servings-adjuster-buttons" role="group" aria-label="Adjust servings">
-        <button 
-          v-for="multiplier in availableMultipliers" 
+        <span
+          v-for="multiplier in availableMultipliers"
           :key="multiplier"
           class="cs-servings-adjuster-btn"
           :class="{ active: currentMultiplier === multiplier }"
@@ -13,7 +13,7 @@
           @click="handleMultiplierChange(multiplier)"
         >
           {{ multiplier }}x
-        </button>
+        </span>
       </div>
     </div>
   </div>
