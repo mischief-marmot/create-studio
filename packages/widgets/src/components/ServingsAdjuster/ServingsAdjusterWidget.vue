@@ -1,8 +1,8 @@
 <template>
   <div class="cs-servings-adjuster">
     <div class="cs-servings-adjuster-inner">
-      <span class="cs-servings-adjuster-label">Adjust Servings</span>
-      <div class="cs-servings-adjuster-buttons" role="group" aria-label="Adjust servings">
+      <span class="cs-servings-adjuster-label">{{ labelText }}</span>
+      <div class="cs-servings-adjuster-buttons" role="group" :aria-label="labelText">
         <span
           v-for="multiplier in availableMultipliers"
           :key="multiplier"
@@ -31,6 +31,7 @@ interface Props {
     defaultMultiplier?: number
     siteUrl?: string
     theme?: Record<string, string>
+    label?: string
   }
   storage?: any
 }
@@ -56,6 +57,11 @@ const creationKey = computed(() => {
   const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
   const domain = normalizeDomain(siteUrl)
   return createCreationKey(domain, props.config.creationId)
+})
+
+// Get the label text from config or use default
+const labelText = computed(() => {
+  return props.config.label || 'Adjust Servings'
 })
 
 onMounted(() => {

@@ -248,7 +248,8 @@ const CreateStudio = {
         creationId,
         defaultMultiplier: parseInt(servingsAdjustment) || 1,
         siteUrl: sdkInstance.getSiteUrl(),
-        theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {}
+        theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {},
+        label: section.getAttribute('data-servings-label') || undefined
       }
 
       const app = await sdkInstance.mount({ type: 'servings-adjuster', selector: adjusterContainer, config })
