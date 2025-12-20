@@ -21,6 +21,8 @@ import { consola } from 'consola'
 interface MigrationRequest {
   limit?: number
   offset?: number
+  userId?: string
+  siteId?: number
 }
 
 export default defineEventHandler(async (event) => {
@@ -30,25 +32,45 @@ export default defineEventHandler(async (event) => {
   try {
     const db = hubDatabase()
 
-    // Parse request body for pagination
+    // Parse request body for pagination and filters
     const body = (await readBody<MigrationRequest>(event).catch(() => ({}))) as MigrationRequest
     const limit = body?.limit || 500
     const offset = body?.offset || 0
+    const userId = body?.userId
+    const siteId = body?.siteId
 
     logger.info(`Pagination: limit=${limit}, offset=${offset}`)
+    if (userId) logger.info(`Filtering by userId: ${userId}`)
+    if (siteId) logger.info(`Filtering by siteId: ${siteId}`)
 
     // Get all unique URLs that haven't been migrated yet
     // (URLs where none of the sites have canonical_site_id set)
+    // Optionally filter by userId or siteId
     logger.info('Finding unmigrated URLs...')
-    const urlsResult = await db.prepare(`
+
+    let urlsQuery = `
       SELECT DISTINCT url FROM Sites
       WHERE url IS NOT NULL
       AND url NOT IN (
         SELECT DISTINCT url FROM Sites WHERE canonical_site_id IS NOT NULL
       )
-      ORDER BY url
-      LIMIT ? OFFSET ?
-    `).bind(limit, offset).all()
+    `
+    const queryParams: (string | number)[] = []
+
+    if (siteId) {
+      // If siteId provided, only get the URL for that specific site
+      urlsQuery += ` AND url = (SELECT url FROM Sites WHERE id = ?)`
+      queryParams.push(siteId)
+    } else if (userId) {
+      // If userId provided, only get URLs for sites belonging to that user
+      urlsQuery += ` AND url IN (SELECT url FROM Sites WHERE user_id = ?)`
+      queryParams.push(userId)
+    }
+
+    urlsQuery += ` ORDER BY url LIMIT ? OFFSET ?`
+    queryParams.push(limit, offset)
+
+    const urlsResult = await db.prepare(urlsQuery).bind(...queryParams).all()
     const urls = urlsResult.results.map((row: any) => row.url)
 
     logger.info(`Found ${urls.length} unique URLs to process`)
@@ -157,14 +179,27 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Check if there are more URLs to process
-    const remainingResult = await db.prepare(`
+    // Check if there are more URLs to process (respecting filters)
+    let remainingQuery = `
       SELECT COUNT(DISTINCT url) as count FROM Sites
       WHERE url IS NOT NULL
       AND url NOT IN (
         SELECT DISTINCT url FROM Sites WHERE canonical_site_id IS NOT NULL
       )
-    `).first()
+    `
+    const remainingParams: (string | number)[] = []
+
+    if (siteId) {
+      remainingQuery += ` AND url = (SELECT url FROM Sites WHERE id = ?)`
+      remainingParams.push(siteId)
+    } else if (userId) {
+      remainingQuery += ` AND url IN (SELECT url FROM Sites WHERE user_id = ?)`
+      remainingParams.push(userId)
+    }
+
+    const remainingResult = remainingParams.length > 0
+      ? await db.prepare(remainingQuery).bind(...remainingParams).first()
+      : await db.prepare(remainingQuery).first()
     const totalRemaining = (remainingResult as any)?.count || 0
     const hasMore = totalRemaining > (offset + limit)
     const nextOffset = hasMore ? offset + limit : null
