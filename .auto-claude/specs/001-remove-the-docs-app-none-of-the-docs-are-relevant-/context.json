@@ -1,0 +1,44 @@
+{
+  "task_description": "Remove the docs app. None of the docs are relevant, the build doesn't really work, and I'll start a new docs app later",
+  "scoped_services": ["docs", "app", "widgets", "shared"],
+  "files_to_modify": {
+    "root": [
+      "package.json"
+    ],
+    "infrastructure": [
+      ".github/workflows/nuxthub-cs-docs.yml"
+    ]
+  },
+  "files_to_delete": [
+    "packages/docs"
+  ],
+  "files_to_reference": [
+    "package.json",
+    "packages/app/package.json",
+    "packages/widgets/package.json",
+    "packages/shared/package.json",
+    "tsconfig.json"
+  ],
+  "patterns": {
+    "workspace_pattern": "npm workspaces monorepo with packages/* glob pattern",
+    "removal_pattern": "Remove package from workspaces array, delete directory, clean node_modules",
+    "verification_pattern": "Grep for @create-studio/docs to ensure no cross-package dependencies"
+  },
+  "existing_implementations": {
+    "description": "Monorepo with 4 packages: app, docs, shared, widgets. Docs is isolated with no dependencies from other packages.",
+    "relevant_files": [
+      "package.json",
+      "packages/docs/package.json",
+      ".github/workflows/nuxthub-cs-docs.yml"
+    ]
+  },
+  "investigation_findings": {
+    "no_cross_dependencies": "Verified that app, widgets, and shared packages do NOT depend on @create-studio/docs",
+    "isolated_package": "Docs package runs on port 3002 and is completely isolated",
+    "ci_workflow": "GitHub workflow nuxthub-cs-docs.yml deploys docs package to NuxtHub",
+    "workspace_scripts": "Root package.json has dev:docs, build:docs, test:docs scripts to remove",
+    "no_typescript_paths": "Root tsconfig.json has no path mappings for docs package"
+  },
+  "created_at": "2026-01-10T11:28:10.644042",
+  "updated_at": "2026-01-10T19:35:00Z"
+}

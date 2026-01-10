@@ -1,0 +1,6 @@
+{
+  "sourceType": "manual",
+  "model": "sonnet",
+  "thinkingLevel": "medium",
+  "baseBranch": "migration/v2-launch"
+}
