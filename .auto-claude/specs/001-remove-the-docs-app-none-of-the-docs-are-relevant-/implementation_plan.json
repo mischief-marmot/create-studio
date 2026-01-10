@@ -42,8 +42,8 @@
             "expected": "No docs references in tsconfig"
           },
           "status": "completed",
-          "notes": "Verified tsconfig.json - no docs references found in path mappings or project references. Only @create-studio/shared and @create-studio/widgets are configured.",
-          "updated_at": "2026-01-10T16:36:03.252915+00:00"
+          "notes": "Verified tsconfig.json contains no docs path mappings. Only references @create-studio/shared and @create-studio/widgets packages. Verification command confirmed no docs references.",
+          "updated_at": "2026-01-10T16:36:08.348189+00:00"
         }
       ]
     },
@@ -73,8 +73,9 @@
             "command": "cat package.json | grep -c '@create-studio/docs' || echo '0'",
             "expected": "0"
           },
-          "status": "pending",
-          "notes": "Remove docs from workspaces array and delete dev:docs, build:docs, test:docs scripts"
+          "status": "completed",
+          "notes": "Verified that package.json has no references to @create-studio/docs. All docs-related scripts (dev:docs, build:docs, test:docs) have been removed. Verification command confirms 0 occurrences.",
+          "updated_at": "2026-01-10T16:37:13.821423+00:00"
         },
         {
           "id": "subtask-2-2",
@@ -88,8 +89,9 @@
             "command": "test ! -f .github/workflows/nuxthub-cs-docs.yml && echo 'Workflow deleted' || echo 'Workflow still exists'",
             "expected": "Workflow deleted"
           },
-          "status": "pending",
-          "notes": "Delete .github/workflows/nuxthub-cs-docs.yml completely"
+          "status": "completed",
+          "notes": "Successfully deleted GitHub Actions workflow file for docs deployment (.github/workflows/nuxthub-cs-docs.yml). Verification passed. Changes committed.",
+          "updated_at": "2026-01-10T16:37:39.951014+00:00"
         },
         {
           "id": "subtask-2-3",
@@ -367,5 +369,5 @@
   "planStatus": "in_progress",
   "updated_at": "2026-01-10T16:34:37.211Z",
   "recoveryNote": "Task recovered from stuck state at 2026-01-10T16:34:37.155Z",
-  "last_updated": "2026-01-10T16:36:03.252923+00:00"
+  "last_updated": "2026-01-10T16:37:39.951018+00:00"
 }
