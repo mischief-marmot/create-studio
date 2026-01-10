@@ -1,0 +1,369 @@
+{
+  "feature": "Remove docs package from monorepo",
+  "workflow_type": "simple",
+  "workflow_rationale": "Single-service removal task with clear steps. No complex dependencies or multi-service integration. Simple workflow minimizes overhead while ensuring safe removal.",
+  "phases": [
+    {
+      "id": "phase-1-discovery",
+      "name": "Pre-Removal Verification",
+      "type": "investigation",
+      "description": "Verify no dependencies exist before deletion",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Search codebase for all references to @create-studio/docs",
+          "service": "monorepo",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -r '@create-studio/docs' packages/app packages/widgets packages/shared || echo 'No dependencies found'",
+            "expected": "No dependencies found"
+          },
+          "status": "completed",
+          "notes": "Verified: No dependencies on @create-studio/docs in packages/app, packages/widgets, or packages/shared. Safe to proceed with removal.",
+          "updated_at": "2026-01-10T16:35:25.038016+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Verify no TypeScript path mappings reference docs",
+          "service": "monorepo",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "tsconfig.json"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cat tsconfig.json | grep -i docs || echo 'No docs references in tsconfig'",
+            "expected": "No docs references in tsconfig"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-removal",
+      "name": "Package and Configuration Removal",
+      "type": "cleanup",
+      "description": "Delete docs package and update workspace configuration",
+      "depends_on": [
+        "phase-1-discovery"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Update root package.json to remove docs workspace and scripts",
+          "service": "monorepo",
+          "files_to_modify": [
+            "package.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "package.json"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cat package.json | grep -c '@create-studio/docs' || echo '0'",
+            "expected": "0"
+          },
+          "status": "pending",
+          "notes": "Remove docs from workspaces array and delete dev:docs, build:docs, test:docs scripts"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Delete GitHub Actions workflow for docs deployment",
+          "service": "infrastructure",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test ! -f .github/workflows/nuxthub-cs-docs.yml && echo 'Workflow deleted' || echo 'Workflow still exists'",
+            "expected": "Workflow deleted"
+          },
+          "status": "pending",
+          "notes": "Delete .github/workflows/nuxthub-cs-docs.yml completely"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Delete packages/docs directory",
+          "service": "docs",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test ! -d packages/docs && echo 'Docs package deleted' || echo 'Docs package still exists'",
+            "expected": "Docs package deleted"
+          },
+          "status": "pending",
+          "notes": "Complete removal of packages/docs directory and all contents"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-cleanup",
+      "name": "Clean Reinstall",
+      "type": "cleanup",
+      "description": "Clean node_modules and reinstall dependencies",
+      "depends_on": [
+        "phase-2-removal"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Clean node_modules and package-lock.json",
+          "service": "monorepo",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test ! -d node_modules && test ! -f package-lock.json && echo 'Cleaned' || echo 'Not cleaned'",
+            "expected": "Cleaned"
+          },
+          "status": "pending",
+          "notes": "Remove node_modules and package-lock.json to ensure clean state"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Reinstall monorepo dependencies",
+          "service": "monorepo",
+          "files_to_modify": [],
+          "files_to_create": [
+            "package-lock.json",
+            "node_modules"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm install && echo 'Install successful'",
+            "expected": "Install successful"
+          },
+          "status": "pending",
+          "notes": "npm install should complete without errors about missing docs workspace"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-verification",
+      "name": "Build Verification",
+      "type": "integration",
+      "description": "Verify remaining packages build successfully",
+      "depends_on": [
+        "phase-3-cleanup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Build shared library",
+          "service": "shared",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run build:shared",
+            "expected": "Build successful"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Build widgets package",
+          "service": "widgets",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run build:widgets",
+            "expected": "Build successful"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Build app package",
+          "service": "app",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run build:app",
+            "expected": "Build successful"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-4",
+          "description": "Run existing tests in all packages",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm test",
+            "expected": "All tests pass"
+          },
+          "status": "pending",
+          "notes": "Ensure no tests were broken by docs removal"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 4,
+    "total_subtasks": 10,
+    "services_involved": [
+      "docs",
+      "app",
+      "widgets",
+      "shared",
+      "monorepo",
+      "infrastructure"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution required for safe removal"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 001 --parallel 1"
+  },
+  "verification_strategy": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "packages/docs directory no longer exists",
+      "Root package.json workspaces array does not include packages/docs",
+      "No @create-studio/docs references in codebase",
+      "npm install completes without errors",
+      "All remaining packages build successfully",
+      "All existing tests pass"
+    ],
+    "verification_steps": [
+      {
+        "name": "Directory Removal Check",
+        "command": "test ! -d packages/docs",
+        "expected_outcome": "Directory does not exist",
+        "type": "filesystem",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Workspace Configuration Check",
+        "command": "cat package.json | grep -c 'packages/docs' || echo '0'",
+        "expected_outcome": "0",
+        "type": "config",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Dependency Search",
+        "command": "grep -r '@create-studio/docs' packages/ || echo 'No references'",
+        "expected_outcome": "No references",
+        "type": "codebase",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Clean Install",
+        "command": "npm install",
+        "expected_outcome": "Successful installation",
+        "type": "build",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build All Packages",
+        "command": "npm run build",
+        "expected_outcome": "All builds succeed",
+        "type": "build",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Run Tests",
+        "command": "npm test",
+        "expected_outcome": "All tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Low risk removal task requires verification that monorepo still functions correctly after docs package deletion"
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "npm run test:shared",
+        "npm run test:widgets",
+        "npm run test:app"
+      ],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3001/",
+          "checks": [
+            "App renders",
+            "No console errors about missing docs package"
+          ]
+        }
+      ]
+    },
+    "build_verification": {
+      "required": true,
+      "checks": [
+        "npm install completes successfully",
+        "npm run build:shared succeeds",
+        "npm run build:widgets succeeds",
+        "npm run build:app succeeds",
+        "No docs workspace in package.json"
+      ]
+    },
+    "filesystem_verification": {
+      "required": true,
+      "checks": [
+        "packages/docs directory does not exist",
+        ".github/workflows/nuxthub-cs-docs.yml does not exist",
+        "No @create-studio/docs references in codebase"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "updated_at": "2026-01-10T16:34:37.211Z",
+  "recoveryNote": "Task recovered from stuck state at 2026-01-10T16:34:37.155Z",
+  "last_updated": "2026-01-10T16:35:25.038032+00:00"
+}
