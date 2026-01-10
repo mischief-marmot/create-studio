@@ -1,0 +1,28 @@
+{
+  "subtasks": {
+    "subtask-1-1": {
+      "attempts": [
+        {
+          "session": 1,
+          "timestamp": "2026-01-10T11:35:39.931518",
+          "approach": "Implemented: Search codebase for all references to @create-studio/docs",
+          "success": true,
+          "error": null
+        },
+        {
+          "session": 1,
+          "timestamp": "2026-01-10T11:35:45.233241",
+          "approach": "Implemented: Search codebase for all references to @create-studio/docs",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    }
+  },
+  "stuck_subtasks": [],
+  "metadata": {
+    "created_at": "2026-01-10T11:34:39.156807",
+    "last_updated": "2026-01-10T11:35:45.233262"
+  }
+}

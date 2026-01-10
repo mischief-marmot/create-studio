@@ -1,0 +1,69 @@
+{
+  "complexity": "standard",
+  "workflow_type": "feature",
+  "confidence": 0.90,
+  "reasoning": "Package removal task in a monorepo. Requires updating workspace configuration and CI workflow. Multiple files affected but scope is well-defined and no external dependencies involved.",
+
+  "analysis": {
+    "scope": {
+      "estimated_files": 8,
+      "estimated_services": 1,
+      "is_cross_cutting": true,
+      "notes": "Entire docs package directory removal + root package.json workspace scripts + CI workflow file. Cross-cutting because it affects monorepo workspace configuration and CI pipeline."
+    },
+    "integrations": {
+      "external_services": [],
+      "new_dependencies": [],
+      "research_needed": false,
+      "notes": "No external services or dependencies involved. This is a pure removal task with no new integrations."
+    },
+    "infrastructure": {
+      "docker_changes": false,
+      "database_changes": false,
+      "config_changes": true,
+      "notes": "Workspace configuration changes (package.json scripts) and CI workflow removal (nuxthub-cs-docs.yml). No Docker or database infrastructure changes needed."
+    },
+    "knowledge": {
+      "patterns_exist": true,
+      "research_required": false,
+      "unfamiliar_tech": [],
+      "notes": "Standard monorepo package removal. Clear patterns exist for updating npm workspaces and removing CI workflows."
+    },
+    "risk": {
+      "level": "low",
+      "concerns": [
+        "Broken references if other packages import from docs (unlikely)",
+        "CI pipeline might fail if workflow not fully removed",
+        "Workspace commands must be cleaned from root package.json"
+      ],
+      "notes": "Low risk because this is a removal task. Main concern is ensuring clean removal without leaving orphaned references. No functional code is being added or modified."
+    }
+  },
+
+  "recommended_phases": [
+    "discovery",
+    "requirements",
+    "context",
+    "spec_writing",
+    "planning",
+    "validation"
+  ],
+
+  "flags": {
+    "needs_research": false,
+    "needs_self_critique": false,
+    "needs_infrastructure_setup": false
+  },
+
+  "validation_recommendations": {
+    "risk_level": "low",
+    "skip_validation": false,
+    "minimal_mode": true,
+    "test_types_required": ["unit"],
+    "security_scan_required": false,
+    "staging_deployment_required": false,
+    "reasoning": "Package removal with minimal risk. Validation ensures monorepo workspace still builds correctly and no broken cross-package references exist."
+  },
+
+  "created_at": "2026-01-10T19:30:00Z"
+}
