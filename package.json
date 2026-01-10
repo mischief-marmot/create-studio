@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "npm run dev --workspace=@create-studio/app",
     "dev:widgets": "npm run dev --workspace=@create-studio/widgets",
-    "dev:docs": "npm run dev --workspace=@create-studio/docs",
     "dev:admin": "npm run dev --workspace=@create-studio/admin",
     "build": "npm run build --workspace=@create-studio/shared && npm run build --workspace=@create-studio/widgets && npm run build --workspace=@create-studio/app",
     "build:shared": "npm run build --workspace=@create-studio/shared",
@@ -20,7 +19,6 @@
     "build:app:production": "npm run build:shared && npm run build:app",
     "deploy:app:preview": "npx wrangler deploy --config packages/app/wrangler.jsonc --env preview",
     "deploy:app:production": "npx wrangler deploy --config packages/app/wrangler.jsonc",
-    "build:docs": "npm run build --workspace=@create-studio/docs",
     "generate:webhook-keys": "node scripts/generate-webhook-keys.js",
     "seed:admin": "npm run seed --workspace=@create-studio/admin",
     "test": "npm run test --workspaces",
@@ -28,7 +26,6 @@
     "test:widgets": "npm run test --workspace=@create-studio/widgets",
     "test:app": "npm run test --workspace=@create-studio/app",
     "test:admin": "npm run test --workspace=@create-studio/admin",
-    "test:docs": "npm run test --workspace=@create-studio/docs",
     "lint": "npm run lint --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules"
