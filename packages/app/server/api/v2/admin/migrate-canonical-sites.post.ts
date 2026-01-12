@@ -30,7 +30,8 @@ export default defineEventHandler(async (event) => {
   logger.start('Starting canonical sites migration...')
 
   try {
-    const db = process.env.DB as D1Database
+    // @ts-expect-error - database is auto-imported by NuxtHub
+    const d1 = db.$client as D1Database
 
     // Parse request body for pagination and filters
     const body = (await readBody<MigrationRequest>(event).catch(() => ({}))) as MigrationRequest
@@ -70,7 +71,7 @@ export default defineEventHandler(async (event) => {
     urlsQuery += ` ORDER BY url LIMIT ? OFFSET ?`
     queryParams.push(limit, offset)
 
-    const urlsResult = await db.prepare(urlsQuery).bind(...queryParams).all()
+    const urlsResult = await d1.prepare(urlsQuery).bind(...queryParams).all()
     const urls = urlsResult.results.map((row: any) => row.url)
 
     logger.info(`Found ${urls.length} unique URLs to process`)
@@ -84,7 +85,7 @@ export default defineEventHandler(async (event) => {
       logger.info(`Processing URL: ${url}`)
 
       // Find all sites for this URL, ordered by id (oldest first)
-      const sitesResult = await db.prepare(`
+      const sitesResult = await d1.prepare(`
         SELECT id, user_id, canonical_site_id
         FROM Sites
         WHERE url = ?
@@ -104,7 +105,7 @@ export default defineEventHandler(async (event) => {
 
       // Ensure canonical site has canonical_site_id = NULL
       if (canonicalSite.canonical_site_id !== null) {
-        await db.prepare(`
+        await d1.prepare(`
           UPDATE Sites
           SET canonical_site_id = NULL
           WHERE id = ?
@@ -118,7 +119,7 @@ export default defineEventHandler(async (event) => {
           const legacySite = sites[i] as any
 
           if (legacySite.canonical_site_id !== canonicalSiteId) {
-            await db.prepare(`
+            await d1.prepare(`
               UPDATE Sites
               SET canonical_site_id = ?
               WHERE id = ?
@@ -140,7 +141,7 @@ export default defineEventHandler(async (event) => {
 
         try {
           // Insert into SiteUsers (ignore if already exists)
-          await db.prepare(`
+          await d1.prepare(`
             INSERT INTO SiteUsers (site_id, user_id, role)
             VALUES (?, ?, ?)
             ON CONFLICT (site_id, user_id) DO NOTHING
@@ -161,13 +162,13 @@ export default defineEventHandler(async (event) => {
         if (siteId === canonicalSiteId) continue
 
         // Check if there's a subscription for this legacy site
-        const subResult = await db.prepare(`
+        const subResult = await d1.prepare(`
           SELECT id FROM Subscriptions WHERE site_id = ?
         `).bind(siteId).first()
 
         if (subResult) {
           // Move subscription to canonical site
-          await db.prepare(`
+          await d1.prepare(`
             UPDATE Subscriptions
             SET site_id = ?
             WHERE site_id = ?
@@ -198,8 +199,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const remainingResult = remainingParams.length > 0
-      ? await db.prepare(remainingQuery).bind(...remainingParams).first()
-      : await db.prepare(remainingQuery).first()
+      ? await d1.prepare(remainingQuery).bind(...remainingParams).first()
+      : await d1.prepare(remainingQuery).first()
     const totalRemaining = (remainingResult as any)?.count || 0
     const hasMore = totalRemaining > (offset + limit)
     const nextOffset = hasMore ? offset + limit : null

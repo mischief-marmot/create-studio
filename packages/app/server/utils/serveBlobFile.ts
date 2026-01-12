@@ -113,8 +113,8 @@ export async function serveBlobFile(
     // logger.debug(`Fetching from blob storage: ${fullPath}`)
 
     // Fetch file from NuxtHub blob storage
-    const blob = await hubBlob().get(fullPath)
-    if (!blob) {
+    const file =await blob.get(fullPath)
+    if (!file) {
       logger.error(`File not found in blob storage: ${fullPath}`)
       throw createError({
         statusCode: 404,
@@ -148,7 +148,7 @@ export async function serveBlobFile(
     setResponseHeaders(event, headers)
 
     // Return the blob stream
-    return blob.stream()
+    return file.stream()
   } catch (error) {
     // Don't re-throw if it's already a 404/400 error
     if (error instanceof H3Error && (error.statusCode === 404 || error.statusCode === 400)) {

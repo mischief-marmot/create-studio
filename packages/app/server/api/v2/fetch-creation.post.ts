@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Initialize KV storage
-  const storage = hubKV()
+  const storage = kv
   const cacheKey = `creation:${site_url}:${creation_id}`
   const TTL = 30 * 24 * 60 * 60 // 30 days in seconds
 

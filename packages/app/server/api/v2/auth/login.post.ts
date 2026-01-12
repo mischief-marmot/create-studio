@@ -48,7 +48,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get user's sites
-    const sites = await (process.env.DB as D1Database)
+    // @ts-expect-error - db is auto-imported by NuxtHub
+    const sites = await (db.$client as D1Database)
       .prepare('SELECT id, url, user_id, create_version, wp_version, php_version FROM Sites WHERE user_id = ?')
       .bind(user.id)
       .all()

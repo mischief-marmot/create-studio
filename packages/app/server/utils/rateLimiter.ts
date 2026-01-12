@@ -30,7 +30,7 @@ export class RateLimiter {
       const now = Date.now()
 
       // Get current count from KV
-      const kv = hubKV()
+      
       const data = await kv.get<{ count: number; resetAt: number }>(fullKey)
 
       if (!data) {

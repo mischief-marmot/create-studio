@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
       try {
         // Extract just the path part (remove any base URL)
         const oldPath = user.avatar.replace(/^.*?avatars\//, 'avatars/')
-        await hubBlob().del(oldPath)
+        await blob.del(oldPath)
         logger.debug('Deleted old avatar', oldPath)
       } catch (error) {
         logger.error('Error deleting old avatar:', error)
@@ -95,7 +95,7 @@ export default defineEventHandler(async (event) => {
     const fileBlob = new Blob([fileField.data], { type: contentType })
 
     // Upload to NuxtHub blob storage
-    const blob = await hubBlob().put(filename, fileBlob, {
+    await blob.put(filename, fileBlob, {
       addRandomSuffix: false
     })
 

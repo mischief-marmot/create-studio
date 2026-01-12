@@ -1,5 +1,7 @@
+/// <reference path="../../hub.d.ts" />
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SiteRepository, SubscriptionRepository } from '~~/server/utils/database'
+import { SubscriptionRepository } from '~~/server/utils/database'
+import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
@@ -30,8 +32,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Find site by URL - need to look up across all users
-    const db = process.env.DB as D1Database
-    const siteResult = await db.prepare('SELECT * FROM Sites WHERE url = ?').bind(siteUrl).first()
+    const siteResult = await db.select().from(schema.sites).where(eq(schema.sites.url, siteUrl)).get()
 
     if (siteResult) {
       const subscriptionRepo = new SubscriptionRepository()

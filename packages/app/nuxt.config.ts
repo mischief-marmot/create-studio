@@ -126,21 +126,18 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxt/test-utils/module",
     "@pinia/nuxt",
+    "@nuxt/content",  // Must be before @nuxthub/core for database auto-config
     "@nuxthub/core",
     "@nuxt/scripts",
     "nuxt-auth-utils",
-    "@nuxt/content",
   ],
   content: {
-    database: {
-      type: 'd1',
-      bindingName: 'DB'
-    }
+    // Database auto-configured by NuxtHub when registered after @nuxt/content
   },
   hub: {
     blob: true,
     kv: true,
-    db: 'sqlite',
+    db: 'sqlite',  // Uses PGLite locally, D1 in production
     cache: true,
   },
   app: {
