@@ -38,3 +38,6 @@ logs
 
 .wrangler
 tmp
+
+# Auto Claude data directory
+.auto-claude/

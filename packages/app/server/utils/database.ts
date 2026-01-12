@@ -2,8 +2,16 @@
  * Database utility functions for D1 integration
  * Provides methods for user management and site management
  *
- * Note: Migrations are handled automatically by NuxtHub from server/database/migrations/
+ * Note: Migrations are handled automatically by NuxtHub from server/db/migrations/
  */
+
+/**
+ * Get the D1 database binding
+ * Uses process.env.DB for direct Cloudflare binding access (NuxtHub v0.10+)
+ */
+function getDatabase(): D1Database {
+  return process.env.DB as D1Database
+}
 
 // Types matching the original Sequelize models
 export interface User {
@@ -99,7 +107,7 @@ export interface CreateSubscriptionData {
  * User database operations
  */
 export class UserRepository {
-  private db = hubDatabase()
+  private get db() { return getDatabase() }
 
   async findByEmail(email: string): Promise<User | null> {
     const result = await this.db.prepare('SELECT * FROM Users WHERE email = ?').bind(email).first()
@@ -311,7 +319,7 @@ export class UserRepository {
  * Site database operations
  */
 export class SiteRepository {
-  private db = hubDatabase()
+  private get db() { return getDatabase() }
 
   async findById(id: number): Promise<Site | null> {
     const result = await this.db.prepare('SELECT * FROM Sites WHERE id = ?').bind(id).first() as Site
@@ -543,7 +551,7 @@ export class SiteRepository {
  * Subscription database operations
  */
 export class SubscriptionRepository {
-  private db = hubDatabase()
+  private get db() { return getDatabase() }
 
   async getBySiteId(siteId: number): Promise<Subscription | null> {
     const result = await this.db.prepare('SELECT * FROM Subscriptions WHERE site_id = ?').bind(siteId).first()
@@ -670,7 +678,7 @@ export class SubscriptionRepository {
  * Manages the many-to-many relationship between users and canonical sites
  */
 export class SiteUserRepository {
-  private db = hubDatabase()
+  private get db() { return getDatabase() }
 
   /**
    * Find a SiteUser record by user and site

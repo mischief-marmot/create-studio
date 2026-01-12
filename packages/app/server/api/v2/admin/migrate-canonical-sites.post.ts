@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
   logger.start('Starting canonical sites migration...')
 
   try {
-    const db = hubDatabase()
+    const db = process.env.DB as D1Database
 
     // Parse request body for pagination and filters
     const body = (await readBody<MigrationRequest>(event).catch(() => ({}))) as MigrationRequest

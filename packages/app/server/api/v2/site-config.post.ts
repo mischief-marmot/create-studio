@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     // Find site by URL - need to look up across all users
-    const db = hubDatabase()
+    const db = process.env.DB as D1Database
     const siteResult = await db.prepare('SELECT * FROM Sites WHERE url = ?').bind(siteUrl).first()
 
     if (siteResult) {

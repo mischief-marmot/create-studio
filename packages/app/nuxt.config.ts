@@ -9,7 +9,7 @@ const toCache = process.env.NODE_ENV === 'production' && {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2025-09-18",
+  compatibilityDate: "2026-01-12",
   future: {
     compatibilityVersion: 4,
   },
@@ -19,8 +19,10 @@ export default defineNuxtConfig({
   debug: false,
   devtools: { enabled: false, timeline: { enabled: true } },
   nitro: {
+    preset: "cloudflare_durable",
     rollupConfig: {
-      plugins: [vue()]
+      plugins: [vue()],
+      external: ['cloudflare:workers', 'cloudflare:sockets']
     },
     cors: {
       origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:8074", "http://localhost:8081", "http://localhost:8083"],
@@ -28,6 +30,8 @@ export default defineNuxtConfig({
       credentials: true,
     },
     cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
       pages: {
         routes: {
           exclude: ['/assets/*']
@@ -136,13 +140,8 @@ export default defineNuxtConfig({
   hub: {
     blob: true,
     kv: true,
-    database: process.env.NODE_ENV === 'test' ? 'TEST_DB' : true,
+    db: 'sqlite',
     cache: true,
-    bindings: {
-      observability: {
-        logs: true,
-      },
-    },
   },
   app: {
     head: {
