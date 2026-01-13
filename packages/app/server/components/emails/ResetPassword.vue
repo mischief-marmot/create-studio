@@ -83,7 +83,7 @@ const responsiveStyles = `
     .email-subtext { color: #b8b8b8 !important; }
     .product-name { color: ${darkColors.baseContent} !important; }
     .email-divider { background-color: #555 !important; }
-    .email-btn { box-shadow: 0 2px 8px rgba(233, 168, 49, 0.2) !important; }
+    .email-btn { box-shadow: none !important; }
     .email-expiry { color: #c8c8c8 !important; }
   }
 `
