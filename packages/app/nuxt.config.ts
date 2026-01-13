@@ -138,7 +138,7 @@ export default defineNuxtConfig({
     blob: true,
     kv: true,
     db: {
-      applyMigrationsDuringBuild: process.env.NODE_ENV === 'PRODUCTION' ? false : true,
+      applyMigrationsDuringBuild: process.env.NODE_ENV === 'production' ? false : true,
       dialect: 'sqlite',
     },  
     cache: true,
@@ -173,7 +173,7 @@ export default defineNuxtConfig({
   scripts: {
     registry: {
       googleAnalytics:  {
-        id: '', // NUXT_PUBLIC_SCRIPTS_REGISTRY_GOOGLE_ANALYTICS_ID
+        id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
         consent: 'analytics', // Require analytics consent before loading
         anonymizeIp: true, // GDPR-friendly
       },
@@ -206,7 +206,7 @@ export default defineNuxtConfig({
       loadAds: false,
       scripts: {
         googleAnalytics: {
-          id: '', // NUXT_PUBLIC_SCRIPTS_REGISTRY_GOOGLE_ANALYTICS_ID
+          id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
         }
       },
       stripePublishableKey: "",

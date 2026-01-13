@@ -41,3 +41,7 @@ tmp
 
 # Auto Claude data directory
 .auto-claude/
+
+packages/app/.data
+
+.worktrees

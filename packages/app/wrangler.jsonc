@@ -3,6 +3,7 @@
   "name": "create-studio",
   "main": "./.output/server/index.mjs",
   "compatibility_date": "2026-01-13",
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./.output/public/",
     "binding": "ASSETS"
@@ -29,7 +30,9 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_id": "75b7c9cc-c82c-41c2-b1dc-ac3a50a86b19"
+      "database_id": "75b7c9cc-c82c-41c2-b1dc-ac3a50a86b19",
+      "migrations_table": "_hub_migrations",
+      "migrations_dir": "./.output/server/db/migrations"
     }
   ],
   "vars": {
@@ -64,7 +67,9 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_id": "d0f371df-bcba-4017-a34d-2987d3d408aa"
+          "database_id": "d0f371df-bcba-4017-a34d-2987d3d408aa",
+          "migrations_table": "_hub_migrations",
+          "migrations_dir": "./.output/server/db/migrations"
         }
       ],
       "vars": {
@@ -72,6 +77,9 @@
         "NUXT_DEBUG": "true",
         "NUXT_HUB_PROJECT_URL": "https://preview.create.studio",
         "NUXT_POSTMARK_SENDING_ADDRESS": "hello@create.studio",
+        "NUXT_PUBLIC_COMPANY_NAME": "Mischief Marmot",
+        "NUXT_PUBLIC_CREATE_STUDIO_BASE_URL": "https://preview.create.studio",
+        "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio",
         "NUXT_PUBLIC_ROOT_URL": "https://preview.create.studio",
         "NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID": "G-Q7YTD7XTY0",
         "NUXT_PUBLIC_SITE_URL": "https://preview.create.studio",
