@@ -173,10 +173,10 @@ export function useAnalytics(config: AnalyticsConfig) {
     try {
       // Use sendBeacon if available (better for page unload)
       if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-        const blob = new Blob([JSON.stringify(sessionData)], {
+        const file = new Blob([JSON.stringify(sessionData)], {
           type: 'application/json'
         })
-        navigator.sendBeacon(analyticsEndpoint, blob)
+        navigator.sendBeacon(analyticsEndpoint, file)
       } else {
         // Fallback to fetch
         await fetch(analyticsEndpoint, {
