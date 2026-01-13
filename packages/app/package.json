@@ -6,6 +6,8 @@
   "scripts": {
     "prebuild": "cd ../shared && npm run build",
     "build": "nuxt build",
+    "deploy:production": "npx nuxt db migrate --remote --production && npx wrangler deploy",
+    "deploy:preview": "npx nuxt db migrate --remote --preview && npx wrangler deploy --env preview",
     "dev": "nuxt dev --host --port 3001",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
