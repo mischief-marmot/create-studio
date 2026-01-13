@@ -137,7 +137,10 @@ export default defineNuxtConfig({
   hub: {
     blob: true,
     kv: true,
-    db: 'sqlite',  // Uses PGLite locally, D1 in production
+    db: {
+      applyMigrationsDuringBuild: process.env.NODE_ENV === 'PRODUCTION' ? false : true,
+      dialect: 'sqlite',
+    },  
     cache: true,
   },
   app: {
