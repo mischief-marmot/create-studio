@@ -133,6 +133,12 @@ export default defineNuxtConfig({
   ],
   content: {
     // Database auto-configured by NuxtHub when registered after @nuxt/content
+    build: {
+      markdown: {
+        // Disable syntax highlighting (Shiki is ~1MB+)
+        highlight: false,
+      },
+    },
   },
   hub: {
     blob: true,

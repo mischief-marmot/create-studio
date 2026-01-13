@@ -1,8 +1,8 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { ServerClient } from "postmark";
 import { render } from "@vue-email/render";
-import ConfirmEmail from "~/components/emails/ConfirmEmail.vue";
-import ResetPassword from "~/components/emails/ResetPassword.vue";
+import ConfirmEmail from "../components/emails/ConfirmEmail.vue";
+import ResetPassword from "../components/emails/ResetPassword.vue";
 
 /**
  * Email service for sending validation emails and other notifications
