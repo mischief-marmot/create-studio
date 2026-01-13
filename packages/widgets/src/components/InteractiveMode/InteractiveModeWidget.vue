@@ -17,14 +17,14 @@
         v-if="showModal"
         ref="modalContainer"
         id="create-studio-interactive-mode"
-        class="cs-interactive-mode-modal cs:fixed cs:top-0 cs:left-0 cs:h-screen cs:flex cs:z-[1000000000] cs:font-sans"
+        class="cs-interactive-mode-modal cs:fixed cs:top-0 cs:left-0 cs:h-screen cs:flex cs:z-1000000000 cs:font-sans"
         tabindex="-1"
         @keydown.esc="closeModal"
       >
         <!-- Modal Content Area -->
         <div class="cs:w-screen cs:h-full cs:bg-gray-100 cs:relative cs:flex cs:items-center cs:justify-center">
           <button
-            class="cs:absolute cs:top-4 cs:right-4 cs:p-2 cs:rounded-full cs:transition-all cs:duration-200 cs:cursor-pointer cs:border-none cs:flex cs:items-center cs:justify-center cs:z-10 cs:hover:bg-gray-300"
+            class="cs-interactive-mode-close-modal cs:absolute cs:top-4 cs:right-4 cs:p-2 cs:rounded-full cs:transition-all cs:duration-200 cs:cursor-pointer cs:border-none cs:flex cs:items-center cs:justify-center cs:z-10 cs:hover:bg-gray-300 cs:w-auto"
             style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
             @click="closeModal"
             aria-label="Close"
