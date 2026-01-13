@@ -6,7 +6,7 @@
   "scripts": {
     "prebuild": "npm run db:flatten-migrations && cd ../shared && npm run build",
     "build": "nuxt build",
-    "build:preview": "nuxt build && node scripts/patch-wrangler-preview.mjs && npx wrangler d1 migrations apply DB --remote --env preview --config wrangler.jsonc",
+    "build:preview": "npm run build && node scripts/patch-wrangler-preview.mjs && npx wrangler d1 migrations apply DB --remote --env preview --config wrangler.jsonc",
     "db:flatten-migrations": "cp -n server/db/migrations/sqlite/*.sql server/db/migrations/ 2>/dev/null || true",
     "deploy:production": "npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc && npx wrangler deploy --config wrangler.jsonc",
     "deploy:preview": "npx wrangler d1 migrations apply DB --remote --env preview --config wrangler.jsonc && npx wrangler deploy --config wrangler.jsonc --env preview",
