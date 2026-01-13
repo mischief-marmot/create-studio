@@ -11,6 +11,7 @@ const wranglerPath = join(process.cwd(), '.output/server/wrangler.json');
 
 // Preview environment configuration
 const previewConfig = {
+  name: 'create-studio-preview',
   d1_databases: [
     {
       binding: 'DB',
