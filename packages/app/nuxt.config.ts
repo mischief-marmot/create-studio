@@ -138,7 +138,7 @@ export default defineNuxtConfig({
     blob: true,
     kv: true,
     db: {
-      applyMigrationsDuringBuild: process.env.NODE_ENV === 'production' ? false : true,
+      applyMigrationsDuringBuild: false,
       dialect: 'sqlite',
     },  
     cache: true,
