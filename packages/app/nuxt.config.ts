@@ -30,7 +30,7 @@ export default defineNuxtConfig({
       credentials: true,
     },
     cloudflare: {
-      deployConfig: true,
+      deployConfig: false,
       nodeCompat: true,
       pages: {
         routes: {
