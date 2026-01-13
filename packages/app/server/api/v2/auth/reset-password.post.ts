@@ -69,12 +69,14 @@ export default defineEventHandler(async (event) => {
     await userRepo.clearPasswordResetToken(user.id!)
 
     // Link user to all their sites in SiteUsers
+    // Use canonical site ID if the site is non-canonical to ensure proper lookup
     const siteRepo = new SiteRepository()
     const userSitesData = await userRepo.findByIdWithSites(user.id!)
 
     if (userSitesData?.Sites) {
       for (const site of userSitesData.Sites) {
-        await siteRepo.addUserToSite(site.id!, user.id!, 'admin')
+        const siteIdToLink = site.canonical_site_id || site.id!
+        await siteRepo.addUserToSite(siteIdToLink, user.id!, 'admin')
       }
     }
 
