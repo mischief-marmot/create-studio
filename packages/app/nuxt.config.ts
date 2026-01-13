@@ -80,24 +80,12 @@ export default defineNuxtConfig({
     },
   },
   vite: {
-   css: {
-      transformer: 'lightningcss',
-      lightningcss: {
-        // Enable CSS Houdini @property at-rule support
-        customAtRules: {
-          property: {
-            prelude: '<custom-ident>',
-            body: 'declaration-list'
-          }
-        }
-      }
-    },
     plugins: [
       tailwindcss(),
-      // hides sourcemap warning for tailwind
+      // Suppress sourcemap warning from Tailwind
       {
         apply: "build",
-        name: "vite-plugin-ignore-sourcemap-warnings",
+        name: "vite-plugin-suppress-sourcemap-warnings",
         configResolved(config) {
           const originalOnWarn = config.build.rollupOptions.onwarn;
           config.build.rollupOptions.onwarn = (warning, warn) => {
