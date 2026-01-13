@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "create-studio",
   "main": "./.output/server/index.mjs",
-  "compatibility_date": "2026-01-12",
+  "compatibility_date": "2026-01-13",
   "assets": {
     "directory": "./.output/public/",
     "binding": "ASSETS"
@@ -32,6 +32,17 @@
       "database_id": "75b7c9cc-c82c-41c2-b1dc-ac3a50a86b19"
     }
   ],
+  "vars": {
+    "NUXT_DEBUG": "true",
+    "NUXT_HUB_PROJECT_URL": "https://create.studio",
+    "NUXT_POSTMARK_SENDING_ADDRESS": "hello@create.studio",
+    "NUXT_PUBLIC_COMPANY_NAME": "Mischief Marmot",
+    "NUXT_PUBLIC_CREATE_STUDIO_BASE_URL": "https://create.studio",
+    "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio",
+    "NUXT_PUBLIC_ROOT_URL": "https://create.studio",
+    "NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID": "G-Q7YTD7XTY0",
+    "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio"
+  },
   "env": {
     "preview": {
       "r2_buckets": [
@@ -55,7 +66,23 @@
           "binding": "DB",
           "database_id": "d0f371df-bcba-4017-a34d-2987d3d408aa"
         }
-      ]
+      ],
+      "vars": {
+        "NUXT_CREATE_STUDIO_BASE_URL": "https://preview.create.studio",
+        "NUXT_DEBUG": "true",
+        "NUXT_HUB_PROJECT_URL": "https://preview.create.studio",
+        "NUXT_POSTMARK_SENDING_ADDRESS": "hello@create.studio",
+        "NUXT_PUBLIC_ROOT_URL": "https://preview.create.studio",
+        "NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID": "G-Q7YTD7XTY0",
+        "NUXT_PUBLIC_SITE_URL": "https://preview.create.studio",
+        "NUXT_PUBLIC_STRIPE_BILLING_PORTAL_URL": "https://billing.stripe.com/p/login/test_00w00l5KiaH27754P5bMQ00",
+        "NUXT_PUBLIC_STRIPE_PRICE_ANNUAL": "price_1SFcybPSeSjfZ8mlPQ1ryqQu",
+        "NUXT_PUBLIC_STRIPE_PRICE_BIENNIAL": "price_1SFcybPSeSjfZ8ml6ECEfpkS",
+        "NUXT_PUBLIC_STRIPE_PRICE_MONTHLY": "price_1SFcybPSeSjfZ8mlxzYNGLhJ",
+        "NUXT_PUBLIC_STRIPE_PRICE_QUARTERLY": "price_1SFcybPSeSjfZ8mlSBaKplrB",
+        "NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51SFcrnPSeSjfZ8mlt0Zz4Hk7Yp2cBddFGOhp3QXXFlpYj8XImS3FA09lfWh7OZG13XZyuuJzSaCH3rZIyMlc10VA00cvRHdN2f",
+        "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio"
+      }
     }
   }
 }
