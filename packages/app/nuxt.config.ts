@@ -80,6 +80,18 @@ export default defineNuxtConfig({
     },
   },
   vite: {
+   css: {
+      transformer: 'lightningcss',
+      lightningcss: {
+        // Enable CSS Houdini @property at-rule support
+        customAtRules: {
+          property: {
+            prelude: '<custom-ident>',
+            body: 'declaration-list'
+          }
+        }
+      }
+    },
     plugins: [
       tailwindcss(),
       // hides sourcemap warning for tailwind

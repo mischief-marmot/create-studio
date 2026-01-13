@@ -48,6 +48,7 @@
   },
   "env": {
     "preview": {
+      "name": "create-studio-preview",
       "r2_buckets": [
         {
           "binding": "BLOB",
