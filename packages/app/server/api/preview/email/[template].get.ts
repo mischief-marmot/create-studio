@@ -27,10 +27,7 @@ const mockProps: Record<string, any> = {
 }
 
 export default defineEventHandler(async (event) => {
-  // Only allow in development
-  if (process.env.NODE_ENV === 'production') {
-    throw createError({ statusCode: 404, message: 'Not found' })
-  }
+  // TODO: Add authentication check before going to production
 
   const template = getRouterParam(event, 'template')
 
