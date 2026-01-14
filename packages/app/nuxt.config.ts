@@ -201,6 +201,9 @@ export default defineNuxtConfig({
     sendingAddress: "hello@create.studio",
     nixId: "",
     nixKey: "",
+    session: {
+      password: "",
+    },
     stripeSecretKey: "",
     stripeWebhookSecret: "",
     public: {
