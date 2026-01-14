@@ -352,6 +352,7 @@ import { useAvatar } from '~/composables/useAvatar.js'
 import { useUpgradeModal } from '~/composables/useUpgradeModal.js'
 import { useAddSiteModal } from '~/composables/useAddSiteModal.js'
 import { useVerifySiteModal } from '~/composables/useVerifySiteModal.js'
+import { useSiteAlreadyVerifiedModal } from '~/composables/useSiteAlreadyVerifiedModal.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -360,6 +361,7 @@ const { selectedSiteId, sites: sitesList, loadSites, selectSite } = useSiteConte
 const { showUpgradeModal, openModal } = useUpgradeModal()
 const { openAddSiteModal } = useAddSiteModal()
 const { openVerifySiteModal } = useVerifySiteModal()
+const { openSiteAlreadyVerifiedModal } = useSiteAlreadyVerifiedModal()
 
 const sidebarOpen = ref(false)
 const siteSelectorOpen = ref(false)
@@ -448,6 +450,9 @@ onMounted(async () => {
       if (matchedSite?.pending) {
         // Site is pending - open Verify Site modal with pre-filled code
         openVerifySiteModal(matchedSite, verificationCodeParam)
+      } else if (matchedSite) {
+        // Site is already verified - show notification
+        openSiteAlreadyVerifiedModal(matchedSite)
       }
     }
   }

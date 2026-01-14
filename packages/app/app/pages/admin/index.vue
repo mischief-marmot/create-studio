@@ -281,6 +281,13 @@
       @close="closeVerifySiteModal"
       @verified="handleSiteVerified"
     />
+
+    <!-- Site Already Verified Modal -->
+    <SiteAlreadyVerifiedModal
+      :is-open="showSiteAlreadyVerifiedModal"
+      :site="alreadyVerifiedSite"
+      @close="closeSiteAlreadyVerifiedModal"
+    />
   </div>
 </template>
 
@@ -302,6 +309,7 @@ import { useUpgradeModal } from '~/composables/useUpgradeModal'
 import { useAuth } from '~/composables/useAuth'
 import { useAddSiteModal } from '~/composables/useAddSiteModal'
 import { useVerifySiteModal } from '~/composables/useVerifySiteModal'
+import { useSiteAlreadyVerifiedModal } from '~/composables/useSiteAlreadyVerifiedModal'
 
 definePageMeta({
   middleware: 'auth',
@@ -319,6 +327,11 @@ const {
   openVerifySiteModal,
   closeVerifySiteModal
 } = useVerifySiteModal()
+const {
+  showSiteAlreadyVerifiedModal,
+  alreadyVerifiedSite,
+  closeSiteAlreadyVerifiedModal
+} = useSiteAlreadyVerifiedModal()
 
 const siteList = ref<Array<any>>([])
 const loading = ref(true)
