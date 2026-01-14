@@ -157,6 +157,7 @@ interface Site {
 const props = defineProps<{
   isOpen: boolean
   site: Site | null
+  initialVerificationCode?: string
 }>()
 
 const emit = defineEmits<{
@@ -185,6 +186,11 @@ const wpSettingsUrl = computed(() => {
 
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
+    // Pre-fill verification code if provided and skip to code input
+    if (props.initialVerificationCode) {
+      verificationCode.value = props.initialVerificationCode
+      showCodeInput.value = true
+    }
     dialogRef.value?.showModal()
   }
   else {

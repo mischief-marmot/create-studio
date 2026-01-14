@@ -268,15 +268,17 @@
     <AddSiteModal
       :is-open="showAddSiteModal"
       :initial-url="initialSiteUrl || undefined"
+      :initial-verification-code="initialVerificationCode || undefined"
       @close="closeAddSiteModal"
       @site-added="handleSiteAdded"
     />
 
     <!-- Verify Site Modal -->
     <VerifySiteModal
-      :is-open="showVerifyModal"
+      :is-open="showVerifySiteModal"
       :site="pendingVerifySite"
-      @close="showVerifyModal = false; pendingVerifySite = null"
+      :initial-verification-code="verifyInitialCode || undefined"
+      @close="closeVerifySiteModal"
       @verified="handleSiteVerified"
     />
   </div>
@@ -299,6 +301,7 @@ import { useAuthFetch } from '~/composables/useAuthFetch'
 import { useUpgradeModal } from '~/composables/useUpgradeModal'
 import { useAuth } from '~/composables/useAuth'
 import { useAddSiteModal } from '~/composables/useAddSiteModal'
+import { useVerifySiteModal } from '~/composables/useVerifySiteModal'
 
 definePageMeta({
   middleware: 'auth',
@@ -308,15 +311,20 @@ definePageMeta({
 const { selectedSiteId, selectedSite, sites, loadSites, selectSite } = useSiteContext()
 const { openModal } = useUpgradeModal()
 const { user } = useAuth()
-const { showAddSiteModal, initialSiteUrl, closeAddSiteModal, openAddSiteModal } = useAddSiteModal()
+const { showAddSiteModal, initialSiteUrl, initialVerificationCode, closeAddSiteModal, openAddSiteModal } = useAddSiteModal()
+const {
+  showVerifySiteModal,
+  pendingSite: pendingVerifySite,
+  initialVerificationCode: verifyInitialCode,
+  openVerifySiteModal,
+  closeVerifySiteModal
+} = useVerifySiteModal()
 
 const siteList = ref<Array<any>>([])
 const loading = ref(true)
 const siteTiers = ref<Record<number, string>>({})
 const siteTeamCounts = ref<Record<number, number>>({})
 const scrollPosition = ref(0)
-const showVerifyModal = ref(false)
-const pendingVerifySite = ref<{ id: number; url: string; name?: string } | null>(null)
 
 const handleSiteAdded = async (site: { id: number; url: string; name?: string }) => {
   // Reload sites to include the new verified site
@@ -325,12 +333,12 @@ const handleSiteAdded = async (site: { id: number; url: string; name?: string })
 }
 
 const openVerifyModal = (site: { id: number; url: string; name?: string }) => {
-  pendingVerifySite.value = site
-  showVerifyModal.value = true
+  openVerifySiteModal(site)
 }
 
 const handleSiteVerified = async (site: { id: number; url: string; name?: string }) => {
   // Reload sites to update the verified status
+  closeVerifySiteModal()
   await loadDashboardData()
 }
 

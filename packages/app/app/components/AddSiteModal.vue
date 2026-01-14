@@ -211,6 +211,7 @@ import {
 const props = defineProps<{
   isOpen: boolean
   initialUrl?: string
+  initialVerificationCode?: string
 }>()
 
 const emit = defineEmits<{
@@ -240,14 +241,27 @@ const wpSettingsUrl = computed(() => {
   return `${baseUrl}/wp-admin/edit.php?page=settings&post_type=mv_create#tab=mv_create_api`
 })
 
-watch(() => props.isOpen, (isOpen) => {
+watch(() => props.isOpen, async (isOpen) => {
   if (isOpen) {
     // Pre-fill with initialUrl if provided
     if (props.initialUrl) {
       // Strip protocol for display
       siteUrl.value = props.initialUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
     }
+    // Pre-fill verification code if provided
+    if (props.initialVerificationCode) {
+      verificationCode.value = props.initialVerificationCode
+    }
     dialogRef.value?.showModal()
+
+    // Auto-submit if both URL and verification code are provided
+    if (props.initialUrl && props.initialVerificationCode) {
+      await handleAddSite()
+      // handleAddSite advances to step 2 on success, skip to step 3 (enter code)
+      if (pendingSite.value) {
+        currentStep.value = 3
+      }
+    }
   }
   else {
     dialogRef.value?.close()

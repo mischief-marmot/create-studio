@@ -351,6 +351,7 @@ import { useSiteContext } from '~/composables/useSiteContext.js'
 import { useAvatar } from '~/composables/useAvatar.js'
 import { useUpgradeModal } from '~/composables/useUpgradeModal.js'
 import { useAddSiteModal } from '~/composables/useAddSiteModal.js'
+import { useVerifySiteModal } from '~/composables/useVerifySiteModal.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -358,6 +359,7 @@ const { logout, user } = useAuth()
 const { selectedSiteId, sites: sitesList, loadSites, selectSite } = useSiteContext()
 const { showUpgradeModal, openModal } = useUpgradeModal()
 const { openAddSiteModal } = useAddSiteModal()
+const { openVerifySiteModal } = useVerifySiteModal()
 
 const sidebarOpen = ref(false)
 const siteSelectorOpen = ref(false)
@@ -428,11 +430,26 @@ watch(selectedSiteId, (newId) => {
 onMounted(async () => {
   // Check for site_url query parameter to auto-select a site
   const siteUrlParam = route.query.site_url as string | undefined
+  const verificationCodeParam = route.query.verification_code as string | undefined
   const result = await loadSites(siteUrlParam)
 
-  // If a site_url was provided but no matching site was found, open the Add Site modal
-  if (siteUrlParam && !result.matched) {
-    openAddSiteModal(siteUrlParam)
+  if (siteUrlParam) {
+    if (!result.matched) {
+      // Site doesn't exist - open Add Site modal
+      // Pass verification_code if provided (for auto-verification flow from plugin)
+      openAddSiteModal(siteUrlParam, verificationCodeParam)
+    } else if (verificationCodeParam) {
+      // Site exists - check if it's pending verification
+      const matchedSite = sitesList.value.find(s => {
+        const normalizedUrl = s.url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+        const normalizedParam = siteUrlParam.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+        return normalizedUrl === normalizedParam
+      })
+      if (matchedSite?.pending) {
+        // Site is pending - open Verify Site modal with pre-filled code
+        openVerifySiteModal(matchedSite, verificationCodeParam)
+      }
+    }
   }
 
   if (typeof window !== 'undefined') {
