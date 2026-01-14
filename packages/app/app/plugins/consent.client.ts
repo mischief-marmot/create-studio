@@ -3,11 +3,12 @@
  * Integrates with @nuxt/scripts consent system
  */
 
+import { useConsentStore } from '~/stores/consent'
+
 export default defineNuxtPlugin((nuxtApp) => {
   // Defer watchers to after Pinia is fully ready
   if (process.client) {
-    nuxtApp.hook('app:created', async () => {
-      const { useConsentStore } = await import('~/stores/consent')
+    nuxtApp.hook('app:created', () => {
       const consentStore = useConsentStore()
 
       // Trigger consent for scripts based on stored preferences
