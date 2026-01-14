@@ -7,6 +7,10 @@
       </p>
     </div>
 
+    <div v-if="accountExistsMessage" class="alert alert-info">
+      <span>An account already exists with this email. Please log in or <NuxtLink to="/auth/request-reset" class="link">reset your password</NuxtLink> if you've forgotten it.</span>
+    </div>
+
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <fieldset class="fieldset">
             <legend class="fieldset-legend">Email</legend>
@@ -67,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { EnvelopeIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { useAuth } from '~/composables/useAuth'
@@ -78,9 +82,13 @@ definePageMeta({
 })
 
 const router = useRouter()
+const route = useRoute()
 const { login } = useAuth()
 
-const email = ref('')
+// Check for account-exists message from registration redirect
+const accountExistsMessage = computed(() => route.query.message === 'account-exists')
+
+const email = ref((route.query.email as string) || '')
 const password = ref('')
 const loading = ref(false)
 const errors = ref<Record<string, string>>({})
