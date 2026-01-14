@@ -68,7 +68,7 @@ Documentation site built with Nuxt Content.
 ## Technology Stack
 
 ### Core Framework
-- **Nuxt 3** (v3.17.3) - Vue.js meta-framework
+- **Nuxt 4** - Vue.js meta-framework
 - **Vue 3** - Progressive JavaScript framework
 - **TypeScript** - Type safety throughout
 

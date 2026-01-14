@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Create Studio is an application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 3, TypeScript, Tailwind CSS v4, DaisyUI, Clerk Auth, and deployed on NuxtHub/Cloudflare.
+Create Studio is an application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 4, TypeScript, Tailwind CSS v4, DaisyUI, Clerk Auth, and deployed on NuxtHub/Cloudflare.
 
 **Project Plan**: See PROJECT_PLAN.md for detailed phased development approach and current progress.
 
@@ -34,7 +34,7 @@ npm test tests/unit/nutrition-api.test.ts
 ## Architecture
 
 ### Framework Stack
-- **Nuxt 3** (v3.17.3) - Vue.js meta-framework
+- **Nuxt 4** (v4.4) - Vue.js meta-framework
 - **TypeScript** - Type safety throughout
 - **Tailwind CSS v4** - Utility-first CSS with `@tailwindcss/vite`
 - **DaisyUI** - Component library with custom themes ("claudette" light, "claudia" dark)
