@@ -16,7 +16,7 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 import { UserRepository, SiteRepository, SiteUserRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { verifyJWT } from '~~/server/utils/auth'
-import { normalizeSiteUrl } from '~~/server/utils/url'
+import { normalizeSiteUrl, parseAllowedTestDomains } from '~~/server/utils/url'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
@@ -104,7 +104,9 @@ export default defineEventHandler(async (event) => {
     const siteUrlParam = getQuery(event).site_url as string | undefined
 
     if (siteUrlParam && authMethod === 'jwt') {
-      const normalizedUrl = normalizeSiteUrl(siteUrlParam)
+      const { allowedTestDomains } = useRuntimeConfig()
+      const allowedDomains = parseAllowedTestDomains(allowedTestDomains)
+      const normalizedUrl = normalizeSiteUrl(siteUrlParam, { allowedDomains })
       if (normalizedUrl) {
         const siteRepo = new SiteRepository()
         const siteUserRepo = new SiteUserRepository()

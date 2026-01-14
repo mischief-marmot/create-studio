@@ -20,7 +20,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SiteUserRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
-import { normalizeSiteUrl, isValidWordPressSiteUrl } from '~~/server/utils/url'
+import { normalizeSiteUrl, isValidWordPressSiteUrl, parseAllowedTestDomains } from '~~/server/utils/url'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
 
 export default defineEventHandler(async (event) => {
@@ -61,7 +61,9 @@ export default defineEventHandler(async (event) => {
     }
 
     // Validate and normalize URL
-    const normalizedUrl = normalizeSiteUrl(url)
+    const { allowedTestDomains } = useRuntimeConfig()
+    const allowedDomains = parseAllowedTestDomains(allowedTestDomains)
+    const normalizedUrl = normalizeSiteUrl(url, { allowedDomains })
 
     if (!normalizedUrl) {
       setResponseStatus(event, 400)

@@ -206,6 +206,9 @@ export default defineNuxtConfig({
     },
     stripeSecretKey: "",
     stripeWebhookSecret: "",
+    // Comma-separated list of domain patterns allowed for testing (e.g., ".local,.test")
+    // These bypass the production block on internal/reserved domains
+    allowedTestDomains: "fastfoodforfamilies.local",
     public: {
       debug: false,
       companyName: "Mischief Marmot LLC",

@@ -27,7 +27,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { UserRepository, SiteRepository, SiteUserRepository } from '~~/server/utils/database'
 import { sendErrorResponse, validateEmail } from '~~/server/utils/errors'
-import { normalizeSiteUrl } from '~~/server/utils/url'
+import { normalizeSiteUrl, parseAllowedTestDomains } from '~~/server/utils/url'
 import * as bcrypt from 'bcryptjs'
 
 export default defineEventHandler(async (event) => {
@@ -162,7 +162,9 @@ export default defineEventHandler(async (event) => {
     let pendingVerification = false
 
     if (site_url && source === 'plugin') {
-      const normalizedUrl = normalizeSiteUrl(site_url)
+      const { allowedTestDomains } = useRuntimeConfig()
+      const allowedDomains = parseAllowedTestDomains(allowedTestDomains)
+      const normalizedUrl = normalizeSiteUrl(site_url, { allowedDomains })
 
       if (normalizedUrl) {
         const siteRepo = new SiteRepository()
