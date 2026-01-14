@@ -31,15 +31,6 @@
             <span>{{ successMessage }}</span>
           </div>
 
-         <!-- Agreement Notice -->
-        <div class="border-base-300 pt-4 border-t">
-          <p class="text-base-content text-sm leading-relaxed">
-            By registering, you agree to our
-            <NuxtLink to="/legal/terms" target="_blank" class="link link-secondary">Terms of Service</NuxtLink>,
-            <NuxtLink to="/legal/privacy" target="_blank" class="link link-secondary">Privacy Policy</NuxtLink>, and
-            <NuxtLink to="/legal/cookies" target="_blank" class="link link-secondary">Cookies Policy</NuxtLink>.
-          </p>
-        </div>
 
           <div class="form-control mt-8 text-center">
             <button
@@ -75,19 +66,8 @@ const success = ref(false)
 const successMessage = ref('')
 const errors = ref<Record<string, string>>({})
 
-// Consent flags
-const consentTos = ref(false)
-const consentPrivacy = ref(false)
-
 const handleSubmit = async () => {
   errors.value = {}
-
-  // Validate required consents
-  if (!consentTos.value || !consentPrivacy.value) {
-    errors.value.general = 'You must agree to the Terms of Service and Privacy Policy'
-    return
-  }
-
   loading.value = true
 
   try {
