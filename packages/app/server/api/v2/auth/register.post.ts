@@ -169,7 +169,7 @@ export default defineEventHandler(async (event) => {
         const siteUserRepo = new SiteUserRepository()
 
         // Find or create canonical site
-        const site = await siteRepo.findOrCreateCanonicalSite(normalizedUrl)
+        const site = await siteRepo.findOrCreateCanonicalSite(normalizedUrl, newUser.id!)
 
         if (site.id) {
           // Create pending SiteUsers record (NOT verified)
