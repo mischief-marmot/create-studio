@@ -7,8 +7,9 @@
  * Response: { success: boolean }
  *
  * This endpoint is called by the WordPress plugin when a user disconnects
- * from Create Studio. It removes the SiteUsers record for that user-site
- * combination but does NOT delete the Site record itself.
+ * from Create Studio. It clears the verified_at timestamp on the SiteUsers
+ * record, returning the connection to an unverified state. This allows the
+ * user to easily reconnect later by re-verifying their site ownership.
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
@@ -71,10 +72,20 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Delete the connection
-    await siteUserRepo.delete(userId, siteId)
+    if (!siteUser.verified_at) {
+      // Already unverified - just return success
+      logger.debug('Site already unverified, returning success', { userId, siteId })
+      return {
+        success: true,
+        message: 'Site already disconnected'
+      }
+    }
 
-    logger.info('Disconnected site from user', { userId, siteId, url: site.url })
+    // Unverify the connection (clear verified_at) instead of deleting
+    // This allows the user to easily reconnect later
+    await siteUserRepo.unverify(userId, siteId)
+
+    logger.info('Unverified site connection for user', { userId, siteId, url: site.url })
 
     return {
       success: true,

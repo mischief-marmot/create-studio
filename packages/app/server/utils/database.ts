@@ -533,6 +533,21 @@ export class SiteUserRepository {
   }
 
   /**
+   * Mark a site-user connection as unverified (clear verified_at)
+   * This allows the user to reconnect later without losing the site association
+   */
+  async unverify(userId: number, siteId: number) {
+    await db.update(schema.siteUsers)
+      .set({ verified_at: null })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
    * Get all pending (unverified) connections for a user
    */
   async getUserPendingConnections(userId: number) {
