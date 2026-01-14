@@ -5,12 +5,18 @@
  * Supports both session and JWT authentication.
  * For JWT: Returns 401 PASSWORD_REQUIRED if user exists but has no password set
  * For session: Allows fetching own user info
+ *
+ * Query params:
+ * - site_url: Optional. When provided (typically from WordPress plugin), returns
+ *   site verification status. If site exists but is not verified, includes
+ *   site.verified=false in the response so the plugin can show verification UI.
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { UserRepository } from '~~/server/utils/database'
+import { UserRepository, SiteRepository, SiteUserRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { verifyJWT } from '~~/server/utils/auth'
+import { normalizeSiteUrl } from '~~/server/utils/url'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
@@ -93,7 +99,38 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Return user data with password status
+    // Check site verification status if site_url is provided
+    let siteInfo: { id: number | null, verified: boolean, url: string } | null = null
+    const siteUrlParam = getQuery(event).site_url as string | undefined
+
+    if (siteUrlParam && authMethod === 'jwt') {
+      const normalizedUrl = normalizeSiteUrl(siteUrlParam)
+      if (normalizedUrl) {
+        const siteRepo = new SiteRepository()
+        const siteUserRepo = new SiteUserRepository()
+
+        const site = await siteRepo.findCanonicalSite(normalizedUrl)
+        if (site) {
+          const siteUser = await siteUserRepo.findByUserAndSite(userIdParam, site.id!)
+          siteInfo = {
+            id: site.id!,
+            verified: !!siteUser?.verified_at,
+            url: normalizedUrl
+          }
+          logger.debug('Site verification status', { siteId: site.id, verified: siteInfo.verified })
+        } else {
+          // Site doesn't exist in Create Studio yet
+          siteInfo = {
+            id: null,
+            verified: false,
+            url: normalizedUrl
+          }
+          logger.debug('Site not found in Create Studio', { url: normalizedUrl })
+        }
+      }
+    }
+
+    // Return user data with password status and optional site verification
     setResponseStatus(event, 200)
     logger.debug('User retrieved successfully', { userId: userIdParam, authMethod })
     return {
@@ -109,7 +146,9 @@ export default defineEventHandler(async (event) => {
         hasPassword: !!user.password,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
-      }
+      },
+      // Include site info when site_url was provided
+      ...(siteInfo && { site: siteInfo })
     }
   } catch (error) {
     logger.error('User fetch error:', error)
