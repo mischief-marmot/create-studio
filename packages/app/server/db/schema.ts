@@ -56,10 +56,14 @@ export const siteUsers = sqliteTable('SiteUsers', {
   role: text('role').notNull().default('admin'), // owner, admin, editor
   verified_at: text('verified_at'),
   joined_at: text('joined_at'),
+  verification_code: text('verification_code'), // Pending verification code from WordPress
+  user_token: text('user_token'), // User-specific API token for WordPress plugin auth
 }, (table) => [
   primaryKey({ columns: [table.site_id, table.user_id] }),
   index('idx_site_users_user_id').on(table.user_id),
   index('idx_site_users_verified_at').on(table.verified_at),
+  index('idx_site_users_verification_code').on(table.verification_code),
+  index('idx_site_users_user_token').on(table.user_token),
 ])
 
 // Subscriptions table

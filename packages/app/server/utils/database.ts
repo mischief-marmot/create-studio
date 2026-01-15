@@ -7,6 +7,7 @@
  */
 
 import { eq, and, or, isNull, isNotNull, sql, like } from 'drizzle-orm'
+import type { SiteUser } from '../db/schema'
 
 // Re-export types from schema for convenience
 export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription } from '../db/schema'
@@ -472,6 +473,20 @@ export class SubscriptionRepository {
 }
 
 /**
+ * Generate a secure random token for user authentication
+ */
+function generateSecureToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let token = ''
+  const randomValues = new Uint8Array(64)
+  crypto.getRandomValues(randomValues)
+  for (let i = 0; i < 64; i++) {
+    token += chars[randomValues[i] % chars.length]
+  }
+  return token
+}
+
+/**
  * SiteUser database operations
  * Manages the many-to-many relationship between users and canonical sites
  */
@@ -486,6 +501,107 @@ export class SiteUserRepository {
         eq(schema.siteUsers.site_id, siteId)
       ))
       .get()
+  }
+
+  /**
+   * Find a SiteUser record by user_token
+   */
+  async findByUserToken(userToken: string) {
+    return await db.select().from(schema.siteUsers)
+      .where(eq(schema.siteUsers.user_token, userToken))
+      .get()
+  }
+
+  /**
+   * Find a SiteUser record by verification_code
+   * Used for frontend user verification flow
+   */
+  async findByVerificationCode(verificationCode: string) {
+    return await db.select().from(schema.siteUsers)
+      .where(eq(schema.siteUsers.verification_code, verificationCode))
+      .get()
+  }
+
+  /**
+   * Find a SiteUser record by site and email (via user lookup)
+   */
+  async findBySiteAndEmail(siteId: number, email: string) {
+    const userRepo = new UserRepository()
+    const user = await userRepo.findByEmail(email)
+    if (!user) return null
+
+    return await this.findByUserAndSite(user.id, siteId)
+  }
+
+  /**
+   * Set verification code for a SiteUser
+   */
+  async setVerificationCode(userId: number, siteId: number, code: string) {
+    await db.update(schema.siteUsers)
+      .set({ verification_code: code })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
+   * Generate and set a user token for authenticated API calls
+   */
+  async generateUserToken(userId: number, siteId: number): Promise<string> {
+    const token = generateSecureToken()
+
+    await db.update(schema.siteUsers)
+      .set({ user_token: token })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return token
+  }
+
+  /**
+   * Clear verification code and token (for disconnect)
+   */
+  async clearVerification(userId: number, siteId: number) {
+    await db.update(schema.siteUsers)
+      .set({
+        verification_code: null,
+        user_token: null,
+        verified_at: null
+      })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
+   * Mark verified and generate user token
+   * Returns the generated token
+   */
+  async markVerifiedWithToken(userId: number, siteId: number): Promise<{ siteUser: SiteUser | undefined; token: string }> {
+    const now = new Date().toISOString()
+    const token = generateSecureToken()
+
+    await db.update(schema.siteUsers)
+      .set({
+        verified_at: now,
+        verification_code: null,
+        user_token: token
+      })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    const siteUser = await this.findByUserAndSite(userId, siteId)
+    return { siteUser, token }
   }
 
   /**
