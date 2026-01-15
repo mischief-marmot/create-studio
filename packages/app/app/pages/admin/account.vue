@@ -431,12 +431,10 @@ const handleAvatarUpload = async (event: Event) => {
     const result = await uploadAvatar(file)
 
     if (result.success) {
-      profileForm.value.avatar = result.url || ''
-      avatarOptions.avatar = result.url || ''
-
-      if (user.value) {
-        user.value.avatar = result.url || ''
-      }
+      // The composable already updates avatarOptions.avatar with the raw path
+      // and avatarUrl with the display URL, so we don't need to override them.
+      // Just update profileForm for form state.
+      profileForm.value.avatar = avatarOptions.avatar
     } else {
       avatarError.value = result.error || 'Failed to upload avatar'
     }

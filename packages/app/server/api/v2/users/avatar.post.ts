@@ -119,12 +119,13 @@ export default defineEventHandler(async (event) => {
       }
     })
 
-    // Return response
+    // Return response - use /avatars/ route which strips the avatars/ prefix
+    const avatarFilename = filename.replace('avatars/', '')
     setResponseStatus(event, 200)
     return {
       success: true,
       avatar: filename,
-      url: `/api/_hub/blob/${filename}`
+      url: `/avatars/${avatarFilename}`
     }
 
   } catch (error) {

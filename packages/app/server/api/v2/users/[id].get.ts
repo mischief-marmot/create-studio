@@ -17,6 +17,7 @@ import { UserRepository, SiteRepository, SiteUserRepository } from '~~/server/ut
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { verifyJWT } from '~~/server/utils/auth'
 import { normalizeSiteUrl, parseAllowedTestDomains } from '~~/server/utils/url'
+import { getAvatarUrl } from '~~/server/utils/avatar'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
@@ -143,6 +144,7 @@ export default defineEventHandler(async (event) => {
         firstname: user.firstname,
         lastname: user.lastname,
         avatar: user.avatar,
+        avatarUrl: getAvatarUrl(user.avatar),
         validEmail: user.validEmail,
         mediavine_publisher: user.mediavine_publisher,
         hasPassword: !!user.password,

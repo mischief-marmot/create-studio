@@ -9,6 +9,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { UserRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
+import { getAvatarUrl } from '~~/server/utils/avatar'
 
 export default defineEventHandler(async (event) => {
   const {debug} = useRuntimeConfig()
@@ -111,6 +112,7 @@ export default defineEventHandler(async (event) => {
         firstname: updatedUser.firstname,
         lastname: updatedUser.lastname,
         avatar: updatedUser.avatar,
+        avatarUrl: getAvatarUrl(updatedUser.avatar),
         validEmail: updatedUser.validEmail,
         mediavine_publisher: updatedUser.mediavine_publisher,
         createdAt: updatedUser.createdAt,

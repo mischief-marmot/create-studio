@@ -9,6 +9,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { UserRepository, SiteRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
+import { getAvatarUrl } from '~~/server/utils/avatar'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
@@ -80,6 +81,7 @@ export default defineEventHandler(async (event) => {
           firstname: user.firstname,
           lastname: user.lastname,
           avatar: user.avatar,
+          avatarUrl: getAvatarUrl(user.avatar),
           validEmail: user.validEmail,
           role: siteUser.role,
           joinedAt: siteUser.joinedAt,
