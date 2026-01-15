@@ -247,12 +247,17 @@ const handleSubmit = async () => {
 
       // If registered from plugin with pending site verification
       if (response.pendingVerification && response.site) {
-        // Redirect to site verification page
-        router.push(`/admin/sites/add?site_id=${response.site.id}&pending=true`)
+        // Redirect to admin dashboard with site_url to trigger verification modal
+        router.push(`/admin?site_url=${encodeURIComponent(response.site.url)}`)
       }
       else {
-        // Redirect to admin dashboard
-        router.push('/admin')
+        // Redirect to requested page or admin dashboard
+        const redirectTo = route.query.redirect as string
+        if (redirectTo && redirectTo.startsWith('/')) {
+          router.push(redirectTo)
+        } else {
+          router.push('/admin')
+        }
       }
     }
     else if (response.passwordResetSent) {

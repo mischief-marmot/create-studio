@@ -115,8 +115,13 @@ const handleSubmit = async () => {
         setSelectedSiteId(response.sites[0].id)
       }
 
-      // Redirect to admin dashboard
-      router.push('/admin')
+      // Redirect to requested page or admin dashboard
+      const redirectTo = route.query.redirect as string
+      if (redirectTo && redirectTo.startsWith('/')) {
+        router.push(redirectTo)
+      } else {
+        router.push('/admin')
+      }
     } else {
       errors.value.general = response.error || 'Login failed'
     }
