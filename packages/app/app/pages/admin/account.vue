@@ -181,60 +181,58 @@
           <div class="">
             <div class="bg-base-100 border-base-300 rounded-3xl overflow-hidden border-2">
               <div class="lg:p-16 p-6">
-                <h2 class="text-base-content font-serif text-lg leading-tight">Change Password</h2>
-                <p class="text-base-content/70 text-sm">
-                  Keep your account secure by using a strong password that you don't use elsewhere.
-                </p>
                 <form @submit.prevent="handleChangePassword" class="space-y-8">
-                  <div class="space-y-3">
+                  <div>
+                    <h2 class="text-base-content font-serif text-lg leading-tight">Change Password</h2>
+                    <p class="text-base-content/70 text-sm">
+                      Keep your account secure by using a strong password that you don't use elsewhere.
+                    </p>
+                  </div>
+
+                  <div class="space-y-2">
                     <label class="block">
-                      <span class="text-base-content block mb-2 text-sm font-bold">Current password</span>
+                      <span class="text-base-content block text-sm">Current password</span>
                     </label>
                     <input v-model="passwordForm.currentPassword" type="password"
-                      class="bg-base-200 border-2 border-base-300 text-base-content rounded-2xl w-full px-5 py-3.5 text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      class="bg-base-200 input"
                       autocomplete="current-password" />
                   </div>
 
-                  <div class="space-y-3">
+                  <div class="space-y-2">
                     <label class="block">
-                      <span class="text-base-content block mb-2 text-sm font-bold">New password</span>
+                      <span class="text-base-content block text-sm">New password</span>
                     </label>
                     <input v-model="passwordForm.newPassword" type="password"
-                      class="bg-base-200 border-2 border-base-300 text-base-content rounded-2xl w-full px-5 py-3.5 text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      class="bg-base-200 input"
                       autocomplete="new-password" minlength="8" />
                     <p class="text-base-content/60 text-sm">Minimum 8 characters</p>
                   </div>
 
-                  <div class="space-y-3">
+                  <div class="space-y-2">
                     <label class="block">
-                      <span class="text-base-content block mb-2 text-sm font-bold">Confirm new password</span>
+                      <span class="text-base-content block text-sm">Confirm new password</span>
                     </label>
                     <input v-model="passwordForm.confirmPassword" type="password"
-                      class="bg-base-200 border-2 border-base-300 text-base-content rounded-2xl w-full px-5 py-3.5 text-base font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      class="bg-base-200 input"
                       autocomplete="new-password" />
                   </div>
 
                   <!-- Alerts -->
-                  <div v-if="passwordError"
-                    class="bg-error/10 border-error/30 text-error rounded-2xl flex items-start gap-3 p-5 border-2">
+                  <div v-if="passwordError" role="alert" class="alert alert-error">
                     <ExclamationCircleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <span class="font-medium">{{ passwordError }}</span>
+                    {{ passwordError }}
                   </div>
 
-                  <div v-if="passwordSuccess"
-                    class="bg-success/10 border-success/30 text-success rounded-2xl flex items-start gap-3 p-5 border-2">
+                  <div v-if="passwordSuccess" role="alert" class="alert alert-success">
                     <CheckCircleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
-                    <span class="font-medium">Password changed successfully!</span>
+                    Password changed successfully!
                   </div>
 
                   <!-- Submit -->
                   <div class="border-base-300 flex justify-end pt-6 border-t-2">
-                    <button type="submit"
-                      class="bg-primary hover:bg-primary-focus disabled:opacity-50 disabled:cursor-not-allowed text-primary-content rounded-full px-8 py-3.5 font-bold flex items-center gap-3 transition-all duration-300 shadow-lg  hover:shadow-xl hover: hover:scale-105"
-                      :disabled="changingPassword">
+                    <button type="submit" class="btn btn-primary btn-lg" :disabled="changingPassword">
                       <span v-if="changingPassword"
                         class="border-primary-content/30 border-t-primary-content animate-spin w-5 h-5 border-2 rounded-full"></span>
-                      <KeyIcon v-else class="w-5 h-5" />
                       {{ changingPassword ? 'Changing...' : 'Update password' }}
                     </button>
                   </div>
