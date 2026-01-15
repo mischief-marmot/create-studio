@@ -13,7 +13,7 @@
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { UserRepository, SiteRepository, SiteUserRepository } from '~~/server/utils/database'
+import { UserRepository, SiteRepository, SiteUserRepository, SubscriptionRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { verifyJWT } from '~~/server/utils/auth'
 import { normalizeSiteUrl, parseAllowedTestDomains } from '~~/server/utils/url'
@@ -101,7 +101,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Check site verification status if site_url is provided
-    let siteInfo: { id: number | null, verified: boolean, url: string } | null = null
+    let siteInfo: { id: number | null, verified: boolean, url: string, subscription_tier: string } | null = null
     const siteUrlParam = getQuery(event).site_url as string | undefined
 
     if (siteUrlParam && authMethod === 'jwt') {
@@ -111,22 +111,27 @@ export default defineEventHandler(async (event) => {
       if (normalizedUrl) {
         const siteRepo = new SiteRepository()
         const siteUserRepo = new SiteUserRepository()
+        const subscriptionRepo = new SubscriptionRepository()
 
         const site = await siteRepo.findCanonicalSite(normalizedUrl)
         if (site) {
           const siteUser = await siteUserRepo.findByUserAndSite(userIdParam, site.id!)
+          // Get subscription tier for the site (defaults to 'free' if no subscription)
+          const subscriptionTier = await subscriptionRepo.getActiveTier(site.id!)
           siteInfo = {
             id: site.id!,
             verified: !!siteUser?.verified_at,
-            url: normalizedUrl
+            url: normalizedUrl,
+            subscription_tier: subscriptionTier
           }
-          logger.debug('Site verification status', { siteId: site.id, verified: siteInfo.verified })
+          logger.debug('Site verification status', { siteId: site.id, verified: siteInfo.verified, subscription_tier: subscriptionTier })
         } else {
           // Site doesn't exist in Create Studio yet
           siteInfo = {
             id: null,
             verified: false,
-            url: normalizedUrl
+            url: normalizedUrl,
+            subscription_tier: 'free'
           }
           logger.debug('Site not found in Create Studio', { url: normalizedUrl })
         }
