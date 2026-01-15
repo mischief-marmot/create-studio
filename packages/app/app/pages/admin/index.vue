@@ -444,7 +444,7 @@ const getSiteTier = (siteId: number) => {
 onMounted(() => {
   loadDashboardData()
   scrollPosition.value = window.scrollY
-	
+
   const handleScroll = () => {
     scrollPosition.value = window.scrollY
   }
