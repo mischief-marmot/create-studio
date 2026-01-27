@@ -106,29 +106,22 @@ function parseAmount(amount: string): number | null {
  * Round a converted amount to a sensible precision and format as string.
  *
  * Strategy:
- * - Values >= 100: round to nearest integer
- * - Values >= 10: round to 1 decimal
- * - Values >= 1: round to 1 decimal
- * - Values < 1: round to 2 decimals
- * - Strip trailing zeros
+ * - Values >= 10: round to nearest 5
+ * - Values >= 1: round to nearest integer
+ * - Values < 1: round to 1 decimal
  */
 function formatAmount(value: number): string {
-  let result: string
-
-  if (value >= 100) {
-    result = Math.round(value).toString()
+  if (value >= 10) {
+    return (Math.round(value / 5) * 5).toString()
   } else if (value >= 1) {
-    result = value.toFixed(1)
+    return Math.round(value).toString()
   } else {
-    result = value.toFixed(2)
+    let result = value.toFixed(1)
+    if (result.includes('.')) {
+      result = result.replace(/0+$/, '').replace(/\.$/, '')
+    }
+    return result
   }
-
-  // Strip trailing zeros after decimal point
-  if (result.includes('.')) {
-    result = result.replace(/0+$/, '').replace(/\.$/, '')
-  }
-
-  return result
 }
 
 /**

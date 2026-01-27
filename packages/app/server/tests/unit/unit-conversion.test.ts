@@ -4,7 +4,7 @@ import type { BatchConversionRequest } from '../../utils/unitConversion'
 
 describe('unitConversion', () => {
   describe('convertBatch - US to Metric', () => {
-    it('converts cups to mL', () => {
+    it('converts cups to mL (rounded to nearest 5)', () => {
       const request: BatchConversionRequest = {
         creation_id: 1,
         source_system: 'us_customary',
@@ -14,62 +14,68 @@ describe('unitConversion', () => {
       expect(result.target_system).toBe('metric')
       expect(result.conversions[0].convertible).toBe(true)
       expect(result.conversions[0].unit).toBe('mL')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(236.6, 0)
+      // 236.588 → nearest 5 = 235
+      expect(result.conversions[0].amount).toBe('235')
     })
 
-    it('converts tbsp to mL', () => {
+    it('converts tbsp to mL (rounded to nearest 5)', () => {
       const result = convertBatch({
         creation_id: 1,
         source_system: 'us_customary',
         ingredients: [{ id: 1, amount: '2', unit: 'tbsp' }],
       })
       expect(result.conversions[0].unit).toBe('mL')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(29.6, 0)
+      // 29.574 → nearest 5 = 30
+      expect(result.conversions[0].amount).toBe('30')
     })
 
-    it('converts oz to g', () => {
+    it('converts oz to g (rounded to nearest 5)', () => {
       const result = convertBatch({
         creation_id: 1,
         source_system: 'us_customary',
         ingredients: [{ id: 1, amount: '8', unit: 'oz' }],
       })
       expect(result.conversions[0].unit).toBe('g')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(226.8, 0)
+      // 226.796 → nearest 5 = 225
+      expect(result.conversions[0].amount).toBe('225')
     })
 
-    it('converts lbs to g', () => {
+    it('converts lbs to g (rounded to nearest 5)', () => {
       const result = convertBatch({
         creation_id: 1,
         source_system: 'us_customary',
         ingredients: [{ id: 1, amount: '2', unit: 'lbs' }],
       })
       expect(result.conversions[0].unit).toBe('g')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(907.2, 0)
+      // 907.184 → nearest 5 = 905
+      expect(result.conversions[0].amount).toBe('905')
     })
 
-    it('upgrades large mL to L', () => {
+    it('upgrades large mL to L (rounded to nearest integer)', () => {
       const result = convertBatch({
         creation_id: 1,
         source_system: 'us_customary',
         ingredients: [{ id: 1, amount: '5', unit: 'cups' }],
       })
       expect(result.conversions[0].unit).toBe('L')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(1.18, 1)
+      // 1182.94 mL → 1.183 L → nearest integer = 1
+      expect(result.conversions[0].amount).toBe('1')
     })
 
-    it('upgrades large g to kg', () => {
+    it('upgrades large g to kg (rounded to nearest integer)', () => {
       const result = convertBatch({
         creation_id: 1,
         source_system: 'us_customary',
         ingredients: [{ id: 1, amount: '40', unit: 'oz' }],
       })
       expect(result.conversions[0].unit).toBe('kg')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(1.13, 1)
+      // 1133.98 g → 1.134 kg → nearest integer = 1
+      expect(result.conversions[0].amount).toBe('1')
     })
   })
 
   describe('convertBatch - Metric to US', () => {
-    it('converts mL to cups', () => {
+    it('converts mL to cups (rounded to nearest integer)', () => {
       const result = convertBatch({
         creation_id: 1,
         source_system: 'metric',
@@ -77,17 +83,19 @@ describe('unitConversion', () => {
       })
       expect(result.target_system).toBe('us_customary')
       expect(result.conversions[0].unit).toBe('cups')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(1, 0)
+      // 237 / 236.588 = 1.002 → nearest integer = 1
+      expect(result.conversions[0].amount).toBe('1')
     })
 
-    it('converts g to oz', () => {
+    it('converts g to oz (rounded to nearest integer)', () => {
       const result = convertBatch({
         creation_id: 1,
         source_system: 'metric',
         ingredients: [{ id: 1, amount: '100', unit: 'g' }],
       })
       expect(result.conversions[0].unit).toBe('oz')
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(3.5, 0)
+      // 100 / 28.3495 = 3.527 → nearest integer = 4
+      expect(result.conversions[0].amount).toBe('4')
     })
   })
 
@@ -99,7 +107,8 @@ describe('unitConversion', () => {
         ingredients: [{ id: 1, amount: '1/2', unit: 'cup' }],
       })
       expect(result.conversions[0].convertible).toBe(true)
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(118.3, 0)
+      // 118.294 → nearest 5 = 120
+      expect(result.conversions[0].amount).toBe('120')
     })
 
     it('handles mixed numbers', () => {
@@ -108,7 +117,8 @@ describe('unitConversion', () => {
         source_system: 'us_customary',
         ingredients: [{ id: 1, amount: '1 1/2', unit: 'cup' }],
       })
-      expect(parseFloat(result.conversions[0].amount!)).toBeCloseTo(354.9, 0)
+      // 354.882 → nearest 5 = 355
+      expect(result.conversions[0].amount).toBe('355')
     })
   })
 
@@ -120,8 +130,8 @@ describe('unitConversion', () => {
         ingredients: [{ id: 1, amount: '1', unit: 'cup', max_amount: '2' }],
       })
       expect(result.conversions[0].convertible).toBe(true)
-      expect(result.conversions[0].max_amount).not.toBeNull()
-      expect(parseFloat(result.conversions[0].max_amount!)).toBeCloseTo(473.2, 0)
+      // max: 473.176 → nearest 5 = 475
+      expect(result.conversions[0].max_amount).toBe('475')
     })
 
     it('returns null max_amount when not provided', () => {
