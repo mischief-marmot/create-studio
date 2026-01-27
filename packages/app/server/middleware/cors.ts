@@ -10,6 +10,7 @@ export default defineEventHandler((event) => {
     /^\/api\/v2\/auth\/request-password-reset/,
     /^\/api\/v2\/timers/,
     /^\/api\/v2\/users\/.*/,
+    /^\/api\/v2\/conversions\/.*/,
     /^\/api\/analytics\/.*/,
     /^\/api\/analytics\/events/,
   ]
