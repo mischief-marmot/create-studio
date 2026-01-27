@@ -81,12 +81,20 @@ export function normalizeSiteUrl(input: string, options?: { allowedDomains?: str
     // Check if this is an explicitly allowed test domain
     const isAllowed = allowedDomains.length > 0 && isAllowedTestDomain(hostname, allowedDomains)
 
+    // Determine if this is a local/development host
+    const isLocalHost = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.endsWith('.local') || isAllowed
+
     // Enforce HTTPS (required for secure plugin communication)
     if (url.protocol !== 'https:') {
-      // Allow http for localhost during development, or for allowed test domains
-      if (url.hostname !== 'localhost' && !url.hostname.endsWith('.local') && !isAllowed) {
+      // Allow http for local/development domains
+      if (!isLocalHost) {
         return null // Reject non-HTTPS URLs
       }
+    }
+
+    // Force HTTP for local hosts (they typically don't have valid SSL)
+    if (isLocalHost && url.protocol === 'https:') {
+      url.protocol = 'http:'
     }
 
     // Block private/internal IP ranges (security)

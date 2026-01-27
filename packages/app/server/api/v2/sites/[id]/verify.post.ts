@@ -144,7 +144,9 @@ export default defineEventHandler(async (event) => {
       // Ensure site URL has protocol
       let siteUrlWithProtocol = site.url
       if (!siteUrlWithProtocol.startsWith('http://') && !siteUrlWithProtocol.startsWith('https://')) {
-        siteUrlWithProtocol = `https://${siteUrlWithProtocol}`
+        // Use HTTP for localhost/local domains, HTTPS for everything else
+        const isLocal = /^(localhost|127\.0\.0\.1)(:\d+)?/.test(siteUrlWithProtocol) || siteUrlWithProtocol.endsWith('.local')
+        siteUrlWithProtocol = `${isLocal ? 'http' : 'https'}://${siteUrlWithProtocol}`
       }
 
       const pluginResponse = await $fetch<{
