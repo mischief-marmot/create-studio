@@ -123,6 +123,17 @@
               <div class="badge badge-md bg-amber-700 text-amber-50 border-amber-700 font-sans uppercase rounded-full">
                 {{ getSiteTier(selectedSite.id) === 'pro' ? 'Pro' : 'Free' }}
               </div>
+              <!-- Dev-only tier toggle -->
+              <button
+                v-if="isDev"
+                @click="toggleSiteTier(selectedSite.id)"
+                class="btn btn-xs btn-ghost text-base-content/50 hover:text-base-content"
+                title="Toggle tier (dev only)"
+                :disabled="togglingTier"
+              >
+                <ArrowPathIcon v-if="togglingTier" class="size-4 animate-spin" />
+                <span v-else class="text-[10px]">DEV: Toggle</span>
+              </button>
             </div>
           </div>
 
@@ -205,8 +216,18 @@
                     <div v-if="site.pending" class="badge badge-sm badge-warning uppercase rounded-sm">
                       Pending
                     </div>
-                    <div v-else class="badge badge-sm bg-amber-700 text-amber-50 border-amber-700 uppercase rounded-sm">
-                      {{ getSiteTier(site.id) === 'pro' ? 'Pro' : 'Free' }}
+                    <div v-else class="flex items-center gap-1">
+                      <div class="badge badge-sm bg-amber-700 text-amber-50 border-amber-700 uppercase rounded-sm">
+                        {{ getSiteTier(site.id) === 'pro' ? 'Pro' : 'Free' }}
+                      </div>
+                      <button
+                        v-if="isDev"
+                        @click.stop="toggleSiteTier(site.id)"
+                        class="text-base-content/40 hover:text-base-content text-[9px]"
+                        title="Toggle tier (dev only)"
+                      >
+                        ⇄
+                      </button>
                     </div>
                     <h3 class="text-base-content text-md font-serif italic truncate">
                       {{ site.name || site.url }}
@@ -302,6 +323,7 @@ import {
   CalendarDaysIcon,
   CodeBracketIcon,
   PlusIcon,
+  ArrowPathIcon,
 } from '@heroicons/vue/24/outline'
 import { useSiteContext } from '~/composables/useSiteContext'
 import { useAuthFetch } from '~/composables/useAuthFetch'
@@ -338,6 +360,10 @@ const loading = ref(true)
 const siteTiers = ref<Record<number, string>>({})
 const siteTeamCounts = ref<Record<number, number>>({})
 const scrollPosition = ref(0)
+const togglingTier = ref(false)
+
+// Check if in development mode
+const isDev = import.meta.dev
 
 const handleSiteAdded = async (site: { id: number; url: string; name?: string }) => {
   // Reload sites to include the new verified site
@@ -439,6 +465,27 @@ const loadDashboardData = async () => {
 
 const getSiteTier = (siteId: number) => {
   return siteTiers.value[siteId] || 'free'
+}
+
+// Dev-only: Toggle site tier between free and pro
+const toggleSiteTier = async (siteId: number) => {
+  if (!isDev) return
+
+  togglingTier.value = true
+  try {
+    const response = await useAuthFetch('/api/dev/toggle-tier', {
+      method: 'POST',
+      body: { siteId }
+    })
+
+    if (response.success) {
+      siteTiers.value[siteId] = response.tier
+    }
+  } catch (error) {
+    console.error('Failed to toggle tier:', error)
+  } finally {
+    togglingTier.value = false
+  }
 }
 
 onMounted(() => {

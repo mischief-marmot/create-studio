@@ -25,7 +25,7 @@ export default defineNuxtConfig({
       external: ['cloudflare:workers', 'cloudflare:sockets']
     },
     cors: {
-      origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:8074", "http://localhost:8081", "http://localhost:8083"],
+      origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:8074", "http://localhost:8174", "http://localhost:8274", "http://localhost:8374", "http://localhost:8081", "http://localhost:8083"],
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       credentials: true,
     },
@@ -208,7 +208,7 @@ export default defineNuxtConfig({
     stripeWebhookSecret: "",
     // Comma-separated list of domain patterns allowed for testing (e.g., ".local,.test")
     // These bypass the production block on internal/reserved domains
-    allowedTestDomains: "fastfoodforfamilies.local",
+    allowedTestDomains: "fastfoodforfamilies.local,localhost,localhost:8074,localhost:8174,localhost:8274",
     public: {
       debug: false,
       companyName: "Mischief Marmot LLC",

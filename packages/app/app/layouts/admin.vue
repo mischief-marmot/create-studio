@@ -433,6 +433,7 @@ onMounted(async () => {
   // Check for site_url query parameter to auto-select a site
   const siteUrlParam = route.query.site_url as string | undefined
   const verificationCodeParam = route.query.verification_code as string | undefined
+  const upgradeParam = route.query.upgrade as string | undefined
   const result = await loadSites(siteUrlParam)
 
   if (siteUrlParam) {
@@ -455,6 +456,11 @@ onMounted(async () => {
         openSiteAlreadyVerifiedModal(matchedSite)
       }
     }
+  }
+
+  // Check for upgrade query parameter to auto-open upgrade modal
+  if (upgradeParam === 'true' || upgradeParam === '1') {
+    openModal()
   }
 
   if (typeof window !== 'undefined') {
