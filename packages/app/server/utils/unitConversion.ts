@@ -40,28 +40,86 @@ export interface BatchConversionResponse {
  * Each entry maps a US unit to its metric equivalent with a multiplier.
  */
 const US_TO_METRIC: Record<string, { factor: number; unit: string }> = {
-  // Volume
-  'cup':    { factor: 236.588, unit: 'mL' },
-  'cups':   { factor: 236.588, unit: 'mL' },
-  'tbsp':   { factor: 14.787,  unit: 'mL' },
-  'tsp':    { factor: 4.929,   unit: 'mL' },
-  'fl oz':  { factor: 29.574,  unit: 'mL' },
-  // Weight
-  'oz':     { factor: 28.3495, unit: 'g' },
-  'lb':     { factor: 453.592, unit: 'g' },
-  'lbs':    { factor: 453.592, unit: 'g' },
+  // Volume - cups
+  'cup':        { factor: 236.588, unit: 'mL' },
+  'cups':       { factor: 236.588, unit: 'mL' },
+  'c':          { factor: 236.588, unit: 'mL' },
+  // Volume - tablespoons
+  'tbsp':       { factor: 14.787,  unit: 'mL' },
+  'tablespoon': { factor: 14.787,  unit: 'mL' },
+  'tablespoons': { factor: 14.787, unit: 'mL' },
+  'Tbsp':       { factor: 14.787,  unit: 'mL' },
+  'T':          { factor: 14.787,  unit: 'mL' },
+  // Volume - teaspoons
+  'tsp':        { factor: 4.929,   unit: 'mL' },
+  'teaspoon':   { factor: 4.929,   unit: 'mL' },
+  'teaspoons':  { factor: 4.929,   unit: 'mL' },
+  't':          { factor: 4.929,   unit: 'mL' },
+  // Volume - fluid ounces
+  'fl oz':      { factor: 29.574,  unit: 'mL' },
+  'fluid oz':   { factor: 29.574,  unit: 'mL' },
+  'fluid ounce': { factor: 29.574, unit: 'mL' },
+  'fluid ounces': { factor: 29.574, unit: 'mL' },
+  // Volume - pints
+  'pint':       { factor: 473.176, unit: 'mL' },
+  'pints':      { factor: 473.176, unit: 'mL' },
+  'pt':         { factor: 473.176, unit: 'mL' },
+  // Volume - quarts
+  'quart':      { factor: 946.353, unit: 'mL' },
+  'quarts':     { factor: 946.353, unit: 'mL' },
+  'qt':         { factor: 946.353, unit: 'mL' },
+  // Volume - gallons
+  'gallon':     { factor: 3785.41, unit: 'mL' },
+  'gallons':    { factor: 3785.41, unit: 'mL' },
+  'gal':        { factor: 3785.41, unit: 'mL' },
+  // Weight - ounces
+  'oz':         { factor: 28.3495, unit: 'g' },
+  'ounce':      { factor: 28.3495, unit: 'g' },
+  'ounces':     { factor: 28.3495, unit: 'g' },
+  // Weight - pounds
+  'lb':         { factor: 453.592, unit: 'g' },
+  'lbs':        { factor: 453.592, unit: 'g' },
+  'pound':      { factor: 453.592, unit: 'g' },
+  'pounds':     { factor: 453.592, unit: 'g' },
+  // Weight - sticks (butter)
+  'stick':      { factor: 113.4,   unit: 'g' },
+  'sticks':     { factor: 113.4,   unit: 'g' },
 }
 
 /**
  * Metric → US Customary conversion factors.
  */
 const METRIC_TO_US: Record<string, { factor: number; unit: string }> = {
-  'ml':  { factor: 1 / 236.588, unit: 'cups' },
-  'mL':  { factor: 1 / 236.588, unit: 'cups' },
-  'l':   { factor: 1000 / 236.588, unit: 'cups' },
-  'L':   { factor: 1000 / 236.588, unit: 'cups' },
-  'g':   { factor: 1 / 28.3495, unit: 'oz' },
-  'kg':  { factor: 1000 / 28.3495, unit: 'oz' },
+  // Volume - milliliters
+  'ml':         { factor: 1 / 236.588, unit: 'cups' },
+  'mL':         { factor: 1 / 236.588, unit: 'cups' },
+  'milliliter': { factor: 1 / 236.588, unit: 'cups' },
+  'milliliters': { factor: 1 / 236.588, unit: 'cups' },
+  // Volume - centiliters
+  'cl':         { factor: 10 / 236.588, unit: 'cups' },
+  'cL':         { factor: 10 / 236.588, unit: 'cups' },
+  'centiliter': { factor: 10 / 236.588, unit: 'cups' },
+  'centiliters': { factor: 10 / 236.588, unit: 'cups' },
+  // Volume - deciliters
+  'dl':         { factor: 100 / 236.588, unit: 'cups' },
+  'dL':         { factor: 100 / 236.588, unit: 'cups' },
+  'deciliter':  { factor: 100 / 236.588, unit: 'cups' },
+  'deciliters': { factor: 100 / 236.588, unit: 'cups' },
+  // Volume - liters
+  'l':          { factor: 1000 / 236.588, unit: 'cups' },
+  'L':          { factor: 1000 / 236.588, unit: 'cups' },
+  'liter':      { factor: 1000 / 236.588, unit: 'cups' },
+  'liters':     { factor: 1000 / 236.588, unit: 'cups' },
+  'litre':      { factor: 1000 / 236.588, unit: 'cups' },
+  'litres':     { factor: 1000 / 236.588, unit: 'cups' },
+  // Weight - grams
+  'g':          { factor: 1 / 28.3495, unit: 'oz' },
+  'gram':       { factor: 1 / 28.3495, unit: 'oz' },
+  'grams':      { factor: 1 / 28.3495, unit: 'oz' },
+  // Weight - kilograms
+  'kg':         { factor: 1000 / 28.3495, unit: 'oz' },
+  'kilogram':   { factor: 1000 / 28.3495, unit: 'oz' },
+  'kilograms':  { factor: 1000 / 28.3495, unit: 'oz' },
 }
 
 // --- Amount Parsing ---
