@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { SubscriptionRepository } from './database'
+import { SubscriptionRepository, SiteRepository } from './database'
 
 /**
  * Get Stripe client instance
@@ -127,6 +127,18 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         })
       }
 
+      // Notify the WordPress site of the subscription change via webhook.
+      try {
+        const siteRepo = new SiteRepository()
+        const site = await siteRepo.findById(siteId)
+        if (site?.url) {
+          const { sendWebhook } = await import('./webhooks')
+          sendWebhook(site.url, { type: 'subscription_change', data: { tier } })
+        }
+      } catch (_) {
+        // Fire-and-forget — don't block Stripe webhook processing.
+      }
+
       break
     }
 
@@ -139,6 +151,18 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
           status: 'canceled',
           tier: 'free',
         })
+
+        // Notify the WordPress site that subscription was canceled.
+        try {
+          const siteRepo = new SiteRepository()
+          const site = await siteRepo.findById(siteId)
+          if (site?.url) {
+            const { sendWebhook } = await import('./webhooks')
+            sendWebhook(site.url, { type: 'subscription_change', data: { tier: 'free' } })
+          }
+        } catch (_) {
+          // Fire-and-forget — don't block Stripe webhook processing.
+        }
       }
 
       break

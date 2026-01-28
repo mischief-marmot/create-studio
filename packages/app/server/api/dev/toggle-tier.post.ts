@@ -59,9 +59,21 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    // Notify the WordPress site of the tier change via webhook.
+    const tier = subscription?.tier || 'free'
+    try {
+      const site = await siteRepo.findById(siteId)
+      if (site?.url) {
+        const { sendWebhook } = await import('~~/server/utils/webhooks')
+        sendWebhook(site.url, { type: 'subscription_change', data: { tier } })
+      }
+    } catch (_) {
+      // Fire-and-forget
+    }
+
     return {
       success: true,
-      tier: subscription?.tier || 'free',
+      tier,
       subscription,
     }
   } catch (error: any) {
