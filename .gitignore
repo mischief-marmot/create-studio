@@ -45,3 +45,7 @@ tmp
 packages/app/.data
 
 .worktrees
+
+# Webhook signing keys (generated per-installation)
+webhook-*.pem
+*.pem

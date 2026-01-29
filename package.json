@@ -19,6 +19,7 @@
     "deploy:app:preview": "npx wrangler deploy --config packages/app/wrangler.jsonc --env preview",
     "deploy:app:production": "npx wrangler deploy --config packages/app/wrangler.jsonc",
     "build:docs": "npm run build --workspace=@create-studio/docs",
+    "generate:webhook-keys": "node scripts/generate-webhook-keys.js",
     "test": "npm run test --workspaces",
     "test:shared": "npm run test --workspace=@create-studio/shared",
     "test:widgets": "npm run test --workspace=@create-studio/widgets",
