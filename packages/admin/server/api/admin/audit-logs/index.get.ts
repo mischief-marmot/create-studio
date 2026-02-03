@@ -1,5 +1,4 @@
 import { eq, and, gte, lte, desc, count, sql } from 'drizzle-orm'
-import { hubDatabase } from "@nuxthub/core"
 import { auditLogs, admins } from "~~/server/utils/db"
 
 /**
@@ -25,7 +24,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const db = hubDatabase()
+  // db is auto-imported from hub:db
 
   try {
     // Get query parameters

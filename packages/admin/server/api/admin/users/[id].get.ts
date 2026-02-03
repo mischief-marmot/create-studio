@@ -1,5 +1,4 @@
 import { eq, desc, count } from 'drizzle-orm'
-import { hubDatabase } from "@nuxthub/core"
 import { users, sites, subscriptions, siteUsers, auditLogs } from "~~/server/utils/db"
 
 /**
@@ -22,7 +21,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const db = hubDatabase()
+  // db is auto-imported from hub:db
   const userId = parseInt(event.context.params?.id || '0')
 
   if (!userId || isNaN(userId)) {

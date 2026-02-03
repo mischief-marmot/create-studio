@@ -1,5 +1,4 @@
 import { eq, and, gte, sql, isNotNull, count } from 'drizzle-orm'
-import { hubDatabase } from "@nuxthub/core"
 import { users, sites, subscriptions, siteUsers } from "~~/server/utils/db"
 
 /**
@@ -16,7 +15,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const db = hubDatabase()
+  // db is auto-imported from hub:db
 
   try {
     // Calculate date boundaries

@@ -1,7 +1,7 @@
 import { auditLogs } from "~~/server/utils/db"
 
 export default defineEventHandler(async (event) => {
-  const db = hubDatabase()
+  // db is auto-imported from hub:db
 
   // Get current session
   const session = await getUserSession(event)
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const userAgent = headers['user-agent'] || 'unknown'
 
   // Create audit log entry
-  await db.insert(auditLogs).values({
+  await db.select().from(schema.insert(auditLogs).values({
     admin_id: session.user.id,
     action: 'logout',
     entity_type: 'admin',
