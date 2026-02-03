@@ -9,6 +9,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "seed": "tsx scripts/seed-admin.ts",
     "test": "vitest run --passWithNoTests",
     "typecheck": "nuxt typecheck"
   },
@@ -18,6 +19,8 @@
     "@pinia/nuxt": "^0.11.0",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.6",
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
     "nuxt": "^4.2.2",
@@ -30,7 +33,10 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.3.1",
     "@nuxt/test-utils": "^3.19.2",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.6.2",
     "daisyui": "^5.5.5",
+    "tsx": "^4.21.0",
     "typescript": "^5.6.0",
     "vitest": "^3.2.4"
   }
