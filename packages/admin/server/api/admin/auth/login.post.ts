@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcrypt'
-import { admins, auditLogs } from '~/server/utils/db'
+import { admins, auditLogs } from '../../../utils/db'
 
 export default defineEventHandler(async (event) => {
   const db = hubDatabase()
