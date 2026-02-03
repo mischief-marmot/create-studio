@@ -1,4 +1,5 @@
 import { eq, desc, count } from 'drizzle-orm'
+import { hubDatabase } from "#imports"
 import { users, sites, subscriptions, siteUsers, auditLogs } from "~~/server/utils/db"
 
 /**

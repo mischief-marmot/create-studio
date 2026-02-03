@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+import { hubDatabase } from "#imports"
 import bcrypt from 'bcrypt'
 import { admins, auditLogs } from "~~/server/utils/db"
 
