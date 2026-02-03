@@ -39,7 +39,17 @@
         <!-- Profile Card (Left/Top) -->
         <div class="lg:col-span-1">
           <div class="admin-section">
-            <h2 class="text-lg font-semibold mb-4">Profile</h2>
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold">Profile</h2>
+              <button
+                v-if="!editMode"
+                class="btn btn-ghost btn-sm btn-circle"
+                @click="enableEditMode"
+                aria-label="Edit profile"
+              >
+                <PencilIcon class="size-4" />
+              </button>
+            </div>
 
             <div class="flex flex-col items-center text-center mb-6">
               <!-- Avatar -->
@@ -60,8 +70,43 @@
                 </div>
               </div>
 
-              <!-- Name -->
-              <h3 class="text-xl font-semibold mb-1">{{ displayName }}</h3>
+              <!-- Name (View Mode) -->
+              <div v-if="!editMode">
+                <h3 class="text-xl font-semibold mb-1">{{ displayName }}</h3>
+              </div>
+
+              <!-- Name (Edit Mode) -->
+              <div v-else class="w-full mb-4 space-y-2">
+                <input
+                  v-model="editForm.firstname"
+                  type="text"
+                  placeholder="First name"
+                  class="input input-bordered input-sm w-full"
+                />
+                <input
+                  v-model="editForm.lastname"
+                  type="text"
+                  placeholder="Last name"
+                  class="input input-bordered input-sm w-full"
+                />
+                <div class="flex gap-2">
+                  <button
+                    class="btn btn-primary btn-sm flex-1"
+                    @click="saveProfile"
+                    :disabled="actionLoading"
+                  >
+                    <span v-if="actionLoading" class="loading loading-spinner loading-xs"></span>
+                    Save
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-sm flex-1"
+                    @click="cancelEdit"
+                    :disabled="actionLoading"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
 
               <!-- Email with Verified Badge -->
               <div class="flex items-center gap-2 mb-3">
@@ -190,6 +235,74 @@
             </div>
           </div>
 
+          <!-- Subscription History Section -->
+          <div class="admin-section">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-lg font-semibold">Subscription History</h2>
+              <AdminBadge
+                status="info"
+                variant="status"
+                :custom-text="activeSubscriptionsCount.toString()"
+                :show-dot="false"
+              />
+            </div>
+
+            <!-- No Active Subscriptions -->
+            <div v-if="activeSubscriptionsCount === 0" class="text-center py-8">
+              <div class="bg-base-200 rounded-full size-12 flex items-center justify-center mx-auto mb-3">
+                <svg class="size-6 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <p class="text-base-content/60 text-sm">No active subscriptions</p>
+            </div>
+
+            <!-- Active Subscriptions List -->
+            <div v-else class="space-y-3">
+              <div
+                v-for="site in sitesWithSubscriptions"
+                :key="site.id"
+                class="border border-base-300 rounded-lg p-4"
+              >
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex-1">
+                    <h3 class="font-medium mb-1">{{ site.name || site.url }}</h3>
+                    <div class="flex items-center gap-2">
+                      <AdminBadge
+                        :status="site.subscription!.tier"
+                        variant="tier"
+                      />
+                      <AdminBadge
+                        :status="site.subscription!.status"
+                        variant="status"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                  <div v-if="site.subscription!.current_period_start" class="flex justify-between">
+                    <span class="text-base-content/60">Started:</span>
+                    <span>{{ formatDate(site.subscription!.current_period_start) }}</span>
+                  </div>
+                  <div v-if="site.subscription!.current_period_end" class="flex justify-between">
+                    <span class="text-base-content/60">{{ site.subscription!.cancel_at_period_end ? 'Ends' : 'Renews' }}:</span>
+                    <span>{{ formatDate(site.subscription!.current_period_end) }}</span>
+                  </div>
+                  <div v-if="site.subscription!.cancel_at_period_end" class="flex justify-between">
+                    <span class="text-base-content/60">Auto-Renew:</span>
+                    <AdminBadge
+                      status="error"
+                      variant="status"
+                      custom-text="Disabled"
+                      :show-dot="false"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Audit Summary Section -->
           <div class="admin-section">
             <h2 class="text-lg font-semibold mb-4">Audit Summary</h2>
@@ -244,12 +357,14 @@
           </button>
 
           <button
-            class="btn btn-error btn-outline btn-sm"
-            @click="openDisableAccountModal"
+            class="btn btn-outline btn-sm"
+            :class="user.validEmail ? 'btn-error' : 'btn-success'"
+            @click="openToggleStatusModal"
             :disabled="actionLoading"
           >
-            <ShieldExclamationIcon class="size-4" />
-            Disable Account
+            <ShieldExclamationIcon v-if="user.validEmail" class="size-4" />
+            <ShieldCheckIcon v-else class="size-4" />
+            {{ user.validEmail ? 'Disable Account' : 'Enable Account' }}
           </button>
         </div>
       </div>
@@ -290,24 +405,31 @@
         </p>
       </AdminModal>
 
-      <!-- Disable Account Modal -->
+      <!-- Toggle Status Modal -->
       <AdminModal
-        :open="showDisableAccountModal"
-        title="Disable Account"
-        description="This is a destructive action. Are you sure?"
-        variant="danger"
-        confirm-text="Disable Account"
+        :open="showToggleStatusModal"
+        :title="user.validEmail ? 'Disable Account' : 'Enable Account'"
+        :description="user.validEmail ? 'This is a destructive action. Are you sure?' : 'Re-enable this user account?'"
+        :variant="user.validEmail ? 'danger' : 'confirm'"
+        :confirm-text="user.validEmail ? 'Disable Account' : 'Enable Account'"
         :loading="actionLoading"
-        @confirm="handleDisableAccount"
+        @confirm="handleToggleStatus"
         @cancel="closeModals"
         @close="closeModals"
       >
-        <div class="bg-error/10 border border-error/20 rounded-lg p-4 mb-4">
+        <div v-if="user.validEmail" class="bg-error/10 border border-error/20 rounded-lg p-4 mb-4">
           <p class="text-sm text-error font-medium mb-2">Warning: This action will:</p>
           <ul class="text-sm text-base-content/70 space-y-1 list-disc list-inside">
             <li>Immediately disable the user's account</li>
             <li>Prevent the user from logging in</li>
             <li>Require admin intervention to re-enable</li>
+          </ul>
+        </div>
+        <div v-else class="bg-success/10 border border-success/20 rounded-lg p-4 mb-4">
+          <p class="text-sm text-success font-medium mb-2">This will:</p>
+          <ul class="text-sm text-base-content/70 space-y-1 list-disc list-inside">
+            <li>Re-enable the user's account</li>
+            <li>Allow the user to log in</li>
           </ul>
         </div>
         <p class="text-sm text-base-content/70">
@@ -334,7 +456,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeftIcon, EnvelopeIcon, LockClosedIcon, ShieldExclamationIcon } from '@heroicons/vue/24/outline'
+import { ArrowLeftIcon, EnvelopeIcon, LockClosedIcon, ShieldExclamationIcon, ShieldCheckIcon, PencilIcon } from '@heroicons/vue/24/outline'
 import { getGravatarUrl, getUserInitials } from '~/composables/useAvatar'
 
 definePageMeta({
@@ -396,10 +518,17 @@ const error = ref<string | null>(null)
 const actionLoading = ref(false)
 const gravatarError = ref(false)
 
+// Edit mode state
+const editMode = ref(false)
+const editForm = ref({
+  firstname: '',
+  lastname: '',
+})
+
 // Modal state
 const showResetPasswordModal = ref(false)
 const showSendVerificationModal = ref(false)
-const showDisableAccountModal = ref(false)
+const showToggleStatusModal = ref(false)
 
 // Alert state
 const alertMessage = ref<string | null>(null)
@@ -424,6 +553,17 @@ const userInitials = computed(() => {
 const gravatarUrl = computed(() => {
   if (!user.value || gravatarError.value) return null
   return getGravatarUrl(user.value.email, 80)
+})
+
+const sitesWithSubscriptions = computed(() => {
+  if (!user.value) return []
+  return user.value.sites.filter(site => site.subscription !== null)
+})
+
+const activeSubscriptionsCount = computed(() => {
+  return sitesWithSubscriptions.value.filter(site =>
+    site.subscription?.status === 'active' || site.subscription?.status === 'trialing'
+  ).length
 })
 
 // Fetch user details
@@ -461,25 +601,77 @@ const openSendVerificationModal = () => {
   showSendVerificationModal.value = true
 }
 
-const openDisableAccountModal = () => {
-  showDisableAccountModal.value = true
+const openToggleStatusModal = () => {
+  showToggleStatusModal.value = true
 }
 
 const closeModals = () => {
   showResetPasswordModal.value = false
   showSendVerificationModal.value = false
-  showDisableAccountModal.value = false
+  showToggleStatusModal.value = false
 }
 
-// Action handlers (placeholder API calls)
-const handleResetPassword = async () => {
+// Edit mode handlers
+const enableEditMode = () => {
+  if (user.value) {
+    editForm.value = {
+      firstname: user.value.firstname || '',
+      lastname: user.value.lastname || '',
+    }
+    editMode.value = true
+  }
+}
+
+const cancelEdit = () => {
+  editMode.value = false
+  editForm.value = {
+    firstname: '',
+    lastname: '',
+  }
+}
+
+const saveProfile = async () => {
+  if (!user.value) return
+
   actionLoading.value = true
   try {
-    // Placeholder - implement actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const response = await $fetch(`/api/admin/users/${user.value.id}/update`, {
+      method: 'PATCH',
+      body: {
+        firstname: editForm.value.firstname,
+        lastname: editForm.value.lastname,
+      },
+    })
+
+    // Update local user data
+    user.value.firstname = editForm.value.firstname || null
+    user.value.lastname = editForm.value.lastname || null
+    user.value.updatedAt = new Date().toISOString()
+
+    showAlert('Profile updated successfully', 'success')
+    editMode.value = false
+  } catch (err: any) {
+    console.error('Failed to update profile:', err)
+    showAlert(err?.data?.message || 'Failed to update profile', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// Action handlers
+const handleResetPassword = async () => {
+  if (!user.value) return
+
+  actionLoading.value = true
+  try {
+    await $fetch(`/api/admin/users/${user.value.id}/reset-password`, {
+      method: 'POST',
+    })
     showAlert('Password reset email sent successfully', 'success')
     closeModals()
+    await fetchUserDetails() // Refresh data
   } catch (err: any) {
+    console.error('Failed to reset password:', err)
     showAlert(err?.data?.message || 'Failed to send password reset email', 'error')
   } finally {
     actionLoading.value = false
@@ -487,32 +679,44 @@ const handleResetPassword = async () => {
 }
 
 const handleSendVerification = async () => {
+  if (!user.value) return
+
   actionLoading.value = true
   try {
-    // Placeholder - implement actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await $fetch(`/api/admin/users/${user.value.id}/send-verification`, {
+      method: 'POST',
+    })
     showAlert('Verification email sent successfully', 'success')
     closeModals()
+    await fetchUserDetails() // Refresh data
   } catch (err: any) {
+    console.error('Failed to send verification email:', err)
     showAlert(err?.data?.message || 'Failed to send verification email', 'error')
   } finally {
     actionLoading.value = false
   }
 }
 
-const handleDisableAccount = async () => {
+const handleToggleStatus = async () => {
+  if (!user.value) return
+
   actionLoading.value = true
   try {
-    // Placeholder - implement actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    showAlert('Account disabled successfully', 'success')
+    const response = await $fetch<{ success: boolean; enabled: boolean; message: string }>(
+      `/api/admin/users/${user.value.id}/toggle-status`,
+      {
+        method: 'POST',
+        body: {
+          enabled: !user.value.validEmail,
+        },
+      }
+    )
+    showAlert(response.message, 'success')
     closeModals()
-    // Optionally navigate back to users list
-    setTimeout(() => {
-      navigateBack()
-    }, 2000)
+    await fetchUserDetails() // Refresh data
   } catch (err: any) {
-    showAlert(err?.data?.message || 'Failed to disable account', 'error')
+    console.error('Failed to toggle account status:', err)
+    showAlert(err?.data?.message || 'Failed to toggle account status', 'error')
   } finally {
     actionLoading.value = false
   }
