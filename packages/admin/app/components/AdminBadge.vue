@@ -40,6 +40,7 @@ const props = withDefaults(defineProps<Props>(), {
 const tierStyles: Record<string, string> = {
   free: 'admin-badge-neutral',
   basic: 'admin-badge-info',
+  pro: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
   professional: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
   enterprise: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
 }
@@ -49,8 +50,13 @@ const statusStyles: Record<string, string> = {
   active: 'admin-badge-success',
   verified: 'admin-badge-success',
   success: 'admin-badge-success',
+  trialing: 'admin-badge-info',
   pending: 'admin-badge-warning',
   warning: 'admin-badge-warning',
+  past_due: 'admin-badge-warning',
+  canceled: 'admin-badge-error',
+  cancelled: 'admin-badge-error',
+  unpaid: 'admin-badge-error',
   suspended: 'admin-badge-error',
   inactive: 'admin-badge-neutral',
   error: 'admin-badge-error',
@@ -60,7 +66,9 @@ const statusStyles: Record<string, string> = {
 
 // Role badge styling
 const roleStyles: Record<string, string> = {
+  owner: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
   admin: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
+  editor: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
   moderator: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
   user: 'admin-badge-neutral',
   guest: 'admin-badge-neutral',
@@ -88,6 +96,7 @@ const dotClass = computed(() => {
     const dotColors: Record<string, string> = {
       free: 'bg-base-content/70',
       basic: 'bg-info',
+      pro: 'bg-purple-500',
       professional: 'bg-purple-500',
       enterprise: 'bg-amber-500',
     }
@@ -96,7 +105,9 @@ const dotClass = computed(() => {
 
   if (props.variant === 'role') {
     const dotColors: Record<string, string> = {
+      owner: 'bg-purple-500',
       admin: 'bg-rose-500',
+      editor: 'bg-blue-500',
       moderator: 'bg-blue-500',
       user: 'bg-base-content/70',
       guest: 'bg-base-content/70',
@@ -109,8 +120,13 @@ const dotClass = computed(() => {
     active: 'bg-success',
     verified: 'bg-success',
     success: 'bg-success',
+    trialing: 'bg-info',
     pending: 'bg-warning',
     warning: 'bg-warning',
+    past_due: 'bg-warning',
+    canceled: 'bg-error',
+    cancelled: 'bg-error',
+    unpaid: 'bg-error',
     suspended: 'bg-error',
     inactive: 'bg-base-content/70',
     error: 'bg-error',
