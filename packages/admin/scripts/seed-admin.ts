@@ -100,41 +100,10 @@ function prompt(question: string): Promise<string> {
 }
 
 /**
- * Prompts for password without echoing to terminal
+ * Prompts for password (plain text - this is a local dev seeding script)
  */
 function promptPassword(question: string): Promise<string> {
-  const rl = createInterface({ input, output })
-
-  return new Promise((resolve) => {
-    // Hide input for password
-    rl.question(question, (answer) => {
-      rl.close()
-      console.log() // New line after password input
-      resolve(answer.trim())
-    })
-
-    // Mute stdin to hide password input
-    if ((input as any)._readableState) {
-      (input as any).setRawMode(true)
-      input.on('data', (char) => {
-        const c = char.toString()
-        switch (c) {
-          case '\n':
-          case '\r':
-          case '\u0004': // Ctrl+D
-            (input as any).setRawMode(false)
-            input.pause()
-            break
-          case '\u0003': // Ctrl+C
-            process.exit()
-            break
-          default:
-            output.write('*')
-            break
-        }
-      })
-    }
-  })
+  return prompt(question)
 }
 
 /**
