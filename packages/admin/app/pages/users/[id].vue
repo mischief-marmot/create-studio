@@ -17,7 +17,7 @@
           </svg>
         </div>
         <div class="space-y-2">
-          <h3 class="font-serif text-xl text-base-content">Unable to Load User</h3>
+          <h3 class="text-xl text-base-content" style="font-family: 'Instrument Serif', serif;">Unable to Load User</h3>
           <p class="text-sm text-base-content/60 leading-relaxed">{{ error }}</p>
         </div>
         <button class="btn btn-outline btn-sm" @click="fetchUserDetails">
@@ -27,11 +27,11 @@
     </div>
 
     <!-- User Profile -->
-    <div v-else-if="user" class="user-detail-page">
+    <div v-else-if="user" class="px-6 py-8 max-w-[1400px] mx-auto">
       <!-- Header with Back Navigation -->
-      <div class="page-header">
+      <div class="mb-12">
         <button
-          class="back-button group"
+          class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-base-content transition-colors mb-6 font-medium tracking-wide group"
           @click="navigateBack"
           aria-label="Back to users"
         >
@@ -39,51 +39,62 @@
           <span>Users</span>
         </button>
 
-        <div class="header-content">
-          <div class="header-meta">
-            <span class="meta-label">User Profile</span>
-            <span class="meta-divider">·</span>
-            <span class="meta-value">ID {{ user.id }}</span>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+            <span class="text-base-content/50">User Profile</span>
+            <span class="text-base-content/30">·</span>
+            <span class="text-base-content/40">ID {{ user.id }}</span>
           </div>
-          <h1 class="page-title">{{ displayName }}</h1>
+          <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+            {{ displayName }}
+          </h1>
         </div>
       </div>
 
-      <!-- Main Content -->
-      <div class="content-grid">
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8">
         <!-- Left Column: Profile Card -->
-        <div class="profile-column">
-          <div class="profile-card card-elevated">
+        <div class="space-y-6">
+          <!-- Profile Card -->
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-8 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
             <!-- Avatar Section -->
-            <div class="avatar-section">
-              <div class="avatar-wrapper">
-                <img
-                  v-if="gravatarUrl"
-                  :src="gravatarUrl"
-                  :alt="`${displayName}'s avatar`"
-                  class="avatar-image"
-                  @error="handleImageError"
-                />
-                <div v-else class="avatar-fallback">
-                  {{ userInitials }}
+            <div class="flex justify-center mb-6">
+              <div class="relative">
+                <div class="w-24 h-24 rounded-full overflow-hidden">
+                  <img
+                    v-if="gravatarUrl"
+                    :src="gravatarUrl"
+                    :alt="`${displayName}'s avatar`"
+                    class="w-full h-full object-cover"
+                    @error="handleImageError"
+                  />
+                  <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-2xl" style="font-family: 'Instrument Serif', serif;">
+                    {{ userInitials }}
+                  </div>
                 </div>
 
-                <!-- Status Indicator -->
+                <!-- Status Ring -->
                 <div
-                  class="status-ring"
-                  :class="user.validEmail ? 'status-verified' : 'status-pending'"
+                  class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center bg-base-100 border-2 border-base-100"
+                  :class="user.validEmail ? 'bg-success/20' : 'bg-warning/20'"
                 >
-                  <div class="status-dot"></div>
+                  <div
+                    class="w-3 h-3 rounded-full"
+                    :class="user.validEmail ? 'bg-success status-pulse-success' : 'bg-warning status-pulse-warning'"
+                  ></div>
                 </div>
               </div>
             </div>
 
             <!-- Name Section -->
-            <div class="name-section">
-              <div v-if="!editMode" class="name-display">
-                <h2 class="user-name">{{ displayName }}</h2>
+            <div class="space-y-4 text-center">
+              <!-- View Mode -->
+              <div v-if="!editMode" class="flex items-center justify-center gap-3">
+                <h2 class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+                  {{ displayName }}
+                </h2>
                 <button
-                  class="edit-trigger"
+                  class="p-1.5 rounded-lg text-base-content/40 hover:text-base-content hover:bg-base-200 transition-all"
                   @click="enableEditMode"
                   aria-label="Edit name"
                 >
@@ -91,24 +102,25 @@
                 </button>
               </div>
 
-              <div v-else class="name-edit">
-                <div class="edit-inputs">
+              <!-- Edit Mode -->
+              <div v-else class="space-y-3">
+                <div class="space-y-2">
                   <input
                     v-model="editForm.firstname"
                     type="text"
                     placeholder="First name"
-                    class="edit-input"
+                    class="w-full px-3 py-2 rounded-lg border border-base-300 bg-base-100 text-sm text-base-content placeholder:text-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                   <input
                     v-model="editForm.lastname"
                     type="text"
                     placeholder="Last name"
-                    class="edit-input"
+                    class="w-full px-3 py-2 rounded-lg border border-base-300 bg-base-100 text-sm text-base-content placeholder:text-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                   />
                 </div>
-                <div class="edit-actions">
+                <div class="flex gap-2">
                   <button
-                    class="btn-save"
+                    class="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="saveProfile"
                     :disabled="actionLoading"
                   >
@@ -116,7 +128,7 @@
                     <span v-else>Save Changes</span>
                   </button>
                   <button
-                    class="btn-cancel"
+                    class="flex-1 px-4 py-2 rounded-lg bg-base-200 text-base-content text-sm font-medium hover:bg-base-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     @click="cancelEdit"
                     :disabled="actionLoading"
                   >
@@ -126,8 +138,8 @@
               </div>
 
               <!-- Email -->
-              <div class="email-display">
-                <a :href="`mailto:${user.email}`" class="email-link">
+              <div class="flex flex-col items-center gap-2">
+                <a :href="`mailto:${user.email}`" class="text-sm text-base-content/60 hover:text-primary transition-colors">
                   {{ user.email }}
                 </a>
                 <AdminBadge
@@ -139,12 +151,12 @@
             </div>
 
             <!-- Divider -->
-            <div class="section-divider"></div>
+            <div class="my-6 h-px bg-gradient-to-r from-transparent via-base-300 to-transparent"></div>
 
             <!-- User Attributes -->
-            <div class="attributes-section">
-              <div class="attribute-item">
-                <span class="attribute-label">Marketing Opt-in</span>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between py-3 border-b border-base-300/30">
+                <span class="text-sm text-base-content/60 font-medium">Marketing Opt-in</span>
                 <AdminBadge
                   :status="user.marketing_opt_in ? 'success' : 'neutral'"
                   variant="status"
@@ -153,8 +165,8 @@
                 />
               </div>
 
-              <div class="attribute-item">
-                <span class="attribute-label">Mediavine Publisher</span>
+              <div class="flex items-center justify-between py-3 border-b border-base-300/30">
+                <span class="text-sm text-base-content/60 font-medium">Mediavine Publisher</span>
                 <AdminBadge
                   :status="user.mediavine_publisher ? 'success' : 'neutral'"
                   variant="status"
@@ -163,64 +175,68 @@
                 />
               </div>
 
-              <div class="attribute-item">
-                <span class="attribute-label">Member Since</span>
-                <span class="attribute-value">{{ formatDate(user.createdAt) }}</span>
+              <div class="flex items-center justify-between py-3 border-b border-base-300/30">
+                <span class="text-sm text-base-content/60 font-medium">Member Since</span>
+                <span class="text-sm text-base-content font-medium">{{ formatDate(user.createdAt) }}</span>
               </div>
 
-              <div class="attribute-item">
-                <span class="attribute-label">Last Updated</span>
-                <span class="attribute-value">{{ formatDate(user.updatedAt) }}</span>
+              <div class="flex items-center justify-between py-3">
+                <span class="text-sm text-base-content/60 font-medium">Last Updated</span>
+                <span class="text-sm text-base-content font-medium">{{ formatDate(user.updatedAt) }}</span>
               </div>
             </div>
           </div>
 
           <!-- Admin Actions Card -->
-          <div class="actions-card card-elevated">
-            <h3 class="section-title">Administrative Actions</h3>
-            <div class="actions-grid">
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <h3 class="text-lg text-base-content mb-4" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+              Administrative Actions
+            </h3>
+            <div class="space-y-3">
               <button
-                class="action-button action-reset"
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-base-300 hover:bg-base-200/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="openResetPasswordModal"
                 :disabled="actionLoading"
               >
-                <div class="action-icon">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-info/10 text-info transition-all">
                   <LockClosedIcon class="w-4 h-4" />
                 </div>
-                <div class="action-content">
-                  <div class="action-title">Reset Password</div>
-                  <div class="action-desc">Send reset email</div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Reset Password</div>
+                  <div class="text-xs text-base-content/50">Send reset email</div>
                 </div>
               </button>
 
               <button
-                class="action-button action-verify"
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-base-300 hover:bg-base-200/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="openSendVerificationModal"
                 :disabled="actionLoading || user.validEmail"
                 :class="{ 'opacity-50 cursor-not-allowed': user.validEmail }"
               >
-                <div class="action-icon">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-success/10 text-success transition-all">
                   <EnvelopeIcon class="w-4 h-4" />
                 </div>
-                <div class="action-content">
-                  <div class="action-title">Send Verification</div>
-                  <div class="action-desc">Resend email</div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Send Verification</div>
+                  <div class="text-xs text-base-content/50">Resend email</div>
                 </div>
               </button>
 
               <button
-                class="action-button"
-                :class="user.validEmail ? 'action-disable' : 'action-enable'"
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-base-300 hover:bg-base-200/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 @click="openToggleStatusModal"
                 :disabled="actionLoading"
               >
-                <div class="action-icon">
+                <div
+                  class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all"
+                  :class="user.validEmail ? 'bg-error/10 text-error' : 'bg-success/10 text-success'"
+                >
                   <ShieldExclamationIcon v-if="user.validEmail" class="w-4 h-4" />
                   <ShieldCheckIcon v-else class="w-4 h-4" />
                 </div>
-                <div class="action-content">
-                  <div class="action-title">{{ user.validEmail ? 'Disable Account' : 'Enable Account' }}</div>
-                  <div class="action-desc">{{ user.validEmail ? 'Suspend access' : 'Restore access' }}</div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">{{ user.validEmail ? 'Disable Account' : 'Enable Account' }}</div>
+                  <div class="text-xs text-base-content/50">{{ user.validEmail ? 'Suspend access' : 'Restore access' }}</div>
                 </div>
               </button>
             </div>
@@ -228,37 +244,43 @@
         </div>
 
         <!-- Right Column: Content -->
-        <div class="content-column">
+        <div class="space-y-6">
           <!-- Sites Section -->
-          <div class="content-card card-elevated">
-            <div class="card-header">
-              <h3 class="card-title">Associated Sites</h3>
-              <div class="card-count">{{ user.sites.length }}</div>
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+                Associated Sites
+              </h3>
+              <div class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                {{ user.sites.length }}
+              </div>
             </div>
 
-            <div v-if="user.sites.length === 0" class="empty-state">
-              <div class="empty-icon">
+            <div v-if="user.sites.length === 0" class="py-12 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
               </div>
-              <p class="empty-text">No sites associated with this account</p>
+              <p class="text-sm text-base-content/50">No sites associated with this account</p>
             </div>
 
-            <div v-else class="sites-list">
+            <div v-else class="space-y-4">
               <div
                 v-for="site in user.sites"
                 :key="site.id"
-                class="site-item"
+                class="p-4 rounded-lg border border-base-300/30 hover:border-base-300 hover:bg-base-50 transition-all"
               >
-                <div class="site-main">
-                  <div class="site-info">
-                    <h4 class="site-name">{{ site.name || 'Unnamed Site' }}</h4>
+                <div class="flex items-start justify-between gap-4 mb-3">
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-base font-medium text-base-content mb-1 truncate">
+                      {{ site.name || 'Unnamed Site' }}
+                    </h4>
                     <a
                       :href="site.url"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="site-url group"
+                      class="inline-flex items-center gap-1.5 text-sm text-primary hover:underline group"
                     >
                       <span>{{ site.url }}</span>
                       <svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -266,7 +288,7 @@
                       </svg>
                     </a>
                   </div>
-                  <div class="site-badges">
+                  <div class="flex flex-col items-end gap-2">
                     <AdminBadge
                       v-if="site.role"
                       :status="site.role"
@@ -280,9 +302,9 @@
                   </div>
                 </div>
 
-                <div v-if="site.subscription" class="site-subscription">
-                  <div class="subscription-label">Subscription</div>
-                  <div class="subscription-info">
+                <div v-if="site.subscription" class="pt-3 mt-3 border-t border-base-300/30">
+                  <div class="text-xs text-base-content/50 mb-2 font-medium uppercase tracking-wider">Subscription</div>
+                  <div class="flex items-center gap-2 flex-wrap">
                     <AdminBadge
                       :status="site.subscription.tier"
                       variant="tier"
@@ -291,7 +313,7 @@
                       :status="site.subscription.status"
                       variant="status"
                     />
-                    <span v-if="site.subscription.current_period_end" class="subscription-text">
+                    <span v-if="site.subscription.current_period_end" class="text-sm text-base-content/60">
                       Renews {{ formatDate(site.subscription.current_period_end) }}
                     </span>
                   </div>
@@ -301,30 +323,36 @@
           </div>
 
           <!-- Subscription History -->
-          <div class="content-card card-elevated">
-            <div class="card-header">
-              <h3 class="card-title">Active Subscriptions</h3>
-              <div class="card-count">{{ activeSubscriptionsCount }}</div>
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+                Active Subscriptions
+              </h3>
+              <div class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                {{ activeSubscriptionsCount }}
+              </div>
             </div>
 
-            <div v-if="activeSubscriptionsCount === 0" class="empty-state">
-              <div class="empty-icon">
+            <div v-if="activeSubscriptionsCount === 0" class="py-12 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
               </div>
-              <p class="empty-text">No active subscriptions</p>
+              <p class="text-sm text-base-content/50">No active subscriptions</p>
             </div>
 
-            <div v-else class="subscriptions-list">
+            <div v-else class="space-y-4">
               <div
                 v-for="site in sitesWithSubscriptions"
                 :key="site.id"
-                class="subscription-card"
+                class="p-4 rounded-lg border border-base-300/30"
               >
-                <div class="subscription-header">
-                  <h4 class="subscription-site">{{ site.name || site.url }}</h4>
-                  <div class="subscription-badges">
+                <div class="flex items-start justify-between gap-4 mb-3">
+                  <h4 class="text-base font-medium text-base-content">
+                    {{ site.name || site.url }}
+                  </h4>
+                  <div class="flex items-center gap-2">
                     <AdminBadge
                       :status="site.subscription!.tier"
                       variant="tier"
@@ -336,17 +364,17 @@
                   </div>
                 </div>
 
-                <div class="subscription-details">
-                  <div v-if="site.subscription!.current_period_start" class="detail-row">
-                    <span class="detail-label">Started</span>
-                    <span class="detail-value">{{ formatDate(site.subscription!.current_period_start) }}</span>
+                <div class="space-y-2">
+                  <div v-if="site.subscription!.current_period_start" class="flex items-center justify-between text-sm">
+                    <span class="text-base-content/60">Started</span>
+                    <span class="text-base-content font-medium">{{ formatDate(site.subscription!.current_period_start) }}</span>
                   </div>
-                  <div v-if="site.subscription!.current_period_end" class="detail-row">
-                    <span class="detail-label">{{ site.subscription!.cancel_at_period_end ? 'Ends' : 'Renews' }}</span>
-                    <span class="detail-value">{{ formatDate(site.subscription!.current_period_end) }}</span>
+                  <div v-if="site.subscription!.current_period_end" class="flex items-center justify-between text-sm">
+                    <span class="text-base-content/60">{{ site.subscription!.cancel_at_period_end ? 'Ends' : 'Renews' }}</span>
+                    <span class="text-base-content font-medium">{{ formatDate(site.subscription!.current_period_end) }}</span>
                   </div>
-                  <div v-if="site.subscription!.cancel_at_period_end" class="detail-row">
-                    <span class="detail-label">Auto-Renew</span>
+                  <div v-if="site.subscription!.cancel_at_period_end" class="flex items-center justify-between text-sm">
+                    <span class="text-base-content/60">Auto-Renew</span>
                     <AdminBadge
                       status="error"
                       variant="status"
@@ -360,32 +388,34 @@
           </div>
 
           <!-- Audit Summary -->
-          <div class="content-card card-elevated">
-            <div class="card-header">
-              <h3 class="card-title">Activity Summary</h3>
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+                Activity Summary
+              </h3>
             </div>
 
-            <div class="audit-grid">
-              <div class="audit-stat">
-                <div class="stat-value">{{ user.auditLogSummary.totalActions }}</div>
-                <div class="stat-label">Total Actions</div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div class="p-4 rounded-lg bg-base-200/50">
+                <div class="text-3xl font-semibold text-base-content mb-1" style="font-family: 'Instrument Serif', serif;">
+                  {{ user.auditLogSummary.totalActions }}
+                </div>
+                <div class="text-xs text-base-content/50 font-medium uppercase tracking-wider">Total Actions</div>
               </div>
 
-              <div class="audit-stat">
-                <div v-if="user.auditLogSummary.lastAction" class="stat-content">
-                  <div class="stat-action">{{ user.auditLogSummary.lastAction.action }}</div>
-                  <div class="stat-time">{{ formatRelativeTime(user.auditLogSummary.lastAction.timestamp) }}</div>
+              <div class="p-4 rounded-lg bg-base-200/50">
+                <div v-if="user.auditLogSummary.lastAction" class="mb-2">
+                  <div class="text-sm font-medium text-base-content mb-1">{{ user.auditLogSummary.lastAction.action }}</div>
+                  <div class="text-xs text-base-content/50">{{ formatRelativeTime(user.auditLogSummary.lastAction.timestamp) }}</div>
                 </div>
-                <div v-else class="stat-content">
-                  <div class="stat-empty">No actions yet</div>
-                </div>
-                <div class="stat-label">Last Action</div>
+                <div v-else class="text-sm text-base-content/50 mb-1">No actions yet</div>
+                <div class="text-xs text-base-content/50 font-medium uppercase tracking-wider">Last Action</div>
               </div>
             </div>
 
             <NuxtLink
               :to="`/audit-logs?user=${user.id}`"
-              class="audit-link"
+              class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg border border-base-300 text-sm font-medium text-base-content hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
             >
               <span>View Full Audit Log</span>
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -800,150 +830,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* ============================================
-   EDITORIAL PRECISION DESIGN SYSTEM
-   Sophisticated admin interface with refined typography
-   ============================================ */
-
-.user-detail-page {
-  @apply px-6 py-8 max-w-[1400px] mx-auto;
-}
-
-/* ============================================
-   PAGE HEADER
-   ============================================ */
-
-.page-header {
-  @apply mb-12;
-}
-
-.back-button {
-  @apply inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-base-content transition-colors mb-6;
-  font-family: 'Satoshi', sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.01em;
-}
-
-.header-content {
-  @apply space-y-2;
-}
-
-.header-meta {
-  @apply flex items-center gap-2 text-xs;
-  font-family: 'Satoshi', sans-serif;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.meta-label {
-  @apply text-base-content/50;
-}
-
-.meta-divider {
-  @apply text-base-content/30;
-}
-
-.meta-value {
-  @apply text-base-content/40;
-}
-
-.page-title {
-  @apply text-4xl text-base-content;
-  font-family: 'Instrument Serif', serif;
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-/* ============================================
-   CONTENT GRID
-   ============================================ */
-
-.content-grid {
-  @apply grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8;
-}
-
-.profile-column {
-  @apply space-y-6;
-}
-
-.content-column {
-  @apply space-y-6;
-}
-
-/* ============================================
-   CARD SYSTEM
-   ============================================ */
-
-.card-elevated {
-  @apply bg-base-100 rounded-xl border border-base-300/50 overflow-hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.03);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-elevated:hover {
-  @apply border-base-300;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-}
-
-/* ============================================
-   PROFILE CARD
-   ============================================ */
-
-.profile-card {
-  @apply p-8;
-}
-
-.avatar-section {
-  @apply flex justify-center mb-6;
-}
-
-.avatar-wrapper {
-  @apply relative;
-}
-
-.avatar-image,
-.avatar-fallback {
-  @apply w-24 h-24 rounded-full;
-}
-
-.avatar-image {
-  @apply object-cover;
-}
-
-.avatar-fallback {
-  @apply flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-2xl;
-  font-family: 'Instrument Serif', serif;
-}
-
-.status-ring {
-  @apply absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center;
-  @apply bg-base-100 border-2 border-base-100;
-}
-
-.status-verified {
-  @apply bg-success/20;
-}
-
-.status-pending {
-  @apply bg-warning/20;
-}
-
-.status-dot {
-  @apply w-3 h-3 rounded-full;
-}
-
-.status-verified .status-dot {
-  @apply bg-success;
-  animation: pulse-success 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.status-pending .status-dot {
-  @apply bg-warning;
-  animation: pulse-warning 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
+/* Pulse animations for status indicators */
 @keyframes pulse-success {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
@@ -954,359 +841,11 @@ onMounted(() => {
   50% { opacity: 0.5; }
 }
 
-.name-section {
-  @apply space-y-4 text-center;
+.status-pulse-success {
+  animation: pulse-success 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-.name-display {
-  @apply flex items-center justify-center gap-3;
-}
-
-.user-name {
-  @apply text-2xl text-base-content;
-  font-family: 'Instrument Serif', serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-.edit-trigger {
-  @apply p-1.5 rounded-lg text-base-content/40 hover:text-base-content hover:bg-base-200 transition-all;
-}
-
-.name-edit {
-  @apply space-y-3;
-}
-
-.edit-inputs {
-  @apply space-y-2;
-}
-
-.edit-input {
-  @apply w-full px-3 py-2 rounded-lg border border-base-300 bg-base-100;
-  @apply text-sm text-base-content placeholder:text-base-content/40;
-  @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
-  @apply transition-all;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.edit-actions {
-  @apply flex gap-2;
-}
-
-.btn-save {
-  @apply flex-1 px-4 py-2 rounded-lg bg-primary text-primary-content;
-  @apply text-sm font-medium hover:opacity-90 transition-opacity;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.btn-cancel {
-  @apply flex-1 px-4 py-2 rounded-lg bg-base-200 text-base-content;
-  @apply text-sm font-medium hover:bg-base-300 transition-colors;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.email-display {
-  @apply flex flex-col items-center gap-2;
-}
-
-.email-link {
-  @apply text-sm text-base-content/60 hover:text-primary transition-colors;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.section-divider {
-  @apply my-6 h-px bg-gradient-to-r from-transparent via-base-300 to-transparent;
-}
-
-/* ============================================
-   ATTRIBUTES SECTION
-   ============================================ */
-
-.attributes-section {
-  @apply space-y-4;
-}
-
-.attribute-item {
-  @apply flex items-center justify-between py-3 border-b border-base-300/30 last:border-0;
-}
-
-.attribute-label {
-  @apply text-sm text-base-content/60;
-  font-family: 'Satoshi', sans-serif;
-  font-weight: 500;
-}
-
-.attribute-value {
-  @apply text-sm text-base-content;
-  font-family: 'Satoshi', sans-serif;
-  font-weight: 500;
-}
-
-/* ============================================
-   ACTIONS CARD
-   ============================================ */
-
-.actions-card {
-  @apply p-6;
-}
-
-.section-title {
-  @apply text-lg text-base-content mb-4;
-  font-family: 'Instrument Serif', serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-.actions-grid {
-  @apply space-y-3;
-}
-
-.action-button {
-  @apply w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50;
-  @apply hover:border-base-300 hover:bg-base-200/50 transition-all;
-  @apply disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.action-icon {
-  @apply flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center;
-  @apply transition-all;
-}
-
-.action-reset .action-icon {
-  @apply bg-info/10 text-info;
-}
-
-.action-reset:hover .action-icon {
-  @apply bg-info/20;
-}
-
-.action-verify .action-icon {
-  @apply bg-success/10 text-success;
-}
-
-.action-verify:hover .action-icon {
-  @apply bg-success/20;
-}
-
-.action-enable .action-icon {
-  @apply bg-success/10 text-success;
-}
-
-.action-enable:hover .action-icon {
-  @apply bg-success/20;
-}
-
-.action-disable .action-icon {
-  @apply bg-error/10 text-error;
-}
-
-.action-disable:hover .action-icon {
-  @apply bg-error/20;
-}
-
-.action-content {
-  @apply flex flex-col items-start text-left;
-}
-
-.action-title {
-  @apply text-sm font-medium text-base-content;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.action-desc {
-  @apply text-xs text-base-content/50;
-  font-family: 'Satoshi', sans-serif;
-}
-
-/* ============================================
-   CONTENT CARDS
-   ============================================ */
-
-.content-card {
-  @apply p-6;
-}
-
-.card-header {
-  @apply flex items-center justify-between mb-6;
-}
-
-.card-title {
-  @apply text-lg text-base-content;
-  font-family: 'Instrument Serif', serif;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-.card-count {
-  @apply px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium;
-  font-family: 'Satoshi', sans-serif;
-}
-
-/* ============================================
-   EMPTY STATES
-   ============================================ */
-
-.empty-state {
-  @apply py-12 text-center;
-}
-
-.empty-icon {
-  @apply inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4;
-}
-
-.empty-text {
-  @apply text-sm text-base-content/50;
-  font-family: 'Satoshi', sans-serif;
-}
-
-/* ============================================
-   SITES LIST
-   ============================================ */
-
-.sites-list {
-  @apply space-y-4;
-}
-
-.site-item {
-  @apply p-4 rounded-lg border border-base-300/30 hover:border-base-300 hover:bg-base-50 transition-all;
-}
-
-.site-main {
-  @apply flex items-start justify-between gap-4 mb-3;
-}
-
-.site-info {
-  @apply flex-1 min-w-0;
-}
-
-.site-name {
-  @apply text-base font-medium text-base-content mb-1 truncate;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.site-url {
-  @apply inline-flex items-center gap-1.5 text-sm text-primary hover:underline;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.site-badges {
-  @apply flex flex-col items-end gap-2;
-}
-
-.site-subscription {
-  @apply pt-3 mt-3 border-t border-base-300/30;
-}
-
-.subscription-label {
-  @apply text-xs text-base-content/50 mb-2;
-  font-family: 'Satoshi', sans-serif;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.subscription-info {
-  @apply flex items-center gap-2 flex-wrap;
-}
-
-.subscription-text {
-  @apply text-sm text-base-content/60;
-  font-family: 'Satoshi', sans-serif;
-}
-
-/* ============================================
-   SUBSCRIPTIONS LIST
-   ============================================ */
-
-.subscriptions-list {
-  @apply space-y-4;
-}
-
-.subscription-card {
-  @apply p-4 rounded-lg border border-base-300/30;
-}
-
-.subscription-header {
-  @apply flex items-start justify-between gap-4 mb-3;
-}
-
-.subscription-site {
-  @apply text-base font-medium text-base-content;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.subscription-badges {
-  @apply flex items-center gap-2;
-}
-
-.subscription-details {
-  @apply space-y-2;
-}
-
-.detail-row {
-  @apply flex items-center justify-between text-sm;
-}
-
-.detail-label {
-  @apply text-base-content/60;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.detail-value {
-  @apply text-base-content font-medium;
-  font-family: 'Satoshi', sans-serif;
-}
-
-/* ============================================
-   AUDIT SUMMARY
-   ============================================ */
-
-.audit-grid {
-  @apply grid grid-cols-2 gap-4 mb-6;
-}
-
-.audit-stat {
-  @apply p-4 rounded-lg bg-base-200/50;
-}
-
-.stat-value {
-  @apply text-3xl font-semibold text-base-content mb-1;
-  font-family: 'Instrument Serif', serif;
-}
-
-.stat-content {
-  @apply mb-2;
-}
-
-.stat-action {
-  @apply text-sm font-medium text-base-content mb-1;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.stat-time {
-  @apply text-xs text-base-content/50;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.stat-empty {
-  @apply text-sm text-base-content/50 mb-1;
-  font-family: 'Satoshi', sans-serif;
-}
-
-.stat-label {
-  @apply text-xs text-base-content/50;
-  font-family: 'Satoshi', sans-serif;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.audit-link {
-  @apply flex items-center justify-center gap-2 py-3 px-4 rounded-lg;
-  @apply border border-base-300 text-sm font-medium text-base-content;
-  @apply hover:border-primary hover:text-primary hover:bg-primary/5 transition-all;
-  font-family: 'Satoshi', sans-serif;
+.status-pulse-warning {
+  animation: pulse-warning 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>
