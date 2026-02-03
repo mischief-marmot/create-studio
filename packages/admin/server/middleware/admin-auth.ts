@@ -17,8 +17,11 @@ export default defineEventHandler(async (event) => {
     return
   }
 
-  // Check session
-  const session = await getUserSession(event)
+  // Check session (must use same password as setUserSession)
+  const config = useRuntimeConfig()
+  const session = await getUserSession(event, {
+    password: config.adminSessionPassword,
+  })
 
   console.log('Admin auth middleware - path:', path)
   console.log('Session found:', !!session)
