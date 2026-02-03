@@ -1,5 +1,5 @@
 import { eq, desc, count } from 'drizzle-orm'
-import { hubDatabase } from "#imports"
+import { hubDatabase } from "@nuxthub/core"
 import { users, sites, subscriptions, siteUsers, auditLogs } from "~~/server/utils/db"
 
 /**

@@ -1,5 +1,5 @@
 import { eq, and, gte, lte, desc, count, sql } from 'drizzle-orm'
-import { hubDatabase } from "#imports"
+import { hubDatabase } from "@nuxthub/core"
 import { auditLogs, admins } from "~~/server/utils/db"
 
 /**
