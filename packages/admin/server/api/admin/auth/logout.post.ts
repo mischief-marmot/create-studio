@@ -2,9 +2,12 @@ import { auditLogs } from "~~/server/utils/db"
 
 export default defineEventHandler(async (event) => {
   // db is auto-imported from hub:db
+  const config = useRuntimeConfig()
 
   // Get current session
-  const session = await getUserSession(event)
+  const session = await getUserSession(event, {
+    password: config.adminSessionPassword,
+  })
 
   if (!session?.user) {
     throw createError({
