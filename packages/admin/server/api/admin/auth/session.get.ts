@@ -1,9 +1,6 @@
 export default defineEventHandler(async (event) => {
   // Get current session
-  const config = useRuntimeConfig()
-  const session = await getUserSession(event, {
-    password: config.adminSessionPassword,
-  })
+  const session = await getUserSession(event)
 
   if (!session?.user) {
     return {
