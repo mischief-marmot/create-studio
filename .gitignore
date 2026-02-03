@@ -49,3 +49,4 @@ packages/app/.data
 # Webhook signing keys (generated per-installation)
 webhook-*.pem
 *.pem
+packages/admin/.data
