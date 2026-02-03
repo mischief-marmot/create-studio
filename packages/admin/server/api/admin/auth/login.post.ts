@@ -19,29 +19,44 @@ export default defineEventHandler(async (event) => {
   }
 
   // Find admin by email
-  const [admin] = await db
+  const results = await db
     .select()
     .from(admins)
     .where(eq(admins.email, email))
-    .limit(1)
+    .all()
+
+  console.log('Login attempt for:', email)
+  console.log('Found admins:', results.length)
+
+  const admin = results[0]
 
   // Check if admin exists
   if (!admin) {
+    console.log('Admin not found')
     throw createError({
       statusCode: 401,
       message: 'Invalid email or password',
     })
   }
+
+  console.log('Admin found:', { id: admin.id, email: admin.email, hasPassword: !!admin.password })
+  console.log('Password from request length:', password.length)
+  console.log('Hash from DB starts with:', admin.password?.substring(0, 7))
 
   // Compare password with hashed password
   const isValidPassword = await bcrypt.compare(password, admin.password)
 
+  console.log('Password comparison result:', isValidPassword)
+
   if (!isValidPassword) {
+    console.log('Password mismatch')
     throw createError({
       statusCode: 401,
       message: 'Invalid email or password',
     })
   }
+
+  console.log('Login successful for:', email)
 
   // Update last_login timestamp
   await db
