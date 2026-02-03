@@ -12,7 +12,7 @@ import { sendErrorResponse } from "~~/server/utils/errors";
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
-  const logger = useLogger("CS:Scraper", config.debug);
+  const logger = useLogger("Scraper", config.debug);
   logger.info("Scrape request received");
   try {
     // Verify JWT token

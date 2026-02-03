@@ -18,6 +18,9 @@ export default defineEventHandler(async (event) => {
   // db is auto-imported from hub:db
 
   try {
+    console.log('=== Dashboard Stats Debug ===')
+    console.log('DB instance:', typeof db)
+
     // Calculate date boundaries
     const now = new Date()
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -27,19 +30,25 @@ export default defineEventHandler(async (event) => {
     const totalUsersResult = await db
       .select({ count: count() })
       .from(users)
+    console.log('Total users result:', totalUsersResult)
     const totalUsers = totalUsersResult[0]?.count || 0
+    console.log('Total users:', totalUsers)
 
     // Get total sites count
     const totalSitesResult = await db
       .select({ count: count() })
       .from(sites)
+    console.log('Total sites result:', totalSitesResult)
     const totalSites = totalSitesResult[0]?.count || 0
 
     // Get total subscriptions count
     const totalSubscriptionsResult = await db
       .select({ count: count() })
       .from(subscriptions)
+    console.log('Total subscriptions result:', totalSubscriptionsResult)
     const totalSubscriptions = totalSubscriptionsResult[0]?.count || 0
+    console.log('=== End Debug ===')
+
 
     // Get new users in last 7 days
     const newUsersLast7DaysResult = await db
@@ -66,11 +75,17 @@ export default defineEventHandler(async (event) => {
     // Get unverified sites count (total sites - verified sites)
     const unverifiedSites = totalSites - verifiedSites
 
-    // Calculate MRR (Monthly Recurring Revenue)
-    // For now, we'll use a simple calculation based on active subscriptions
-    // Assuming each pro subscription is $10/month (this should come from a config)
-    const PRO_SUBSCRIPTION_PRICE = 10
-    const activeSubscriptionsResult = await db
+    // Get active users (users with at least one site that has an active subscription)
+    const activeUsersResult = await db
+      .select({ count: count() })
+      .from(users)
+      .innerJoin(sites, eq(users.id, sites.user_id))
+      .innerJoin(subscriptions, eq(sites.id, subscriptions.site_id))
+      .where(eq(subscriptions.status, 'active'))
+    const activeUsers = activeUsersResult[0]?.count || 0
+
+    // Get pro subscriptions count
+    const proSubscriptionsResult = await db
       .select({ count: count() })
       .from(subscriptions)
       .where(
@@ -79,18 +94,46 @@ export default defineEventHandler(async (event) => {
           eq(subscriptions.tier, 'pro')
         )
       )
-    const activeProSubscriptions = activeSubscriptionsResult[0]?.count || 0
-    const mrr = activeProSubscriptions * PRO_SUBSCRIPTION_PRICE
+    const proSubscriptions = proSubscriptionsResult[0]?.count || 0
+
+    // Get free subscriptions count
+    const freeSubscriptionsResult = await db
+      .select({ count: count() })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.status, 'active'),
+          eq(subscriptions.tier, 'free')
+        )
+      )
+    const freeSubscriptions = freeSubscriptionsResult[0]?.count || 0
+
+    // Calculate MRR (Monthly Recurring Revenue)
+    // Assuming each pro subscription is $10/month (this should come from a config)
+    const PRO_SUBSCRIPTION_PRICE = 10
+    const mrr = proSubscriptions * PRO_SUBSCRIPTION_PRICE
+
+    // Calculate churn rate (for now, just return 0 - needs historical data)
+    const churnRate = 0
 
     return {
-      totalUsers,
-      totalSites,
-      totalSubscriptions,
-      newUsersLast7Days,
-      newUsersLast30Days,
-      verifiedSites,
-      unverifiedSites,
-      mrr,
+      users: {
+        total: totalUsers,
+        newLast7Days: newUsersLast7Days,
+        newLast30Days: newUsersLast30Days,
+        active: activeUsers,
+      },
+      revenue: {
+        mrr,
+        proSubscriptions,
+        freeSubscriptions,
+        churnRate,
+      },
+      sites: {
+        total: totalSites,
+        verified: verifiedSites,
+        pendingVerifications: unverifiedSites,
+      },
     }
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)

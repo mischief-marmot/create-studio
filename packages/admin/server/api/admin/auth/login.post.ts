@@ -92,8 +92,6 @@ export default defineEventHandler(async (event) => {
       firstname: admin.firstname,
       lastname: admin.lastname,
     },
-  }, {
-    password: config.adminSessionPassword,
   })
 
   // Return admin info (without password)

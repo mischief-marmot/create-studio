@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "create-studio-admin",
+  "main": "./.output/server/index.mjs",
+  "compatibility_date": "2026-01-13",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./.output/public/",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "create-studio",
+      "database_id": "75b7c9cc-c82c-41c2-b1dc-ac3a50a86b19",
+      "migrations_table": "_hub_migrations",
+      "migrations_dir": "./.output/server/db/migrations"
+    }
+  ],
+  "vars": {
+    "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio Admin"
+  }
+}

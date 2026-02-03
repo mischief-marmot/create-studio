@@ -173,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 definePageMeta({
@@ -286,12 +286,14 @@ const fetchUsers = async () => {
   }
 }
 
+// Initial fetch
+onMounted(() => {
+  fetchUsers()
+})
+
 // Watch for filter changes and refetch
-watchEffect(() => {
-  // Reset to page 1 when filters change
-  if (searchQuery.value || verifiedFilter.value || hasSitesFilter.value) {
-    pagination.value.page = 1
-  }
+watch([searchQuery, verifiedFilter, hasSitesFilter], () => {
+  pagination.value.page = 1
   fetchUsers()
 })
 
