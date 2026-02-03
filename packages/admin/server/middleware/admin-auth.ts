@@ -20,7 +20,12 @@ export default defineEventHandler(async (event) => {
   // Check session
   const session = await getUserSession(event)
 
+  console.log('Admin auth middleware - path:', path)
+  console.log('Session found:', !!session)
+  console.log('Session user:', session?.user ? { id: session.user.id, email: session.user.email } : null)
+
   if (!session?.user) {
+    console.log('No valid session, blocking request')
     // Redirect to login for page requests
     if (!path.startsWith('/api/')) {
       return sendRedirect(event, '/login')
@@ -32,6 +37,8 @@ export default defineEventHandler(async (event) => {
       message: 'Authentication required',
     })
   }
+
+  console.log('Session valid, allowing request')
 
   // User is authenticated, continue
 })
