@@ -9,7 +9,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "seed": "tsx scripts/seed-admin.ts",
+    "seed": "tsx --tsconfig scripts/tsconfig.json scripts/seed-admin.ts",
     "test": "vitest run --passWithNoTests",
     "typecheck": "nuxt typecheck"
   },
