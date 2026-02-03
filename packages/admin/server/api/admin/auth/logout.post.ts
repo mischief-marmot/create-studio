@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const userAgent = headers['user-agent'] || 'unknown'
 
   // Create audit log entry
-  await db.select().from(schema.insert(auditLogs).values({
+  await db.insert(auditLogs).values({
     admin_id: session.user.id,
     action: 'logout',
     entity_type: 'admin',
