@@ -68,6 +68,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Admin-specific config
     adminSessionPassword: "",
+    // Session configuration for nuxt-auth-utils
+    session: {
+      password: process.env.NUXT_ADMIN_SESSION_PASSWORD || "",
+    },
     public: {
       productName: "Create Studio Admin",
     },
