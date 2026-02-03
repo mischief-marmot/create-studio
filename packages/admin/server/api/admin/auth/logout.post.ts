@@ -1,4 +1,4 @@
-import { auditLogs } from '../../../utils/db'
+import { auditLogs } from "~~/server/utils/db"
 
 export default defineEventHandler(async (event) => {
   const db = hubDatabase()

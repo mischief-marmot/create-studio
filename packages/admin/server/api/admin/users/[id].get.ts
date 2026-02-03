@@ -1,5 +1,5 @@
 import { eq, desc, count } from 'drizzle-orm'
-import { users, sites, subscriptions, siteUsers, auditLogs } from '../../../../utils/db'
+import { users, sites, subscriptions, siteUsers, auditLogs } from "~~/server/utils/db"
 
 /**
  * GET /api/admin/users/[id]

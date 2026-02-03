@@ -1,5 +1,5 @@
 import { eq, and, gte, lte, desc, count, sql } from 'drizzle-orm'
-import { auditLogs, admins } from '../../../../utils/db'
+import { auditLogs, admins } from "~~/server/utils/db"
 
 /**
  * GET /api/admin/audit-logs
