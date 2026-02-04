@@ -3,7 +3,7 @@ import { users, auditLogs } from "~~/server/utils/db"
 
 /**
  * PATCH /api/admin/users/[id]/update
- * Update user profile fields (firstname, lastname)
+ * Update user profile fields (firstname, lastname, email, validEmail)
  */
 export default defineEventHandler(async (event) => {
   // Check admin session
@@ -43,21 +43,49 @@ export default defineEventHandler(async (event) => {
     const user = userResult[0]
     const body = await readBody(event)
 
-    // Validate input
-    const updateData: { firstname?: string | null; lastname?: string | null; updatedAt: string } = {
+    // Validate input - track which fields are being updated
+    const updateData: {
+      firstname?: string | null
+      lastname?: string | null
+      email?: string
+      validEmail?: boolean
+      updatedAt: string
+    } = {
       updatedAt: new Date().toISOString(),
     }
 
+    const allowedFields = ['firstname', 'lastname', 'email', 'validEmail']
+    let hasUpdates = false
+
     if ('firstname' in body) {
       updateData.firstname = body.firstname?.trim() || null
+      hasUpdates = true
     }
 
     if ('lastname' in body) {
       updateData.lastname = body.lastname?.trim() || null
+      hasUpdates = true
+    }
+
+    if ('email' in body) {
+      const newEmail = body.email?.trim()
+      if (!newEmail || !newEmail.includes('@')) {
+        throw createError({
+          statusCode: 400,
+          message: 'Invalid email address',
+        })
+      }
+      updateData.email = newEmail
+      hasUpdates = true
+    }
+
+    if ('validEmail' in body) {
+      updateData.validEmail = Boolean(body.validEmail)
+      hasUpdates = true
     }
 
     // Check if there are any changes
-    if (!('firstname' in body) && !('lastname' in body)) {
+    if (!hasUpdates) {
       throw createError({
         statusCode: 400,
         message: 'No fields to update',
@@ -86,16 +114,31 @@ export default defineEventHandler(async (event) => {
       changes.after.lastname = updateData.lastname
     }
 
-    await db.insert(auditLogs).values({
-      admin_id: session.user.id,
-      action: 'user_updated',
-      entity_type: 'user',
-      entity_id: userId,
-      changes: JSON.stringify(changes),
-      ip_address: getRequestIP(event) || null,
-      user_agent: getHeader(event, 'user-agent') || null,
-      createdAt: new Date().toISOString(),
-    })
+    if ('email' in body) {
+      changes.before.email = user.email
+      changes.after.email = updateData.email
+    }
+
+    if ('validEmail' in body) {
+      changes.before.validEmail = user.validEmail
+      changes.after.validEmail = updateData.validEmail
+    }
+
+    // Wrap audit log in try-catch to prevent FK errors from stale sessions
+    try {
+      await db.insert(auditLogs).values({
+        admin_id: session.user.id,
+        action: 'user_updated',
+        entity_type: 'user',
+        entity_id: userId,
+        changes: JSON.stringify(changes),
+        ip_address: getRequestIP(event) || null,
+        user_agent: getHeader(event, 'user-agent') || null,
+        createdAt: new Date().toISOString(),
+      })
+    } catch (auditError) {
+      console.warn('Failed to create audit log:', auditError)
+    }
 
     // Get updated user
     const updatedUserResult = await db
@@ -112,6 +155,7 @@ export default defineEventHandler(async (event) => {
         email: updatedUserResult[0].email,
         firstname: updatedUserResult[0].firstname,
         lastname: updatedUserResult[0].lastname,
+        validEmail: updatedUserResult[0].validEmail,
       },
     }
   } catch (error) {

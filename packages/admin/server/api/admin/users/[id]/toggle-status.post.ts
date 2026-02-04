@@ -55,19 +55,23 @@ export default defineEventHandler(async (event) => {
       .where(eq(users.id, userId))
 
     // Create audit log entry
-    await db.insert(auditLogs).values({
-      admin_id: session.user.id,
-      action: newStatus ? 'user_enabled' : 'user_disabled',
-      entity_type: 'user',
-      entity_id: userId,
-      changes: JSON.stringify({
-        before: { validEmail: user.validEmail },
-        after: { validEmail: newStatus },
-      }),
-      ip_address: getRequestIP(event) || null,
-      user_agent: getHeader(event, 'user-agent') || null,
-      createdAt: new Date().toISOString(),
-    })
+    try {
+      await db.insert(auditLogs).values({
+        admin_id: session.user.id,
+        action: newStatus ? 'user_enabled' : 'user_disabled',
+        entity_type: 'user',
+        entity_id: userId,
+        changes: JSON.stringify({
+          before: { validEmail: user.validEmail },
+          after: { validEmail: newStatus },
+        }),
+        ip_address: getRequestIP(event) || null,
+        user_agent: getHeader(event, 'user-agent') || null,
+        createdAt: new Date().toISOString(),
+      })
+    } catch (auditError) {
+      console.warn('Failed to create audit log:', auditError)
+    }
 
     return {
       success: true,
