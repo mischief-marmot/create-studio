@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // db is auto-imported from hub:db
+  const db = useAdminDb(event)
   const siteId = parseInt(event.context.params?.id || '0')
 
   if (!siteId || isNaN(siteId)) {

@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const db = useAdminDb(event)
   const subscriptionId = parseInt(event.context.params?.id || '0')
 
   if (!subscriptionId || isNaN(subscriptionId)) {

@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // db is auto-imported from hub:db
+  const db = useAdminDb(event)
 
   try {
     // Get query parameters
