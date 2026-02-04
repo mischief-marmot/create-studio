@@ -7,9 +7,6 @@ export default defineNuxtConfig({
     compatibilityVersion: 4,
   },
 
-  // Extend the main app as a layer to share components, composables, server utils
-  extends: ["../app"],
-
   devServer: {
     port: 3002,
   },
@@ -27,7 +24,6 @@ export default defineNuxtConfig({
 
   css: ["./app/assets/main.css"],
 
-  // Admin-specific modules (inherits from main app layer)
   modules: [
     "@nuxt/eslint",
     "@pinia/nuxt",
