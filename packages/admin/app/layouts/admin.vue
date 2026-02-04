@@ -16,6 +16,7 @@ import {
 
 const route = useRoute()
 const { adminUser, logout, isAuthenticated } = useAdminAuth()
+const { environment, fetchEnvironment } = useAdminEnvironment()
 
 // Mobile drawer state
 const isDrawerOpen = ref(false)
@@ -48,13 +49,14 @@ const toggleTheme = () => {
   document.documentElement.setAttribute('data-theme', newTheme)
 }
 
-// Initialize theme
+// Initialize theme and environment
 onMounted(() => {
   const savedTheme = localStorage.getItem('admin-theme') as 'claudette' | 'claudia' | null
   if (savedTheme) {
     theme.value = savedTheme
     document.documentElement.setAttribute('data-theme', savedTheme)
   }
+  fetchEnvironment()
 })
 
 // Close drawer when route changes
@@ -98,7 +100,8 @@ const handleLogout = async () => {
         <div class="flex-1">
           <h1 class="text-lg font-bold">Create Studio Admin</h1>
         </div>
-        <div class="flex-none">
+        <div class="flex-none flex items-center gap-2">
+          <AdminEnvironmentSelector />
           <button
             class="btn btn-square btn-ghost"
             @click="toggleTheme"
@@ -129,7 +132,14 @@ const handleLogout = async () => {
     >
       <!-- Logo/Branding -->
       <div class="p-6 border-b border-base-300">
-        <h1 class="font-bold text-xl text-base-content">Create Studio Admin</h1>
+        <h1 class="font-bold text-xl text-base-content flex items-center gap-2">
+          Create Studio Admin
+          <span
+            class="size-2 rounded-full"
+            :class="environment === 'production' ? 'bg-success' : 'bg-warning'"
+            :title="`${environment.charAt(0).toUpperCase() + environment.slice(1)} environment`"
+          ></span>
+        </h1>
         <p class="text-sm text-base-content/60 mt-1">Management Portal</p>
       </div>
 
@@ -192,7 +202,8 @@ const handleLogout = async () => {
         <div class="flex-1">
           <!-- Breadcrumb or page title could go here -->
         </div>
-        <div class="flex-none">
+        <div class="flex-none flex items-center gap-2">
+          <AdminEnvironmentSelector />
           <button
             class="btn btn-square btn-ghost"
             @click="toggleTheme"
@@ -216,6 +227,10 @@ const handleLogout = async () => {
         'lg:ml-[280px]',
       ]"
     >
+      <!-- Environment warning banner -->
+      <div v-if="environment === 'preview'" class="bg-warning/10 border-b border-warning/20 px-4 py-2 text-warning text-sm text-center">
+        You are viewing <strong>Preview</strong> environment data
+      </div>
       <div class="p-6">
         <slot />
       </div>
