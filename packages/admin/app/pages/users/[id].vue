@@ -73,15 +73,14 @@
                   </div>
                 </div>
 
-                <!-- Status Ring -->
+                <!-- Verified Checkmark (only shown if verified) -->
                 <div
-                  class="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center bg-base-100 border-2 border-base-100"
-                  :class="user.validEmail ? 'bg-success/20' : 'bg-warning/20'"
+                  v-if="user.validEmail"
+                  class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center bg-base-100 border-2 border-base-100"
                 >
-                  <div
-                    class="w-3 h-3 rounded-full"
-                    :class="user.validEmail ? 'bg-success status-pulse-success' : 'bg-warning status-pulse-warning'"
-                  ></div>
+                  <div class="w-5 h-5 rounded-full bg-success flex items-center justify-center">
+                    <CheckIcon class="w-3 h-3 text-success-content" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -89,20 +88,20 @@
             <!-- Name Section -->
             <div class="space-y-4 text-center">
               <!-- View Mode -->
-              <div v-if="!editMode" class="flex items-center justify-center gap-3">
+              <div v-if="!editNameMode" class="flex items-center justify-center gap-3">
                 <h2 class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
                   {{ displayName }}
                 </h2>
                 <button
                   class="p-1.5 rounded-lg text-base-content/40 hover:text-base-content hover:bg-base-200 transition-all"
-                  @click="enableEditMode"
+                  @click="enableEditNameMode"
                   aria-label="Edit name"
                 >
                   <PencilIcon class="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              <!-- Edit Mode -->
+              <!-- Edit Name Mode -->
               <div v-else class="space-y-3">
                 <div class="space-y-2">
                   <input
@@ -121,15 +120,15 @@
                 <div class="flex gap-2">
                   <button
                     class="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                    @click="saveProfile"
+                    @click="saveNameChanges"
                     :disabled="actionLoading"
                   >
                     <span v-if="actionLoading" class="loading loading-spinner loading-xs"></span>
-                    <span v-else>Save Changes</span>
+                    <span v-else>Save</span>
                   </button>
                   <button
                     class="flex-1 px-4 py-2 rounded-lg bg-base-200 text-base-content text-sm font-medium hover:bg-base-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    @click="cancelEdit"
+                    @click="cancelEditName"
                     :disabled="actionLoading"
                   >
                     Cancel
@@ -137,16 +136,59 @@
                 </div>
               </div>
 
-              <!-- Email -->
-              <div class="flex flex-col items-center gap-2">
-                <a :href="`mailto:${user.email}`" class="text-sm text-base-content/60 hover:text-primary transition-colors">
-                  {{ user.email }}
-                </a>
-                <AdminBadge
-                  :status="user.validEmail ? 'verified' : 'pending'"
-                  variant="status"
-                  :custom-text="user.validEmail ? 'Verified' : 'Unverified'"
-                />
+              <!-- Email Section -->
+              <div class="flex flex-col items-center gap-1">
+                <!-- View Email Mode -->
+                <div v-if="!editEmailMode" class="flex items-center gap-2">
+                  <a :href="`mailto:${user.email}`" class="text-sm text-base-content/60 hover:text-primary transition-colors">
+                    {{ user.email }}
+                  </a>
+                  <button
+                    class="p-1 rounded text-base-content/40 hover:text-base-content hover:bg-base-200 transition-all"
+                    @click="enableEditEmailMode"
+                    aria-label="Edit email"
+                  >
+                    <PencilIcon class="w-3 h-3" />
+                  </button>
+                </div>
+
+                <!-- Edit Email Mode -->
+                <div v-else class="w-full space-y-2">
+                  <input
+                    v-model="editForm.email"
+                    type="email"
+                    placeholder="Email address"
+                    class="w-full px-3 py-2 rounded-lg border border-base-300 bg-base-100 text-sm text-base-content placeholder:text-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-center"
+                  />
+                  <div class="flex gap-2">
+                    <button
+                      class="flex-1 px-3 py-1.5 rounded-lg bg-primary text-primary-content text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      @click="saveEmailChange"
+                      :disabled="actionLoading"
+                    >
+                      <span v-if="actionLoading" class="loading loading-spinner loading-xs"></span>
+                      <span v-else>Save</span>
+                    </button>
+                    <button
+                      class="flex-1 px-3 py-1.5 rounded-lg bg-base-200 text-base-content text-xs font-medium hover:bg-base-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      @click="cancelEditEmail"
+                      :disabled="actionLoading"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Verification Status -->
+                <div class="flex items-center gap-1.5 mt-1">
+                  <template v-if="user.validEmail">
+                    <CheckIcon class="w-3.5 h-3.5 text-success" />
+                    <span class="text-xs text-base-content/60">Verified</span>
+                  </template>
+                  <template v-else>
+                    <span class="text-xs text-base-content/50">Unverified</span>
+                  </template>
+                </div>
               </div>
             </div>
 
@@ -156,32 +198,26 @@
             <!-- User Attributes -->
             <div class="space-y-4">
               <div class="flex items-center justify-between py-3 border-b border-base-300/30">
-                <span class="text-sm text-base-content/60 font-medium">Marketing Opt-in</span>
-                <AdminBadge
-                  :status="user.marketing_opt_in ? 'success' : 'neutral'"
-                  variant="status"
-                  :custom-text="user.marketing_opt_in ? 'Yes' : 'No'"
-                  :show-dot="false"
-                />
+                <span class="text-sm text-base-content/60">Marketing Opt-in</span>
+                <span class="text-sm" :class="user.marketing_opt_in ? 'font-medium text-base-content' : 'text-base-content/50'">
+                  {{ user.marketing_opt_in ? 'Yes' : 'No' }}
+                </span>
               </div>
 
               <div class="flex items-center justify-between py-3 border-b border-base-300/30">
-                <span class="text-sm text-base-content/60 font-medium">Mediavine Publisher</span>
-                <AdminBadge
-                  :status="user.mediavine_publisher ? 'success' : 'neutral'"
-                  variant="status"
-                  :custom-text="user.mediavine_publisher ? 'Yes' : 'No'"
-                  :show-dot="false"
-                />
+                <span class="text-sm text-base-content/60">Mediavine Publisher</span>
+                <span class="text-sm" :class="user.mediavine_publisher ? 'font-medium text-base-content' : 'text-base-content/50'">
+                  {{ user.mediavine_publisher ? 'Yes' : 'No' }}
+                </span>
               </div>
 
               <div class="flex items-center justify-between py-3 border-b border-base-300/30">
-                <span class="text-sm text-base-content/60 font-medium">Member Since</span>
+                <span class="text-sm text-base-content/60">Member Since</span>
                 <span class="text-sm text-base-content font-medium">{{ formatDate(user.createdAt) }}</span>
               </div>
 
               <div class="flex items-center justify-between py-3">
-                <span class="text-sm text-base-content/60 font-medium">Last Updated</span>
+                <span class="text-sm text-base-content/60">Last Updated</span>
                 <span class="text-sm text-base-content font-medium">{{ formatDate(user.updatedAt) }}</span>
               </div>
             </div>
@@ -198,7 +234,7 @@
                 @click="openResetPasswordModal"
                 :disabled="actionLoading"
               >
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-info/10 text-info transition-all">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
                   <LockClosedIcon class="w-4 h-4" />
                 </div>
                 <div class="flex flex-col items-start text-left">
@@ -213,12 +249,28 @@
                 :disabled="actionLoading || user.validEmail"
                 :class="{ 'opacity-50 cursor-not-allowed': user.validEmail }"
               >
-                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-success/10 text-success transition-all">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
                   <EnvelopeIcon class="w-4 h-4" />
                 </div>
                 <div class="flex flex-col items-start text-left">
                   <div class="text-sm font-medium text-base-content">Send Verification</div>
-                  <div class="text-xs text-base-content/50">Resend email</div>
+                  <div class="text-xs text-base-content/50">Resend verification email</div>
+                </div>
+              </button>
+
+              <!-- Direct Verify Email Action -->
+              <button
+                v-if="!user.validEmail"
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-base-300 hover:bg-base-200/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="openVerifyEmailModal"
+                :disabled="actionLoading"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
+                  <CheckBadgeIcon class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Verify Email</div>
+                  <div class="text-xs text-base-content/50">Directly mark email as verified</div>
                 </div>
               </button>
 
@@ -227,10 +279,7 @@
                 @click="openToggleStatusModal"
                 :disabled="actionLoading"
               >
-                <div
-                  class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-all"
-                  :class="user.validEmail ? 'bg-error/10 text-error' : 'bg-success/10 text-success'"
-                >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
                   <ShieldExclamationIcon v-if="user.validEmail" class="w-4 h-4" />
                   <ShieldCheckIcon v-else class="w-4 h-4" />
                 </div>
@@ -251,9 +300,7 @@
               <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
                 Associated Sites
               </h3>
-              <div class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                {{ user.sites.length }}
-              </div>
+              <span class="text-sm text-base-content/60">{{ user.sites.length }} {{ user.sites.length === 1 ? 'site' : 'sites' }}</span>
             </div>
 
             <div v-if="user.sites.length === 0" class="py-12 text-center">
@@ -288,34 +335,44 @@
                       </svg>
                     </a>
                   </div>
-                  <div class="flex flex-col items-end gap-2">
-                    <AdminBadge
-                      v-if="site.role"
-                      :status="site.role"
-                      variant="role"
-                    />
-                    <AdminBadge
-                      :status="site.isVerified ? 'verified' : 'pending'"
-                      variant="status"
-                      :custom-text="site.isVerified ? 'Verified' : 'Pending'"
-                    />
+                  <div class="flex flex-col items-end gap-1 text-right">
+                    <!-- Role -->
+                    <div v-if="site.role" class="flex items-center gap-1.5">
+                      <UserIcon class="w-3.5 h-3.5 text-base-content/40" />
+                      <span class="text-sm font-medium text-base-content">{{ capitalizeFirst(site.role) }}</span>
+                    </div>
+                    <!-- Verification Status -->
+                    <div class="flex items-center gap-1.5">
+                      <template v-if="site.isVerified">
+                        <CheckIcon class="w-3.5 h-3.5 text-success" />
+                        <span class="text-xs text-base-content/60">Verified</span>
+                      </template>
+                      <template v-else>
+                        <span class="text-xs text-base-content/50">Pending verification</span>
+                      </template>
+                    </div>
                   </div>
                 </div>
 
                 <div v-if="site.subscription" class="pt-3 mt-3 border-t border-base-300/30">
-                  <div class="text-xs text-base-content/50 mb-2 font-medium uppercase tracking-wider">Subscription</div>
-                  <div class="flex items-center gap-2 flex-wrap">
-                    <AdminBadge
-                      :status="site.subscription.tier"
-                      variant="tier"
-                    />
-                    <AdminBadge
-                      :status="site.subscription.status"
-                      variant="status"
-                    />
-                    <span v-if="site.subscription.current_period_end" class="text-sm text-base-content/60">
-                      Renews {{ formatDate(site.subscription.current_period_end) }}
-                    </span>
+                  <div class="flex items-center gap-4 flex-wrap text-sm">
+                    <!-- Tier -->
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-base-content/60">Plan:</span>
+                      <span class="font-medium text-base-content">{{ formatTier(site.subscription.tier) }}</span>
+                    </div>
+                    <!-- Status -->
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-base-content/60">Status:</span>
+                      <span :class="getSubscriptionStatusClass(site.subscription.status)">
+                        {{ formatSubscriptionStatus(site.subscription.status) }}
+                      </span>
+                    </div>
+                    <!-- Renewal -->
+                    <div v-if="site.subscription.current_period_end" class="flex items-center gap-1.5">
+                      <span class="text-base-content/60">{{ site.subscription.cancel_at_period_end ? 'Ends:' : 'Renews:' }}</span>
+                      <span class="text-base-content">{{ formatDate(site.subscription.current_period_end) }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -328,9 +385,7 @@
               <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
                 Active Subscriptions
               </h3>
-              <div class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                {{ activeSubscriptionsCount }}
-              </div>
+              <span class="text-sm text-base-content/60">{{ activeSubscriptionsCount }} active</span>
             </div>
 
             <div v-if="activeSubscriptionsCount === 0" class="py-12 text-center">
@@ -352,15 +407,11 @@
                   <h4 class="text-base font-medium text-base-content">
                     {{ site.name || site.url }}
                   </h4>
-                  <div class="flex items-center gap-2">
-                    <AdminBadge
-                      :status="site.subscription!.tier"
-                      variant="tier"
-                    />
-                    <AdminBadge
-                      :status="site.subscription!.status"
-                      variant="status"
-                    />
+                  <div class="flex items-center gap-3 text-sm">
+                    <span class="font-medium text-base-content">{{ formatTier(site.subscription!.tier) }}</span>
+                    <span :class="getSubscriptionStatusClass(site.subscription!.status)">
+                      {{ formatSubscriptionStatus(site.subscription!.status) }}
+                    </span>
                   </div>
                 </div>
 
@@ -375,12 +426,7 @@
                   </div>
                   <div v-if="site.subscription!.cancel_at_period_end" class="flex items-center justify-between text-sm">
                     <span class="text-base-content/60">Auto-Renew</span>
-                    <AdminBadge
-                      status="error"
-                      variant="status"
-                      custom-text="Disabled"
-                      :show-dot="false"
-                    />
+                    <span class="text-base-content/50">Disabled</span>
                   </div>
                 </div>
               </div>
@@ -461,6 +507,22 @@
       </AdminModal>
 
       <AdminModal
+        :open="showVerifyEmailModal"
+        title="Verify Email"
+        description="Directly mark this email as verified?"
+        variant="confirm"
+        confirm-text="Verify Email"
+        :loading="actionLoading"
+        @confirm="handleDirectVerifyEmail"
+        @cancel="closeModals"
+        @close="closeModals"
+      >
+        <p class="text-sm text-base-content/70 leading-relaxed">
+          This will mark <strong class="font-medium">{{ user.email }}</strong> as verified without requiring the user to click a verification link.
+        </p>
+      </AdminModal>
+
+      <AdminModal
         :open="showToggleStatusModal"
         :title="user.validEmail ? 'Disable Account' : 'Enable Account'"
         :description="user.validEmail ? 'This action will suspend user access' : 'Restore user account access'"
@@ -510,7 +572,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeftIcon, EnvelopeIcon, LockClosedIcon, ShieldExclamationIcon, ShieldCheckIcon, PencilIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowLeftIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+  ShieldExclamationIcon,
+  ShieldCheckIcon,
+  PencilIcon,
+  CheckIcon,
+  CheckBadgeIcon,
+  UserIcon
+} from '@heroicons/vue/24/outline'
 import { getGravatarUrl, getUserInitials } from '~/composables/useAvatar'
 
 definePageMeta({
@@ -573,15 +645,18 @@ const actionLoading = ref(false)
 const gravatarError = ref(false)
 
 // Edit mode state
-const editMode = ref(false)
+const editNameMode = ref(false)
+const editEmailMode = ref(false)
 const editForm = ref({
   firstname: '',
   lastname: '',
+  email: '',
 })
 
 // Modal state
 const showResetPasswordModal = ref(false)
 const showSendVerificationModal = ref(false)
+const showVerifyEmailModal = ref(false)
 const showToggleStatusModal = ref(false)
 
 // Alert state
@@ -655,6 +730,10 @@ const openSendVerificationModal = () => {
   showSendVerificationModal.value = true
 }
 
+const openVerifyEmailModal = () => {
+  showVerifyEmailModal.value = true
+}
+
 const openToggleStatusModal = () => {
   showToggleStatusModal.value = true
 }
@@ -662,34 +741,31 @@ const openToggleStatusModal = () => {
 const closeModals = () => {
   showResetPasswordModal.value = false
   showSendVerificationModal.value = false
+  showVerifyEmailModal.value = false
   showToggleStatusModal.value = false
 }
 
-// Edit mode handlers
-const enableEditMode = () => {
+// Edit name mode handlers
+const enableEditNameMode = () => {
   if (user.value) {
-    editForm.value = {
-      firstname: user.value.firstname || '',
-      lastname: user.value.lastname || '',
-    }
-    editMode.value = true
+    editForm.value.firstname = user.value.firstname || ''
+    editForm.value.lastname = user.value.lastname || ''
+    editNameMode.value = true
   }
 }
 
-const cancelEdit = () => {
-  editMode.value = false
-  editForm.value = {
-    firstname: '',
-    lastname: '',
-  }
+const cancelEditName = () => {
+  editNameMode.value = false
+  editForm.value.firstname = ''
+  editForm.value.lastname = ''
 }
 
-const saveProfile = async () => {
+const saveNameChanges = async () => {
   if (!user.value) return
 
   actionLoading.value = true
   try {
-    const response = await $fetch(`/api/admin/users/${user.value.id}/update`, {
+    await $fetch(`/api/admin/users/${user.value.id}/update`, {
       method: 'PATCH',
       body: {
         firstname: editForm.value.firstname,
@@ -702,11 +778,55 @@ const saveProfile = async () => {
     user.value.lastname = editForm.value.lastname || null
     user.value.updatedAt = new Date().toISOString()
 
-    showAlert('Profile updated successfully', 'success')
-    editMode.value = false
+    showAlert('Name updated successfully', 'success')
+    editNameMode.value = false
   } catch (err: any) {
-    console.error('Failed to update profile:', err)
-    showAlert(err?.data?.message || 'Failed to update profile', 'error')
+    console.error('Failed to update name:', err)
+    showAlert(err?.data?.message || 'Failed to update name', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// Edit email mode handlers
+const enableEditEmailMode = () => {
+  if (user.value) {
+    editForm.value.email = user.value.email
+    editEmailMode.value = true
+  }
+}
+
+const cancelEditEmail = () => {
+  editEmailMode.value = false
+  editForm.value.email = ''
+}
+
+const saveEmailChange = async () => {
+  if (!user.value) return
+
+  if (!editForm.value.email || !editForm.value.email.includes('@')) {
+    showAlert('Please enter a valid email address', 'error')
+    return
+  }
+
+  actionLoading.value = true
+  try {
+    await $fetch(`/api/admin/users/${user.value.id}/update`, {
+      method: 'PATCH',
+      body: {
+        email: editForm.value.email,
+      },
+    })
+
+    // Update local user data
+    user.value.email = editForm.value.email
+    user.value.updatedAt = new Date().toISOString()
+
+    showAlert('Email updated successfully', 'success')
+    editEmailMode.value = false
+  } catch (err: any) {
+    console.error('Failed to update email:', err)
+    showAlert(err?.data?.message || 'Failed to update email', 'error')
   } finally {
     actionLoading.value = false
   }
@@ -751,6 +871,32 @@ const handleSendVerification = async () => {
   }
 }
 
+const handleDirectVerifyEmail = async () => {
+  if (!user.value) return
+
+  actionLoading.value = true
+  try {
+    await $fetch(`/api/admin/users/${user.value.id}/update`, {
+      method: 'PATCH',
+      body: {
+        validEmail: true,
+      },
+    })
+
+    // Update local user data
+    user.value.validEmail = true
+    user.value.updatedAt = new Date().toISOString()
+
+    showAlert('Email verified successfully', 'success')
+    closeModals()
+  } catch (err: any) {
+    console.error('Failed to verify email:', err)
+    showAlert(err?.data?.message || 'Failed to verify email', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
 const handleToggleStatus = async () => {
   if (!user.value) return
 
@@ -790,7 +936,7 @@ const handleImageError = () => {
   gravatarError.value = true
 }
 
-// Format date helper
+// Format helpers
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
@@ -800,7 +946,6 @@ const formatDate = (dateString: string): string => {
   })
 }
 
-// Format relative time helper
 const formatRelativeTime = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
@@ -823,29 +968,50 @@ const formatRelativeTime = (dateString: string): string => {
   }
 }
 
+const capitalizeFirst = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
+
+const formatTier = (tier: string): string => {
+  const tierMap: Record<string, string> = {
+    free: 'Free',
+    basic: 'Basic',
+    pro: 'Pro',
+    professional: 'Pro',
+    enterprise: 'Enterprise',
+  }
+  return tierMap[tier.toLowerCase()] || capitalizeFirst(tier)
+}
+
+const formatSubscriptionStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    active: 'Active',
+    trialing: 'Trial',
+    past_due: 'Past Due',
+    canceled: 'Canceled',
+    cancelled: 'Canceled',
+    unpaid: 'Unpaid',
+    inactive: 'Inactive',
+  }
+  return statusMap[status.toLowerCase()] || capitalizeFirst(status)
+}
+
+const getSubscriptionStatusClass = (status: string): string => {
+  const statusLower = status.toLowerCase()
+  if (statusLower === 'active' || statusLower === 'trialing') {
+    return 'font-medium text-base-content'
+  }
+  if (statusLower === 'past_due' || statusLower === 'unpaid') {
+    return 'text-warning'
+  }
+  if (statusLower === 'canceled' || statusLower === 'cancelled') {
+    return 'text-base-content/50'
+  }
+  return 'text-base-content/60'
+}
+
 // Initialize
 onMounted(() => {
   fetchUserDetails()
 })
 </script>
-
-<style scoped>
-/* Pulse animations for status indicators */
-@keyframes pulse-success {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-
-@keyframes pulse-warning {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.status-pulse-success {
-  animation: pulse-success 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.status-pulse-warning {
-  animation: pulse-warning 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-</style>

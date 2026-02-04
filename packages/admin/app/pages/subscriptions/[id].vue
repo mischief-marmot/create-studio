@@ -1,268 +1,357 @@
 <template>
-  <div class="p-8">
+  <div class="min-h-screen">
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-12">
-      <span class="loading loading-spinner loading-lg text-primary"></span>
+    <div v-if="loading" class="flex items-center justify-center min-h-[60vh]">
+      <div class="flex flex-col items-center gap-4">
+        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <p class="text-sm text-base-content/50 font-light tracking-wide">Loading subscription details...</p>
+      </div>
     </div>
 
     <!-- Error State -->
-    <div v-else-if="error" class="flex flex-col items-center justify-center py-12 text-center">
-      <div class="bg-error/10 rounded-full size-16 flex items-center justify-center mb-4">
-        <svg class="size-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+    <div v-else-if="error" class="flex items-center justify-center min-h-[60vh]">
+      <div class="max-w-md text-center space-y-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error/10 border border-error/20">
+          <svg class="w-8 h-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div class="space-y-2">
+          <h3 class="text-xl text-base-content" style="font-family: 'Instrument Serif', serif;">Unable to Load Subscription</h3>
+          <p class="text-sm text-base-content/60 leading-relaxed">{{ error }}</p>
+        </div>
+        <button class="btn btn-outline btn-sm" @click="fetchSubscriptionDetails">
+          Try Again
+        </button>
       </div>
-      <p class="text-base-content/60 text-sm mb-4">{{ error }}</p>
-      <button class="btn btn-sm btn-primary" @click="fetchSubscriptionDetails">
-        Try Again
-      </button>
     </div>
 
     <!-- Subscription Details -->
-    <div v-else-if="subscription">
-      <!-- Page Header with Back Button -->
-      <div class="admin-page-header mb-6">
+    <div v-else-if="subscription" class="px-6 py-8 max-w-[1400px] mx-auto">
+      <!-- Header with Back Navigation -->
+      <div class="mb-12">
         <button
-          class="btn btn-ghost btn-sm mb-4"
+          class="inline-flex items-center gap-2 text-sm text-base-content/60 hover:text-base-content transition-colors mb-6 font-medium tracking-wide group"
           @click="navigateBack"
           aria-label="Back to subscriptions"
         >
-          <ArrowLeftIcon class="size-5 mr-2" />
-          Back to Subscriptions
+          <ArrowLeftIcon class="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span>Subscriptions</span>
         </button>
-        <h1 class="admin-page-title">Subscription Details</h1>
-        <p class="admin-page-subtitle">Subscription #{{ subscription.id }}</p>
+
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+            <span class="text-base-content/50">Subscription</span>
+            <span class="text-base-content/30">·</span>
+            <span class="text-base-content/40">ID {{ subscription.id }}</span>
+          </div>
+          <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+            {{ formatTier(subscription.tier) }}
+          </h1>
+        </div>
       </div>
 
       <!-- Main Content Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <!-- Left Column (Overview) -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- Subscription Overview Section -->
-          <div class="admin-section">
-            <h2 class="text-lg font-semibold mb-4">Subscription Overview</h2>
-
-            <div class="space-y-4">
-              <!-- Site -->
-              <div class="flex justify-between items-start py-3 border-b border-base-300">
-                <span class="text-base-content/60 text-sm">Site</span>
-                <div class="text-right">
-                  <NuxtLink
-                    :to="`/sites/${subscription.site.id}`"
-                    class="font-medium hover:text-primary transition-colors"
-                  >
-                    {{ subscription.site.name }}
-                  </NuxtLink>
-                  <a
-                    :href="subscription.site.url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-primary text-sm hover:underline inline-flex items-center gap-1 mt-1"
-                  >
-                    {{ subscription.site.url }}
-                    <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
+      <div class="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8">
+        <!-- Left Column: Subscription Profile Card -->
+        <div class="space-y-6">
+          <!-- Profile Card -->
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-8 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <!-- Icon Section -->
+            <div class="flex justify-center mb-6">
+              <div class="relative">
+                <div class="w-24 h-24 rounded-full overflow-hidden flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                  <CreditCardIcon class="w-12 h-12" />
                 </div>
               </div>
+            </div>
 
-              <!-- User -->
-              <div class="flex justify-between items-center py-3 border-b border-base-300">
-                <span class="text-base-content/60 text-sm">User</span>
-                <div v-if="subscription.user" class="text-right">
-                  <NuxtLink
-                    :to="`/users/${subscription.user.id}`"
-                    class="font-medium hover:text-primary transition-colors"
-                  >
-                    {{ subscription.user.displayName }}
-                  </NuxtLink>
-                  <div class="text-base-content/60 text-sm">{{ subscription.user.email }}</div>
-                </div>
-                <div v-else class="text-base-content/40 text-sm">Unknown</div>
-              </div>
-
-              <!-- Tier -->
-              <div class="flex justify-between items-center py-3 border-b border-base-300">
-                <span class="text-base-content/60 text-sm">Tier</span>
-                <AdminBadge
-                  :status="subscription.tier"
-                  variant="tier"
-                />
-              </div>
+            <!-- Plan & Status Section -->
+            <div class="space-y-4 text-center">
+              <h2 class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+                {{ formatTier(subscription.tier) }}
+              </h2>
 
               <!-- Status -->
-              <div class="flex justify-between items-center py-3 border-b border-base-300">
-                <span class="text-base-content/60 text-sm">Status</span>
-                <AdminBadge
-                  :status="getStatusBadgeType(subscription.status)"
-                  variant="status"
-                  :custom-text="formatStatus(subscription.status)"
-                />
+              <div class="flex flex-col items-center gap-1">
+                <span class="text-xs text-base-content/50 font-medium uppercase tracking-wider">Status</span>
+                <span
+                  class="text-sm font-medium"
+                  :class="getStatusClass(subscription.status)"
+                >
+                  {{ formatStatus(subscription.status) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="my-6 h-px bg-gradient-to-r from-transparent via-base-300 to-transparent"></div>
+
+            <!-- Subscription Attributes -->
+            <div class="space-y-4">
+              <!-- Billing Period -->
+              <div v-if="subscription.current_period_start" class="flex items-center justify-between py-3 border-b border-base-300/30">
+                <span class="text-sm text-base-content/60 font-medium">Period Start</span>
+                <span class="text-sm text-base-content font-medium">{{ formatDate(subscription.current_period_start) }}</span>
               </div>
 
-              <!-- Billing Period -->
-              <div class="flex justify-between items-start py-3 border-b border-base-300">
-                <span class="text-base-content/60 text-sm">Billing Period</span>
-                <div class="text-right text-sm">
-                  <div v-if="subscription.current_period_start">
-                    <span class="text-base-content/60">Start:</span>
-                    <span class="ml-2">{{ formatDate(subscription.current_period_start) }}</span>
+              <div v-if="subscription.current_period_end" class="flex items-center justify-between py-3 border-b border-base-300/30">
+                <span class="text-sm text-base-content/60 font-medium">{{ subscription.cancel_at_period_end ? 'Ends' : 'Renews' }}</span>
+                <span class="text-sm text-base-content font-medium">{{ formatDate(subscription.current_period_end) }}</span>
+              </div>
+
+              <!-- Auto-Renew -->
+              <div class="flex items-center justify-between py-3 border-b border-base-300/30">
+                <span class="text-sm text-base-content/60 font-medium">Auto-Renew</span>
+                <span
+                  class="text-sm font-medium"
+                  :class="subscription.cancel_at_period_end ? 'text-base-content/50' : 'text-base-content'"
+                >
+                  {{ subscription.cancel_at_period_end ? 'Disabled' : 'Enabled' }}
+                </span>
+              </div>
+
+              <div class="flex items-center justify-between py-3 border-b border-base-300/30">
+                <span class="text-sm text-base-content/60 font-medium">Created</span>
+                <span class="text-sm text-base-content font-medium">{{ formatDate(subscription.createdAt) }}</span>
+              </div>
+
+              <div class="flex items-center justify-between py-3">
+                <span class="text-sm text-base-content/60 font-medium">Updated</span>
+                <span class="text-sm text-base-content font-medium">{{ formatDate(subscription.updatedAt) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Admin Actions Card -->
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <h3 class="text-lg text-base-content mb-4" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+              Administrative Actions
+            </h3>
+
+            <!-- Stripe status indicator -->
+            <div class="mb-4 p-3 rounded-lg" :class="hasStripeIntegration ? 'bg-[#635bff]/10 border border-[#635bff]/20' : 'bg-base-200/50 border border-base-300/30'">
+              <div class="flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full" :class="hasStripeIntegration ? 'bg-[#635bff]' : 'bg-base-content/30'"></div>
+                <span class="text-xs font-medium" :class="hasStripeIntegration ? 'text-[#635bff]' : 'text-base-content/50'">
+                  {{ hasStripeIntegration ? 'Stripe Connected' : 'Manual Subscription' }}
+                </span>
+              </div>
+              <p class="text-xs text-base-content/50 mt-1 ml-4">
+                {{ hasStripeIntegration ? 'Changes sync with Stripe billing' : 'Direct database control, no billing' }}
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <button
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-base-300 hover:bg-base-200/50 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="openModifyTierModal"
+                :disabled="actionLoading"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
+                  <ArrowsUpDownIcon class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Modify Tier</div>
+                  <div class="text-xs text-base-content/50">
+                    {{ hasStripeIntegration ? 'Change plan (syncs with Stripe)' : 'Toggle between Free/Pro' }}
                   </div>
-                  <div v-if="subscription.current_period_end" class="mt-1">
-                    <span class="text-base-content/60">End:</span>
-                    <span class="ml-2">{{ formatDate(subscription.current_period_end) }}</span>
+                </div>
+              </button>
+
+              <!-- Cancel button for Stripe subscriptions -->
+              <button
+                v-if="hasStripeIntegration"
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-warning/30 hover:bg-warning/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="openCancelModal"
+                :disabled="actionLoading || subscription.status === 'canceled' || subscription.cancel_at_period_end"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
+                  <XMarkIcon class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Cancel Subscription</div>
+                  <div class="text-xs text-base-content/50">
+                    {{ subscription.status === 'canceled' ? 'Already canceled' : subscription.cancel_at_period_end ? 'Cancellation pending' : 'Cancel at period end' }}
                   </div>
-                  <div v-if="!subscription.current_period_start && !subscription.current_period_end" class="text-base-content/40">
-                    -
+                </div>
+              </button>
+
+              <!-- Delete button for non-Stripe subscriptions -->
+              <button
+                v-if="!hasStripeIntegration"
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-error/30 hover:bg-error/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="openDeleteModal"
+                :disabled="actionLoading"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
+                  <TrashIcon class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Delete Subscription</div>
+                  <div class="text-xs text-base-content/50">Remove subscription record entirely</div>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Content -->
+        <div class="space-y-6">
+          <!-- Site & User Info Section -->
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <h3 class="text-lg text-base-content mb-6" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+              Associated Account
+            </h3>
+
+            <div class="space-y-6">
+              <!-- Site Info -->
+              <div class="p-4 rounded-lg border border-base-300/30 hover:border-base-300 transition-all">
+                <div class="flex items-start gap-4">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                    <GlobeAltIcon class="w-6 h-6" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 text-xs text-base-content/50 font-medium uppercase tracking-wider mb-1">Site</div>
+                    <NuxtLink
+                      :to="`/sites/${subscription.site.id}`"
+                      class="text-base font-medium text-base-content hover:text-primary transition-colors block truncate"
+                    >
+                      {{ subscription.site.name }}
+                    </NuxtLink>
+                    <a
+                      :href="subscription.site.url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1.5 text-sm text-primary hover:underline group mt-1"
+                    >
+                      <span class="truncate">{{ subscription.site.url }}</span>
+                      <svg class="w-3 h-3 flex-shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
                   </div>
                 </div>
               </div>
 
-              <!-- Cancel at Period End -->
-              <div v-if="subscription.cancel_at_period_end" class="flex justify-between items-center py-3 border-b border-base-300">
-                <span class="text-base-content/60 text-sm">Auto-Renew</span>
-                <AdminBadge
-                  status="error"
-                  variant="status"
-                  custom-text="Disabled"
-                  :show-dot="false"
-                />
+              <!-- User Info -->
+              <div v-if="subscription.user" class="p-4 rounded-lg border border-base-300/30 hover:border-base-300 transition-all">
+                <div class="flex items-start gap-4">
+                  <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                    <UserIcon class="w-6 h-6" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 text-xs text-base-content/50 font-medium uppercase tracking-wider mb-1">Owner</div>
+                    <NuxtLink
+                      :to="`/users/${subscription.user.id}`"
+                      class="text-base font-medium text-base-content hover:text-primary transition-colors block truncate"
+                    >
+                      {{ subscription.user.displayName }}
+                    </NuxtLink>
+                    <a
+                      :href="`mailto:${subscription.user.email}`"
+                      class="text-sm text-base-content/60 hover:text-primary transition-colors"
+                    >
+                      {{ subscription.user.email }}
+                    </a>
+                  </div>
+                </div>
               </div>
 
-              <!-- Created / Updated -->
-              <div class="flex justify-between items-center py-3 border-b border-base-300">
-                <span class="text-base-content/60 text-sm">Created</span>
-                <span class="text-sm">{{ formatDate(subscription.createdAt) }}</span>
-              </div>
-
-              <div class="flex justify-between items-center py-3">
-                <span class="text-base-content/60 text-sm">Updated</span>
-                <span class="text-sm">{{ formatDate(subscription.updatedAt) }}</span>
+              <div v-else class="p-4 rounded-lg border border-base-300/30 bg-base-200/30">
+                <div class="flex items-center gap-3 text-base-content/50">
+                  <UserIcon class="w-5 h-5" />
+                  <span class="text-sm">No user associated</span>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Stripe Links Section -->
-          <div class="admin-section">
-            <h2 class="text-lg font-semibold mb-4">Stripe Dashboard</h2>
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <h3 class="text-lg text-base-content mb-6" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+              Stripe Dashboard
+            </h3>
 
-            <div class="space-y-3">
+            <div v-if="!subscription.stripeCustomerLink && !subscription.stripeSubscriptionLink" class="py-12 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <p class="text-sm text-base-content/50">No Stripe data available</p>
+              <p class="text-xs text-base-content/40 mt-1">This subscription may not be connected to Stripe</p>
+            </div>
+
+            <div v-else class="space-y-4">
               <!-- Stripe Customer Link -->
-              <div v-if="subscription.stripeCustomerLink" class="flex items-center justify-between p-4 border border-base-300 rounded-lg hover:bg-base-200 transition-colors">
-                <div class="flex items-center gap-3">
-                  <div class="bg-primary/10 rounded-lg size-10 flex items-center justify-center">
-                    <svg class="size-5 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="font-medium">Customer Dashboard</div>
-                    <div class="text-base-content/60 text-sm">View customer details in Stripe</div>
-                  </div>
-                </div>
-                <a
-                  :href="subscription.stripeCustomerLink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-sm btn-outline"
-                >
-                  Open
-                  <svg class="size-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
-
-              <!-- Stripe Subscription Link -->
-              <div v-if="subscription.stripeSubscriptionLink" class="flex items-center justify-between p-4 border border-base-300 rounded-lg hover:bg-base-200 transition-colors">
-                <div class="flex items-center gap-3">
-                  <div class="bg-primary/10 rounded-lg size-10 flex items-center justify-center">
-                    <svg class="size-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div class="font-medium">Subscription Dashboard</div>
-                    <div class="text-base-content/60 text-sm">View subscription details in Stripe</div>
-                  </div>
-                </div>
-                <a
-                  :href="subscription.stripeSubscriptionLink"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="btn btn-sm btn-outline"
-                >
-                  Open
-                  <svg class="size-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
-              </div>
-
-              <!-- No Stripe Data -->
-              <div v-if="!subscription.stripeCustomerLink && !subscription.stripeSubscriptionLink" class="text-center py-8">
-                <div class="bg-base-200 rounded-full size-12 flex items-center justify-center mx-auto mb-3">
-                  <svg class="size-6 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <p class="text-base-content/60 text-sm">No Stripe data available</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column (Actions) -->
-        <div class="space-y-6">
-          <!-- Admin Actions Section -->
-          <div class="admin-section">
-            <h2 class="text-lg font-semibold mb-4">Admin Actions</h2>
-
-            <div class="space-y-3">
-              <button
-                class="btn btn-outline btn-sm w-full"
-                @click="openModifyTierModal"
-                :disabled="actionLoading"
-              >
-                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-                Modify Tier
-              </button>
-
-              <button
-                class="btn btn-outline btn-sm btn-error w-full"
-                @click="openCancelModal"
-                :disabled="actionLoading || subscription.status === 'canceled' || subscription.cancel_at_period_end"
-              >
-                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                Cancel Subscription
-              </button>
-            </div>
-          </div>
-
-          <!-- Billing History Section -->
-          <div class="admin-section">
-            <h2 class="text-lg font-semibold mb-4">Billing History</h2>
-            <div class="text-center py-8">
-              <div class="bg-base-200 rounded-full size-12 flex items-center justify-center mx-auto mb-3">
-                <svg class="size-6 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <p class="text-base-content/60 text-sm mb-3">View billing history in Stripe</p>
               <a
                 v-if="subscription.stripeCustomerLink"
                 :href="subscription.stripeCustomerLink"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="btn btn-sm btn-outline"
+                class="flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-base-300 hover:bg-base-200/50 transition-all group"
               >
-                Open Stripe
-                <svg class="size-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-[#635bff]/10 text-[#635bff] transition-all">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <div class="text-sm font-medium text-base-content">Customer Dashboard</div>
+                  <div class="text-xs text-base-content/50">View customer details in Stripe</div>
+                </div>
+                <svg class="w-4 h-4 text-base-content/40 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+
+              <!-- Stripe Subscription Link -->
+              <a
+                v-if="subscription.stripeSubscriptionLink"
+                :href="subscription.stripeSubscriptionLink"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-base-300 hover:bg-base-200/50 transition-all group"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-[#635bff]/10 text-[#635bff] transition-all">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <div class="text-sm font-medium text-base-content">Subscription Dashboard</div>
+                  <div class="text-xs text-base-content/50">View subscription details in Stripe</div>
+                </div>
+                <svg class="w-4 h-4 text-base-content/40 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Billing History Section -->
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <h3 class="text-lg text-base-content mb-6" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+              Billing History
+            </h3>
+
+            <div class="py-12 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
+                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p class="text-sm text-base-content/50 mb-4">View billing history in Stripe</p>
+              <a
+                v-if="subscription.stripeCustomerLink"
+                :href="subscription.stripeCustomerLink"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-lg border border-base-300 text-sm font-medium text-base-content hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+              >
+                <span>Open Stripe</span>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
               </a>
@@ -280,12 +369,16 @@
         variant="confirm"
         confirm-text="Update Tier"
         :loading="actionLoading"
+        :disabled="selectedTier === subscription?.tier"
         @confirm="handleModifyTier"
         @cancel="closeModals"
         @close="closeModals"
       >
         <div class="mb-4">
           <label class="block text-sm font-medium mb-2">Select New Tier</label>
+          <p v-if="selectedTier === subscription?.tier" class="text-sm text-base-content/50 mb-2">
+            Current tier: <span class="font-medium capitalize">{{ subscription?.tier }}</span>
+          </p>
           <div class="space-y-2">
             <label class="flex items-center gap-3 p-3 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors" :class="{ 'border-primary bg-primary/5': selectedTier === 'free' }">
               <input
@@ -299,7 +392,7 @@
                 <div class="font-medium">Free</div>
                 <div class="text-base-content/60 text-sm">Downgrade to free tier</div>
               </div>
-              <AdminBadge status="free" variant="tier" />
+              <span class="text-sm font-medium text-base-content/60">Free Plan</span>
             </label>
 
             <label class="flex items-center gap-3 p-3 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors" :class="{ 'border-primary bg-primary/5': selectedTier === 'pro' }">
@@ -314,26 +407,42 @@
                 <div class="font-medium">Pro</div>
                 <div class="text-base-content/60 text-sm">Upgrade to pro tier</div>
               </div>
-              <AdminBadge status="pro" variant="tier" />
+              <span class="text-sm font-medium text-base-content">Pro Plan</span>
             </label>
           </div>
         </div>
 
-        <div class="bg-warning/10 border border-warning/20 rounded-lg p-4">
-          <p class="text-sm text-warning font-medium mb-2">Note:</p>
+        <!-- Warning for Stripe subscriptions -->
+        <div v-if="hasStripeIntegration && selectedTier === 'free'" class="bg-warning/10 border border-warning/20 rounded-lg p-4">
+          <p class="text-sm text-warning font-medium mb-2">Stripe Integration Notice:</p>
           <ul class="text-sm text-base-content/70 space-y-1 list-disc list-inside">
-            <li>This will immediately change the tier in the database</li>
-            <li>If downgrading to free with an active Stripe subscription, it will be canceled</li>
-            <li>Changes are logged in the audit log</li>
+            <li>Downgrading to free will cancel the Stripe subscription</li>
+            <li>User will lose Pro access immediately</li>
+            <li>No refunds are processed automatically</li>
           </ul>
+        </div>
+
+        <!-- Info for non-Stripe subscriptions -->
+        <div v-else-if="!hasStripeIntegration" class="bg-info/10 border border-info/20 rounded-lg p-4">
+          <p class="text-sm text-info font-medium mb-2">Manual Subscription:</p>
+          <ul class="text-sm text-base-content/70 space-y-1 list-disc list-inside">
+            <li>This is a manually managed subscription (no Stripe billing)</li>
+            <li>Tier change takes effect immediately</li>
+            <li v-if="selectedTier === 'pro'">Upgrading to Pro grants access without payment</li>
+          </ul>
+        </div>
+
+        <!-- Default info -->
+        <div v-else class="bg-base-200/50 border border-base-300/30 rounded-lg p-4">
+          <p class="text-sm text-base-content/60">Changes are logged in the audit log.</p>
         </div>
       </AdminModal>
 
-      <!-- Cancel Subscription Modal -->
+      <!-- Cancel Subscription Modal (Stripe subscriptions) -->
       <AdminModal
         :open="showCancelModal"
         title="Cancel Subscription"
-        description="This is a destructive action. Are you sure?"
+        description="This subscription is connected to Stripe billing."
         variant="danger"
         confirm-text="Cancel Subscription"
         :loading="actionLoading"
@@ -341,13 +450,38 @@
         @cancel="closeModals"
         @close="closeModals"
       >
+        <div class="bg-warning/10 border border-warning/20 rounded-lg p-4 mb-4">
+          <p class="text-sm text-warning font-medium mb-2">This action will:</p>
+          <ul class="text-sm text-base-content/70 space-y-1 list-disc list-inside">
+            <li>Set the subscription to cancel at period end in Stripe</li>
+            <li>User retains Pro access until current billing period ends</li>
+            <li>Stripe webhooks will finalize the cancellation</li>
+            <li>No further charges will be made</li>
+          </ul>
+        </div>
+        <p class="text-sm text-base-content/70">
+          Site: <strong>{{ subscription.site.name }}</strong>
+        </p>
+      </AdminModal>
+
+      <!-- Delete Subscription Modal (Non-Stripe subscriptions) -->
+      <AdminModal
+        :open="showDeleteModal"
+        title="Delete Subscription"
+        description="This will permanently remove the subscription record."
+        variant="danger"
+        confirm-text="Delete Subscription"
+        :loading="actionLoading"
+        @confirm="handleDeleteSubscription"
+        @cancel="closeModals"
+        @close="closeModals"
+      >
         <div class="bg-error/10 border border-error/20 rounded-lg p-4 mb-4">
           <p class="text-sm text-error font-medium mb-2">Warning: This action will:</p>
           <ul class="text-sm text-base-content/70 space-y-1 list-disc list-inside">
-            <li>Cancel the subscription in Stripe (if applicable)</li>
-            <li>Set the subscription to cancel at period end</li>
-            <li>Downgrade tier to free</li>
-            <li>User will retain access until current period ends</li>
+            <li>Permanently delete this subscription record</li>
+            <li>Site will have no subscription (can create a new one)</li>
+            <li>This action cannot be undone</li>
           </ul>
         </div>
         <p class="text-sm text-base-content/70">
@@ -356,12 +490,9 @@
       </AdminModal>
 
       <!-- Success/Error Alert -->
-      <div
-        v-if="alertMessage"
-        class="toast toast-top toast-end"
-      >
+      <div v-if="alertMessage" class="toast toast-top toast-end">
         <div
-          class="alert"
+          class="alert shadow-lg"
           :class="alertType === 'success' ? 'alert-success' : 'alert-error'"
         >
           <span>{{ alertMessage }}</span>
@@ -372,9 +503,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowLeftIcon,
+  CreditCardIcon,
+  ArrowsUpDownIcon,
+  XMarkIcon,
+  GlobeAltIcon,
+  UserIcon,
+  TrashIcon
+} from '@heroicons/vue/24/outline'
 
 definePageMeta({
   layout: 'admin'
@@ -420,7 +559,13 @@ const actionLoading = ref(false)
 // Modal state
 const showModifyTierModal = ref(false)
 const showCancelModal = ref(false)
+const showDeleteModal = ref(false)
 const selectedTier = ref<'free' | 'pro'>('free')
+
+// Computed
+const hasStripeIntegration = computed(() => {
+  return !!(subscription.value?.stripe_subscription_id || subscription.value?.stripe_customer_id)
+})
 
 // Alert state
 const alertMessage = ref<string | null>(null)
@@ -465,9 +610,14 @@ const openCancelModal = () => {
   showCancelModal.value = true
 }
 
+const openDeleteModal = () => {
+  showDeleteModal.value = true
+}
+
 const closeModals = () => {
   showModifyTierModal.value = false
   showCancelModal.value = false
+  showDeleteModal.value = false
 }
 
 // Action handlers
@@ -476,7 +626,7 @@ const handleModifyTier = async () => {
 
   actionLoading.value = true
   try {
-    const response = await $fetch(`/api/admin/subscriptions/${subscription.value.id}/modify-tier`, {
+    await $fetch(`/api/admin/subscriptions/${subscription.value.id}/modify-tier`, {
       method: 'POST',
       body: {
         tier: selectedTier.value,
@@ -499,15 +649,35 @@ const handleCancelSubscription = async () => {
 
   actionLoading.value = true
   try {
-    await $fetch(`/api/admin/subscriptions/${subscription.value.id}/cancel`, {
+    const response = await $fetch<{ message: string; hasStripe: boolean }>(`/api/admin/subscriptions/${subscription.value.id}/cancel`, {
       method: 'POST',
     })
-    showAlert('Subscription canceled successfully', 'success')
+    showAlert(response.message || 'Subscription canceled successfully', 'success')
     closeModals()
     await fetchSubscriptionDetails() // Refresh data
   } catch (err: any) {
     console.error('Failed to cancel subscription:', err)
     showAlert(err?.data?.message || 'Failed to cancel subscription', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const handleDeleteSubscription = async () => {
+  if (!subscription.value) return
+
+  actionLoading.value = true
+  try {
+    await $fetch(`/api/admin/subscriptions/${subscription.value.id}`, {
+      method: 'DELETE',
+    })
+    showAlert('Subscription deleted successfully', 'success')
+    closeModals()
+    // Navigate back to subscriptions list since this subscription no longer exists
+    router.push('/subscriptions')
+  } catch (err: any) {
+    console.error('Failed to delete subscription:', err)
+    showAlert(err?.data?.message || 'Failed to delete subscription', 'error')
   } finally {
     actionLoading.value = false
   }
@@ -523,7 +693,8 @@ const showAlert = (message: string, type: 'success' | 'error') => {
 }
 
 // Format helpers
-const formatDate = (dateString: string): string => {
+const formatDate = (dateString: string | null): string => {
+  if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
@@ -532,20 +703,46 @@ const formatDate = (dateString: string): string => {
   })
 }
 
-const formatStatus = (status: string): string => {
-  return status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')
+const formatTier = (tier: string): string => {
+  const tierMap: Record<string, string> = {
+    'free': 'Free Plan',
+    'pro': 'Pro Plan',
+    'enterprise': 'Enterprise Plan'
+  }
+  return tierMap[tier] || tier.charAt(0).toUpperCase() + tier.slice(1) + ' Plan'
 }
 
-const getStatusBadgeType = (status: string): string => {
+const formatStatus = (status: string): string => {
   const statusMap: Record<string, string> = {
-    'free': 'neutral',
-    'active': 'success',
-    'trialing': 'info',
-    'canceled': 'error',
-    'past_due': 'warning',
-    'unpaid': 'error',
+    'free': 'Free',
+    'active': 'Active',
+    'trialing': 'Trial',
+    'canceled': 'Canceled',
+    'past_due': 'Past Due',
+    'unpaid': 'Unpaid',
+    'incomplete': 'Incomplete',
+    'incomplete_expired': 'Expired',
+    'paused': 'Paused'
   }
-  return statusMap[status] || 'neutral'
+  return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')
+}
+
+const getStatusClass = (status: string): string => {
+  const positiveStatuses = ['active', 'trialing']
+  const negativeStatuses = ['canceled', 'incomplete', 'incomplete_expired', 'unpaid']
+  const warningStatuses = ['past_due', 'paused']
+  const neutralStatuses = ['free']
+
+  if (positiveStatuses.includes(status)) {
+    return 'text-success'
+  } else if (negativeStatuses.includes(status)) {
+    return 'text-error'
+  } else if (warningStatuses.includes(status)) {
+    return 'text-warning'
+  } else if (neutralStatuses.includes(status)) {
+    return 'text-base-content/60'
+  }
+  return 'text-base-content'
 }
 
 // Initialize

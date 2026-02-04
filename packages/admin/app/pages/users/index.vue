@@ -1,180 +1,216 @@
 <template>
-  <div class="p-8">
-    <!-- Page Header -->
-    <div class="admin-page-header">
-      <h1 class="admin-page-title">Users</h1>
-      <p class="admin-page-subtitle">Manage user accounts and permissions</p>
-    </div>
-
-    <!-- Filters Section -->
-    <div class="admin-section mb-6">
-      <div class="flex flex-col sm:flex-row gap-4">
-        <!-- Search -->
-        <div class="flex-1">
-          <AdminSearchInput
-            v-model="searchQuery"
-            placeholder="Search by email or name..."
-            :debounce="300"
-            @search="handleSearch"
-          />
+  <div class="min-h-screen">
+    <!-- Page Container -->
+    <div class="px-6 py-8 max-w-[1400px] mx-auto">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 text-xs font-medium tracking-widest uppercase mb-2">
+          <span class="text-base-content/50">Admin</span>
+          <span class="text-base-content/30">·</span>
+          <span class="text-base-content/40">User Management</span>
         </div>
-
-        <!-- Filters -->
-        <div class="flex gap-2">
-          <AdminFilterDropdown
-            v-model="verifiedFilter"
-            :options="verifiedOptions"
-            label="Verified"
-            @change="handleFilterChange"
-          />
-          <AdminFilterDropdown
-            v-model="hasSitesFilter"
-            :options="hasSitesOptions"
-            label="Has Sites"
-            @change="handleFilterChange"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Users Table -->
-    <div class="admin-section">
-      <!-- Loading State -->
-      <div v-if="loading" class="flex items-center justify-center py-12">
-        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+          Users
+        </h1>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="bg-error/10 rounded-full size-16 flex items-center justify-center mb-4">
-          <svg class="size-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <p class="text-base-content/60 text-sm">{{ error }}</p>
-        <button class="btn btn-sm btn-primary mt-4" @click="fetchUsers">
-          Try Again
-        </button>
-      </div>
-
-      <!-- Table -->
-      <div v-else-if="users.length > 0">
-        <div class="overflow-x-auto">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Sites</th>
-                <th>Tier</th>
-                <th>Verified</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="user in users"
-                :key="user.id"
-                class="cursor-pointer hover:bg-base-200"
-                @click="navigateToUser(user.id)"
-              >
-                <td>
-                  <div class="font-medium">{{ formatName(user) }}</div>
-                </td>
-                <td>
-                  <div class="text-base-content/60">{{ user.email }}</div>
-                </td>
-                <td>
-                  <div class="font-medium">{{ user.sitesCount }}</div>
-                </td>
-                <td>
-                  <AdminBadge
-                    :status="getTier(user)"
-                    variant="tier"
-                  />
-                </td>
-                <td>
-                  <AdminBadge
-                    :status="user.validEmail ? 'success' : 'warning'"
-                    variant="status"
-                    :custom-text="user.validEmail ? 'Verified' : 'Unverified'"
-                  />
-                </td>
-                <td>
-                  <div class="text-base-content/60 text-sm">
-                    {{ formatDate(user.createdAt) }}
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div
-          v-if="pagination.totalPages > 1"
-          class="border-t border-base-300 px-6 py-4 flex items-center justify-between"
-        >
-          <div class="text-base-content/60 text-sm">
-            Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, pagination.total) }} of {{ pagination.total }} users
+      <!-- Filters Section -->
+      <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm mb-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Search -->
+          <div class="flex-1">
+            <AdminSearchInput
+              v-model="searchQuery"
+              placeholder="Search by email or name..."
+              :debounce="300"
+              @search="handleSearch"
+            />
           </div>
-          <div class="flex items-center gap-2">
-            <button
-              class="btn btn-sm btn-ghost"
-              :disabled="pagination.page === 1"
-              @click="handlePageChange(pagination.page - 1)"
-              aria-label="Previous page"
-            >
-              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
 
-            <div class="flex items-center gap-1">
+          <!-- Filters -->
+          <div class="flex gap-2">
+            <AdminFilterDropdown
+              v-model="verifiedFilter"
+              :options="verifiedOptions"
+              label="Verified"
+              @change="handleFilterChange"
+            />
+            <AdminFilterDropdown
+              v-model="hasSitesFilter"
+              :options="hasSitesOptions"
+              label="Has Sites"
+              @change="handleFilterChange"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table Card -->
+      <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+        <!-- Loading State -->
+        <div v-if="loading" class="flex items-center justify-center py-16">
+          <div class="flex flex-col items-center gap-4">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="text-sm text-base-content/50 font-light tracking-wide">Loading users...</p>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="flex flex-col items-center justify-center py-16 text-center px-6">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error/10 border border-error/20 mb-4">
+            <svg class="w-8 h-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="text-xl text-base-content mb-2" style="font-family: 'Instrument Serif', serif;">Unable to Load Users</h3>
+          <p class="text-sm text-base-content/60 mb-4">{{ error }}</p>
+          <button class="btn btn-outline btn-sm" @click="fetchUsers">
+            Try Again
+          </button>
+        </div>
+
+        <!-- Table -->
+        <div v-else-if="users.length > 0">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-base-300/50">
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">User</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Sites</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Plan</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Status</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="user in users"
+                  :key="user.id"
+                  class="border-b border-base-300/30 last:border-b-0 hover:bg-base-50 transition-colors cursor-pointer"
+                  @click="navigateToUser(user.id)"
+                >
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-4">
+                      <!-- Avatar -->
+                      <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+                        <img
+                          v-if="!avatarErrors[user.id]"
+                          :src="getGravatarUrl(user.email, 80)"
+                          :alt="`${formatName(user)}'s avatar`"
+                          class="w-full h-full object-cover"
+                          @error="handleAvatarError(user.id)"
+                        />
+                        <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-medium text-sm" style="font-family: 'Instrument Serif', serif;">
+                          {{ getUserInitials(user.firstname || undefined, user.lastname || undefined) }}
+                        </div>
+                      </div>
+                      <!-- Name & Email -->
+                      <div class="min-w-0">
+                        <div class="font-medium text-base-content hover:text-primary transition-colors truncate">
+                          {{ formatName(user) }}
+                        </div>
+                        <div class="text-sm text-base-content/50 truncate">{{ user.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm font-medium text-base-content">{{ user.sitesCount }}</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span
+                      class="text-sm font-medium"
+                      :class="user.hasActiveSubscription ? 'text-base-content' : 'text-base-content/50'"
+                    >
+                      {{ user.hasActiveSubscription ? 'Pro' : 'Free' }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-1.5">
+                      <template v-if="user.validEmail">
+                        <CheckIcon class="w-4 h-4 text-success" />
+                        <span class="text-sm text-base-content/70">Verified</span>
+                      </template>
+                      <template v-else>
+                        <span class="text-sm text-base-content/50">Unverified</span>
+                      </template>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm text-base-content/70">{{ formatDate(user.createdAt) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div
+            v-if="pagination.totalPages > 1"
+            class="border-t border-base-300/50 px-6 py-4 flex items-center justify-between"
+          >
+            <div class="text-base-content/60 text-sm">
+              Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, pagination.total) }} of {{ pagination.total }} users
+            </div>
+            <div class="flex items-center gap-2">
               <button
-                v-for="page in visiblePages"
-                :key="page"
-                class="btn btn-sm"
-                :class="page === pagination.page ? 'btn-primary' : 'btn-ghost'"
-                @click="handlePageChange(page)"
-                :aria-label="`Go to page ${page}`"
-                :aria-current="page === pagination.page ? 'page' : undefined"
+                class="btn btn-sm btn-ghost"
+                :disabled="pagination.page === 1"
+                @click="handlePageChange(pagination.page - 1)"
+                aria-label="Previous page"
               >
-                {{ page }}
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div class="flex items-center gap-1">
+                <button
+                  v-for="page in visiblePages"
+                  :key="page"
+                  class="btn btn-sm"
+                  :class="page === pagination.page ? 'btn-primary' : 'btn-ghost'"
+                  @click="handlePageChange(page)"
+                  :aria-label="`Go to page ${page}`"
+                  :aria-current="page === pagination.page ? 'page' : undefined"
+                >
+                  {{ page }}
+                </button>
+              </div>
+
+              <button
+                class="btn btn-sm btn-ghost"
+                :disabled="pagination.page === pagination.totalPages"
+                @click="handlePageChange(pagination.page + 1)"
+                aria-label="Next page"
+              >
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
-
-            <button
-              class="btn btn-sm btn-ghost"
-              :disabled="pagination.page === pagination.totalPages"
-              @click="handlePageChange(pagination.page + 1)"
-              aria-label="Next page"
-            >
-              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Empty State -->
-      <div v-else class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="bg-base-200 rounded-full size-16 flex items-center justify-center mb-4">
-          <svg class="size-8 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
+        <!-- Empty State -->
+        <div v-else class="flex flex-col items-center justify-center py-16 text-center px-6">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <h3 class="text-xl text-base-content mb-2" style="font-family: 'Instrument Serif', serif;">No Users Found</h3>
+          <p class="text-sm text-base-content/50">Try adjusting your search or filters</p>
         </div>
-        <p class="text-base-content/60 text-sm mb-1">No users found</p>
-        <p class="text-base-content/40 text-xs">Try adjusting your filters</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { CheckIcon } from '@heroicons/vue/24/outline'
+import { getGravatarUrl, getUserInitials } from '~/composables/useAvatar'
 
 definePageMeta({
   layout: 'admin'
@@ -210,6 +246,9 @@ const pagination = ref<Pagination>({
 })
 const loading = ref(false)
 const error = ref<string | null>(null)
+
+// Avatar error tracking
+const avatarErrors = reactive<Record<string, boolean>>({})
 
 // Filters
 const searchQuery = ref('')
@@ -319,6 +358,11 @@ const navigateToUser = (userId: string) => {
   router.push(`/users/${userId}`)
 }
 
+// Avatar error handler
+const handleAvatarError = (userId: string) => {
+  avatarErrors[userId] = true
+}
+
 // Format helpers
 const formatName = (user: User): string => {
   if (user.firstname && user.lastname) {
@@ -333,37 +377,12 @@ const formatName = (user: User): string => {
   return user.email
 }
 
-const getTier = (user: User): string => {
-  if (user.hasActiveSubscription) {
-    return 'professional'
-  }
-  return 'free'
-}
-
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) {
-    return 'Today'
-  } else if (diffDays === 1) {
-    return 'Yesterday'
-  } else if (diffDays < 7) {
-    return `${diffDays} days ago`
-  } else if (diffDays < 30) {
-    const weeks = Math.floor(diffDays / 7)
-    return `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`
-  } else if (diffDays < 365) {
-    const months = Math.floor(diffDays / 30)
-    return `${months} ${months === 1 ? 'month' : 'months'} ago`
-  } else {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    })
-  }
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
 }
 </script>

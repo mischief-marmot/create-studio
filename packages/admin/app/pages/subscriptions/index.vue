@@ -1,211 +1,226 @@
 <template>
-  <div class="p-8">
-    <!-- Page Header -->
-    <div class="admin-page-header">
-      <h1 class="admin-page-title">Subscriptions</h1>
-      <p class="admin-page-subtitle">Manage site subscriptions and billing</p>
-    </div>
-
-    <!-- Filters Section -->
-    <div class="admin-section mb-6">
-      <div class="flex flex-col sm:flex-row gap-4">
-        <!-- Search -->
-        <div class="flex-1">
-          <AdminSearchInput
-            v-model="searchQuery"
-            placeholder="Search by site name or URL..."
-            :debounce="300"
-            @search="handleSearch"
-          />
+  <div class="min-h-screen">
+    <!-- Page Content -->
+    <div class="px-6 py-8 max-w-[1400px] mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 text-xs font-medium tracking-widest uppercase mb-2">
+          <span class="text-base-content/50">Subscriptions</span>
         </div>
-
-        <!-- Filters -->
-        <div class="flex gap-2">
-          <AdminFilterDropdown
-            v-model="tierFilter"
-            :options="tierOptions"
-            label="Tier"
-            @change="handleFilterChange"
-          />
-          <AdminFilterDropdown
-            v-model="statusFilter"
-            :options="statusOptions"
-            label="Status"
-            @change="handleFilterChange"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Subscriptions Table -->
-    <div class="admin-section">
-      <!-- Loading State -->
-      <div v-if="loading" class="flex items-center justify-center py-12">
-        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+          Manage Subscriptions
+        </h1>
+        <p class="text-base-content/60 mt-2">Site subscriptions and billing management</p>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="bg-error/10 rounded-full size-16 flex items-center justify-center mb-4">
-          <svg class="size-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <p class="text-base-content/60 text-sm">{{ error }}</p>
-        <button class="btn btn-sm btn-primary mt-4" @click="fetchSubscriptions">
-          Try Again
-        </button>
-      </div>
-
-      <!-- Table -->
-      <div v-else-if="subscriptions.length > 0">
-        <div class="overflow-x-auto">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Site</th>
-                <th>User</th>
-                <th>Tier</th>
-                <th>Status</th>
-                <th>Period End</th>
-                <th>Stripe</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="subscription in subscriptions"
-                :key="subscription.id"
-                class="cursor-pointer hover:bg-base-200"
-                @click="navigateToSubscription(subscription.id)"
-              >
-                <td>
-                  <div class="flex flex-col">
-                    <div class="font-medium">{{ subscription.siteName }}</div>
-                    <div class="text-base-content/60 text-sm">{{ subscription.siteUrl }}</div>
-                  </div>
-                </td>
-                <td>
-                  <div class="text-base-content/60">{{ subscription.userEmail }}</div>
-                </td>
-                <td>
-                  <AdminBadge
-                    :status="subscription.tier"
-                    variant="tier"
-                  />
-                </td>
-                <td>
-                  <AdminBadge
-                    :status="getStatusBadgeType(subscription.status)"
-                    variant="status"
-                    :custom-text="formatStatus(subscription.status)"
-                  />
-                </td>
-                <td>
-                  <div v-if="subscription.current_period_end" class="text-base-content/60 text-sm">
-                    {{ formatDate(subscription.current_period_end) }}
-                  </div>
-                  <div v-else class="text-base-content/40 text-sm">-</div>
-                </td>
-                <td>
-                  <div class="flex gap-2" @click.stop>
-                    <!-- Stripe Customer Link -->
-                    <a
-                      v-if="subscription.stripeCustomerLink"
-                      :href="subscription.stripeCustomerLink"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="btn btn-xs btn-ghost"
-                      title="View in Stripe Customer Dashboard"
-                      aria-label="View customer in Stripe dashboard"
-                    >
-                      <svg class="size-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
-                      </svg>
-                    </a>
-
-                    <!-- Stripe Subscription Link -->
-                    <a
-                      v-if="subscription.stripeSubscriptionLink"
-                      :href="subscription.stripeSubscriptionLink"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="btn btn-xs btn-ghost"
-                      title="View in Stripe Subscription Dashboard"
-                      aria-label="View subscription in Stripe dashboard"
-                    >
-                      <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </a>
-
-                    <!-- No Stripe Data -->
-                    <span v-if="!subscription.stripeCustomerLink && !subscription.stripeSubscriptionLink" class="text-base-content/40 text-xs">
-                      -
-                    </span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div
-          v-if="pagination.totalPages > 1"
-          class="border-t border-base-300 px-6 py-4 flex items-center justify-between"
-        >
-          <div class="text-base-content/60 text-sm">
-            Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, pagination.total) }} of {{ pagination.total }} subscriptions
+      <!-- Filters Card -->
+      <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm mb-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Search -->
+          <div class="flex-1">
+            <AdminSearchInput
+              v-model="searchQuery"
+              placeholder="Search by site name or URL..."
+              :debounce="300"
+              @search="handleSearch"
+            />
           </div>
-          <div class="flex items-center gap-2">
-            <button
-              class="btn btn-sm btn-ghost"
-              :disabled="pagination.page === 1"
-              @click="handlePageChange(pagination.page - 1)"
-              aria-label="Previous page"
-            >
-              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
 
-            <div class="flex items-center gap-1">
+          <!-- Filters -->
+          <div class="flex gap-2">
+            <AdminFilterDropdown
+              v-model="tierFilter"
+              :options="tierOptions"
+              label="Tier"
+              @change="handleFilterChange"
+            />
+            <AdminFilterDropdown
+              v-model="statusFilter"
+              :options="statusOptions"
+              label="Status"
+              @change="handleFilterChange"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscriptions Table Card -->
+      <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+        <!-- Loading State -->
+        <div v-if="loading" class="flex items-center justify-center py-16">
+          <div class="flex flex-col items-center gap-4">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="text-sm text-base-content/50 font-light tracking-wide">Loading subscriptions...</p>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="flex items-center justify-center py-16">
+          <div class="max-w-md text-center space-y-6">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error/10 border border-error/20">
+              <svg class="w-8 h-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="space-y-2">
+              <h3 class="text-xl text-base-content" style="font-family: 'Instrument Serif', serif;">Unable to Load Subscriptions</h3>
+              <p class="text-sm text-base-content/60 leading-relaxed">{{ error }}</p>
+            </div>
+            <button class="btn btn-outline btn-sm" @click="fetchSubscriptions">
+              Try Again
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div v-else-if="subscriptions.length > 0">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-base-300/50">
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Site</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">User</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Plan</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Status</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Period End</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Stripe</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="subscription in subscriptions"
+                  :key="subscription.id"
+                  class="border-b border-base-300/30 last:border-b-0 cursor-pointer hover:bg-base-50 transition-colors"
+                  @click="navigateToSubscription(subscription.id)"
+                >
+                  <td class="py-4 px-6">
+                    <div class="flex flex-col">
+                      <span class="font-medium text-base-content">{{ subscription.siteName }}</span>
+                      <span class="text-sm text-base-content/50 truncate max-w-xs">{{ subscription.siteUrl }}</span>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm text-base-content/70">{{ subscription.userEmail }}</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm font-medium" :class="getTierClass(subscription.tier)">
+                      {{ formatTier(subscription.tier) }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm" :class="getStatusClass(subscription.status)">
+                      {{ formatStatus(subscription.status) }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span v-if="subscription.current_period_end" class="text-sm text-base-content/70">
+                      {{ formatDate(subscription.current_period_end) }}
+                    </span>
+                    <span v-else class="text-sm text-base-content/40">-</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="flex gap-2" @click.stop>
+                      <!-- Stripe Customer Link -->
+                      <a
+                        v-if="subscription.stripeCustomerLink"
+                        :href="subscription.stripeCustomerLink"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="p-2 rounded-lg text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all"
+                        title="View in Stripe Customer Dashboard"
+                        aria-label="View customer in Stripe dashboard"
+                      >
+                        <svg class="size-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z" />
+                        </svg>
+                      </a>
+
+                      <!-- Stripe Subscription Link -->
+                      <a
+                        v-if="subscription.stripeSubscriptionLink"
+                        :href="subscription.stripeSubscriptionLink"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="p-2 rounded-lg text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all"
+                        title="View in Stripe Subscription Dashboard"
+                        aria-label="View subscription in Stripe dashboard"
+                      >
+                        <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </a>
+
+                      <!-- No Stripe Data -->
+                      <span v-if="!subscription.stripeCustomerLink && !subscription.stripeSubscriptionLink" class="text-base-content/40 text-sm px-2">
+                        -
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div
+            v-if="pagination.totalPages > 1"
+            class="border-t border-base-300/50 px-6 py-4 flex items-center justify-between"
+          >
+            <div class="text-base-content/50 text-sm">
+              Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, pagination.total) }} of {{ pagination.total }} subscriptions
+            </div>
+            <div class="flex items-center gap-2">
               <button
-                v-for="page in visiblePages"
-                :key="page"
-                class="btn btn-sm"
-                :class="page === pagination.page ? 'btn-primary' : 'btn-ghost'"
-                @click="handlePageChange(page)"
-                :aria-label="`Go to page ${page}`"
-                :aria-current="page === pagination.page ? 'page' : undefined"
+                class="p-2 rounded-lg text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                :disabled="pagination.page === 1"
+                @click="handlePageChange(pagination.page - 1)"
+                aria-label="Previous page"
               >
-                {{ page }}
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div class="flex items-center gap-1">
+                <button
+                  v-for="page in visiblePages"
+                  :key="page"
+                  class="min-w-[32px] h-8 px-2 rounded-lg text-sm font-medium transition-all"
+                  :class="page === pagination.page
+                    ? 'bg-primary text-primary-content'
+                    : 'text-base-content/70 hover:text-base-content hover:bg-base-200'"
+                  @click="handlePageChange(page)"
+                  :aria-label="`Go to page ${page}`"
+                  :aria-current="page === pagination.page ? 'page' : undefined"
+                >
+                  {{ page }}
+                </button>
+              </div>
+
+              <button
+                class="p-2 rounded-lg text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                :disabled="pagination.page === pagination.totalPages"
+                @click="handlePageChange(pagination.page + 1)"
+                aria-label="Next page"
+              >
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
-
-            <button
-              class="btn btn-sm btn-ghost"
-              :disabled="pagination.page === pagination.totalPages"
-              @click="handlePageChange(pagination.page + 1)"
-              aria-label="Next page"
-            >
-              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Empty State -->
-      <div v-else class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="bg-base-200 rounded-full size-16 flex items-center justify-center mb-4">
-          <svg class="size-8 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-          </svg>
+        <!-- Empty State -->
+        <div v-else class="flex flex-col items-center justify-center py-16 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+          <h3 class="text-lg text-base-content mb-1" style="font-family: 'Instrument Serif', serif;">No Subscriptions Found</h3>
+          <p class="text-sm text-base-content/50">Try adjusting your search or filters</p>
         </div>
-        <p class="text-base-content/60 text-sm mb-1">No subscriptions found</p>
-        <p class="text-base-content/40 text-xs">Try adjusting your filters</p>
       </div>
     </div>
   </div>
@@ -420,26 +435,48 @@ const formatDate = (dateString: string): string => {
   }
 }
 
-const formatStatus = (status: string): string => {
-  // Handle special cases
-  const statusMap: Record<string, string> = {
-    past_due: 'Past Due',
+const formatTier = (tier: string): string => {
+  const tierMap: Record<string, string> = {
+    free: 'Free',
+    pro: 'Pro',
+    professional: 'Pro',
+    enterprise: 'Enterprise',
   }
-
-  return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1).toLowerCase()
+  return tierMap[tier.toLowerCase()] || tier.charAt(0).toUpperCase() + tier.slice(1)
 }
 
-const getStatusBadgeType = (status: string): string => {
-  // Map subscription statuses to badge types
-  const statusMap: Record<string, string> = {
-    active: 'success',
-    trialing: 'info',
-    canceled: 'neutral',
-    past_due: 'warning',
-    unpaid: 'error',
-    free: 'neutral',
+const getTierClass = (tier: string): string => {
+  const tierLower = tier.toLowerCase()
+  if (tierLower === 'pro' || tierLower === 'professional' || tierLower === 'enterprise') {
+    return 'text-base-content'
   }
+  return 'text-base-content/60'
+}
 
-  return statusMap[status] || 'neutral'
+const formatStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    active: 'Active',
+    trialing: 'Trial',
+    past_due: 'Past Due',
+    canceled: 'Canceled',
+    cancelled: 'Canceled',
+    unpaid: 'Unpaid',
+    free: 'Free',
+  }
+  return statusMap[status.toLowerCase()] || status.charAt(0).toUpperCase() + status.slice(1)
+}
+
+const getStatusClass = (status: string): string => {
+  const statusLower = status.toLowerCase()
+  if (statusLower === 'active' || statusLower === 'trialing') {
+    return 'font-medium text-base-content'
+  }
+  if (statusLower === 'past_due' || statusLower === 'unpaid') {
+    return 'text-warning'
+  }
+  if (statusLower === 'canceled' || statusLower === 'cancelled') {
+    return 'text-base-content/50'
+  }
+  return 'text-base-content/60'
 }
 </script>

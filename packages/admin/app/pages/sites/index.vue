@@ -1,187 +1,222 @@
 <template>
-  <div class="p-8">
-    <!-- Page Header -->
-    <div class="admin-page-header">
-      <h1 class="admin-page-title">Sites</h1>
-      <p class="admin-page-subtitle">Manage WordPress sites and their subscriptions</p>
-    </div>
-
-    <!-- Filters Section -->
-    <div class="admin-section mb-6">
-      <div class="flex flex-col sm:flex-row gap-4">
-        <!-- Search -->
-        <div class="flex-1">
-          <AdminSearchInput
-            v-model="searchQuery"
-            placeholder="Search by site name or URL..."
-            :debounce="300"
-            @search="handleSearch"
-          />
+  <div class="min-h-screen">
+    <!-- Page Content -->
+    <div class="px-6 py-8 max-w-[1400px] mx-auto">
+      <!-- Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 text-xs font-medium tracking-widest uppercase mb-2">
+          <span class="text-base-content/50">Management</span>
         </div>
-
-        <!-- Filters -->
-        <div class="flex gap-2">
-          <AdminFilterDropdown
-            v-model="verifiedFilter"
-            :options="verifiedOptions"
-            label="Verified"
-            @change="handleFilterChange"
-          />
-          <AdminFilterDropdown
-            v-model="subscriptionFilter"
-            :options="subscriptionOptions"
-            label="Subscription"
-            @change="handleFilterChange"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Sites Table -->
-    <div class="admin-section">
-      <!-- Loading State -->
-      <div v-if="loading" class="flex items-center justify-center py-12">
-        <span class="loading loading-spinner loading-lg text-primary"></span>
+        <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+          Sites
+        </h1>
+        <p class="mt-2 text-sm text-base-content/60">Manage WordPress sites and their subscriptions</p>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="bg-error/10 rounded-full size-16 flex items-center justify-center mb-4">
-          <svg class="size-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <p class="text-base-content/60 text-sm">{{ error }}</p>
-        <button class="btn btn-sm btn-primary mt-4" @click="fetchSites">
-          Try Again
-        </button>
-      </div>
-
-      <!-- Table -->
-      <div v-else-if="sites.length > 0">
-        <div class="overflow-x-auto">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Site Name</th>
-                <th>URL</th>
-                <th>Owner</th>
-                <th>Users</th>
-                <th>Subscription</th>
-                <th>Verified</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="site in sites"
-                :key="site.id"
-                class="cursor-pointer hover:bg-base-200"
-                @click="navigateToSite(site.id)"
-              >
-                <td>
-                  <div class="font-medium">{{ site.name }}</div>
-                </td>
-                <td>
-                  <div class="text-base-content/60 text-sm truncate max-w-xs" :title="site.url">
-                    {{ site.url }}
-                  </div>
-                </td>
-                <td>
-                  <div class="text-base-content/60">
-                    {{ formatOwnerName(site.owner) }}
-                  </div>
-                  <div class="text-base-content/40 text-xs">{{ site.owner.email }}</div>
-                </td>
-                <td>
-                  <div class="font-medium">{{ site.usersCount }}</div>
-                </td>
-                <td>
-                  <AdminBadge
-                    v-if="site.subscription"
-                    :status="site.subscription.tier"
-                    variant="tier"
-                  />
-                  <AdminBadge
-                    v-else
-                    status="free"
-                    variant="tier"
-                  />
-                </td>
-                <td>
-                  <AdminBadge
-                    :status="site.isVerified ? 'success' : 'warning'"
-                    variant="status"
-                    :custom-text="site.isVerified ? 'Verified' : 'Unverified'"
-                  />
-                </td>
-                <td>
-                  <div class="text-base-content/60 text-sm">
-                    {{ formatDate(site.createdAt) }}
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Pagination -->
-        <div
-          v-if="pagination.totalPages > 1"
-          class="border-t border-base-300 px-6 py-4 flex items-center justify-between"
-        >
-          <div class="text-base-content/60 text-sm">
-            Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, pagination.total) }} of {{ pagination.total }} sites
+      <!-- Filters Card -->
+      <div class="bg-base-100 rounded-xl border border-base-300/50 p-4 shadow-sm mb-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <!-- Search -->
+          <div class="flex-1">
+            <AdminSearchInput
+              v-model="searchQuery"
+              placeholder="Search by site name or URL..."
+              :debounce="300"
+              @search="handleSearch"
+            />
           </div>
-          <div class="flex items-center gap-2">
-            <button
-              class="btn btn-sm btn-ghost"
-              :disabled="pagination.page === 1"
-              @click="handlePageChange(pagination.page - 1)"
-              aria-label="Previous page"
-            >
-              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
 
+          <!-- Filters -->
+          <div class="flex gap-2">
+            <AdminFilterDropdown
+              v-model="verifiedFilter"
+              :options="verifiedOptions"
+              label="Verified"
+              @change="handleFilterChange"
+            />
+            <AdminFilterDropdown
+              v-model="subscriptionFilter"
+              :options="subscriptionOptions"
+              label="Subscription"
+              @change="handleFilterChange"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Sites Table Card -->
+      <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+        <!-- Loading State -->
+        <div v-if="loading" class="flex items-center justify-center py-16">
+          <div class="flex flex-col items-center gap-4">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="text-sm text-base-content/50 font-light tracking-wide">Loading sites...</p>
+          </div>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="flex items-center justify-center py-16">
+          <div class="max-w-md text-center space-y-6">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error/10 border border-error/20">
+              <svg class="w-8 h-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="space-y-2">
+              <h3 class="text-xl text-base-content" style="font-family: 'Instrument Serif', serif;">Unable to Load Sites</h3>
+              <p class="text-sm text-base-content/60 leading-relaxed">{{ error }}</p>
+            </div>
+            <button class="btn btn-outline btn-sm" @click="fetchSites">
+              Try Again
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div v-else-if="sites.length > 0">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-base-300/50">
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Site</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Owner</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Users</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Plan</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Status</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="site in sites"
+                  :key="site.id"
+                  class="border-b border-base-300/30 last:border-b-0 cursor-pointer hover:bg-base-50 transition-colors"
+                  @click="navigateToSite(site.id)"
+                >
+                  <!-- Site Name & URL -->
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-3">
+                      <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/10 text-primary">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                      </div>
+                      <div class="min-w-0">
+                        <div class="font-medium text-base-content hover:text-primary transition-colors truncate max-w-[200px]">
+                          {{ site.name || 'Unnamed Site' }}
+                        </div>
+                        <div class="text-xs text-base-content/50 truncate max-w-[200px]" :title="site.url">
+                          {{ site.url }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Owner -->
+                  <td class="py-4 px-6">
+                    <div class="font-medium text-sm text-base-content">{{ formatOwnerName(site.owner) }}</div>
+                    <div class="text-xs text-base-content/50">{{ site.owner.email }}</div>
+                  </td>
+
+                  <!-- Users Count -->
+                  <td class="py-4 px-6">
+                    <span class="text-sm font-medium text-base-content">{{ site.usersCount }}</span>
+                  </td>
+
+                  <!-- Subscription Tier -->
+                  <td class="py-4 px-6">
+                    <span
+                      class="text-sm font-medium"
+                      :class="site.subscription && site.subscription.tier !== 'free' ? 'text-base-content' : 'text-base-content/50'"
+                    >
+                      {{ formatTier(site.subscription?.tier) }}
+                    </span>
+                  </td>
+
+                  <!-- Verified Status -->
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-1.5">
+                      <template v-if="site.isVerified">
+                        <svg class="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-sm text-base-content">Verified</span>
+                      </template>
+                      <template v-else>
+                        <span class="text-sm text-base-content/50">Pending</span>
+                      </template>
+                    </div>
+                  </td>
+
+                  <!-- Created Date -->
+                  <td class="py-4 px-6">
+                    <span class="text-sm text-base-content/70">{{ formatDate(site.createdAt) }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div
+            v-if="pagination.totalPages > 1"
+            class="border-t border-base-300/50 px-6 py-4 flex items-center justify-between"
+          >
+            <div class="text-sm text-base-content/60">
+              Showing <span class="font-medium text-base-content">{{ startIndex + 1 }}</span> to <span class="font-medium text-base-content">{{ Math.min(endIndex, pagination.total) }}</span> of <span class="font-medium text-base-content">{{ pagination.total }}</span> sites
+            </div>
             <div class="flex items-center gap-1">
               <button
-                v-for="page in visiblePages"
-                :key="page"
-                class="btn btn-sm"
-                :class="page === pagination.page ? 'btn-primary' : 'btn-ghost'"
-                @click="handlePageChange(page)"
-                :aria-label="`Go to page ${page}`"
-                :aria-current="page === pagination.page ? 'page' : undefined"
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-base-content/60 hover:text-base-content hover:bg-base-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                :disabled="pagination.page === 1"
+                @click="handlePageChange(pagination.page - 1)"
+                aria-label="Previous page"
               >
-                {{ page }}
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div class="flex items-center gap-1">
+                <button
+                  v-for="page in visiblePages"
+                  :key="page"
+                  class="min-w-[32px] h-8 px-2 flex items-center justify-center rounded-lg text-sm font-medium transition-all"
+                  :class="page === pagination.page
+                    ? 'bg-primary text-primary-content'
+                    : 'text-base-content/60 hover:text-base-content hover:bg-base-200'"
+                  @click="handlePageChange(page)"
+                  :aria-label="`Go to page ${page}`"
+                  :aria-current="page === pagination.page ? 'page' : undefined"
+                >
+                  {{ page }}
+                </button>
+              </div>
+
+              <button
+                class="w-8 h-8 flex items-center justify-center rounded-lg text-base-content/60 hover:text-base-content hover:bg-base-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                :disabled="pagination.page === pagination.totalPages"
+                @click="handlePageChange(pagination.page + 1)"
+                aria-label="Next page"
+              >
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
-
-            <button
-              class="btn btn-sm btn-ghost"
-              :disabled="pagination.page === pagination.totalPages"
-              @click="handlePageChange(pagination.page + 1)"
-              aria-label="Next page"
-            >
-              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Empty State -->
-      <div v-else class="flex flex-col items-center justify-center py-12 text-center">
-        <div class="bg-base-200 rounded-full size-16 flex items-center justify-center mb-4">
-          <svg class="size-8 text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-          </svg>
+        <!-- Empty State -->
+        <div v-else class="flex flex-col items-center justify-center py-16 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+            </svg>
+          </div>
+          <h3 class="text-lg text-base-content mb-1" style="font-family: 'Instrument Serif', serif;">No sites found</h3>
+          <p class="text-sm text-base-content/50">Try adjusting your search or filters</p>
         </div>
-        <p class="text-base-content/60 text-sm mb-1">No sites found</p>
-        <p class="text-base-content/40 text-xs">Try adjusting your filters</p>
       </div>
     </div>
   </div>
@@ -358,6 +393,19 @@ const formatOwnerName = (owner: Owner): string => {
     return owner.lastname
   }
   return owner.email
+}
+
+const formatTier = (tier: string | undefined): string => {
+  if (!tier || tier === 'free') {
+    return 'Free'
+  }
+  const tierMap: Record<string, string> = {
+    pro: 'Pro',
+    professional: 'Pro',
+    enterprise: 'Enterprise',
+    basic: 'Basic',
+  }
+  return tierMap[tier.toLowerCase()] || tier.charAt(0).toUpperCase() + tier.slice(1)
 }
 
 const formatDate = (dateString: string): string => {
