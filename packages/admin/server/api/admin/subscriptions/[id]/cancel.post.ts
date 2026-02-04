@@ -4,7 +4,14 @@ import Stripe from 'stripe'
 
 /**
  * POST /api/admin/subscriptions/[id]/cancel
- * Cancel subscription in Stripe and update database status
+ * Cancel subscription - behavior depends on whether Stripe is connected
+ *
+ * Two paths:
+ * 1. Has Stripe subscription: Set cancel_at_period_end via Stripe API
+ *    - User retains access until period ends
+ *    - Stripe webhooks will finalize cancellation
+ * 2. No Stripe subscription: Immediately set to free tier
+ *    - Direct database update, takes effect immediately
  */
 export default defineEventHandler(async (event) => {
   // Check admin session
@@ -42,6 +49,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const currentSubscription = subscriptionResult[0]
+    const hasStripeSubscription = !!currentSubscription.stripe_subscription_id
 
     // Check if already canceled
     if (currentSubscription.status === 'canceled') {
@@ -51,8 +59,16 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Cancel in Stripe if there's a Stripe subscription
-    if (currentSubscription.stripe_subscription_id) {
+    // For non-Stripe subscriptions that are already free, nothing to cancel
+    if (!hasStripeSubscription && currentSubscription.tier === 'free') {
+      throw createError({
+        statusCode: 400,
+        message: 'Subscription is already on free tier',
+      })
+    }
+
+    // PATH 1: Has Stripe subscription - cancel via Stripe API
+    if (hasStripeSubscription) {
       const config = useRuntimeConfig()
       const stripe = new Stripe(config.stripeSecretKey, {
         apiVersion: '2024-11-20.acacia',
@@ -60,7 +76,7 @@ export default defineEventHandler(async (event) => {
 
       try {
         // Cancel at period end to allow access until current period expires
-        await stripe.subscriptions.update(currentSubscription.stripe_subscription_id, {
+        await stripe.subscriptions.update(currentSubscription.stripe_subscription_id!, {
           cancel_at_period_end: true,
         })
       } catch (stripeError: any) {
@@ -70,46 +86,67 @@ export default defineEventHandler(async (event) => {
           message: 'Failed to cancel subscription in Stripe',
         })
       }
+
+      // Update database to reflect pending cancellation
+      await db
+        .update(subscriptions)
+        .set({
+          cancel_at_period_end: true,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(subscriptions.id, subscriptionId))
+    } else {
+      // PATH 2: No Stripe subscription - immediate downgrade to free
+      await db
+        .update(subscriptions)
+        .set({
+          tier: 'free',
+          status: 'free',
+          cancel_at_period_end: false,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(subscriptions.id, subscriptionId))
     }
 
-    // Update subscription in database
-    await db
-      .update(subscriptions)
-      .set({
-        cancel_at_period_end: true,
-        status: currentSubscription.stripe_subscription_id ? 'canceled' : 'free',
-        tier: 'free',
-        updatedAt: new Date().toISOString(),
+    // Create audit log entry (don't let audit log failures break the operation)
+    try {
+      await db.insert(auditLogs).values({
+        admin_id: session.user.id,
+        action: 'subscription_canceled',
+        entity_type: 'subscription',
+        entity_id: subscriptionId,
+        changes: JSON.stringify({
+          before: {
+            status: currentSubscription.status,
+            tier: currentSubscription.tier,
+            cancel_at_period_end: currentSubscription.cancel_at_period_end,
+          },
+          after: hasStripeSubscription
+            ? {
+                cancel_at_period_end: true,
+              }
+            : {
+                status: 'free',
+                tier: 'free',
+                cancel_at_period_end: false,
+              },
+          hasStripe: hasStripeSubscription,
+        }),
+        ip_address: getRequestIP(event) || null,
+        user_agent: getHeader(event, 'user-agent') || null,
+        createdAt: new Date().toISOString(),
       })
-      .where(eq(subscriptions.id, subscriptionId))
-
-    // Create audit log entry
-    await db.insert(auditLogs).values({
-      admin_id: session.user.id,
-      action: 'subscription_canceled',
-      entity_type: 'subscription',
-      entity_id: subscriptionId,
-      changes: JSON.stringify({
-        before: {
-          status: currentSubscription.status,
-          tier: currentSubscription.tier,
-          cancel_at_period_end: currentSubscription.cancel_at_period_end,
-        },
-        after: {
-          status: currentSubscription.stripe_subscription_id ? 'canceled' : 'free',
-          tier: 'free',
-          cancel_at_period_end: true,
-        },
-      }),
-      ip_address: getRequestIP(event) || null,
-      user_agent: getHeader(event, 'user-agent') || null,
-      createdAt: new Date().toISOString(),
-    })
+    } catch (auditError) {
+      console.warn('Failed to create audit log:', auditError)
+    }
 
     return {
       success: true,
-      message: 'Subscription canceled successfully',
-      cancel_at_period_end: true,
+      message: hasStripeSubscription
+        ? 'Subscription will be canceled at end of billing period'
+        : 'Subscription downgraded to free tier',
+      cancel_at_period_end: hasStripeSubscription,
+      hasStripe: hasStripeSubscription,
     }
   } catch (error) {
     // If it's already a createError, re-throw it

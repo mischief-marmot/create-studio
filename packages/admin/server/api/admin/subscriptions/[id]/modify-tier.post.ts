@@ -5,7 +5,10 @@ import Stripe from 'stripe'
 /**
  * POST /api/admin/subscriptions/[id]/modify-tier
  * Modify subscription tier (upgrade/downgrade/grant free pro)
- * Updates both database and Stripe subscription
+ *
+ * Two paths:
+ * 1. No Stripe subscription: Direct database toggle (immediate effect)
+ * 2. Has Stripe subscription: Cancel via Stripe API when downgrading to free
  */
 export default defineEventHandler(async (event) => {
   // Check admin session
@@ -54,6 +57,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const currentSubscription = subscriptionResult[0]
+    const hasStripeSubscription = !!currentSubscription.stripe_subscription_id
 
     // Check if tier is already set
     if (currentSubscription.tier === tier) {
@@ -63,24 +67,34 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Update Stripe subscription if applicable
-    if (currentSubscription.stripe_subscription_id && tier === 'free') {
-      // If downgrading to free and there's a Stripe subscription, cancel it
+    // PATH 1: Has Stripe subscription - need to handle via Stripe
+    if (hasStripeSubscription && tier === 'free') {
+      // Downgrading to free with a Stripe subscription - cancel it in Stripe
       const config = useRuntimeConfig()
       const stripe = new Stripe(config.stripeSecretKey, {
         apiVersion: '2024-11-20.acacia',
       })
 
       try {
-        await stripe.subscriptions.cancel(currentSubscription.stripe_subscription_id)
+        await stripe.subscriptions.cancel(currentSubscription.stripe_subscription_id!)
       } catch (stripeError: any) {
         console.error('Stripe cancellation error:', stripeError)
         // Continue with database update even if Stripe fails
       }
     }
 
-    // Determine new status based on tier
-    const newStatus = tier === 'free' ? 'free' : currentSubscription.status
+    // PATH 2: No Stripe subscription - direct database update
+    // Determine new status based on tier and Stripe status
+    let newStatus: string
+    if (tier === 'free') {
+      newStatus = 'free'
+    } else if (hasStripeSubscription) {
+      // Keep current Stripe status
+      newStatus = currentSubscription.status
+    } else {
+      // No Stripe, upgrading to pro - set to active (admin-granted pro)
+      newStatus = 'active'
+    }
 
     // Update subscription in database
     await db
@@ -88,36 +102,45 @@ export default defineEventHandler(async (event) => {
       .set({
         tier,
         status: newStatus,
+        // Clear cancel_at_period_end if upgrading
+        cancel_at_period_end: tier === 'pro' ? false : currentSubscription.cancel_at_period_end,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(subscriptions.id, subscriptionId))
 
     // Create audit log entry
-    await db.insert(auditLogs).values({
-      admin_id: session.user.id,
-      action: 'subscription_tier_modified',
-      entity_type: 'subscription',
-      entity_id: subscriptionId,
-      changes: JSON.stringify({
-        before: {
-          tier: currentSubscription.tier,
-          status: currentSubscription.status,
-        },
-        after: {
-          tier,
-          status: newStatus,
-        },
-      }),
-      ip_address: getRequestIP(event) || null,
-      user_agent: getHeader(event, 'user-agent') || null,
-      createdAt: new Date().toISOString(),
-    })
+    try {
+      await db.insert(auditLogs).values({
+        admin_id: session.user.id,
+        action: 'subscription_tier_modified',
+        entity_type: 'subscription',
+        entity_id: subscriptionId,
+        changes: JSON.stringify({
+          before: {
+            tier: currentSubscription.tier,
+            status: currentSubscription.status,
+          },
+          after: {
+            tier,
+            status: newStatus,
+          },
+        }),
+        ip_address: getRequestIP(event) || null,
+        user_agent: getHeader(event, 'user-agent') || null,
+        createdAt: new Date().toISOString(),
+      })
+    } catch (auditError) {
+      console.warn('Failed to create audit log:', auditError)
+    }
 
     return {
       success: true,
-      message: `Subscription tier updated to ${tier} successfully`,
+      message: hasStripeSubscription && tier === 'free'
+        ? `Subscription downgraded to free. Stripe subscription canceled.`
+        : `Subscription tier updated to ${tier} successfully`,
       tier,
       status: newStatus,
+      hasStripe: hasStripeSubscription,
     }
   } catch (error) {
     // If it's already a createError, re-throw it
