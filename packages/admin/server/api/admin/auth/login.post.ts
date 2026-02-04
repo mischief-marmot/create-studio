@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { admins, auditLogs } from "~~/server/utils/db"
 
 export default defineEventHandler(async (event) => {

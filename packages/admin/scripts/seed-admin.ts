@@ -14,7 +14,7 @@
 
 import { createInterface } from 'node:readline'
 import { stdin as input, stdout as output } from 'node:process'
-import { hash } from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import Database from 'better-sqlite3'
 import { existsSync, readdirSync } from 'node:fs'
@@ -156,7 +156,7 @@ async function seedAdmin() {
   try {
     // Hash password
     console.log('\nHashing password...')
-    const passwordHash = await hash(password, BCRYPT_ROUNDS)
+    const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
 
     // Connect to database
     console.log('Connecting to database...')

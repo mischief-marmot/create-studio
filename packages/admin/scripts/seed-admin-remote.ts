@@ -10,7 +10,7 @@
 import { execSync } from 'node:child_process'
 import { createInterface } from 'node:readline'
 import { stdin as input, stdout as output } from 'node:process'
-import { hash } from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 const BCRYPT_ROUNDS = 10
 const DATABASE_NAME = 'create-studio' // Change to 'create-studio-preview' for preview
@@ -45,7 +45,7 @@ async function main() {
 
   // Hash password
   console.log('\nHashing password...')
-  const passwordHash = await hash(password, BCRYPT_ROUNDS)
+  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
 
   // Build SQL command
   const sql = `INSERT INTO Admins (email, password, role, createdAt, updatedAt) VALUES ('${email}', '${passwordHash}', 'super_admin', datetime('now'), datetime('now'))`
