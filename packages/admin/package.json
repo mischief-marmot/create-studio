@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev --port 3002",
-    "prebuild": "mkdir -p ../app/.nuxt && echo '{\"compilerOptions\":{\"paths\":{}}}' > ../app/.nuxt/tsconfig.json",
+    "prebuild": "node scripts/prebuild.js",
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "seed": "tsx --tsconfig scripts/tsconfig.json scripts/seed-admin.ts",
+    "seed:remote": "tsx --tsconfig scripts/tsconfig.json scripts/seed-admin-remote.ts",
     "test": "vitest run --passWithNoTests",
     "typecheck": "nuxt typecheck"
   },

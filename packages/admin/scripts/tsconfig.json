@@ -7,6 +7,9 @@
     "skipLibCheck": true,
     "strict": true,
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
-  }
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {}
+  },
+  "include": ["*.ts"]
 }
