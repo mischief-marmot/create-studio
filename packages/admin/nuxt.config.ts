@@ -37,6 +37,7 @@ export default defineNuxtConfig({
 
   hub: {
     // Share database with main app
+    dir: "../app/.data/hub",
     db: {
       dialect: "sqlite",
     },
