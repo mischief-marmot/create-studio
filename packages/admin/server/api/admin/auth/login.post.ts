@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import { admins, auditLogs } from "~~/server/utils/db"
 
 export default defineEventHandler(async (event) => {
-  // db is auto-imported from hub:db
+  const db = useAdminDb(event)
   const config = useRuntimeConfig()
 
   // Parse request body
@@ -73,15 +73,19 @@ export default defineEventHandler(async (event) => {
   const userAgent = headers['user-agent'] || 'unknown'
 
   // Create audit log entry
-  await db.insert(auditLogs).values({
-    admin_id: admin.id,
-    action: 'login',
-    entity_type: 'admin',
-    entity_id: admin.id,
-    ip_address: Array.isArray(ipAddress) ? ipAddress[0] : ipAddress,
-    user_agent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
-    createdAt: new Date().toISOString(),
-  })
+  try {
+    await db.insert(auditLogs).values({
+      admin_id: admin.id,
+      action: 'login',
+      entity_type: 'admin',
+      entity_id: admin.id,
+      ip_address: Array.isArray(ipAddress) ? ipAddress[0] : ipAddress,
+      user_agent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
+      createdAt: new Date().toISOString(),
+    })
+  } catch (auditError) {
+    console.warn('Failed to create audit log:', auditError)
+  }
 
   // Create session
   await setUserSession(event, {
