@@ -29,8 +29,4 @@ CREATE TABLE `AuditLogs` (
 CREATE INDEX `idx_audit_logs_admin_id` ON `AuditLogs` (`admin_id`);--> statement-breakpoint
 CREATE INDEX `idx_audit_logs_action` ON `AuditLogs` (`action`);--> statement-breakpoint
 CREATE INDEX `idx_audit_logs_entity_type` ON `AuditLogs` (`entity_type`);--> statement-breakpoint
-CREATE INDEX `idx_audit_logs_created_at` ON `AuditLogs` (`createdAt`);--> statement-breakpoint
-ALTER TABLE `SiteUsers` ADD `verification_code` text;--> statement-breakpoint
-ALTER TABLE `SiteUsers` ADD `user_token` text;--> statement-breakpoint
-CREATE INDEX `idx_site_users_verification_code` ON `SiteUsers` (`verification_code`);--> statement-breakpoint
-CREATE INDEX `idx_site_users_user_token` ON `SiteUsers` (`user_token`);
+CREATE INDEX `idx_audit_logs_created_at` ON `AuditLogs` (`createdAt`);
