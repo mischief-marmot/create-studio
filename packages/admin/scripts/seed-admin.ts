@@ -44,30 +44,33 @@ const __dirname = dirname(__filename)
 const BCRYPT_ROUNDS = 10
 
 /**
- * Finds the Wrangler D1 database file
+ * Finds the NuxtHub D1 database file
  */
 function findDatabasePath(): string {
-  // Look for the database in the app's .wrangler directory
+  // Look for the database in the app's .data/hub directory (NuxtHub location)
   // Script is in packages/admin/scripts/, so go up to root, then to app
   const rootDir = join(__dirname, '../../..')
+  const hubDbPath = join(rootDir, 'packages/app/.data/hub/db/sqlite.db')
+
+  if (existsSync(hubDbPath)) {
+    return hubDbPath
+  }
+
+  // Fallback: check older Wrangler location
   const wranglerDir = join(rootDir, 'packages/app/.wrangler/state/v3/d1/miniflare-D1DatabaseObject')
 
-  if (!existsSync(wranglerDir)) {
-    throw new Error(
-      'Database directory not found. Please run the dev server at least once to create the database:\n' +
-      '  cd packages/app && npm run dev'
-    )
+  if (existsSync(wranglerDir)) {
+    const files = readdirSync(wranglerDir)
+    const sqliteFile = files.find(f => f.endsWith('.sqlite'))
+    if (sqliteFile) {
+      return join(wranglerDir, sqliteFile)
+    }
   }
 
-  // Find the .sqlite file
-  const files = readdirSync(wranglerDir)
-  const sqliteFile = files.find(f => f.endsWith('.sqlite'))
-
-  if (!sqliteFile) {
-    throw new Error('Database file not found in .wrangler directory')
-  }
-
-  return join(wranglerDir, sqliteFile)
+  throw new Error(
+    'Database file not found. Please run the dev server at least once to create the database:\n' +
+    '  cd packages/app && npm run dev'
+  )
 }
 
 /**

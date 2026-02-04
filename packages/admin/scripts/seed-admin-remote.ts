@@ -47,10 +47,12 @@ async function main() {
   console.log('\nHashing password...')
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS)
 
-  // Build SQL command
-  const sql = `INSERT INTO Admins (email, password, role, createdAt, updatedAt) VALUES ('${email}', '${passwordHash}', 'super_admin', datetime('now'), datetime('now'))`
+  // Build SQL command - escape $ in hash to prevent shell interpolation
+  const escapedHash = passwordHash.replace(/\$/g, '\\$')
+  const sql = `INSERT INTO Admins (email, password, role, createdAt, updatedAt) VALUES ('${email}', '${escapedHash}', 'super_admin', datetime('now'), datetime('now'))`
 
   console.log('\nExecuting on remote D1...')
+  console.log('Hash preview:', passwordHash.substring(0, 10) + '...')
 
   try {
     execSync(`npx wrangler d1 execute ${DATABASE_NAME} --remote --command "${sql}"`, {
