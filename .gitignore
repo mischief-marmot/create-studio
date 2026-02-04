@@ -50,3 +50,4 @@ packages/app/.data
 webhook-*.pem
 *.pem
 packages/admin/.data
+packages/app/.data/hub

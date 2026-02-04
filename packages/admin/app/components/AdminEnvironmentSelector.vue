@@ -3,7 +3,7 @@
     <button
       tabindex="0"
       class="btn btn-ghost btn-sm gap-2"
-      :disabled="isLoading || isLocal"
+      :disabled="isLoading"
       :aria-label="`Current environment: ${getLabel(environment)}. Click to change.`"
     >
       <span v-if="isLoading" class="loading loading-spinner loading-xs"></span>

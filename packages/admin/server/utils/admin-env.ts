@@ -65,8 +65,9 @@ export function setAdminEnvironment(event: H3Event, env: AdminEnvironment): void
  * Get the Cloudflare bindings for the current admin environment
  * Returns appropriate bindings based on the selected environment (production or preview)
  *
- * In local development, cloudflare.env may not exist, so we handle that gracefully
- * by setting isLocal: true and returning undefined bindings.
+ * In dev mode (local or --remote), we use NuxtHub's auto-imported db and only support
+ * the default environment. Multi-environment switching only works when deployed to
+ * Cloudflare Workers where we have direct access to both DB and DB_PREVIEW bindings.
  *
  * @param event - H3 event from the request
  * @returns Admin environment bindings with db, blob, kv, cache, and metadata
@@ -75,14 +76,18 @@ export function useAdminEnv(event: H3Event): AdminEnvBindings {
   const environment = getAdminEnvironment(event)
   const cloudflareEnv = event.context.cloudflare?.env as Record<string, unknown> | undefined
 
-  // Handle local development where cloudflare.env doesn't exist
-  if (!cloudflareEnv) {
+  // Check if we have direct Cloudflare bindings (deployed to Workers)
+  // In dev mode, cloudflare.env may not exist or DB binding may not be set
+  const hasCloudflareBindings = cloudflareEnv && cloudflareEnv.DB
+
+  // Handle dev mode (local or --remote) - use NuxtHub's mechanism
+  if (!hasCloudflareBindings) {
     return {
       db: undefined as unknown as D1Database,
       blob: undefined as unknown as R2Bucket,
       kv: undefined as unknown as KVNamespace,
       cache: undefined as unknown as KVNamespace,
-      environment,
+      environment: 'production', // Only production available in dev
       isLocal: true,
     }
   }

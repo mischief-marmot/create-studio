@@ -101,7 +101,9 @@ const handleLogout = async () => {
           <h1 class="text-lg font-bold">Create Studio Admin</h1>
         </div>
         <div class="flex-none flex items-center gap-2">
-          <AdminEnvironmentSelector />
+          <ClientOnly>
+            <AdminEnvironmentSelector />
+          </ClientOnly>
           <button
             class="btn btn-square btn-ghost"
             @click="toggleTheme"
@@ -134,11 +136,13 @@ const handleLogout = async () => {
       <div class="p-6 border-b border-base-300">
         <h1 class="font-bold text-xl text-base-content flex items-center gap-2">
           Create Studio Admin
-          <span
-            class="size-2 rounded-full"
-            :class="environment === 'production' ? 'bg-success' : 'bg-warning'"
-            :title="`${environment.charAt(0).toUpperCase() + environment.slice(1)} environment`"
-          ></span>
+          <ClientOnly>
+            <span
+              class="size-2 rounded-full"
+              :class="environment === 'production' ? 'bg-success' : 'bg-warning'"
+              :title="`${environment.charAt(0).toUpperCase() + environment.slice(1)} environment`"
+            ></span>
+          </ClientOnly>
         </h1>
         <p class="text-sm text-base-content/60 mt-1">Management Portal</p>
       </div>
@@ -203,7 +207,9 @@ const handleLogout = async () => {
           <!-- Breadcrumb or page title could go here -->
         </div>
         <div class="flex-none flex items-center gap-2">
-          <AdminEnvironmentSelector />
+          <ClientOnly>
+            <AdminEnvironmentSelector />
+          </ClientOnly>
           <button
             class="btn btn-square btn-ghost"
             @click="toggleTheme"
@@ -228,9 +234,11 @@ const handleLogout = async () => {
       ]"
     >
       <!-- Environment warning banner -->
-      <div v-if="environment === 'preview'" class="bg-warning/10 border-b border-warning/20 px-4 py-2 text-warning text-sm text-center">
-        You are viewing <strong>Preview</strong> environment data
-      </div>
+      <ClientOnly>
+        <div v-if="environment === 'preview'" class="bg-warning/10 border-b border-warning/20 px-4 py-2 text-warning text-sm text-center">
+          You are viewing <strong>Preview</strong> environment data
+        </div>
+      </ClientOnly>
       <div class="p-6">
         <slot />
       </div>

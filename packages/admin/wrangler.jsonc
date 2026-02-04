@@ -12,16 +12,32 @@
     {
       "binding": "BLOB",
       "bucket_name": "create-studio"
+    },
+    {
+      "binding": "BLOB_PREVIEW",
+      "bucket_name": "create-studio-preview"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "KV",
-      "id": "7dc773eb80a44b2ab23ec5f0823a12a3"
+      "id": "7dc773eb80a44b2ab23ec5f0823a12a3",
+      "preview_id": "7dc773eb80a44b2ab23ec5f0823a12a3"
     },
     {
       "binding": "CACHE",
-      "id": "ed9b7bfcb79f4e1ba2e3e94961bb0192"
+      "id": "ed9b7bfcb79f4e1ba2e3e94961bb0192",
+      "preview_id": "ed9b7bfcb79f4e1ba2e3e94961bb0192"
+    },
+    {
+      "binding": "KV_PREVIEW",
+      "id": "9db8b6ec8e6640808667c975f906e232",
+      "preview_id": "9db8b6ec8e6640808667c975f906e232"
+    },
+    {
+      "binding": "CACHE_PREVIEW",
+      "id": "0224961fc68b48e7bb65cab509fe6c83",
+      "preview_id": "0224961fc68b48e7bb65cab509fe6c83"
     }
   ],
   "d1_databases": [
@@ -31,41 +47,16 @@
       "database_id": "75b7c9cc-c82c-41c2-b1dc-ac3a50a86b19",
       "migrations_table": "_hub_migrations",
       "migrations_dir": "./.output/server/db/migrations"
+    },
+    {
+      "binding": "DB_PREVIEW",
+      "database_name": "create-studio-preview",
+      "database_id": "d0f371df-bcba-4017-a34d-2987d3d408aa",
+      "migrations_table": "_hub_migrations",
+      "migrations_dir": "./.output/server/db/migrations"
     }
   ],
   "vars": {
     "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio Admin"
-  },
-  "env": {
-    "preview": {
-      "name": "create-studio-admin-preview",
-      "r2_buckets": [
-        {
-          "binding": "BLOB",
-          "bucket_name": "create-studio-preview"
-        }
-      ],
-      "kv_namespaces": [
-        {
-          "binding": "KV",
-          "id": "9db8b6ec8e6640808667c975f906e232"
-        },
-        {
-          "binding": "CACHE",
-          "id": "0224961fc68b48e7bb65cab509fe6c83"
-        }
-      ],
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_id": "d0f371df-bcba-4017-a34d-2987d3d408aa",
-          "migrations_table": "_hub_migrations",
-          "migrations_dir": "./.output/server/db/migrations"
-        }
-      ],
-      "vars": {
-        "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio Admin"
-      }
-    }
   }
 }

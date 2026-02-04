@@ -1,4 +1,4 @@
-import { ref, readonly } from 'vue'
+import { readonly } from 'vue'
 
 /**
  * Admin environment type
@@ -17,13 +17,22 @@ interface EnvironmentResponse {
 /**
  * Admin environment composable
  * Provides environment detection and switching for admin portal
+ *
+ * Uses useCookie to read initial state for SSR hydration consistency
  */
 export const useAdminEnvironment = () => {
-  const environment = ref<AdminEnvironment>('production')
-  const availableEnvironments = ref<string[]>(['production', 'preview'])
-  const isLoading = ref(false)
-  const error = ref<string | null>(null)
-  const isLocal = ref(false)
+  // Read environment from cookie for SSR consistency
+  // This ensures server and client render the same initial value
+  const envCookie = useCookie<AdminEnvironment>('admin_environment', {
+    default: () => 'production',
+  })
+
+  // Use useState for SSR-safe state that persists across hydration
+  const environment = useState<AdminEnvironment>('admin-environment', () => envCookie.value || 'production')
+  const availableEnvironments = useState<string[]>('admin-available-environments', () => ['production', 'preview'])
+  const isLoading = useState('admin-env-loading', () => false)
+  const error = useState<string | null>('admin-env-error', () => null)
+  const isLocal = useState('admin-env-is-local', () => false)
 
   /**
    * Fetch current environment from server

@@ -1,4 +1,4 @@
-import { getAdminEnvironment, useAdminEnv } from '../../utils/admin-env'
+import { useAdminEnv } from '../../utils/admin-env'
 import type { AdminEnvironment } from '../../utils/admin-env'
 
 /**
@@ -25,12 +25,17 @@ export default defineEventHandler(async (event): Promise<EnvironmentResponse> =>
   }
 
   // Get current environment info
-  const environment = getAdminEnvironment(event)
   const adminEnv = useAdminEnv(event)
 
+  // In local/dev mode, only production is available
+  // Both environments only available when deployed to Cloudflare
+  const availableEnvironments: AdminEnvironment[] = adminEnv.isLocal
+    ? ['production']
+    : ['production', 'preview']
+
   return {
-    environment,
-    availableEnvironments: ['production', 'preview'],
+    environment: adminEnv.environment,
+    availableEnvironments,
     isLocal: adminEnv.isLocal,
   }
 })
