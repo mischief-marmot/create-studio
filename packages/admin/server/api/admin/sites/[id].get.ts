@@ -51,6 +51,8 @@ export default defineEventHandler(async (event) => {
         ownerEmail: users.email,
         ownerFirstname: users.firstname,
         ownerLastname: users.lastname,
+        ownerCreatedAt: users.createdAt,
+        ownerUpdatedAt: users.updatedAt,
       })
       .from(sites)
       .innerJoin(users, eq(sites.user_id, users.id))
@@ -121,6 +123,9 @@ export default defineEventHandler(async (event) => {
 
     const subscription = subscriptionResult[0] || null
 
+    // Helper: check if a string is a valid ISO-ish date (starts with a 4-digit year)
+    const isValidDate = (s: string | null) => s != null && /^\d{4}-/.test(s)
+
     return {
       id: site.id,
       name: site.name,
@@ -152,8 +157,8 @@ export default defineEventHandler(async (event) => {
         joined_at: user.joined_at,
       })),
       subscription,
-      createdAt: site.createdAt,
-      updatedAt: site.updatedAt,
+      createdAt: isValidDate(site.createdAt) ? site.createdAt : (site.ownerCreatedAt ?? null),
+      updatedAt: isValidDate(site.updatedAt) ? site.updatedAt : (site.ownerUpdatedAt ?? null),
     }
   } catch (error) {
     // If it's already a createError, re-throw it
