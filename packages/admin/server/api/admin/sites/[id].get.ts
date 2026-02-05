@@ -85,6 +85,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get all associated users from SiteUsers table
+    // For legacy sites, look up users from the canonical site
+    const siteUsersLookupId = site.canonical_site_id ?? siteId
     const associatedUsers = await db
       .select({
         userId: siteUsers.user_id,
@@ -97,10 +99,11 @@ export default defineEventHandler(async (event) => {
       })
       .from(siteUsers)
       .innerJoin(users, eq(siteUsers.user_id, users.id))
-      .where(eq(siteUsers.site_id, siteId))
+      .where(eq(siteUsers.site_id, siteUsersLookupId))
       .orderBy(desc(siteUsers.joined_at))
 
     // Get subscription info for this site
+    // For legacy sites, look up subscription from the canonical site
     const subscriptionResult = await db
       .select({
         id: subscriptions.id,
@@ -113,7 +116,7 @@ export default defineEventHandler(async (event) => {
         stripe_subscription_id: subscriptions.stripe_subscription_id,
       })
       .from(subscriptions)
-      .where(eq(subscriptions.site_id, siteId))
+      .where(eq(subscriptions.site_id, siteUsersLookupId))
       .limit(1)
 
     const subscription = subscriptionResult[0] || null

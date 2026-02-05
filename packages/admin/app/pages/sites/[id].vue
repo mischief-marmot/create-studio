@@ -44,10 +44,42 @@
             <span class="text-base-content/50">Site Details</span>
             <span class="text-base-content/30">·</span>
             <span class="text-base-content/40">ID {{ site.id }}</span>
+            <span v-if="isCanonical" class="text-base-content/30">·</span>
+            <span v-if="isCanonical" class="text-success/70">Canonical</span>
+            <span v-if="isLegacy" class="text-base-content/30">·</span>
+            <span v-if="isLegacy" class="text-warning/70">Legacy</span>
           </div>
           <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
             {{ site.name || site.url }}
           </h1>
+        </div>
+      </div>
+
+      <!-- Legacy Site Banner -->
+      <div v-if="isLegacy" class="mb-8 bg-warning/10 border border-warning/30 rounded-xl p-6">
+        <div class="flex items-start gap-4">
+          <div class="shrink-0 mt-0.5">
+            <svg class="w-5 h-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-sm font-semibold text-base-content">This is a legacy site record</h3>
+            <p class="text-sm text-base-content/70">
+              This site ID is a duplicate registration. All users, subscriptions, and settings are managed on the canonical site.
+              Actions are disabled on legacy sites.
+            </p>
+            <NuxtLink
+              :to="`/sites/${site.canonical_site.id}`"
+              class="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+            >
+              Go to canonical site: {{ site.canonical_site.name || site.canonical_site.url }}
+              <span class="text-base-content/40">#{{ site.canonical_site.id }}</span>
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </NuxtLink>
+          </div>
         </div>
       </div>
 
@@ -206,6 +238,7 @@
                   {{ site.associated_users.length }}
                 </div>
                 <button
+                  v-if="!isLegacy"
                   class="btn btn-sm btn-primary"
                   @click="openAddUserModal"
                   :disabled="actionLoading"
@@ -235,7 +268,7 @@
                     <th class="text-left py-3 px-4 text-xs font-medium text-base-content/50 uppercase tracking-wider">Role</th>
                     <th class="text-left py-3 px-4 text-xs font-medium text-base-content/50 uppercase tracking-wider">Status</th>
                     <th class="text-left py-3 px-4 text-xs font-medium text-base-content/50 uppercase tracking-wider">Joined</th>
-                    <th class="text-right py-3 px-4 text-xs font-medium text-base-content/50 uppercase tracking-wider">Actions</th>
+                    <th v-if="!isLegacy" class="text-right py-3 px-4 text-xs font-medium text-base-content/50 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -264,7 +297,7 @@
                     <td class="py-4 px-4">
                       <span class="text-sm text-base-content/70">{{ formatDate(user.joined_at) }}</span>
                     </td>
-                    <td class="py-4 px-4">
+                    <td v-if="!isLegacy" class="py-4 px-4">
                       <div class="flex items-center justify-end gap-1" @click.stop>
                         <!-- Change Role Dropdown -->
                         <div class="dropdown dropdown-end">
@@ -345,6 +378,7 @@
               </div>
               <p class="text-sm text-base-content/50 mb-4">No active subscription</p>
               <button
+                v-if="!isLegacy"
                 class="btn btn-sm btn-primary"
                 @click="openCreateSubscriptionModal"
                 :disabled="actionLoading"
@@ -774,6 +808,10 @@ const editForm = ref({
   interactive_mode_button_text: '',
 })
 
+// Computed: canonical vs legacy site
+const isLegacy = computed(() => !!site.value?.canonical_site)
+const isCanonical = computed(() => site.value !== null && !site.value.canonical_site)
+
 // Computed: all owners from associated users + the primary owner
 const siteOwners = computed(() => {
   if (!site.value) return []
@@ -1154,6 +1192,7 @@ const saveButtonTextChange = async () => {
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
+  if (isNaN(date.getTime())) return 'N/A'
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
