@@ -7,6 +7,7 @@ import {
   CreditCardIcon,
   GlobeAltIcon,
   DocumentTextIcon,
+  ChartBarIcon,
   ArrowLeftStartOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
@@ -31,6 +32,7 @@ const navigation = [
   { name: 'Subscriptions', href: '/subscriptions', icon: CreditCardIcon },
   { name: 'Sites', href: '/sites', icon: GlobeAltIcon },
   { name: 'Audit Logs', href: '/audit-logs', icon: DocumentTextIcon },
+  { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
 ]
 
 // Check if route is active
