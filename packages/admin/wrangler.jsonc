@@ -54,6 +54,11 @@
       "database_id": "d0f371df-bcba-4017-a34d-2987d3d408aa",
       "migrations_table": "_hub_migrations",
       "migrations_dir": "./.output/server/db/migrations"
+    },
+    {
+      "binding": "DB_ADMIN",
+      "database_name": "create-studio-admin",
+      "database_id": "d289dece-7c58-4593-a8ef-e72ed9cdf80e"
     }
   ],
   "vars": {
