@@ -93,6 +93,7 @@
                   class="text-sm text-base-content hover:text-primary transition-colors font-medium"
                 >
                   {{ formatOwnerName(site.owner) }}
+                  <span class="text-base-content/40 font-normal">#{{ site.owner.id }}</span>
                 </NuxtLink>
               </div>
             </div>
@@ -405,18 +406,34 @@
         @close="closeModals"
       >
         <div class="space-y-4">
-          <!-- Email Search -->
+          <!-- Search Input with Mode Toggle -->
           <div class="form-control">
             <label class="label">
-              <span class="label-text">Search by Email</span>
+              <span class="label-text">Search by</span>
             </label>
-            <input
-              v-model="userSearchQuery"
-              type="text"
-              placeholder="Type at least 2 characters..."
-              class="input input-bordered w-full"
-              @input="debouncedSearchUsers"
-            />
+            <div class="flex items-center input input-bordered w-full pr-1">
+              <input
+                v-model="userSearchQuery"
+                :type="searchMode === 'id' ? 'number' : 'text'"
+                :placeholder="searchMode === 'id' ? 'Enter user ID...' : 'Type at least 2 characters...'"
+                class="grow bg-transparent outline-none text-sm"
+                @input="debouncedSearchUsers"
+              />
+              <div class="flex items-center gap-0.5 bg-base-200 rounded-md p-0.5 shrink-0">
+                <button
+                  type="button"
+                  class="px-2.5 py-1 text-xs font-medium rounded transition-all"
+                  :class="searchMode === 'email' ? 'bg-base-100 text-base-content shadow-sm' : 'text-base-content/40 hover:text-base-content'"
+                  @click="switchSearchMode('email')"
+                >Email</button>
+                <button
+                  type="button"
+                  class="px-2.5 py-1 text-xs font-medium rounded transition-all"
+                  :class="searchMode === 'id' ? 'bg-base-100 text-base-content shadow-sm' : 'text-base-content/40 hover:text-base-content'"
+                  @click="switchSearchMode('id')"
+                >ID</button>
+              </div>
+            </div>
           </div>
 
           <!-- Search Results -->
@@ -427,15 +444,25 @@
             <div
               v-for="searchUser in userSearchResults"
               :key="searchUser.id"
-              class="p-3 hover:bg-base-200 cursor-pointer border-b border-base-300 last:border-b-0"
-              :class="{ 'bg-primary/10': selectedSearchUser?.id === searchUser.id }"
+              class="p-3 border-b border-base-300 last:border-b-0"
+              :class="[
+                isUserAlreadyAssociated(searchUser.id)
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:bg-base-200 cursor-pointer',
+                { 'bg-primary/10': selectedSearchUser?.id === searchUser.id }
+              ]"
               @click="selectSearchUser(searchUser)"
             >
-              <div class="font-medium text-sm">{{ formatSearchUserName(searchUser) }}</div>
-              <div class="text-base-content/60 text-xs">{{ searchUser.email }}</div>
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-medium text-sm">{{ formatSearchUserName(searchUser) }} <span class="text-base-content/40 font-normal">#{{ searchUser.id }}</span></div>
+                  <div class="text-base-content/60 text-xs">{{ searchUser.email }}</div>
+                </div>
+                <span v-if="isUserAlreadyAssociated(searchUser.id)" class="text-xs text-base-content/40 italic">Already added</span>
+              </div>
             </div>
           </div>
-          <div v-else-if="userSearchQuery.length >= 2 && !userSearchLoading" class="text-center py-4 text-base-content/60 text-sm">
+          <div v-else-if="userSearchQuery.trim().length >= (searchMode === 'id' ? 1 : 2) && !userSearchLoading" class="text-center py-4 text-base-content/60 text-sm">
             No users found
           </div>
 
@@ -658,6 +685,7 @@ const selectedUser = ref<AssociatedUser | null>(null)
 const newRole = ref<string>('editor')
 
 // Add user modal state
+const searchMode = ref<'email' | 'id'>('email')
 const userSearchQuery = ref('')
 const userSearchResults = ref<SearchUser[]>([])
 const userSearchLoading = ref(false)
@@ -722,6 +750,7 @@ const closeModals = () => {
   showCreateSubscriptionModal.value = false
   selectedUser.value = null
   selectedSearchUser.value = null
+  searchMode.value = 'email'
   userSearchQuery.value = ''
   userSearchResults.value = []
   newRole.value = 'editor'
@@ -752,18 +781,25 @@ const openCreateSubscriptionModal = () => {
 }
 
 // User search
+const switchSearchMode = (mode: 'email' | 'id') => {
+  searchMode.value = mode
+  userSearchQuery.value = ''
+  userSearchResults.value = []
+  selectedSearchUser.value = null
+}
+
 const searchUsers = async () => {
-  if (userSearchQuery.value.length < 2) {
+  const q = userSearchQuery.value.trim()
+  const minLength = searchMode.value === 'id' ? 1 : 2
+  if (q.length < minLength) {
     userSearchResults.value = []
     return
   }
 
   userSearchLoading.value = true
   try {
-    const results = await $fetch<SearchUser[]>(`/api/admin/users/search?q=${encodeURIComponent(userSearchQuery.value)}`)
-    // Filter out users already associated with this site
-    const existingUserIds = site.value?.associated_users.map(u => u.id) || []
-    userSearchResults.value = results.filter(u => !existingUserIds.includes(u.id))
+    const results = await $fetch<SearchUser[]>(`/api/admin/users/search?q=${encodeURIComponent(q)}&mode=${searchMode.value}`)
+    userSearchResults.value = results
   } catch (err: any) {
     console.error('Failed to search users:', err)
     userSearchResults.value = []
@@ -781,7 +817,12 @@ const debouncedSearchUsers = () => {
   }, 300)
 }
 
+const isUserAlreadyAssociated = (userId: number): boolean => {
+  return site.value?.associated_users.some(u => u.id === userId) || false
+}
+
 const selectSearchUser = (user: SearchUser) => {
+  if (isUserAlreadyAssociated(user.id)) return
   selectedSearchUser.value = user
 }
 

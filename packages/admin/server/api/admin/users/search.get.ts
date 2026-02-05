@@ -1,17 +1,17 @@
-import { like } from 'drizzle-orm'
-import { users } from "~~/server/utils/db"
+import { eq, like } from 'drizzle-orm'
+import { users } from "~~/server/utils/admin-db"
 
 /**
  * GET /api/admin/users/search
- * Search users by email for the add user modal
+ * Search users by email or ID for the add user modal
  *
  * Query params:
- * - q: string (search query, minimum 2 characters)
+ * - q: string (search query)
+ * - mode: 'email' | 'id' (search mode, default: 'email')
  *
  * Returns:
  * - Array of matching users (id, email, firstname, lastname)
  * - Limited to 10 results
- * - Case-insensitive LIKE query on email
  */
 export default defineEventHandler(async (event) => {
   // Check admin session
@@ -26,30 +26,49 @@ export default defineEventHandler(async (event) => {
   const db = useAdminDb(event)
 
   try {
-    // Get query parameter
+    // Get query parameters
     const query = getQuery(event)
     const q = (query.q as string || '').trim()
+    const mode = (query.mode as string || 'email') === 'id' ? 'id' : 'email'
 
-    // Validate minimum query length
-    if (q.length < 2) {
+    // Validate minimum query length (1 for ID, 2 for email)
+    const minLength = mode === 'id' ? 1 : 2
+    if (q.length < minLength) {
       throw createError({
         statusCode: 400,
-        message: 'Search query must be at least 2 characters',
+        message: `Search query must be at least ${minLength} character${minLength > 1 ? 's' : ''}`,
       })
     }
 
-    // Search users by email (case-insensitive LIKE)
-    const searchPattern = `%${q.toLowerCase()}%`
-    const matchingUsers = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        firstname: users.firstname,
-        lastname: users.lastname,
-      })
-      .from(users)
-      .where(like(users.email, searchPattern))
-      .limit(10)
+    let matchingUsers
+    if (mode === 'id') {
+      const numericId = parseInt(q)
+      if (isNaN(numericId)) {
+        return []
+      }
+      matchingUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstname: users.firstname,
+          lastname: users.lastname,
+        })
+        .from(users)
+        .where(eq(users.id, numericId))
+        .limit(1)
+    } else {
+      const searchPattern = `%${q.toLowerCase()}%`
+      matchingUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstname: users.firstname,
+          lastname: users.lastname,
+        })
+        .from(users)
+        .where(like(users.email, searchPattern))
+        .limit(10)
+    }
 
     return matchingUsers
   } catch (error) {
