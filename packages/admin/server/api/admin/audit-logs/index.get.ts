@@ -11,6 +11,7 @@ import { useAdminOpsDb, auditLogs, admins } from "~~/server/utils/admin-ops-db"
  * - admin_id: number (filter by admin)
  * - action: string (filter by action type)
  * - entity_type: string (filter by entity type)
+ * - entity_id: number (filter by entity ID)
  * - date_from: string (ISO date, filter from date)
  * - date_to: string (ISO date, filter to date)
  */
@@ -36,6 +37,7 @@ export default defineEventHandler(async (event) => {
     const adminId = query.admin_id ? parseInt(query.admin_id as string) : undefined
     const action = query.action as string | undefined
     const entityType = query.entity_type as string | undefined
+    const entityId = query.entity_id ? parseInt(query.entity_id as string) : undefined
     const dateFrom = query.date_from as string | undefined
     const dateTo = query.date_to as string | undefined
 
@@ -52,6 +54,10 @@ export default defineEventHandler(async (event) => {
 
     if (entityType) {
       conditions.push(eq(auditLogs.entity_type, entityType))
+    }
+
+    if (entityId) {
+      conditions.push(eq(auditLogs.entity_id, entityId))
     }
 
     if (dateFrom) {
@@ -125,6 +131,7 @@ export default defineEventHandler(async (event) => {
         admin_id: adminId,
         action,
         entity_type: entityType,
+        entity_id: entityId,
         date_from: dateFrom,
         date_to: dateTo,
       },

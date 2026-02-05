@@ -68,9 +68,46 @@
 
             <!-- Site Name Section -->
             <div class="space-y-4 text-center">
-              <h2 class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
-                {{ site.name || 'Unnamed Site' }}
-              </h2>
+              <!-- View Mode -->
+              <div v-if="!editNameMode" class="flex items-center justify-center gap-3">
+                <h2 class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+                  {{ site.name || 'Unnamed Site' }}
+                </h2>
+                <button
+                  class="p-1.5 rounded-lg text-base-content/40 hover:text-base-content hover:bg-base-200 transition-all"
+                  @click="enableEditNameMode"
+                  aria-label="Edit site name"
+                >
+                  <PencilIcon class="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <!-- Edit Name Mode -->
+              <div v-else class="space-y-3">
+                <input
+                  v-model="editForm.name"
+                  type="text"
+                  placeholder="Site name"
+                  class="w-full px-3 py-2 rounded-lg border border-base-300 bg-base-100 text-sm text-base-content placeholder:text-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-center"
+                />
+                <div class="flex gap-2">
+                  <button
+                    class="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-content text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    @click="saveNameChange"
+                    :disabled="actionLoading"
+                  >
+                    <span v-if="actionLoading" class="loading loading-spinner loading-xs"></span>
+                    <span v-else>Save</span>
+                  </button>
+                  <button
+                    class="flex-1 px-4 py-2 rounded-lg bg-base-200 text-base-content text-sm font-medium hover:bg-base-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    @click="cancelEditName"
+                    :disabled="actionLoading"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
 
               <!-- URL -->
               <a
@@ -85,16 +122,22 @@
                 </svg>
               </a>
 
-              <!-- Owner Link -->
+              <!-- Owners -->
               <div class="flex flex-col items-center gap-1">
-                <span class="text-xs text-base-content/50 font-medium uppercase tracking-wider">Owner</span>
-                <NuxtLink
-                  :to="`/users/${site.owner.id}`"
-                  class="text-sm text-base-content hover:text-primary transition-colors font-medium"
-                >
-                  {{ formatOwnerName(site.owner) }}
-                  <span class="text-base-content/40 font-normal">#{{ site.owner.id }}</span>
-                </NuxtLink>
+                <span class="text-xs text-base-content/50 font-medium uppercase tracking-wider">
+                  {{ siteOwners.length > 1 ? 'Owners' : 'Owner' }}
+                </span>
+                <div class="flex flex-col items-center gap-1">
+                  <NuxtLink
+                    v-for="owner in siteOwners"
+                    :key="owner.id"
+                    :to="`/users/${owner.id}`"
+                    class="text-sm text-base-content hover:text-primary transition-colors font-medium"
+                  >
+                    {{ formatOwnerName(owner) }}
+                    <span class="text-base-content/40 font-normal">#{{ owner.id }}</span>
+                  </NuxtLink>
+                </div>
               </div>
             </div>
 
@@ -372,22 +415,70 @@
             </div>
 
             <div class="space-y-4">
+              <!-- Interactive Mode Toggle -->
               <div class="flex items-center justify-between py-3 border-b border-base-300/30">
                 <span class="text-sm text-base-content/60 font-medium">Interactive Mode</span>
-                <span
-                  class="text-sm font-medium"
-                  :class="site.settings.interactive_mode_enabled ? 'text-base-content' : 'text-base-content/50'"
-                >
-                  {{ site.settings.interactive_mode_enabled ? 'Enabled' : 'Disabled' }}
-                </span>
+                <input
+                  type="checkbox"
+                  class="toggle toggle-success toggle-sm"
+                  :checked="site.settings.interactive_mode_enabled"
+                  :disabled="actionLoading"
+                  @change="handleToggleInteractiveMode"
+                />
               </div>
 
-              <div v-if="site.settings.interactive_mode_button_text" class="flex items-center justify-between py-3">
+              <!-- Button Text -->
+              <div class="flex items-center justify-between py-3">
                 <span class="text-sm text-base-content/60 font-medium">Button Text</span>
-                <span class="text-sm text-base-content font-medium">{{ site.settings.interactive_mode_button_text }}</span>
+                <div v-if="!editButtonTextMode" class="flex items-center gap-2">
+                  <span class="text-sm text-base-content font-medium">{{ site.settings.interactive_mode_button_text || 'Default' }}</span>
+                  <button
+                    class="p-1 rounded text-base-content/40 hover:text-base-content hover:bg-base-200 transition-all"
+                    @click="enableEditButtonTextMode"
+                    aria-label="Edit button text"
+                  >
+                    <PencilIcon class="w-3 h-3" />
+                  </button>
+                </div>
+                <div v-else class="flex items-center gap-2">
+                  <input
+                    v-model="editForm.interactive_mode_button_text"
+                    type="text"
+                    placeholder="Button text"
+                    class="w-40 px-2 py-1 rounded-lg border border-base-300 bg-base-100 text-sm text-base-content placeholder:text-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-right"
+                  />
+                  <button
+                    class="px-2 py-1 rounded-lg bg-primary text-primary-content text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                    @click="saveButtonTextChange"
+                    :disabled="actionLoading"
+                  >
+                    Save
+                  </button>
+                  <button
+                    class="px-2 py-1 rounded-lg bg-base-200 text-base-content text-xs font-medium hover:bg-base-300 transition-colors"
+                    @click="cancelEditButtonText"
+                    :disabled="actionLoading"
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+
+          <!-- Site User Activity -->
+          <AdminAuditTimeline
+            entity-type="site_user"
+            :entity-id="site.id"
+            title="User Management Activity"
+          />
+
+          <!-- Site Activity -->
+          <AdminAuditTimeline
+            entity-type="site"
+            :entity-id="site.id"
+            title="Site Activity"
+          />
         </div>
       </div>
 
@@ -584,12 +675,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   ArrowLeftIcon,
   UserPlusIcon,
   PencilSquareIcon,
+  PencilIcon,
   CheckBadgeIcon,
   TrashIcon,
   PlusIcon,
@@ -673,6 +765,34 @@ const site = ref<Site | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const actionLoading = ref(false)
+
+// Edit state
+const editNameMode = ref(false)
+const editButtonTextMode = ref(false)
+const editForm = ref({
+  name: '',
+  interactive_mode_button_text: '',
+})
+
+// Computed: all owners from associated users + the primary owner
+const siteOwners = computed(() => {
+  if (!site.value) return []
+  // Collect owners from associated_users with role 'owner'
+  const ownerUsers = site.value.associated_users
+    .filter(u => u.role === 'owner')
+    .map(u => ({
+      id: u.id,
+      email: u.email,
+      firstname: u.firstname,
+      lastname: u.lastname,
+    }))
+  // If the primary owner isn't in the list, add them
+  const primaryOwner = site.value.owner
+  if (!ownerUsers.some(o => o.id === primaryOwner.id)) {
+    ownerUsers.unshift(primaryOwner)
+  }
+  return ownerUsers
+})
 
 // Modal state
 const showAddUserModal = ref(false)
@@ -937,6 +1057,94 @@ const handleCreateSubscription = async () => {
   } catch (err: any) {
     console.error('Failed to create subscription:', err)
     showAlert(err?.data?.message || 'Failed to create subscription', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+// Site edit handlers
+const enableEditNameMode = () => {
+  if (site.value) {
+    editForm.value.name = site.value.name || ''
+    editNameMode.value = true
+  }
+}
+
+const cancelEditName = () => {
+  editNameMode.value = false
+  editForm.value.name = ''
+}
+
+const saveNameChange = async () => {
+  if (!site.value) return
+
+  actionLoading.value = true
+  try {
+    await $fetch(`/api/admin/sites/${site.value.id}`, {
+      method: 'PATCH',
+      body: { name: editForm.value.name },
+    })
+    site.value.name = editForm.value.name || null
+    site.value.updatedAt = new Date().toISOString()
+    showAlert('Site name updated successfully', 'success')
+    editNameMode.value = false
+  } catch (err: any) {
+    console.error('Failed to update site name:', err)
+    showAlert(err?.data?.message || 'Failed to update site name', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const handleToggleInteractiveMode = async () => {
+  if (!site.value) return
+
+  const newValue = !site.value.settings.interactive_mode_enabled
+  actionLoading.value = true
+  try {
+    await $fetch(`/api/admin/sites/${site.value.id}`, {
+      method: 'PATCH',
+      body: { interactive_mode_enabled: newValue },
+    })
+    site.value.settings.interactive_mode_enabled = newValue
+    site.value.updatedAt = new Date().toISOString()
+    showAlert(`Interactive mode ${newValue ? 'enabled' : 'disabled'}`, 'success')
+  } catch (err: any) {
+    console.error('Failed to toggle interactive mode:', err)
+    showAlert(err?.data?.message || 'Failed to toggle interactive mode', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const enableEditButtonTextMode = () => {
+  if (site.value) {
+    editForm.value.interactive_mode_button_text = site.value.settings.interactive_mode_button_text || ''
+    editButtonTextMode.value = true
+  }
+}
+
+const cancelEditButtonText = () => {
+  editButtonTextMode.value = false
+  editForm.value.interactive_mode_button_text = ''
+}
+
+const saveButtonTextChange = async () => {
+  if (!site.value) return
+
+  actionLoading.value = true
+  try {
+    await $fetch(`/api/admin/sites/${site.value.id}`, {
+      method: 'PATCH',
+      body: { interactive_mode_button_text: editForm.value.interactive_mode_button_text },
+    })
+    site.value.settings.interactive_mode_button_text = editForm.value.interactive_mode_button_text || null
+    site.value.updatedAt = new Date().toISOString()
+    showAlert('Button text updated successfully', 'success')
+    editButtonTextMode.value = false
+  } catch (err: any) {
+    console.error('Failed to update button text:', err)
+    showAlert(err?.data?.message || 'Failed to update button text', 'error')
   } finally {
     actionLoading.value = false
   }

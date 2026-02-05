@@ -357,6 +357,12 @@
               </a>
             </div>
           </div>
+
+          <!-- Audit Timeline -->
+          <AdminAuditTimeline
+            entity-type="subscription"
+            :entity-id="subscription.id"
+          />
         </div>
       </div>
 

@@ -433,42 +433,11 @@
             </div>
           </div>
 
-          <!-- Audit Summary -->
-          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
-                Activity Summary
-              </h3>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4 mb-6">
-              <div class="p-4 rounded-lg bg-base-200/50">
-                <div class="text-3xl font-semibold text-base-content mb-1" style="font-family: 'Instrument Serif', serif;">
-                  {{ user.auditLogSummary.totalActions }}
-                </div>
-                <div class="text-xs text-base-content/50 font-medium uppercase tracking-wider">Total Actions</div>
-              </div>
-
-              <div class="p-4 rounded-lg bg-base-200/50">
-                <div v-if="user.auditLogSummary.lastAction" class="mb-2">
-                  <div class="text-sm font-medium text-base-content mb-1">{{ user.auditLogSummary.lastAction.action }}</div>
-                  <div class="text-xs text-base-content/50">{{ formatRelativeTime(user.auditLogSummary.lastAction.timestamp) }}</div>
-                </div>
-                <div v-else class="text-sm text-base-content/50 mb-1">No actions yet</div>
-                <div class="text-xs text-base-content/50 font-medium uppercase tracking-wider">Last Action</div>
-              </div>
-            </div>
-
-            <NuxtLink
-              :to="`/audit-logs?user=${user.id}`"
-              class="flex items-center justify-center gap-2 py-3 px-4 rounded-lg border border-base-300 text-sm font-medium text-base-content hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
-            >
-              <span>View Full Audit Log</span>
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </NuxtLink>
-          </div>
+          <!-- Audit Timeline -->
+          <AdminAuditTimeline
+            entity-type="user"
+            :entity-id="user.id"
+          />
         </div>
       </div>
 
@@ -944,28 +913,6 @@ const formatDate = (dateString: string): string => {
     month: 'short',
     day: 'numeric'
   })
-}
-
-const formatRelativeTime = (dateString: string): string => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffSeconds = Math.floor(diffMs / 1000)
-  const diffMinutes = Math.floor(diffSeconds / 60)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
-
-  if (diffSeconds < 60) {
-    return 'Just now'
-  } else if (diffMinutes < 60) {
-    return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`
-  } else if (diffHours < 24) {
-    return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`
-  } else if (diffDays < 7) {
-    return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
-  } else {
-    return formatDate(dateString)
-  }
 }
 
 const capitalizeFirst = (str: string): string => {
