@@ -1,7 +1,7 @@
-import { auditLogs } from "~~/server/utils/db"
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
-  const db = useAdminDb(event)
+  const db = useAdminOpsDb(event)
 
   // Get current session
   const session = await getUserSession(event)
@@ -27,6 +27,7 @@ export default defineEventHandler(async (event) => {
       entity_id: session.user.id,
       ip_address: Array.isArray(ipAddress) ? ipAddress[0] : ipAddress,
       user_agent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
+      environment: getAuditEnvironment(event),
       createdAt: new Date().toISOString(),
     })
   } catch (auditError) {

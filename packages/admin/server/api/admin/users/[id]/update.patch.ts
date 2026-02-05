@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { users, auditLogs } from "~~/server/utils/db"
+import { users } from "~~/server/utils/db"
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**
  * PATCH /api/admin/users/[id]/update
@@ -126,11 +127,13 @@ export default defineEventHandler(async (event) => {
 
     // Wrap audit log in try-catch to prevent FK errors from stale sessions
     try {
-      await db.insert(auditLogs).values({
+      const adminOpsDb = useAdminOpsDb(event)
+      await adminOpsDb.insert(auditLogs).values({
         admin_id: session.user.id,
         action: 'user_updated',
         entity_type: 'user',
         entity_id: userId,
+        environment: getAuditEnvironment(event),
         changes: JSON.stringify(changes),
         ip_address: getRequestIP(event) || null,
         user_agent: getHeader(event, 'user-agent') || null,

@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { subscriptions, sites, auditLogs } from "~~/server/utils/db"
+import { subscriptions, sites } from "~~/server/utils/db"
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**
  * POST /api/admin/subscriptions/create
@@ -83,11 +84,13 @@ export default defineEventHandler(async (event) => {
 
     // Create audit log entry (don't let audit log failures break the main operation)
     try {
-      await db.insert(auditLogs).values({
+      const adminOpsDb = useAdminOpsDb(event)
+      await adminOpsDb.insert(auditLogs).values({
         admin_id: session.user.id,
         action: 'subscription_created',
         entity_type: 'subscription',
         entity_id: createdSubscription.id,
+        environment: getAuditEnvironment(event),
         changes: JSON.stringify({
           site_id: siteId,
           tier,

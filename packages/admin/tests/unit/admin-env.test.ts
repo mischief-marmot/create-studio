@@ -45,6 +45,7 @@ function createMockEvent(options: {
  */
 function createMockCloudflareEnv(options?: {
   includePreview?: boolean
+  includeAdminDb?: boolean
 }) {
   const env: Record<string, unknown> = {
     DB: { name: 'production-db' },
@@ -58,6 +59,10 @@ function createMockCloudflareEnv(options?: {
     env.BLOB_PREVIEW = { name: 'preview-blob' }
     env.KV_PREVIEW = { name: 'preview-kv' }
     env.CACHE_PREVIEW = { name: 'preview-cache' }
+  }
+
+  if (options?.includeAdminDb) {
+    env.DB_ADMIN = { name: 'admin-db' }
   }
 
   return env
@@ -195,7 +200,7 @@ describe('admin-env utilities', () => {
   describe('useAdminEnv', () => {
     describe('production environment', () => {
       it('returns production bindings when environment is production', () => {
-        const cloudflareEnv = createMockCloudflareEnv({ includePreview: true })
+        const cloudflareEnv = createMockCloudflareEnv({ includePreview: true, includeAdminDb: true })
         const event = createMockEvent({
           cookie: 'production',
           cloudflareEnv,
@@ -206,13 +211,14 @@ describe('admin-env utilities', () => {
         expect(result.environment).toBe('production')
         expect(result.isLocal).toBe(false)
         expect(result.db).toEqual({ name: 'production-db' })
+        expect(result.adminDb).toEqual({ name: 'admin-db' })
         expect(result.blob).toEqual({ name: 'production-blob' })
         expect(result.kv).toEqual({ name: 'production-kv' })
         expect(result.cache).toEqual({ name: 'production-cache' })
       })
 
       it('returns production bindings when no cookie is set', () => {
-        const cloudflareEnv = createMockCloudflareEnv({ includePreview: true })
+        const cloudflareEnv = createMockCloudflareEnv({ includePreview: true, includeAdminDb: true })
         const event = createMockEvent({
           cloudflareEnv,
         })
@@ -222,12 +228,28 @@ describe('admin-env utilities', () => {
         expect(result.environment).toBe('production')
         expect(result.isLocal).toBe(false)
         expect(result.db).toEqual({ name: 'production-db' })
+        expect(result.adminDb).toEqual({ name: 'admin-db' })
+      })
+
+      it('returns null for adminDb when DB_ADMIN binding is not available', () => {
+        const cloudflareEnv = createMockCloudflareEnv({ includePreview: true, includeAdminDb: false })
+        const event = createMockEvent({
+          cookie: 'production',
+          cloudflareEnv,
+        })
+
+        const result = useAdminEnv(event)
+
+        expect(result.environment).toBe('production')
+        expect(result.isLocal).toBe(false)
+        expect(result.db).toEqual({ name: 'production-db' })
+        expect(result.adminDb).toBeNull()
       })
     })
 
     describe('preview environment', () => {
       it('returns preview bindings when environment is preview', () => {
-        const cloudflareEnv = createMockCloudflareEnv({ includePreview: true })
+        const cloudflareEnv = createMockCloudflareEnv({ includePreview: true, includeAdminDb: true })
         const event = createMockEvent({
           cookie: 'preview',
           cloudflareEnv,
@@ -238,13 +260,15 @@ describe('admin-env utilities', () => {
         expect(result.environment).toBe('preview')
         expect(result.isLocal).toBe(false)
         expect(result.db).toEqual({ name: 'preview-db' })
+        // Admin DB is shared across environments (no preview version)
+        expect(result.adminDb).toEqual({ name: 'admin-db' })
         expect(result.blob).toEqual({ name: 'preview-blob' })
         expect(result.kv).toEqual({ name: 'preview-kv' })
         expect(result.cache).toEqual({ name: 'preview-cache' })
       })
 
       it('falls back to production bindings when preview bindings are not available', () => {
-        const cloudflareEnv = createMockCloudflareEnv({ includePreview: false })
+        const cloudflareEnv = createMockCloudflareEnv({ includePreview: false, includeAdminDb: true })
         const event = createMockEvent({
           cookie: 'preview',
           cloudflareEnv,
@@ -256,6 +280,7 @@ describe('admin-env utilities', () => {
         expect(result.isLocal).toBe(false)
         // Should fall back to production bindings
         expect(result.db).toEqual({ name: 'production-db' })
+        expect(result.adminDb).toEqual({ name: 'admin-db' })
         expect(result.blob).toEqual({ name: 'production-blob' })
         expect(result.kv).toEqual({ name: 'production-kv' })
         expect(result.cache).toEqual({ name: 'production-cache' })
@@ -276,6 +301,7 @@ describe('admin-env utilities', () => {
         expect(result.isLocal).toBe(true)
         expect(result.environment).toBe('production')
         expect(result.db).toBeUndefined()
+        expect(result.adminDb).toBeNull()
         expect(result.blob).toBeUndefined()
         expect(result.kv).toBeUndefined()
         expect(result.cache).toBeUndefined()
@@ -291,10 +317,11 @@ describe('admin-env utilities', () => {
         const result = useAdminEnv(event)
 
         expect(result.isLocal).toBe(true)
-        expect(result.environment).toBe('preview')
+        // In local mode, environment is always 'production' regardless of cookie
+        expect(result.environment).toBe('production')
       })
 
-      it('returns correct environment string in local mode', () => {
+      it('returns production environment in local mode regardless of cookie', () => {
         const event = createMockEvent({
           cookie: 'preview',
         })
@@ -302,7 +329,8 @@ describe('admin-env utilities', () => {
 
         const result = useAdminEnv(event)
 
-        expect(result.environment).toBe('preview')
+        // In local mode, environment is always 'production' (only production available in dev)
+        expect(result.environment).toBe('production')
         expect(result.isLocal).toBe(true)
       })
     })

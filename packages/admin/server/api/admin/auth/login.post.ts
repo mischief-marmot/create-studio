@@ -1,9 +1,9 @@
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
-import { admins, auditLogs } from "~~/server/utils/db"
+import { useAdminOpsDb, admins, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
-  const db = useAdminDb(event)
+  const db = useAdminOpsDb(event)
   const config = useRuntimeConfig()
 
   // Parse request body
@@ -81,6 +81,7 @@ export default defineEventHandler(async (event) => {
       entity_id: admin.id,
       ip_address: Array.isArray(ipAddress) ? ipAddress[0] : ipAddress,
       user_agent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
+      environment: getAuditEnvironment(event),
       createdAt: new Date().toISOString(),
     })
   } catch (auditError) {

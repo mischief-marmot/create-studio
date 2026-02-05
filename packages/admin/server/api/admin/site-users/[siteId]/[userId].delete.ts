@@ -1,5 +1,6 @@
 import { eq, and } from 'drizzle-orm'
-import { sites, siteUsers, auditLogs } from '~~/server/utils/db'
+import { sites, siteUsers } from '~~/server/utils/db'
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**
  * DELETE /api/admin/site-users/[siteId]/[userId]
@@ -100,11 +101,13 @@ export default defineEventHandler(async (event) => {
 
     // Create audit log entry
     try {
-      await db.insert(auditLogs).values({
+      const adminOpsDb = useAdminOpsDb(event)
+      await adminOpsDb.insert(auditLogs).values({
         admin_id: session.user.id,
         action: 'site_user_removed',
         entity_type: 'site_user',
         entity_id: siteId,
+        environment: getAuditEnvironment(event),
         changes: JSON.stringify({
           site_id: siteId,
           user_id: userId,

@@ -13,7 +13,7 @@ import { stdin as input, stdout as output } from 'node:process'
 import bcrypt from 'bcryptjs'
 
 const BCRYPT_ROUNDS = 10
-const DATABASE_NAME = 'create-studio' // Change to 'create-studio-preview' for preview
+const DATABASE_NAME = 'create-studio-admin' // Change to 'create-studio-admin-preview' for preview
 
 function prompt(question: string): Promise<string> {
   const rl = createInterface({ input, output })

@@ -12,7 +12,10 @@ export type AdminEnvironment = 'production' | 'preview'
  * Cloudflare bindings available for admin operations
  */
 export interface AdminEnvBindings {
+  /** Main app database (for managing sites/users) */
   db: D1Database
+  /** Admin operations database (for admin sessions, audit logs, etc.) */
+  adminDb: D1Database | null
   blob: R2Bucket
   kv: KVNamespace
   cache: KVNamespace
@@ -76,14 +79,15 @@ export function useAdminEnv(event: H3Event): AdminEnvBindings {
   const environment = getAdminEnvironment(event)
   const cloudflareEnv = event.context.cloudflare?.env as Record<string, unknown> | undefined
 
-  // Check if we have direct Cloudflare bindings (deployed to Workers)
-  // In dev mode, cloudflare.env may not exist or DB binding may not be set
-  const hasCloudflareBindings = cloudflareEnv && cloudflareEnv.DB
+  // Check if we're in development mode
+  // In dev mode, use NuxtHub's hubDatabase() which handles local/remote connections
+  const isDev = import.meta.dev
 
-  // Handle dev mode (local or --remote) - use NuxtHub's mechanism
-  if (!hasCloudflareBindings) {
+  // Handle dev mode (local or --remote) - use NuxtHub's hubDatabase() mechanism
+  if (isDev) {
     return {
       db: undefined as unknown as D1Database,
+      adminDb: null, // Admin DB not available in local dev (uses hubDatabase instead)
       blob: undefined as unknown as R2Bucket,
       kv: undefined as unknown as KVNamespace,
       cache: undefined as unknown as KVNamespace,
@@ -92,10 +96,27 @@ export function useAdminEnv(event: H3Event): AdminEnvBindings {
     }
   }
 
+  // In production, check if we have direct Cloudflare bindings
+  const hasCloudflareBindings = cloudflareEnv && cloudflareEnv.DB
+
+  // Fallback if no bindings available (shouldn't happen in production)
+  if (!hasCloudflareBindings) {
+    return {
+      db: undefined as unknown as D1Database,
+      adminDb: null,
+      blob: undefined as unknown as R2Bucket,
+      kv: undefined as unknown as KVNamespace,
+      cache: undefined as unknown as KVNamespace,
+      environment: 'production',
+      isLocal: true, // Treat as local if no bindings
+    }
+  }
+
   // For production environment, use the standard bindings
   if (environment === 'production') {
     return {
       db: cloudflareEnv.DB as D1Database,
+      adminDb: (cloudflareEnv.DB_ADMIN as D1Database) ?? null,
       blob: cloudflareEnv.BLOB as R2Bucket,
       kv: cloudflareEnv.KV as KVNamespace,
       cache: cloudflareEnv.CACHE as KVNamespace,
@@ -106,8 +127,10 @@ export function useAdminEnv(event: H3Event): AdminEnvBindings {
 
   // For preview environment, use preview bindings with fallback to production
   // Preview bindings may not always be available, so we fall back gracefully
+  // Note: Admin DB is shared across environments (no preview version)
   return {
     db: (cloudflareEnv.DB_PREVIEW ?? cloudflareEnv.DB) as D1Database,
+    adminDb: (cloudflareEnv.DB_ADMIN as D1Database) ?? null,
     blob: (cloudflareEnv.BLOB_PREVIEW ?? cloudflareEnv.BLOB) as R2Bucket,
     kv: (cloudflareEnv.KV_PREVIEW ?? cloudflareEnv.KV) as KVNamespace,
     cache: (cloudflareEnv.CACHE_PREVIEW ?? cloudflareEnv.CACHE) as KVNamespace,

@@ -1,5 +1,6 @@
 import { eq, and } from 'drizzle-orm'
-import { siteUsers, auditLogs } from "~~/server/utils/db"
+import { siteUsers } from "~~/server/utils/db"
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**
  * PATCH /api/admin/site-users/[siteId]/[userId]
@@ -85,11 +86,13 @@ export default defineEventHandler(async (event) => {
 
     // Create audit log entry
     try {
-      await db.insert(auditLogs).values({
+      const adminOpsDb = useAdminOpsDb(event)
+      await adminOpsDb.insert(auditLogs).values({
         admin_id: session.user.id,
         action: 'site_user_role_updated',
         entity_type: 'site_user',
         entity_id: siteId, // Using siteId as primary identifier
+        environment: getAuditEnvironment(event),
         changes: JSON.stringify({
           site_id: siteId,
           user_id: userId,

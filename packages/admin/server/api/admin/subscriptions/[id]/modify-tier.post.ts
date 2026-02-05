@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { subscriptions, sites, auditLogs } from "~~/server/utils/db"
+import { subscriptions, sites } from "~~/server/utils/db"
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import Stripe from 'stripe'
 
 /**
@@ -110,11 +111,13 @@ export default defineEventHandler(async (event) => {
 
     // Create audit log entry
     try {
-      await db.insert(auditLogs).values({
+      const adminOpsDb = useAdminOpsDb(event)
+      await adminOpsDb.insert(auditLogs).values({
         admin_id: session.user.id,
         action: 'subscription_tier_modified',
         entity_type: 'subscription',
         entity_id: subscriptionId,
+        environment: getAuditEnvironment(event),
         changes: JSON.stringify({
           before: {
             tier: currentSubscription.tier,

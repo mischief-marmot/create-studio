@@ -45,20 +45,22 @@ const BCRYPT_ROUNDS = 10
 
 /**
  * Finds the NuxtHub D1 database file
+ *
+ * Note: Locally, the admin portal shares the app's database via hub.dir config.
+ * The Admins table lives in the same local SQLite file as the app data.
  */
 function findDatabasePath(): string {
-  // Look for the database in the app's .data/hub directory (NuxtHub location)
-  // Script is in packages/admin/scripts/, so go up to root, then to app
+  // Script is in packages/admin/scripts/, go up to repo root
   const rootDir = join(__dirname, '../../..')
-  const hubDbPath = join(rootDir, 'packages/app/.data/hub/db/sqlite.db')
 
+  // Primary location: app's NuxtHub database (shared locally via hub.dir)
+  const hubDbPath = join(rootDir, 'packages/app/.data/hub/db/sqlite.db')
   if (existsSync(hubDbPath)) {
     return hubDbPath
   }
 
   // Fallback: check older Wrangler location
   const wranglerDir = join(rootDir, 'packages/app/.wrangler/state/v3/d1/miniflare-D1DatabaseObject')
-
   if (existsSync(wranglerDir)) {
     const files = readdirSync(wranglerDir)
     const sqliteFile = files.find(f => f.endsWith('.sqlite'))

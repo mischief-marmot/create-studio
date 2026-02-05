@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { users, auditLogs } from "~~/server/utils/db"
+import { users } from "~~/server/utils/db"
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**
  * POST /api/admin/users/[id]/send-verification
@@ -52,11 +53,13 @@ export default defineEventHandler(async (event) => {
 
     // Create audit log entry
     try {
-      await db.insert(auditLogs).values({
+      const adminOpsDb = useAdminOpsDb(event)
+      await adminOpsDb.insert(auditLogs).values({
         admin_id: session.user.id,
         action: 'verification_email_sent',
         entity_type: 'user',
         entity_id: userId,
+        environment: getAuditEnvironment(event),
         changes: JSON.stringify({
           email: user.email,
           sent_at: new Date().toISOString(),

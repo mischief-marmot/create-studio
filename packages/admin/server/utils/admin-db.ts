@@ -14,6 +14,9 @@ import type { H3Event } from 'h3'
 // Re-export schema tables for convenience in API routes
 export * from '../../../app/server/db/schema'
 
+// Type for NuxtHub's auto-imported db
+type DrizzleDb = ReturnType<typeof drizzle>
+
 /**
  * Get a Drizzle database instance for the current admin environment
  *
@@ -29,13 +32,13 @@ export * from '../../../app/server/db/schema'
  * })
  * ```
  */
-export function useAdminDb(event: H3Event) {
+export function useAdminDb(event: H3Event): DrizzleDb {
   const { db: d1Binding, isLocal } = useAdminEnv(event)
 
-  // In local development, fall back to the default NuxtHub database
-  // which is auto-imported and uses the local SQLite database
+  // In local development, use NuxtHub's auto-imported `db`
+  // The `db` is auto-imported from 'hub:db' in the server context
   if (isLocal) {
-    // db is auto-imported from hub:db in NuxtHub
+    // @ts-expect-error - db is auto-imported by NuxtHub at compile time
     return db
   }
 

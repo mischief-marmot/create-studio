@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
-import { subscriptions, auditLogs } from "~~/server/utils/db"
+import { subscriptions } from "~~/server/utils/db"
+import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**
  * DELETE /api/admin/subscriptions/[id]
@@ -61,11 +62,13 @@ export default defineEventHandler(async (event) => {
 
     // Create audit log entry (don't let audit log failures break the operation)
     try {
-      await db.insert(auditLogs).values({
+      const adminOpsDb = useAdminOpsDb(event)
+      await adminOpsDb.insert(auditLogs).values({
         admin_id: session.user.id,
         action: 'subscription_deleted',
         entity_type: 'subscription',
         entity_id: subscriptionId,
+        environment: getAuditEnvironment(event),
         changes: JSON.stringify({
           deleted: {
             id: currentSubscription.id,
