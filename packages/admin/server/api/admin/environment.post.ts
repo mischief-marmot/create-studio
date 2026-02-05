@@ -1,6 +1,6 @@
 import { getAdminEnvironment, setAdminEnvironment, useAdminEnv } from '../../utils/admin-env'
 import type { AdminEnvironment } from '../../utils/admin-env'
-import { auditLogs } from '~~/server/utils/db'
+import { auditLogs } from '~~/server/utils/admin-ops-db'
 
 /**
  * Response structure for environment endpoints

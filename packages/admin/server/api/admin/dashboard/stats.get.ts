@@ -1,5 +1,5 @@
 import { eq, and, gte, sql, isNotNull, count } from 'drizzle-orm'
-import { users, sites, subscriptions, siteUsers } from "~~/server/utils/db"
+import { users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
 
 /**
  * GET /api/admin/dashboard/stats

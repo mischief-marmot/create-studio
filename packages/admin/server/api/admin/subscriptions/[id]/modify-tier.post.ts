@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { subscriptions, sites } from "~~/server/utils/db"
+import { subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import Stripe from 'stripe'
 

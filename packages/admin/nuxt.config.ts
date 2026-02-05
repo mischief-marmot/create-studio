@@ -1,5 +1,13 @@
 import tailwindcss from "@tailwindcss/vite";
 
+// Suppress known upstream warning from @nuxthub/core's tsdown/rolldown-plugin-dts dependency
+// See: https://github.com/rolldown/tsdown/issues/182
+const _warn = console.warn;
+console.warn = (...args: unknown[]) => {
+  if (typeof args[0] === "string" && args[0].includes("[rolldown-plugin-dts]")) return;
+  _warn(...args);
+};
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2026-01-12",

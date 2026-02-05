@@ -11,8 +11,11 @@ import * as schema from '../../../app/server/db/schema'
 import { useAdminEnv } from './admin-env'
 import type { H3Event } from 'h3'
 
-// Re-export schema tables for convenience in API routes
-export * from '../../../app/server/db/schema'
+// Re-export app schema tables for convenience in API routes
+// Note: admins/auditLogs/Admin/NewAdmin/AuditLog/NewAuditLog are intentionally
+// excluded here to avoid collisions with admin-ops-db.ts exports
+export { users, sites, siteUsers, subscriptions } from '../../../app/server/db/schema'
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription } from '../../../app/server/db/schema'
 
 // Type for NuxtHub's auto-imported db
 type DrizzleDb = ReturnType<typeof drizzle>

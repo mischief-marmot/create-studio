@@ -1,5 +1,5 @@
 import { eq, like, or, sql, desc, count } from 'drizzle-orm'
-import { users, sites, subscriptions, siteUsers } from "~~/server/utils/db"
+import { users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
 
 /**
  * GET /api/admin/users
