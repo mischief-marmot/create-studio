@@ -1,5 +1,5 @@
 import { eq, and, gte, lte, desc, count, sql } from 'drizzle-orm'
-import { auditLogs, admins } from "~~/server/utils/admin-ops-db"
+import { useAdminOpsDb, auditLogs, admins } from "~~/server/utils/admin-ops-db"
 
 /**
  * GET /api/admin/audit-logs
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const db = useAdminDb(event)
+  const db = useAdminOpsDb(event)
 
   try {
     // Get query parameters

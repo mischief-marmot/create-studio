@@ -1,8 +1,6 @@
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
-  const db = useAdminOpsDb(event)
-
   // Get current session
   const session = await getUserSession(event)
 
@@ -18,8 +16,9 @@ export default defineEventHandler(async (event) => {
   const ipAddress = headers['x-forwarded-for'] || headers['x-real-ip'] || 'unknown'
   const userAgent = headers['user-agent'] || 'unknown'
 
-  // Create audit log entry
+  // Create audit log entry (non-blocking - don't let audit failure block logout)
   try {
+    const db = useAdminOpsDb(event)
     await db.insert(auditLogs).values({
       admin_id: session.user.id,
       action: 'logout',
