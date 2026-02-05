@@ -1,6 +1,6 @@
 import { eq, desc, count } from 'drizzle-orm'
 import { users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
-import { auditLogs } from "~~/server/utils/admin-ops-db"
+import { useAdminOpsDb, auditLogs } from "~~/server/utils/admin-ops-db"
 
 /**
  * GET /api/admin/users/[id]
@@ -80,8 +80,9 @@ export default defineEventHandler(async (event) => {
       .innerJoin(sites, eq(subscriptions.site_id, sites.id))
       .where(eq(sites.user_id, userId))
 
-    // Get audit log summary for this user
-    const auditLogCountResult = await db
+    // Get audit log summary for this user (from admin ops DB)
+    const adminOpsDb = useAdminOpsDb(event)
+    const auditLogCountResult = await adminOpsDb
       .select({ count: count() })
       .from(auditLogs)
       .where(eq(auditLogs.entity_type, 'user'))
@@ -89,7 +90,7 @@ export default defineEventHandler(async (event) => {
     const totalAuditActions = auditLogCountResult[0]?.count || 0
 
     // Get last audit action
-    const lastAuditAction = await db
+    const lastAuditAction = await adminOpsDb
       .select({
         action: auditLogs.action,
         createdAt: auditLogs.createdAt,

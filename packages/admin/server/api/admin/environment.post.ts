@@ -1,6 +1,6 @@
 import { getAdminEnvironment, setAdminEnvironment, useAdminEnv } from '../../utils/admin-env'
 import type { AdminEnvironment } from '../../utils/admin-env'
-import { auditLogs } from '~~/server/utils/admin-ops-db'
+import { useAdminOpsDb, auditLogs } from '~~/server/utils/admin-ops-db'
 
 /**
  * Response structure for environment endpoints
@@ -62,7 +62,8 @@ export default defineEventHandler(async (event): Promise<EnvironmentResponse> =>
 
   // Log the environment switch to audit logs
   try {
-    await db.insert(auditLogs).values({
+    const adminOpsDb = useAdminOpsDb(event)
+    await adminOpsDb.insert(auditLogs).values({
       admin_id: session.user.id,
       action: 'environment_switched',
       entity_type: 'environment',
