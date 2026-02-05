@@ -294,140 +294,122 @@
 
         <!-- Right Column: Content -->
         <div class="space-y-6">
-          <!-- Sites Section -->
+          <!-- Sites & Subscriptions -->
           <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
-                Associated Sites
+                Sites & Subscriptions
               </h3>
               <span class="text-sm text-base-content/60">{{ user.sites.length }} {{ user.sites.length === 1 ? 'site' : 'sites' }}</span>
             </div>
 
+            <!-- Empty State -->
             <div v-if="user.sites.length === 0" class="py-12 text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
                 </svg>
               </div>
               <p class="text-sm text-base-content/50">No sites associated with this account</p>
             </div>
 
+            <!-- Sites List -->
             <div v-else class="space-y-4">
               <div
                 v-for="site in user.sites"
                 :key="site.id"
-                class="p-4 rounded-lg border border-base-300/30 hover:border-base-300 hover:bg-base-50 transition-all"
+                class="rounded-lg border border-base-300/30 hover:border-base-300 transition-all overflow-hidden"
               >
-                <div class="flex items-start justify-between gap-4 mb-3">
-                  <div class="flex-1 min-w-0">
-                    <h4 class="text-base font-medium text-base-content mb-1 truncate">
-                      {{ site.name || 'Unnamed Site' }}
-                    </h4>
-                    <a
-                      :href="site.url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1.5 text-sm text-primary hover:underline group"
-                    >
-                      <span>{{ site.url }}</span>
-                      <svg class="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
-                  </div>
-                  <div class="flex flex-col items-end gap-1 text-right">
-                    <!-- Role -->
-                    <div v-if="site.role" class="flex items-center gap-1.5">
-                      <UserIcon class="w-3.5 h-3.5 text-base-content/40" />
-                      <span class="text-sm font-medium text-base-content">{{ capitalizeFirst(site.role) }}</span>
+                <!-- Site info row -->
+                <div class="p-4">
+                  <div class="flex items-start justify-between gap-4 mb-2">
+                    <!-- Name + URL -->
+                    <div class="min-w-0 flex-1">
+                      <h4 class="text-base font-medium text-base-content truncate">{{ site.name || 'Unnamed Site' }}</h4>
+                      <div class="text-xs text-base-content/40 mt-0.5">{{ cleanUrl(site.url) }}</div>
                     </div>
-                    <!-- Verification Status -->
+                    <!-- Role badge -->
+                    <span
+                      v-if="site.role"
+                      class="px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider shrink-0"
+                      :class="{
+                        'bg-primary/10 text-primary': site.role === 'owner',
+                        'bg-base-200 text-base-content/50': site.role === 'admin',
+                        'bg-base-200/60 text-base-content/40': site.role === 'editor',
+                      }"
+                    >
+                      {{ site.role }}
+                    </span>
+                  </div>
+
+                  <!-- Verification + Versions row -->
+                  <div class="flex items-center gap-3 mt-3 text-xs">
                     <div class="flex items-center gap-1.5">
                       <template v-if="site.isVerified">
                         <CheckIcon class="w-3.5 h-3.5 text-success" />
-                        <span class="text-xs text-base-content/60">Verified</span>
+                        <span class="text-base-content/50">Verified</span>
                       </template>
                       <template v-else>
-                        <span class="text-xs text-base-content/50">Pending verification</span>
+                        <span class="w-3.5 h-3.5 rounded-full border border-base-300 inline-block"></span>
+                        <span class="text-base-content/35">Unverified</span>
                       </template>
                     </div>
+                    <template v-if="site.versions?.create">
+                      <span class="text-base-content/20">&middot;</span>
+                      <span class="text-base-content/35 font-mono">v{{ site.versions.create }}</span>
+                    </template>
                   </div>
-                </div>
 
-                <div v-if="site.subscription" class="pt-3 mt-3 border-t border-base-300/30">
-                  <div class="flex items-center gap-4 flex-wrap text-sm">
-                    <!-- Tier -->
-                    <div class="flex items-center gap-1.5">
-                      <span class="text-base-content/60">Plan:</span>
-                      <span class="font-medium text-base-content">{{ formatTier(site.subscription.tier) }}</span>
-                    </div>
-                    <!-- Status -->
-                    <div class="flex items-center gap-1.5">
-                      <span class="text-base-content/60">Status:</span>
-                      <span :class="getSubscriptionStatusClass(site.subscription.status)">
-                        {{ formatSubscriptionStatus(site.subscription.status) }}
-                      </span>
-                    </div>
-                    <!-- Renewal -->
-                    <div v-if="site.subscription.current_period_end" class="flex items-center gap-1.5">
-                      <span class="text-base-content/60">{{ site.subscription.cancel_at_period_end ? 'Ends:' : 'Renews:' }}</span>
-                      <span class="text-base-content">{{ formatDate(site.subscription.current_period_end) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Subscription History -->
-          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
-                Active Subscriptions
-              </h3>
-              <span class="text-sm text-base-content/60">{{ activeSubscriptionsCount }} active</span>
-            </div>
-
-            <div v-if="activeSubscriptionsCount === 0" class="py-12 text-center">
-              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
-                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-              </div>
-              <p class="text-sm text-base-content/50">No active subscriptions</p>
-            </div>
-
-            <div v-else class="space-y-4">
-              <div
-                v-for="site in sitesWithSubscriptions"
-                :key="site.id"
-                class="p-4 rounded-lg border border-base-300/30"
-              >
-                <div class="flex items-start justify-between gap-4 mb-3">
-                  <h4 class="text-base font-medium text-base-content">
-                    {{ site.name || site.url }}
-                  </h4>
-                  <div class="flex items-center gap-3 text-sm">
-                    <span class="font-medium text-base-content">{{ formatTier(site.subscription!.tier) }}</span>
-                    <span :class="getSubscriptionStatusClass(site.subscription!.status)">
-                      {{ formatSubscriptionStatus(site.subscription!.status) }}
+                  <!-- Subscription summary -->
+                  <div v-if="site.subscription" class="mt-3 flex items-center gap-2 text-xs">
+                    <span
+                      class="w-1.5 h-1.5 rounded-full shrink-0"
+                      :class="{
+                        'bg-success': site.subscription.status === 'active' || site.subscription.status === 'trialing',
+                        'bg-warning': site.subscription.status === 'past_due',
+                        'bg-base-content/25': site.subscription.status === 'canceled' || site.subscription.status === 'cancelled',
+                      }"
+                    ></span>
+                    <span class="font-medium text-base-content/60">{{ formatTier(site.subscription.tier) }}</span>
+                    <span class="text-base-content/20">&middot;</span>
+                    <span :class="getSubscriptionStatusClass(site.subscription.status)" class="text-xs">
+                      {{ formatSubscriptionStatus(site.subscription.status) }}
                     </span>
+                    <template v-if="site.subscription.current_period_end">
+                      <span class="text-base-content/20">&middot;</span>
+                      <span class="text-base-content/35">
+                        {{ site.subscription.cancel_at_period_end ? 'Ends' : 'Renews' }} {{ formatDate(site.subscription.current_period_end) }}
+                      </span>
+                    </template>
                   </div>
                 </div>
 
-                <div class="space-y-2">
-                  <div v-if="site.subscription!.current_period_start" class="flex items-center justify-between text-sm">
-                    <span class="text-base-content/60">Started</span>
-                    <span class="text-base-content font-medium">{{ formatDate(site.subscription!.current_period_start) }}</span>
-                  </div>
-                  <div v-if="site.subscription!.current_period_end" class="flex items-center justify-between text-sm">
-                    <span class="text-base-content/60">{{ site.subscription!.cancel_at_period_end ? 'Ends' : 'Renews' }}</span>
-                    <span class="text-base-content font-medium">{{ formatDate(site.subscription!.current_period_end) }}</span>
-                  </div>
-                  <div v-if="site.subscription!.cancel_at_period_end" class="flex items-center justify-between text-sm">
-                    <span class="text-base-content/60">Auto-Renew</span>
-                    <span class="text-base-content/50">Disabled</span>
-                  </div>
+                <!-- Action links -->
+                <div class="flex border-t border-base-300/30 divide-x divide-base-300/30 text-xs">
+                  <NuxtLink
+                    :to="`/sites/${site.id}`"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-base-content/50 hover:text-primary hover:bg-primary/5 transition-colors font-medium"
+                  >
+                    Manage Site
+                  </NuxtLink>
+                  <NuxtLink
+                    v-if="site.subscription"
+                    :to="`/subscriptions/${site.subscription.id}`"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-base-content/50 hover:text-primary hover:bg-primary/5 transition-colors font-medium"
+                  >
+                    Manage Subscription
+                  </NuxtLink>
+                  <a
+                    :href="site.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-base-content/50 hover:text-primary hover:bg-primary/5 transition-colors font-medium"
+                  >
+                    Visit Site
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
                 </div>
               </div>
             </div>
@@ -550,7 +532,6 @@ import {
   PencilIcon,
   CheckIcon,
   CheckBadgeIcon,
-  UserIcon
 } from '@heroicons/vue/24/outline'
 import { getGravatarUrl, getUserInitials } from '~/composables/useAvatar'
 
@@ -571,6 +552,7 @@ interface Site {
     wordpress: string | null
   }
   subscription: {
+    id: number
     siteId: number
     status: string
     tier: string
@@ -653,13 +635,9 @@ const gravatarUrl = computed(() => {
   return getGravatarUrl(user.value.email, 120)
 })
 
-const sitesWithSubscriptions = computed(() => {
-  if (!user.value) return []
-  return user.value.sites.filter(site => site.subscription !== null)
-})
-
 const activeSubscriptionsCount = computed(() => {
-  return sitesWithSubscriptions.value.filter(site =>
+  if (!user.value) return 0
+  return user.value.sites.filter(site =>
     site.subscription?.status === 'active' || site.subscription?.status === 'trialing'
   ).length
 })
@@ -917,6 +895,10 @@ const formatDate = (dateString: string): string => {
 
 const capitalizeFirst = (str: string): string => {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
+
+const cleanUrl = (url: string): string => {
+  return url.replace(/^https?:\/\//, '').replace(/\/$/, '')
 }
 
 const formatTier = (tier: string): string => {

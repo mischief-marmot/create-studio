@@ -1,4 +1,4 @@
-import { eq, desc, count } from 'drizzle-orm'
+import { eq, desc, count, inArray } from 'drizzle-orm'
 import { users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs } from "~~/server/utils/admin-ops-db"
 
@@ -49,7 +49,7 @@ export default defineEventHandler(async (event) => {
 
     const user = userResult[0]
 
-    // Get user's sites with verification status
+    // Get user's sites via siteUsers pivot table (finds ALL associated sites, not just owned)
     const userSites = await db
       .select({
         id: sites.id,
@@ -61,24 +61,37 @@ export default defineEventHandler(async (event) => {
         create_version: sites.create_version,
         wp_version: sites.wp_version,
       })
-      .from(sites)
-      .leftJoin(siteUsers, eq(sites.id, siteUsers.site_id))
-      .where(eq(sites.user_id, userId))
+      .from(siteUsers)
+      .innerJoin(sites, eq(siteUsers.site_id, sites.id))
+      .where(eq(siteUsers.user_id, userId))
       .orderBy(desc(sites.createdAt))
 
-    // Get subscription info for user's sites
-    const userSubscriptions = await db
-      .select({
-        siteId: subscriptions.site_id,
-        status: subscriptions.status,
-        tier: subscriptions.tier,
-        current_period_start: subscriptions.current_period_start,
-        current_period_end: subscriptions.current_period_end,
-        cancel_at_period_end: subscriptions.cancel_at_period_end,
-      })
-      .from(subscriptions)
-      .innerJoin(sites, eq(subscriptions.site_id, sites.id))
-      .where(eq(sites.user_id, userId))
+    // Get subscription info for user's associated sites
+    const siteIds = userSites.map(s => s.id)
+    let userSubscriptions: {
+      id: number
+      siteId: number
+      status: string
+      tier: string
+      current_period_start: string | null
+      current_period_end: string | null
+      cancel_at_period_end: boolean | null
+    }[] = []
+
+    if (siteIds.length > 0) {
+      userSubscriptions = await db
+        .select({
+          id: subscriptions.id,
+          siteId: subscriptions.site_id,
+          status: subscriptions.status,
+          tier: subscriptions.tier,
+          current_period_start: subscriptions.current_period_start,
+          current_period_end: subscriptions.current_period_end,
+          cancel_at_period_end: subscriptions.cancel_at_period_end,
+        })
+        .from(subscriptions)
+        .where(inArray(subscriptions.site_id, siteIds))
+    }
 
     // Get audit log summary for this user (from admin ops DB)
     const adminOpsDb = useAdminOpsDb(event)
