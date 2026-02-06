@@ -230,11 +230,11 @@
                 <th class="text-base-content px-4 py-4 font-semibold text-left">Feature</th>
                 <th class="text-primary-content bg-primary/80 dark:bg-primary px-4 py-4 font-semibold text-center">
                   Create
-                  <div class="text-primary-content text-xs font-normal">Free forever</div>
+                  <div class="text-primary-content text-xs font-normal">Free-$15/mo</div>
                 </th>
                 <th class="text-base-content px-4 py-4 font-semibold text-center">
                   WP Recipe Maker
-                  <div class="text-base-content text-xs font-normal">$49+/year</div>
+                  <div class="text-base-content text-xs font-normal">$49-149/year</div>
                 </th>
                 <th class="text-base-content px-4 py-4 font-semibold text-center">
                   Tasty Recipes
@@ -451,7 +451,7 @@
               <p class=" mb-6 text-lg">Save hours of manual work while helping health-conscious readers make informed choices.</p>
               <div class="bg-base-300 border-base-content/10 p-4 border rounded-lg">
                 <p class=" mb-2 text-sm font-semibold">How it works</p>
-                <p class=" text-sm">Our <strong class="">free API</strong> calculates nutrition facts automatically from your ingredient list. Scientifically accurate and ready to go.</p>
+                <p class=" text-sm">Our <strong class="">free API</strong> calculates nutrition facts automatically from your ingredient list, ready to review.</p>
               </div>
             </div>
           </div>
@@ -464,7 +464,7 @@
                 Social Proof
               </div>
               <h3 class="mb-4 font-serif text-3xl">Build trust with reader reviews</h3>
-              <p class="mb-6 text-lg">Let your audience share their stories and help others choose what to make. Respond to reviews to build community.</p>
+              <p class="mb-6 text-lg">Let your audience share their stories and help others choose what to make. Respond to reviews to build community and engagement.</p>
               <div class="bg-base-300 border-base-content/30 p-4 border rounded-lg">
                 <p class="mb-2 text-sm font-semibold">How it works</p>
                 <p class="text-sm">Readers leave ratings and reviews directly on your cards. You can respond and build a community of engaged followers.</p>
@@ -806,12 +806,12 @@ const scrollToSection = (id: string) => {
 // Comparison data
 const comparisonFeatures = [
   { name: 'JSON-LD Schema', wprm: 'check', create: 'check', tasty: 'check' },
+  { name: 'User Experience', wprm: 'Confusing', create: 'Pleasant', tasty: 'Modern' },
   { name: 'Nutrition API', wprm: 'Paid', create: 'Free', tasty: 'Paid' },
   { name: 'Card Templates', wprm: 'Dated', create: 'Beautiful', tasty: 'Polished' },
   { name: 'Interactive Mode', wprm: '✗', create: 'Exclusive', tasty: '✗' },
-  { name: 'Content Types', wprm: 'Recipes', create: 'Recipes, How-Tos, Lists', tasty: 'Recipes' },
+  { name: 'Content Types', wprm: 'Repurposed Recipes', create: 'Recipes, How-Tos, Lists', tasty: 'Recipes' },
   { name: 'User Ratings', wprm: 'Paid', create: 'Free', tasty: 'Paid' },
-  { name: 'Serving Adjustments', wprm: 'Paid', create: 'Free', tasty: 'Paid' },
 ]
 
 // Page meta
