@@ -13,7 +13,7 @@ function getStripeClient(): Stripe {
   }
 
   return new Stripe(apiKey, {
-    apiVersion: '2025-09-30.clover',
+    apiVersion: '2026-01-28.clover',
     httpClient: Stripe.createFetchHttpClient()
   })
 }
