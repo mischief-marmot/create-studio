@@ -330,31 +330,91 @@
             </div>
           </div>
 
-          <!-- Billing History Section -->
+          <!-- Revenue & Billing Section -->
           <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
             <h3 class="text-lg text-base-content mb-6" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
-              Billing History
+              Revenue & Billing
             </h3>
 
-            <div class="py-12 text-center">
+            <!-- Loading -->
+            <div v-if="revenueLoading" class="py-8 text-center">
+              <span class="loading loading-spinner loading-md text-primary"></span>
+              <p class="text-sm text-base-content/50 mt-2">Loading billing data...</p>
+            </div>
+
+            <!-- No Stripe — Manual Subscription -->
+            <div v-else-if="revenue && !revenue.hasStripe" class="py-8 text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p class="text-sm text-base-content/50 mb-4">View billing history in Stripe</p>
-              <a
-                v-if="subscription.stripeCustomerLink"
-                :href="subscription.stripeCustomerLink"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center justify-center gap-2 py-3 px-4 rounded-lg border border-base-300 text-sm font-medium text-base-content hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
-              >
-                <span>Open Stripe</span>
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-              </a>
+              <p class="text-sm font-medium text-base-content/70 mb-1">Manual Subscription</p>
+              <p class="text-xs text-base-content/50">This subscription was granted manually and has no Stripe billing.</p>
+              <p class="text-xs text-base-content/50 mt-1">It does not contribute to MRR.</p>
+            </div>
+
+            <!-- Stripe Revenue Data -->
+            <div v-else-if="revenue && revenue.hasStripe" class="space-y-6">
+              <!-- Revenue Summary -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 rounded-lg bg-base-200/30 border border-base-300/30">
+                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                    {{ formatCurrency(revenue.totalRevenue) }}
+                  </div>
+                  <div class="text-xs text-base-content/60 mt-1">Total Revenue</div>
+                </div>
+                <div v-if="revenue.plan" class="p-4 rounded-lg bg-base-200/30 border border-base-300/30">
+                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                    {{ formatCurrency(revenue.plan.amount) }}
+                  </div>
+                  <div class="text-xs text-base-content/60 mt-1">
+                    per {{ revenue.plan.intervalCount > 1 ? `${revenue.plan.intervalCount} ` : '' }}{{ revenue.plan.interval }}{{ revenue.plan.intervalCount > 1 ? 's' : '' }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Invoice History -->
+              <div v-if="revenue.invoices.length > 0">
+                <h4 class="text-sm font-medium text-base-content/70 mb-3">Invoices ({{ revenue.invoices.length }})</h4>
+                <div class="divide-y divide-base-300/30">
+                  <div
+                    v-for="invoice in revenue.invoices"
+                    :key="invoice.id"
+                    class="flex items-center justify-between py-3"
+                  >
+                    <div class="flex items-center gap-3">
+                      <div class="w-2 h-2 rounded-full bg-success"></div>
+                      <div>
+                        <div class="text-sm text-base-content font-medium">{{ formatCurrency(invoice.amount) }}</div>
+                        <div class="text-xs text-base-content/50">{{ invoice.number || invoice.id }}</div>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-xs text-base-content/50">{{ formatDate(invoice.date) }}</span>
+                      <a
+                        v-if="invoice.pdfUrl"
+                        :href="invoice.pdfUrl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-xs text-primary hover:underline"
+                      >
+                        PDF
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="text-center py-4">
+                <p class="text-sm text-base-content/50">No invoices found</p>
+              </div>
+            </div>
+
+            <!-- Error state -->
+            <div v-else-if="revenueError" class="py-8 text-center">
+              <p class="text-sm text-error/80">{{ revenueError }}</p>
+              <button class="btn btn-outline btn-xs mt-2" @click="fetchRevenue">Retry</button>
             </div>
           </div>
 
@@ -556,11 +616,37 @@ interface Subscription {
 const router = useRouter()
 const route = useRoute()
 
+interface RevenueData {
+  hasStripe: boolean
+  plan: {
+    name: string
+    amount: number
+    currency: string
+    interval: string
+    intervalCount: number
+  } | null
+  totalRevenue: number
+  currency: string
+  invoices: Array<{
+    id: string
+    number: string | null
+    date: string | null
+    amount: number
+    currency: string
+    status: string | null
+    pdfUrl: string | null
+    hostedUrl: string | null
+  }>
+}
+
 // State
 const subscription = ref<Subscription | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const actionLoading = ref(false)
+const revenue = ref<RevenueData | null>(null)
+const revenueLoading = ref(false)
+const revenueError = ref<string | null>(null)
 
 // Modal state
 const showModifyTierModal = ref(false)
@@ -587,6 +673,8 @@ const fetchSubscriptionDetails = async () => {
     const response = await $fetch<Subscription>(`/api/admin/subscriptions/${subscriptionId}`)
     subscription.value = response
     selectedTier.value = response.tier as 'free' | 'pro'
+    // Fetch revenue data in parallel (non-blocking)
+    fetchRevenue()
   } catch (err: any) {
     console.error('Failed to fetch subscription details:', err)
     if (err?.statusCode === 404) {
@@ -596,6 +684,23 @@ const fetchSubscriptionDetails = async () => {
     }
   } finally {
     loading.value = false
+  }
+}
+
+// Fetch revenue data from Stripe
+const fetchRevenue = async () => {
+  if (!subscription.value) return
+  revenueLoading.value = true
+  revenueError.value = null
+
+  try {
+    const response = await $fetch<RevenueData>(`/api/admin/subscriptions/${subscription.value.id}/revenue`)
+    revenue.value = response
+  } catch (err: any) {
+    console.error('Failed to fetch revenue data:', err)
+    revenueError.value = err?.data?.message || 'Failed to load billing data'
+  } finally {
+    revenueLoading.value = false
   }
 }
 
@@ -699,6 +804,15 @@ const showAlert = (message: string, type: 'success' | 'error') => {
 }
 
 // Format helpers
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
+}
+
 const formatDate = (dateString: string | null): string => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)

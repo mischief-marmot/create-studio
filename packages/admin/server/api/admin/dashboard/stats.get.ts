@@ -1,4 +1,4 @@
-import { eq, and, gte, sql, isNotNull, count } from 'drizzle-orm'
+import { eq, and, gte, isNotNull, count } from 'drizzle-orm'
 import { users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
 
 /**
@@ -6,7 +6,6 @@ import { users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db
  * Returns dashboard metrics for admin portal
  */
 export default defineEventHandler(async (event) => {
-  // Check admin session
   const session = await getUserSession(event)
   if (!session?.user) {
     throw createError({
@@ -18,10 +17,6 @@ export default defineEventHandler(async (event) => {
   const db = useAdminDb(event)
 
   try {
-    console.log('=== Dashboard Stats Debug ===')
-    console.log('DB instance:', typeof db)
-
-    // Calculate date boundaries
     const now = new Date()
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -30,25 +25,13 @@ export default defineEventHandler(async (event) => {
     const totalUsersResult = await db
       .select({ count: count() })
       .from(users)
-    console.log('Total users result:', totalUsersResult)
     const totalUsers = totalUsersResult[0]?.count || 0
-    console.log('Total users:', totalUsers)
 
     // Get total sites count
     const totalSitesResult = await db
       .select({ count: count() })
       .from(sites)
-    console.log('Total sites result:', totalSitesResult)
     const totalSites = totalSitesResult[0]?.count || 0
-
-    // Get total subscriptions count
-    const totalSubscriptionsResult = await db
-      .select({ count: count() })
-      .from(subscriptions)
-    console.log('Total subscriptions result:', totalSubscriptionsResult)
-    const totalSubscriptions = totalSubscriptionsResult[0]?.count || 0
-    console.log('=== End Debug ===')
-
 
     // Get new users in last 7 days
     const newUsersLast7DaysResult = await db
@@ -72,7 +55,6 @@ export default defineEventHandler(async (event) => {
       .where(isNotNull(siteUsers.verified_at))
     const verifiedSites = verifiedSitesResult[0]?.count || 0
 
-    // Get unverified sites count (total sites - verified sites)
     const unverifiedSites = totalSites - verifiedSites
 
     // Get active users (users with at least one site that has an active subscription)
@@ -84,8 +66,21 @@ export default defineEventHandler(async (event) => {
       .where(eq(subscriptions.status, 'active'))
     const activeUsers = activeUsersResult[0]?.count || 0
 
-    // Get pro subscriptions count
-    const proSubscriptionsResult = await db
+    // Get paid pro subscriptions (active pro with Stripe billing)
+    const paidProResult = await db
+      .select({ count: count() })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.status, 'active'),
+          eq(subscriptions.tier, 'pro'),
+          isNotNull(subscriptions.stripe_subscription_id)
+        )
+      )
+    const paidProSubscriptions = paidProResult[0]?.count || 0
+
+    // Get manual pro subscriptions (active pro without Stripe billing)
+    const allProResult = await db
       .select({ count: count() })
       .from(subscriptions)
       .where(
@@ -94,7 +89,8 @@ export default defineEventHandler(async (event) => {
           eq(subscriptions.tier, 'pro')
         )
       )
-    const proSubscriptions = proSubscriptionsResult[0]?.count || 0
+    const totalProSubscriptions = allProResult[0]?.count || 0
+    const manualProSubscriptions = totalProSubscriptions - paidProSubscriptions
 
     // Get free subscriptions count
     const freeSubscriptionsResult = await db
@@ -108,13 +104,10 @@ export default defineEventHandler(async (event) => {
       )
     const freeSubscriptions = freeSubscriptionsResult[0]?.count || 0
 
-    // Calculate MRR (Monthly Recurring Revenue)
-    // Assuming each pro subscription is $10/month (this should come from a config)
-    const PRO_SUBSCRIPTION_PRICE = 10
-    const mrr = proSubscriptions * PRO_SUBSCRIPTION_PRICE
-
-    // Calculate churn rate (for now, just return 0 - needs historical data)
-    const churnRate = 0
+    // MRR: only count Stripe-billed pro subscriptions
+    // Uses $10/month estimate — accurate MRR requires Stripe price data
+    const PRO_MONTHLY_ESTIMATE = 10
+    const mrr = paidProSubscriptions * PRO_MONTHLY_ESTIMATE
 
     return {
       users: {
@@ -125,9 +118,9 @@ export default defineEventHandler(async (event) => {
       },
       revenue: {
         mrr,
-        proSubscriptions,
+        paidProSubscriptions,
+        manualProSubscriptions,
         freeSubscriptions,
-        churnRate,
       },
       sites: {
         total: totalSites,

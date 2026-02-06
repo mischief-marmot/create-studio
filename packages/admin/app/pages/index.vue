@@ -115,15 +115,26 @@
               <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
                 {{ formatCurrency(stats.revenue.mrr) }}
               </div>
-              <div class="text-sm text-base-content/60">Monthly Recurring Revenue</div>
+              <div class="text-sm text-base-content/60">MRR</div>
+              <div v-if="stats.revenue.mrr === 0 && (stats.revenue.paidProSubscriptions + stats.revenue.manualProSubscriptions) > 0" class="text-xs text-warning/80">
+                No Stripe-billed subscriptions
+              </div>
             </div>
 
-            <!-- Pro Subscriptions -->
+            <!-- Paid Pro -->
             <div class="space-y-1">
               <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                {{ formatNumber(stats.revenue.proSubscriptions) }}
+                {{ formatNumber(stats.revenue.paidProSubscriptions) }}
               </div>
-              <div class="text-sm text-base-content/60">Pro Subscriptions</div>
+              <div class="text-sm text-base-content/60">Paid Pro</div>
+            </div>
+
+            <!-- Manual Pro -->
+            <div class="space-y-1">
+              <div class="text-3xl" :class="stats.revenue.manualProSubscriptions > 0 ? 'text-base-content' : 'text-base-content/50'" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                {{ formatNumber(stats.revenue.manualProSubscriptions) }}
+              </div>
+              <div class="text-sm text-base-content/60">Manual Pro</div>
             </div>
 
             <!-- Free Subscriptions -->
@@ -131,15 +142,7 @@
               <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
                 {{ formatNumber(stats.revenue.freeSubscriptions) }}
               </div>
-              <div class="text-sm text-base-content/60">Free Subscriptions</div>
-            </div>
-
-            <!-- Churn Rate -->
-            <div class="space-y-1">
-              <div class="text-3xl" :class="stats.revenue.churnRate > 5 ? 'text-warning' : 'text-base-content'" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                {{ formatPercentage(stats.revenue.churnRate) }}
-              </div>
-              <div class="text-sm text-base-content/60">Churn Rate</div>
+              <div class="text-sm text-base-content/60">Free</div>
             </div>
           </div>
         </div>
@@ -281,9 +284,9 @@ interface DashboardStats {
   }
   revenue: {
     mrr: number
-    proSubscriptions: number
+    paidProSubscriptions: number
+    manualProSubscriptions: number
     freeSubscriptions: number
-    churnRate: number
   }
   sites: {
     total: number
@@ -307,10 +310,6 @@ const formatCurrency = (value: number): string => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value)
-}
-
-const formatPercentage = (value: number): string => {
-  return `${value.toFixed(1)}%`
 }
 
 const fetchDashboardData = async () => {
