@@ -17,7 +17,7 @@ import { stdin as input, stdout as output } from 'node:process'
 import bcrypt from 'bcryptjs'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import Database from 'better-sqlite3'
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core'
@@ -44,35 +44,46 @@ const __dirname = dirname(__filename)
 const BCRYPT_ROUNDS = 10
 
 /**
- * Finds the NuxtHub D1 database file
+ * Gets the path to the admin ops database file.
  *
- * Note: Locally, the admin portal shares the app's database via hub.dir config.
- * The Admins table lives in the same local SQLite file as the app data.
+ * The admin ops database is separate from the main app database.
+ * It lives at packages/admin/.data/admin-ops.db and is auto-created
+ * with the necessary tables when the admin dev server starts.
  */
 function findDatabasePath(): string {
-  // Script is in packages/admin/scripts/, go up to repo root
-  const rootDir = join(__dirname, '../../..')
+  // Script is in packages/admin/scripts/, go up to packages/admin/
+  const adminPkgRoot = join(__dirname, '..')
+  const dataDir = join(adminPkgRoot, '.data')
 
-  // Primary location: app's NuxtHub database (shared locally via hub.dir)
-  const hubDbPath = join(rootDir, 'packages/app/.data/hub/db/sqlite.db')
-  if (existsSync(hubDbPath)) {
-    return hubDbPath
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true })
   }
 
-  // Fallback: check older Wrangler location
-  const wranglerDir = join(rootDir, 'packages/app/.wrangler/state/v3/d1/miniflare-D1DatabaseObject')
-  if (existsSync(wranglerDir)) {
-    const files = readdirSync(wranglerDir)
-    const sqliteFile = files.find(f => f.endsWith('.sqlite'))
-    if (sqliteFile) {
-      return join(wranglerDir, sqliteFile)
-    }
+  const dbPath = join(dataDir, 'admin-ops.db')
+
+  // If the DB doesn't exist yet, create it with the Admins table
+  if (!existsSync(dbPath)) {
+    console.log('Creating admin ops database...')
+    const sqlite = new Database(dbPath)
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS Admins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        firstname TEXT,
+        lastname TEXT,
+        role TEXT NOT NULL DEFAULT 'admin',
+        last_login TEXT,
+        createdAt TEXT,
+        updatedAt TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_admins_email ON Admins (email);
+      CREATE INDEX IF NOT EXISTS idx_admins_role ON Admins (role);
+    `)
+    sqlite.close()
   }
 
-  throw new Error(
-    'Database file not found. Please run the dev server at least once to create the database:\n' +
-    '  cd packages/app && npm run dev'
-  )
+  return dbPath
 }
 
 /**
