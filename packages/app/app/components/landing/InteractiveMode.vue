@@ -3,7 +3,10 @@
     <div class="max-w-7xl lg:px-8 sm:px-6 mx-auto">
       <!-- Header -->
       <div class="max-w-3xl mx-auto text-center">
-        <span class="badge badge-primary badge-lg mb-4 font-bold">All-New Feature!</span>
+        <span class="badge badge-primary badge-lg gap-2 mb-4 font-bold">
+          All-New Feature!
+          <span class="bg-primary-content text-primary text-xs font-bold px-1.5 py-0.5 rounded">Pro</span>
+        </span>
         <span v-if="eyebrow" class="text-primary-content dark:text-primary block mb-2 text-sm font-semibold tracking-wider uppercase">{{ eyebrow }}</span>
         <h2 class="sm:text-5xl lg:text-6xl text-base-content font-serif text-4xl">{{ title }}</h2>
         <p v-if="description" class="text-base-content mt-6 text-lg leading-relaxed">{{ description }}</p>
@@ -24,9 +27,7 @@
               <!-- Content -->
               <div class="flex-1 min-w-0">
                 <h3 class="text-primary-content group-hover:text-primary-content/70 dark:group-hover:text-primary dark:text-primary/70 mb-2 font-serif text-3xl tracking-wider transition-colors">{{ feature.name }}</h3>
-                <p class="text-base-content/80 text-sm leading-relaxed">
-                  {{ feature.description }}
-                </p>
+                <p class="text-base-content/80 text-sm leading-relaxed" v-html="feature.description" />
               </div>
 
               <!-- Number Badge -->
@@ -195,7 +196,7 @@ const features = [
   },
   {
     name: 'Ad-supported experience',
-    description: 'Create 2.0 Free plan: Create shows ads in Interactive Mode while your site ads run elsewhere. <br/>Create 2.0 Pro plan: Use your own ad network or disable Interactive Mode entirely for complete control.',
+    description: `<strong>Create 2.0 Free+ plan</strong>: Create shows ads in Interactive Mode while your site ads run elsewhere. <br/><strong>Create 2.0 Pro plan</strong>: Use your own ad network or disable Interactive Mode entirely for complete control.`,
     icon: ComputerDesktopIcon
   },
 ]

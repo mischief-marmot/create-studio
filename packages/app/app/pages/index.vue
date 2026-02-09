@@ -464,10 +464,10 @@
                 Social Proof
               </div>
               <h3 class="mb-4 font-serif text-3xl">Build trust with reader reviews</h3>
-              <p class="mb-6 text-lg">Let your audience share their stories and help others choose what to make. Respond to reviews to build community and engagement.</p>
+              <p class="mb-6 text-lg">Let your audience share their stories and help others choose what to make. Pro users can respond to reviews to build community engagement.</p>
               <div class="bg-base-300 border-base-content/30 p-4 border rounded-lg">
                 <p class="mb-2 text-sm font-semibold">How it works</p>
-                <p class="text-sm">Readers leave ratings and reviews directly on your cards. You can respond and build a community of engaged followers.</p>
+                <p class="text-sm">Readers leave ratings and reviews directly on your cards. Pro users can respond to build a community of engaged followers.</p>
               </div>
             </div>
             <div class="bg-base-300 border-base-content/30 rounded-xl p-6 space-y-4 border">
@@ -475,6 +475,13 @@
                 <div class="text-primary mb-2 text-sm">★★★★★</div>
                 <p class="text-sm">"Made this for my family and they loved it!"</p>
                 <p class="mt-2 text-xs">— Sarah M.</p>
+                <div class="bg-base-200 border-base-content/20 p-3 mt-3 ml-4 border-l-2 rounded-r-lg">
+                  <div class="flex items-center gap-2">
+                    <p class="text-xs font-semibold">Admin Reply</p>
+                    <span class="badge badge-primary badge-xs">Pro Feature</span>
+                  </div>
+                  <p class="mt-1 text-xs">So glad your family enjoyed it, Sarah! Try adding a pinch of cinnamon next time for an extra twist.</p>
+                </div>
               </div>
               <div class="text-primary mb-2 text-sm">★★★★★</div>
               <p class="text-sm">"Perfect weeknight dinner."</p>
@@ -484,37 +491,53 @@
           <!-- Feature 4: Servings -->
           <div class="lg:grid-cols-2 sm:p-6 lg:grid-flow-dense grid items-center gap-12 p-3">
             <div class="bg-base-300 border-base-content/30 rounded-xl lg:order-1 order-2 p-6 border">
-              <div class="flex items-center justify-center mb-8">
-                <button
-                  @click="servingsMultiplier = 1"
-                  :class="['btn rounded-r-none btn-sm border border-r-0', servingsMultiplier === 1 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
-                >
-                  1x
-                </button>
-                <button
-                  @click="servingsMultiplier = 2"
-                  :class="['btn rounded-none btn-sm border-t', servingsMultiplier === 2 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
-                >
-                  2x
-                </button>
-                <button
-                  @click="servingsMultiplier = 3"
-                  :class="['btn rounded-l-none btn-sm border border-l-0', servingsMultiplier === 3 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
-                >
-                  3x
-                </button>
+              <div class="flex flex-wrap items-center justify-center gap-4 mb-8">
+                <div class="flex">
+                  <button
+                    @click="servingsMultiplier = 1"
+                    :class="['btn rounded-r-none btn-sm border border-r-0', servingsMultiplier === 1 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                  >
+                    1x
+                  </button>
+                  <button
+                    @click="servingsMultiplier = 2"
+                    :class="['btn rounded-none btn-sm border-t', servingsMultiplier === 2 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                  >
+                    2x
+                  </button>
+                  <button
+                    @click="servingsMultiplier = 3"
+                    :class="['btn rounded-l-none btn-sm border border-l-0', servingsMultiplier === 3 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                  >
+                    3x
+                  </button>
+                </div>
+                <div class="flex">
+                  <button
+                    @click="unitSystem = 'imperial'"
+                    :class="['btn rounded-r-none btn-sm border border-r-0', unitSystem === 'imperial' ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                  >
+                    Imperial
+                  </button>
+                  <button
+                    @click="unitSystem = 'metric'"
+                    :class="['btn rounded-l-none btn-sm border border-l-0', unitSystem === 'metric' ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                  >
+                    Metric
+                  </button>
+                </div>
               </div>
               <div class="space-y-2 text-sm">
                 <div class="border-slate-950 flex items-center justify-between py-2 border-b">
-                  <span>{{ getScaledAmount('2', 'lbs') }}</span>
+                  <span>{{ getConvertedUnit(2, 'lbs') }}</span>
                   <span>salmon fillet</span>
                 </div>
                 <div class="border-slate-950 flex items-center justify-between py-2 border-b">
-                  <span>{{ getScaledAmount('0.25', 'cup') }}</span>
+                  <span>{{ getConvertedUnit(0.25, 'cup') }}</span>
                   <span>honey</span>
                 </div>
                 <div class="flex items-center justify-between py-2">
-                  <span>{{ getScaledAmount('3', 'tbsp') }}</span>
+                  <span>{{ getConvertedUnit(3, 'tbsp') }}</span>
                   <span>soy sauce</span>
                 </div>
               </div>
@@ -522,13 +545,14 @@
             <div class="order-1">
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <span class="text-xs italic">1x</span>
-                Servings Adjustments
+                Servings & Unit Conversion
+                <span class="bg-primary-content text-primary text-xs font-bold px-1.5 py-0.5 rounded">Pro</span>
               </div>
-              <h3 class="mb-4 font-serif text-3xl">Readers scale recipes to their needs</h3>
-              <p class="mb-6 text-lg">Your readers can double or triple ingredients without doing math. All ingredients adjust automatically.</p>
+              <h3 class="mb-4 font-serif text-3xl">Readers scale recipes and convert units</h3>
+              <p class="mb-6 text-lg">Your readers can double or triple ingredients without doing math. Switch between metric and imperial with one tap.</p>
               <div class="bg-base-300 border-base-content/30 p-4 border rounded-lg">
                 <p class="mb-2 text-sm font-semibold">How it works</p>
-                <p class="text-sm">Intelligent scaling adjusts quantities proportionally as readers change servings. Measurements update in real-time.</p>
+                <p class="text-sm">Intelligent scaling adjusts quantities proportionally as readers change servings. Toggle between metric and imperial units instantly.</p>
               </div>
             </div>
           </div>
@@ -566,15 +590,15 @@
         </div>
 
         <div class="lg:grid-cols-3 grid gap-6">
-          <!-- Create 1.0 Plan -->
+          <!-- Create 2.0 Free Plan -->
           <div class="bg-base-100/50 border-base-300 rounded-2xl p-8 border">
-            <h3 class="mb-2 font-serif text-2xl">Create 1.0</h3>
-            <p class="text-base-content/70 mb-6 text-sm">Legacy version</p>
+            <h3 class="mb-2 font-serif text-2xl">Create 2.0 Free</h3>
+            <p class="text-base-content/70 mb-6 text-sm">Free forever</p>
             <div class="mb-8">
               <span class="text-5xl font-bold">$0</span>
               <span class="text-base-content ml-2">forever</span>
             </div>
-            <p class="text-base-content mb-8 text-sm">The original Create plugin with core recipe functionality. Completely free, not ad-supported, but does not include updates, support, or new features.</p>
+            <p class="text-base-content mb-8 text-sm">The original Create plugin with core recipe functionality. Completely free, not ad-supported, but does not include new features, updates, or support.</p>
             <div class="mb-8 space-y-3">
               <p class="text-base-content opacity-70 text-xs font-semibold tracking-wide uppercase">Features</p>
               <ul class="space-y-2">
@@ -588,7 +612,7 @@
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
-                  Recipes, How-Tos, & Lists
+                  Recipes, How-Tos & Lists
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
@@ -599,28 +623,24 @@
                   User Ratings & Reviews
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
-                  <span class="text-error flex-shrink-0 ml-1.5">✕</span>
-                  Interactive Mode
+                  <span class="text-error flex-shrink-0 ml-0.5">✕</span>
+                  <span class="opacity-50">New Features</span>
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
-                  <span class="text-error flex-shrink-0 ml-1.5">✕</span>
-                  Support
-                </li>
-                <li class="text-base-content flex items-start gap-3 text-sm">
-                  <span class="text-error flex-shrink-0 ml-1.5">✕</span>
-                  Updates
+                  <span class="text-error flex-shrink-0 ml-0.5">✕</span>
+                  <span class="opacity-50">Updates & Support</span>
                 </li>
               </ul>
             </div>
           </div>
 
-          <!-- Create 2.0 Free Plan (Recommended) -->
-          <div class="bg-gradient-to-br from-base-100 to-base-100 border-primary rounded-2xl lg:scale-105 relative p-8 border-2">
-            <div class="-top-4 left-1/2 bg-gradient-to-r from-primary to-primary/80 text-primary-content absolute px-4 py-1 text-sm font-bold -translate-x-1/2 rounded-lg">
-              Most Popular
+          <!-- Create 2.0 Free+ Plan (Coming Soon) -->
+          <div class="bg-base-100/50 border-base-300 rounded-2xl relative p-8 border">
+            <div class="-top-4 left-1/2 badge badge-warning absolute px-4 py-3 text-sm font-bold -translate-x-1/2">
+              Coming Soon
             </div>
-            <h3 class="mb-2 font-serif text-4xl">Create 2.0</h3>
-            <p class="text-base-content mb-6 text-sm">Ad-supported</p>
+            <h3 class="mb-2 font-serif text-2xl">Create 2.0 Free+</h3>
+            <p class="text-base-content mb-6 text-sm">Ad-supported — Coming Soon</p>
             <div class="mb-8">
               <span class="text-5xl font-bold">$0</span>
             </div>
@@ -630,19 +650,15 @@
               <ul class="space-y-2">
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Interactive Mode (ad-supported)
+                  Everything in Free
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Recipes, How-Tos & Lists
+                  Interactive Mode <span class="text-base-content/60 text-xs">(ad-supported)</span>
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Automatic Nutrition Calculation
-                </li>
-                <li class="text-base-content flex items-start gap-3 text-sm">
-                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  New Themes
+                  Premium Themes
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
@@ -650,62 +666,85 @@
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Review Responses
+                  Unit Conversion
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Review Responses & Management
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Interactive Checklists
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Featured Reviews Block
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Products in Lists
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Bulk Import List Items
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Updates & Support
                 </li>
               </ul>
             </div>
-            <a href="/plugin" class="btn btn-primary btn-block rounded-xl ">Get Started Free</a>
+            <a href="#" class="btn btn-outline btn-block rounded-xl">Get Notified</a>
           </div>
 
           <!-- Create 2.0 Pro Plan -->
-          <div class="bg-base-100/50 border-base-300 rounded-2xl p-8 border">
-            <h3 class="mb-2 font-serif text-3xl">Create 2.0 Pro</h3>
+          <div class="bg-gradient-to-br from-base-100 to-base-100 border-primary rounded-2xl lg:scale-105 relative p-8 border-2">
+            <div class="-top-4 left-1/2 bg-gradient-to-r from-primary to-primary/80 text-primary-content absolute px-4 py-1 text-sm font-bold -translate-x-1/2 rounded-lg">
+              Recommended
+            </div>
+            <h3 class="mb-2 font-serif text-4xl">Create 2.0 Pro</h3>
             <p class="text-base-content/70 mb-4 text-sm">Maximize revenue</p>
 
             <!-- Billing Toggle -->
-            <div class="bg-base-100 border-primary flex items-center gap-3 p-2 mb-4 border rounded-lg">
+            <div class="bg-base-100 border-primary grid grid-cols-4 gap-1 p-1.5 mb-4 border rounded-lg">
               <button
-                @click="proBillingPeriod = 'monthly'"
-                :class="['cursor-pointer flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors', proBillingPeriod === 'monthly' ? 'bg-primary/70 text-primary-content' : 'text-base-content hover:bg-base-200']"
+                v-for="period in (['monthly', 'quarterly', 'annual', 'biennial'] as const)"
+                :key="period"
+                @click="proBillingPeriod = period"
+                :class="['cursor-pointer py-2 px-1 rounded-md text-xs font-medium transition-colors text-center', proBillingPeriod === period ? 'bg-primary/70 text-primary-content' : 'text-base-content hover:bg-base-200']"
               >
-                Monthly
-              </button>
-              <button
-                @click="proBillingPeriod = 'annual'"
-                :class="['cursor-pointer flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors', proBillingPeriod === 'annual' ? 'bg-primary/70 text-primary-content' : 'text-base-content hover:bg-base-200']"
-              >
-                Annual
+                {{ period === 'biennial' ? '2-Year' : period.charAt(0).toUpperCase() + period.slice(1) }}
               </button>
             </div>
 
             <div class="mb-8">
               <div class="flex flex-col items-baseline gap-1">
                 <div>
-                  <span class="font-serif text-4xl font-semibold tracking-wider">{{ proBillingPeriod === 'annual' ? '$12.50' : '$15' }}</span>
+                  <span class="font-serif text-4xl font-semibold tracking-wider">{{ proPricing[proBillingPeriod].price }}</span>
                   <span class="text-base-content ml-2">/month</span>
                 </div>
               </div>
-              <p class="text-base-content/60 mt-2 text-xs">{{ proBillingPeriod === 'annual' ? 'billed $150/year' : 'billed monthly' }}</p>
+              <p class="text-base-content/60 mt-2 text-xs">{{ proPricing[proBillingPeriod].note }}</p>
             </div>
-            <p class="text-base-content mb-8 text-sm">Everything in Create 2.0 Free, plus control your own ad network. No Create ads, full customization.</p>
+            <p class="text-base-content mb-8 text-sm">Everything in Create 2.0 Free+, plus control your own ad network. No Create ads, full customization.</p>
             <div class="mb-8 space-y-3">
               <p class="text-sm font-semibold">Pro features</p>
               <ul class="space-y-2">
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Your Ads, All The Way
+                  Everything in Free+
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Zero Create ads
+                  Remove Create Ads Entirely
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Disable Interactive Mode
+                  Customize Interactive Mode
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Priority support
+                  Priority Support
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
@@ -713,7 +752,7 @@
                 </li>
               </ul>
             </div>
-            <a href="#" class="btn bg-base-100/50 btn-block">Upgrade Now</a>
+            <a href="#" class="btn btn-primary btn-block rounded-xl">Upgrade Now</a>
           </div>
         </div>
       </div>
@@ -760,8 +799,18 @@ onMounted(() => {
 // Servings multiplier state
 const servingsMultiplier = ref(1)
 
+// Unit system state
+const unitSystem = ref<'imperial' | 'metric'>('imperial')
+
 // Pro billing period state
-const proBillingPeriod = ref<'annual' | 'monthly'>('annual')
+const proBillingPeriod = ref<'monthly' | 'quarterly' | 'annual' | 'biennial'>('annual')
+
+const proPricing: Record<string, { price: string; note: string }> = {
+  monthly: { price: '$15', note: 'billed monthly' },
+  quarterly: { price: '$13.33', note: 'billed $40/quarter' },
+  annual: { price: '$12.50', note: 'billed $150/year' },
+  biennial: { price: '$10.42', note: 'billed $250/2 years' },
+}
 
 // Comparison state
 const expandedProduct = ref<'create' | 'wprm' | 'tasty' | null>(null)
@@ -775,6 +824,27 @@ const getScaledAmount = (baseAmount: string, unit: string) => {
   const formatted = scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(2)
 
   return `${formatted} ${unit}`
+}
+
+// Metric conversion map from imperial units
+const metricConversions: Record<string, { factor: number; unit: string }> = {
+  lbs: { factor: 453.592, unit: 'g' },
+  cup: { factor: 240, unit: 'ml' },
+  tbsp: { factor: 15, unit: 'ml' },
+}
+
+// Helper function to scale and optionally convert units
+const getConvertedUnit = (baseAmount: number, imperialUnit: string) => {
+  const scaled = baseAmount * servingsMultiplier.value
+
+  if (unitSystem.value === 'metric' && metricConversions[imperialUnit]) {
+    const { factor, unit } = metricConversions[imperialUnit]
+    const converted = Math.round(scaled * factor)
+    return `${converted} ${unit}`
+  }
+
+  const formatted = scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(2)
+  return `${formatted} ${imperialUnit}`
 }
 
 // Demo recipe URL - hardcoded for now until createCreationKey is available
