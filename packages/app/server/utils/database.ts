@@ -20,6 +20,7 @@ export interface CreateUserData {
   avatar?: string
   mediavine_publisher?: boolean
   marketing_opt_in?: boolean
+  metadata?: Record<string, any>
   consent_tos_accepted_at?: string
   consent_privacy_accepted_at?: string
   consent_cookies_accepted_at?: string
@@ -66,6 +67,7 @@ export class UserRepository {
       lastname: userData.lastname || null,
       mediavine_publisher: userData.mediavine_publisher || false,
       marketing_opt_in: userData.marketing_opt_in || false,
+      metadata: userData.metadata || null,
       createdAt: now,
       updatedAt: now,
     }).returning().get()
@@ -164,6 +166,7 @@ export class UserRepository {
     mediavine_publisher: boolean
     validEmail: boolean
     marketing_opt_in: boolean
+    metadata: Record<string, any> | null
     consent_tos_accepted_at: string | null
     consent_privacy_accepted_at: string | null
     consent_cookies_accepted_at: string | null

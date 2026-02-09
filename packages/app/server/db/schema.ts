@@ -18,6 +18,7 @@ export const users = sqliteTable('Users', {
   mediavine_publisher: integer('mediavine_publisher', { mode: 'boolean' }).default(false),
   validEmail: integer('validEmail', { mode: 'boolean' }).default(false),
   marketing_opt_in: integer('marketing_opt_in', { mode: 'boolean' }).default(false),
+  metadata: text('metadata', { mode: 'json' }).$type<Record<string, any>>(),
   consent_tos_accepted_at: text('consent_tos_accepted_at'),
   consent_privacy_accepted_at: text('consent_privacy_accepted_at'),
   consent_cookies_accepted_at: text('consent_cookies_accepted_at'),

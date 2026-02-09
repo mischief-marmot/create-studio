@@ -694,7 +694,7 @@
                 </li>
               </ul>
             </div>
-            <a href="#" class="btn btn-outline btn-block rounded-xl">Get Notified</a>
+            <button @click="openWaitlistModal" class="btn btn-outline btn-block rounded-xl">Get Notified</button>
           </div>
 
           <!-- Create 2.0 Pro Plan -->
@@ -769,6 +769,8 @@
         </a>
       </div>
     </section>
+    <!-- Waitlist Modal -->
+    <WaitlistFreePlusModal v-model="showWaitlistModal" />
   </NuxtLayout>
 </template>
 
@@ -784,6 +786,9 @@ import {
 } from '@heroicons/vue/20/solid'
 
 const config = useRuntimeConfig().public
+
+// Waitlist modal
+const { showWaitlistModal, openWaitlistModal } = useWaitlistModal()
 
 // Rotating words for hero title
 const rotatingWords = ['Recipes', 'How-Tos', 'Lists']
