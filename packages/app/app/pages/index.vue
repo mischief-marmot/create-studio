@@ -752,7 +752,7 @@
                 </li>
               </ul>
             </div>
-            <a href="#" class="btn btn-primary btn-block rounded-xl">Upgrade Now</a>
+            <button @click="handleUpgrade" class="btn btn-primary btn-block rounded-xl">Upgrade Now</button>
           </div>
         </div>
       </div>
@@ -789,6 +789,30 @@ const config = useRuntimeConfig().public
 
 // Waitlist modal
 const { showWaitlistModal, openWaitlistModal } = useWaitlistModal()
+
+// Upgrade flow — conditional based on auth + site state
+const { loggedIn } = useAuth()
+const { sites, loadSites } = useSiteContext()
+
+const handleUpgrade = async () => {
+  // Not logged in → register first
+  if (!loggedIn.value) {
+    return navigateTo('/auth/register')
+  }
+
+  // Logged in — check if they have a site
+  if (sites.value.length === 0) {
+    await loadSites()
+  }
+
+  if (sites.value.length === 0) {
+    // No site linked → go to dashboard to add one
+    return navigateTo('/admin')
+  }
+
+  // Has a site → go to settings, upgrade query param auto-opens the modal
+  return navigateTo('/admin/settings?upgrade=true#subscription')
+}
 
 // Rotating words for hero title
 const rotatingWords = ['Recipes', 'How-Tos', 'Lists']
