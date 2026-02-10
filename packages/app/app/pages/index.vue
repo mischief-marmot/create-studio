@@ -546,7 +546,7 @@
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary border border-primary/70 text-sm font-medium text-primary-content mb-6">
                 <span class="text-xs italic">1x</span>
                 Servings & Unit Conversion
-                <span class="bg-primary-content text-primary text-xs font-bold px-1.5 py-0.5 rounded">Pro</span>
+                <span class="bg-primary-content text-primary text-xs font-bold px-1.5 py-0.5 rounded">Premium</span>
               </div>
               <h3 class="mb-4 font-serif text-3xl">Readers scale recipes and convert units</h3>
               <p class="mb-6 text-lg">Your readers can double or triple ingredients without doing math. Switch between metric and imperial with one tap.</p>

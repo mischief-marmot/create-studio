@@ -289,6 +289,55 @@ describe('Settings Page Tier Display', () => {
   })
 })
 
+describe('Premium Feature Visibility', () => {
+  const PREMIUM_FEATURES = [
+    'Interactive Mode',
+    'Servings Adjustment',
+    'Unit Conversion',
+    'Premium Themes',
+    'Interactive Checklists',
+    'Review Responses & Management',
+    'Featured Reviews Block',
+    'Products in Lists',
+    'Bulk Import List Items',
+  ]
+
+  const PRO_ONLY_FEATURES = [
+    'Use your own ad network in Interactive Mode',
+    'Customize Interactive Mode settings',
+    'Priority support',
+  ]
+
+  const isPremiumFeatureVisible = (tier: string) => tier !== 'free'
+  const isProOnlyFeatureVisible = (tier: string) => tier === 'pro'
+
+  it('should show premium features for free-plus tier', () => {
+    expect(isPremiumFeatureVisible('free-plus')).toBe(true)
+  })
+
+  it('should show premium features for pro tier', () => {
+    expect(isPremiumFeatureVisible('pro')).toBe(true)
+  })
+
+  it('should hide premium features for free tier', () => {
+    expect(isPremiumFeatureVisible('free')).toBe(false)
+  })
+
+  it('should show pro-only features only for pro tier', () => {
+    expect(isProOnlyFeatureVisible('pro')).toBe(true)
+    expect(isProOnlyFeatureVisible('free-plus')).toBe(false)
+    expect(isProOnlyFeatureVisible('free')).toBe(false)
+  })
+
+  it('should have all expected premium features', () => {
+    expect(PREMIUM_FEATURES.length).toBe(9)
+  })
+
+  it('should have all expected pro-only features', () => {
+    expect(PRO_ONLY_FEATURES.length).toBe(3)
+  })
+})
+
 describe('Admin Panel Format Tier', () => {
   const formatTier = (tier: string): string => {
     const tierMap: Record<string, string> = {

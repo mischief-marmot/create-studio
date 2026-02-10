@@ -267,6 +267,42 @@
                       </svg>
                       Unit Conversion
                     </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Premium Themes
+                    </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Interactive Checklists
+                    </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Review Responses &amp; Management
+                    </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Featured Reviews Block
+                    </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Products in Lists
+                    </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Bulk Import List Items
+                    </li>
                     <li class="flex items-center gap-2">
                       <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"/>
