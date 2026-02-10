@@ -461,6 +461,21 @@
               <span class="text-sm font-medium text-base-content/60">Free Plan</span>
             </label>
 
+            <label class="flex items-center gap-3 p-3 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors" :class="{ 'border-primary bg-primary/5': selectedTier === 'free-plus' }">
+              <input
+                type="radio"
+                name="tier"
+                value="free-plus"
+                v-model="selectedTier"
+                class="radio radio-primary"
+              />
+              <div class="flex-1">
+                <div class="font-medium">Free+</div>
+                <div class="text-base-content/60 text-sm">Ad-supported tier with interactive features</div>
+              </div>
+              <span class="text-sm font-medium text-base-content">Free+ Plan</span>
+            </label>
+
             <label class="flex items-center gap-3 p-3 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors" :class="{ 'border-primary bg-primary/5': selectedTier === 'pro' }">
               <input
                 type="radio"
@@ -652,7 +667,7 @@ const revenueError = ref<string | null>(null)
 const showModifyTierModal = ref(false)
 const showCancelModal = ref(false)
 const showDeleteModal = ref(false)
-const selectedTier = ref<'free' | 'pro'>('free')
+const selectedTier = ref<'free' | 'free-plus' | 'pro'>('free')
 
 // Computed
 const hasStripeIntegration = computed(() => {
@@ -672,7 +687,7 @@ const fetchSubscriptionDetails = async () => {
     const subscriptionId = route.params.id
     const response = await $fetch<Subscription>(`/api/admin/subscriptions/${subscriptionId}`)
     subscription.value = response
-    selectedTier.value = response.tier as 'free' | 'pro'
+    selectedTier.value = response.tier as 'free' | 'free-plus' | 'pro'
     // Fetch revenue data in parallel (non-blocking)
     fetchRevenue()
   } catch (err: any) {
@@ -712,7 +727,7 @@ const navigateBack = () => {
 // Modal handlers
 const openModifyTierModal = () => {
   if (subscription.value) {
-    selectedTier.value = subscription.value.tier as 'free' | 'pro'
+    selectedTier.value = subscription.value.tier as 'free' | 'free-plus' | 'pro'
   }
   showModifyTierModal.value = true
 }
@@ -826,6 +841,7 @@ const formatDate = (dateString: string | null): string => {
 const formatTier = (tier: string): string => {
   const tierMap: Record<string, string> = {
     'free': 'Free Plan',
+    'free-plus': 'Free+ Plan',
     'pro': 'Pro Plan',
     'enterprise': 'Enterprise Plan'
   }

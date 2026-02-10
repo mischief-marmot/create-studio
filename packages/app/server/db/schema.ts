@@ -74,7 +74,7 @@ export const subscriptions = sqliteTable('Subscriptions', {
   stripe_customer_id: text('stripe_customer_id'),
   stripe_subscription_id: text('stripe_subscription_id').unique(),
   status: text('status').notNull().default('free'), // free, active, canceled, past_due, trialing, unpaid
-  tier: text('tier').notNull().default('free'), // free, pro
+  tier: text('tier').notNull().default('free'), // free, free-plus, pro
   current_period_start: text('current_period_start'),
   current_period_end: text('current_period_end'),
   cancel_at_period_end: integer('cancel_at_period_end', { mode: 'boolean' }).default(false),

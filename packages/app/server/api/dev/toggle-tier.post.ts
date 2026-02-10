@@ -42,16 +42,17 @@ export default defineEventHandler(async (event) => {
     let subscription = await subscriptionRepo.getBySiteId(siteId)
 
     if (!subscription) {
-      // Create a new pro subscription
+      // Create a new free-plus subscription
       subscription = await subscriptionRepo.create({
         site_id: siteId,
         status: 'active',
-        tier: 'pro',
+        tier: 'free-plus',
       })
     } else {
-      // Toggle the tier
-      const newTier = subscription.tier === 'pro' ? 'free' : 'pro'
-      const newStatus = newTier === 'pro' ? 'active' : 'free'
+      // Cycle the tier: free → free-plus → pro → free
+      const tierCycle: Record<string, string> = { free: 'free-plus', 'free-plus': 'pro', pro: 'free' }
+      const newTier = tierCycle[subscription.tier] || 'free-plus'
+      const newStatus = newTier === 'free' ? 'free' : 'active'
 
       subscription = await subscriptionRepo.update(siteId, {
         tier: newTier,

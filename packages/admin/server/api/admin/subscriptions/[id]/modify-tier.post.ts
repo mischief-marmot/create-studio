@@ -36,10 +36,10 @@ export default defineEventHandler(async (event) => {
     const { tier } = body
 
     // Validate tier
-    if (!tier || !['free', 'pro'].includes(tier)) {
+    if (!tier || !['free', 'free-plus', 'pro'].includes(tier)) {
       throw createError({
         statusCode: 400,
-        message: 'Invalid tier. Must be "free" or "pro"',
+        message: 'Invalid tier. Must be "free", "free-plus", or "pro"',
       })
     }
 
@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
       // Keep current Stripe status
       newStatus = currentSubscription.status
     } else {
-      // No Stripe, upgrading to pro - set to active (admin-granted pro)
+      // No Stripe, upgrading to pro or free-plus - set to active (admin-granted)
       newStatus = 'active'
     }
 
@@ -104,7 +104,7 @@ export default defineEventHandler(async (event) => {
         tier,
         status: newStatus,
         // Clear cancel_at_period_end if upgrading
-        cancel_at_period_end: tier === 'pro' ? false : currentSubscription.cancel_at_period_end,
+        cancel_at_period_end: (tier === 'pro' || tier === 'free-plus') ? false : currentSubscription.cancel_at_period_end,
         updatedAt: new Date().toISOString(),
       })
       .where(eq(subscriptions.id, subscriptionId))

@@ -205,6 +205,13 @@ const CreateStudio = {
       throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
     }
 
+    // Check if servings adjustment is enabled for this tier
+    const siteConfig = await sdkInstance.getSiteConfig()
+    if (siteConfig?.features?.servingsAdjustment === false) {
+      logger.debug('Servings adjustment disabled for this tier')
+      return []
+    }
+
     const sections = document.querySelectorAll(selector)
     const apps: any[] = []
 

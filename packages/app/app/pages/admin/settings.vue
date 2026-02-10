@@ -180,12 +180,12 @@
 
               <div
                 class="rounded-2xl lg:p-8 p-6"
-                :class="tier === 'pro' ? 'bg-gradient-to-br from-base-200 to-primary/10 border border-primary/20' : 'bg-base-200'"
+                :class="tier !== 'free' ? 'bg-gradient-to-br from-base-200 to-primary/10 border border-primary/20' : 'bg-base-200'"
               >
                 <!-- Plan Header -->
                 <div class="flex items-start justify-between mb-6">
                   <div class="flex flex-col gap-1">
-                    <span class="font-serif text-2xl italic font-light">{{ tier === 'pro' ? 'Pro Plan' : 'Free Plan' }}</span>
+                    <span class="font-serif text-2xl italic font-light">{{ tier === 'pro' ? 'Pro Plan' : tier === 'free-plus' ? 'Free+ Plan' : 'Free Plan' }}</span>
                     <div class="flex items-center gap-2">
                       <span
                         class="w-2 h-2 rounded-full"
@@ -201,7 +201,9 @@
                             ? 'Canceling'
                             : subscription?.status === 'active'
                               ? 'Active'
-                              : 'Free'
+                              : tier === 'free-plus'
+                                ? 'Active'
+                                : 'Free'
                         }}
                       </span>
                     </div>
@@ -247,11 +249,23 @@
                       </svg>
                       Priority support
                     </li>
-                    <li class="flex items-center gap-2">
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
                       <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
-                      Interactive Mode with Create ads
+                      Interactive Mode{{ tier !== 'pro' ? ' with Create ads' : '' }}
+                    </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Servings Adjustment
+                    </li>
+                    <li v-if="tier !== 'free'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      Unit Conversion
                     </li>
                     <li class="flex items-center gap-2">
                       <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -485,7 +499,9 @@ const siteForm = ref({
 })
 
 const tierDisplayName = computed(() => {
-  return tier.value === 'pro' ? 'Pro' : 'Free'
+  if (tier.value === 'pro') return 'Pro'
+  if (tier.value === 'free-plus') return 'Free+'
+  return 'Free'
 })
 
 const formatDate = (dateString: string) => {

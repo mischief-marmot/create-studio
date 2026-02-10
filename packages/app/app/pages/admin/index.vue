@@ -54,13 +54,13 @@
                 <SparklesIcon class="text-success size-6" />
               </div>
               <div class="flex flex-col">
-                <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ proSitesCount }}</span>
-                <p class="text-base-content/70 text-sm">Pro Site{{ proSitesCount > 1 ? 's' : '' }}</p>
+                <span class="text-base-content font-serif text-3xl font-thin leading-none">{{ premiumSitesCount }}</span>
+                <p class="text-base-content/70 text-sm">Premium Site{{ premiumSitesCount !== 1 ? 's' : '' }}</p>
               </div>
             </div>
-            <div v-if="proSitesCount > 0" class="mt-auto">
+            <div v-if="premiumSitesCount > 0" class="mt-auto">
               <div class="bg-base-300 h-2 overflow-hidden rounded-full">
-                  <div class="bg-success h-full transition-all duration-700 rounded-full" :style="`width: ${(proSitesCount / sites.length) * 100}%`"></div>
+                  <div class="bg-success h-full transition-all duration-700 rounded-full" :style="`width: ${(premiumSitesCount / sites.length) * 100}%`"></div>
                 </div>
             </div>
           </div>
@@ -121,7 +121,7 @@
                 <Cog6ToothIcon class="size-6" />
               </button>
               <div class="badge badge-md bg-amber-700 text-amber-50 border-amber-700 font-sans uppercase rounded-full">
-                {{ getSiteTier(selectedSite.id) === 'pro' ? 'Pro' : 'Free' }}
+                {{ getTierLabel(selectedSite.id) }}
               </div>
               <!-- Dev-only tier toggle -->
               <button
@@ -142,8 +142,8 @@
             <div>
               <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">Subscription</p>
               <p class="text-base-content">
-                <span :class="getSiteTier(selectedSiteId) === 'pro' ? 'inline-flex size-2 rounded-full bg-success animate-pulse' : 'hidden'"></span>
-                {{ getSiteTier(selectedSiteId) === 'pro' ? 'Active' : 'Free' }}</p>
+                <span :class="getSiteTier(selectedSiteId) !== 'free' ? 'inline-flex size-2 rounded-full bg-success animate-pulse' : 'hidden'"></span>
+                {{ getSiteTier(selectedSiteId) === 'free' ? 'Free' : getSiteTier(selectedSiteId) === 'free-plus' ? 'Free+' : 'Active' }}</p>
             </div>
             <div>
               <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">WordPress</p>
@@ -218,7 +218,7 @@
                     </div>
                     <div v-else class="flex items-center gap-1">
                       <div class="badge badge-sm bg-amber-700 text-amber-50 border-amber-700 uppercase rounded-sm">
-                        {{ getSiteTier(site.id) === 'pro' ? 'Pro' : 'Free' }}
+                        {{ getTierLabel(site.id) }}
                       </div>
                       <button
                         v-if="isDev"
@@ -271,7 +271,7 @@
                   Verify Now
                 </button>
                 <button
-                  v-else-if="getSiteTier(site.id) === 'free'"
+                  v-else-if="getSiteTier(site.id) !== 'pro'"
                   @click.stop="selectSite(site.id); openModal()"
                   class="btn btn-primary"
                 >
@@ -391,8 +391,8 @@ const greeting = computed(() => {
   return 'Working late'
 })
 
-const proSitesCount = computed(() => {
-  return Object.values(siteTiers.value).filter(tier => tier === 'pro').length
+const premiumSitesCount = computed(() => {
+  return Object.values(siteTiers.value).filter(tier => tier === 'pro' || tier === 'free-plus').length
 })
 
 const totalTeamMembers = computed(() => {
@@ -465,6 +465,13 @@ const loadDashboardData = async () => {
 
 const getSiteTier = (siteId: number) => {
   return siteTiers.value[siteId] || 'free'
+}
+
+const getTierLabel = (siteId: number) => {
+  const tier = getSiteTier(siteId)
+  if (tier === 'pro') return 'Pro'
+  if (tier === 'free-plus') return 'Free+'
+  return 'Free'
 }
 
 // Dev-only: Toggle site tier between free and pro

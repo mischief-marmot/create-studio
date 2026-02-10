@@ -38,6 +38,11 @@ export default defineEventHandler(async (event) => {
       const subscriptionRepo = new SubscriptionRepository()
       subscriptionTier = await subscriptionRepo.getActiveTier(siteResult.id as number)
 
+      // Free tier gets no interactive mode at all
+      if (subscriptionTier === 'free') {
+        showInteractiveMode = false
+      }
+
       // Pro sites can customize Interactive Mode settings
       if (subscriptionTier === 'pro') {
         // Check if Interactive Mode is disabled (0 means disabled, 1 or null means enabled)
@@ -70,7 +75,9 @@ export default defineEventHandler(async (event) => {
     renderMode,
     features: {
       inDomRendering: renderMode === 'in-dom',
-      customStyling: subscriptionTier !== 'free',
+      customStyling: subscriptionTier === 'pro',
+      servingsAdjustment: subscriptionTier !== 'free',
+      unitConversion: subscriptionTier !== 'free',
       analytics: true,
     }
   }
