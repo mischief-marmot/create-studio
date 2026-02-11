@@ -76,7 +76,7 @@
                         Your Site
                       </div>
                       <div class="text-base-content flex items-center gap-2 text-xs">
-                        <span>5.0</span>
+                        <span>4.9</span>
                         <span class="flex gap-0.5">
                           <span class="text-primary">★</span>
                           <span class="text-primary">★</span>
@@ -190,7 +190,7 @@
                         Your Site
                       </div>
                       <div class="text-base-content flex items-center gap-2 text-xs">
-                        <span>5.0</span>
+                        <span>4.9</span>
                         <span class="flex gap-0.5">
                           <span class="text-primary">★</span>
                           <span class="text-primary">★</span>
@@ -218,8 +218,9 @@
       <div class="max-w-6xl mx-auto">
         <div class="mb-16 text-center">
           <span class="text-primary-content dark:text-primary text-lg font-semibold tracking-wide uppercase">Why Create?</span>
-          <h2 class="lg:text-7xl mt-2 mb-4 font-serif text-6xl">Premium features. Zero cost.</h2>
+          <h2 class="lg:text-7xl mt-2 mb-4 font-serif text-6xl">Core features. Zero cost.</h2>
           <p class="text-base-content text-3xl">See how Create compares to other popular recipe plugins</p>
+          <p class="text-base-content opacity-80 text-md max-w-xl m-auto mt-4">You shouldn't have to pay for basics like Ratings and Nutrition calculation. Fully-functional cards are free with Create.</p>
         </div>
 
         <!-- Desktop Comparison Table -->
@@ -464,10 +465,10 @@
                 Social Proof
               </div>
               <h3 class="mb-4 font-serif text-3xl">Build trust with reader reviews</h3>
-              <p class="mb-6 text-lg">Let your audience share their stories and help others choose what to make. Pro users can respond to reviews to build community engagement.</p>
+              <p class="mb-6 text-lg">Let your audience share their stories and help others choose what to make. Premium users can respond to reviews to build community engagement.</p>
               <div class="bg-base-300 border-base-content/30 p-4 border rounded-lg">
                 <p class="mb-2 text-sm font-semibold">How it works</p>
-                <p class="text-sm">Readers leave ratings and reviews directly on your cards. Pro users can respond to build a community of engaged followers.</p>
+                <p class="text-sm">Readers leave ratings and reviews directly on your cards. Premium users can respond to build a community of engaged followers.</p>
               </div>
             </div>
             <div class="bg-base-300 border-base-content/30 rounded-xl p-6 space-y-4 border">
@@ -478,7 +479,7 @@
                 <div class="bg-base-200 border-base-content/20 p-3 mt-3 ml-4 border-l-2 rounded-r-lg">
                   <div class="flex items-center gap-2">
                     <p class="text-xs font-semibold">Admin Reply</p>
-                    <span class="badge badge-primary badge-xs">Pro Feature</span>
+                    <span class="badge badge-primary badge-xs">Premium Feature</span>
                   </div>
                   <p class="mt-1 text-xs">So glad your family enjoyed it, Sarah! Try adding a pinch of cinnamon next time for an extra twist.</p>
                 </div>
@@ -529,7 +530,7 @@
               </div>
               <div class="space-y-2 text-sm">
                 <div class="border-slate-950 flex items-center justify-between py-2 border-b">
-                  <span>{{ getConvertedUnit(2, 'lbs') }}</span>
+                  <span>{{ getConvertedUnit(6, 'oz') }}</span>
                   <span>salmon fillet</span>
                 </div>
                 <div class="border-slate-950 flex items-center justify-between py-2 border-b">
@@ -858,6 +859,7 @@ const getScaledAmount = (baseAmount: string, unit: string) => {
 // Metric conversion map from imperial units
 const metricConversions: Record<string, { factor: number; unit: string }> = {
   lbs: { factor: 453.592, unit: 'g' },
+  oz: { factor: 28.3495, unit: 'g' },
   cup: { factor: 240, unit: 'ml' },
   tbsp: { factor: 15, unit: 'ml' },
 }

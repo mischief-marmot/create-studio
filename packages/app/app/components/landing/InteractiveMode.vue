@@ -5,7 +5,6 @@
       <div class="max-w-3xl mx-auto text-center">
         <span class="badge badge-primary badge-lg gap-2 mb-4 font-bold">
           All-New Feature!
-          <span class="bg-primary-content text-primary text-xs font-bold px-1.5 py-0.5 rounded">Pro</span>
         </span>
         <span v-if="eyebrow" class="text-primary-content dark:text-primary block mb-2 text-sm font-semibold tracking-wider uppercase">{{ eyebrow }}</span>
         <h2 class="sm:text-5xl lg:text-6xl text-base-content font-serif text-4xl">{{ title }}</h2>
