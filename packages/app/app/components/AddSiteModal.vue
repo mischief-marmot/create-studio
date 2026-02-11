@@ -257,8 +257,9 @@ watch(() => props.isOpen, async (isOpen) => {
     // Auto-submit if both URL and verification code are provided
     if (props.initialUrl && props.initialVerificationCode) {
       await handleAddSite()
-      // handleAddSite advances to step 2 on success, skip to step 3 (enter code)
-      if (pendingSite.value) {
+      // handleAddSite advances to step 4 if already verified, step 2 if pending
+      // Only skip to step 3 (enter code) if still pending
+      if (pendingSite.value && currentStep.value === 2) {
         currentStep.value = 3
       }
     }
@@ -298,14 +299,33 @@ const handleAddSite = async () => {
       error?: string
       site?: { id: number; url: string; name?: string }
       pending?: boolean
+      already_verified?: boolean
+      verified_at?: string
     }>('/api/v2/sites/add', {
       method: 'POST',
       body: { url: normalizedUrl },
     })
 
     if (response.success && response.site) {
-      pendingSite.value = response.site
-      currentStep.value = 2
+      if (response.already_verified) {
+        // Site is already verified — re-sync token with WordPress plugin if we have a code
+        if (props.initialVerificationCode && response.site.id) {
+          try {
+            await $fetch(`/api/v2/sites/${response.site.id}/verify`, {
+              method: 'POST',
+              body: { verification_code: props.initialVerificationCode },
+            })
+          } catch {
+            // Token re-sync failed — not critical, site is still verified
+          }
+        }
+        verifiedSite.value = response.site
+        currentStep.value = 4
+      }
+      else {
+        pendingSite.value = response.site
+        currentStep.value = 2
+      }
     }
     else {
       error.value = response.error || 'Failed to add site'

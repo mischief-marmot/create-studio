@@ -9,10 +9,10 @@
  * Key Logic:
  * 1. Find site by ID
  * 2. Find SiteUsers record for current user + this site
- * 3. If already verified -> return error
- * 4. Call WordPress plugin to verify code
- * 5. If valid -> mark SiteUsers.verified_at = NOW()
- * 6. Update site metadata from plugin response
+ * 3. Call WordPress plugin to verify code (even if already verified, to re-sync token)
+ * 4. If valid -> mark SiteUsers.verified_at = NOW() (skip if already verified)
+ * 5. Update site metadata from plugin response
+ * 6. If already verified and WP callback fails, return success anyway
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
@@ -106,18 +106,10 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    if (siteUser.verified_at) {
-      // Already verified
-      return {
-        success: true,
-        site,
-        verified_at: siteUser.verified_at,
-        message: 'Site is already verified'
-      }
-    }
+    const alreadyVerified = !!siteUser.verified_at
 
-    // Call WordPress plugin to verify code
-    logger.debug('Verifying code with WordPress plugin', { siteId, url: site.url })
+    // Call WordPress plugin to verify code (even if already verified, to re-sync the token)
+    logger.debug('Verifying code with WordPress plugin', { siteId, url: site.url, alreadyVerified })
 
     // Get user info for generating JWT
     const user = await userRepo.findById(userId)
@@ -168,6 +160,16 @@ export default defineEventHandler(async (event) => {
       }).finally(() => clearTimeout(timeoutId))
 
       if (!pluginResponse.valid) {
+        if (alreadyVerified) {
+          // WP code mismatch but site is already verified — return success anyway
+          logger.debug('WP code mismatch on re-sync, but site already verified', { siteId })
+          return {
+            success: true,
+            site,
+            verified_at: siteUser.verified_at,
+            message: 'Site is already verified (token re-sync skipped)'
+          }
+        }
         setResponseStatus(event, 401)
         return {
           success: false,
@@ -175,11 +177,15 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Code is valid - mark connection as verified
-      const verifiedConnection = await siteUserRepo.markVerified(userId, siteId)
+      // Code is valid - mark connection as verified (skip if already verified)
+      let verifiedAt = siteUser.verified_at
+      if (!alreadyVerified) {
+        const verifiedConnection = await siteUserRepo.markVerified(userId, siteId)
+        verifiedAt = verifiedConnection?.verified_at || verifiedAt
 
-      // Mark user's email as valid (they've proven site access)
-      await userRepo.updateEmailValidation(userId, true)
+        // Mark user's email as valid (they've proven site access)
+        await userRepo.updateEmailValidation(userId, true)
+      }
 
       // Update site metadata from plugin response
       if (pluginResponse.wp_version || pluginResponse.php_version || pluginResponse.create_version || pluginResponse.site_name) {
@@ -191,7 +197,7 @@ export default defineEventHandler(async (event) => {
         })
       }
 
-      logger.info('Site verified successfully', { userId, siteId, url: site.url })
+      logger.info('Site verified successfully', { userId, siteId, url: site.url, resync: alreadyVerified })
 
       return {
         success: true,
@@ -202,11 +208,22 @@ export default defineEventHandler(async (event) => {
           php_version: pluginResponse.php_version,
           create_version: pluginResponse.create_version
         },
-        verified_at: verifiedConnection?.verified_at
+        verified_at: verifiedAt
       }
     }
     catch (fetchError: any) {
       logger.error('Error verifying with plugin:', fetchError)
+
+      // If already verified, WP callback failure is not critical — site is still verified
+      if (alreadyVerified) {
+        logger.debug('WP callback failed on re-sync, but site already verified', { siteId })
+        return {
+          success: true,
+          site,
+          verified_at: siteUser.verified_at,
+          message: 'Site is already verified (token re-sync failed)'
+        }
+      }
 
       // Handle specific error types
       if (fetchError.name === 'AbortError') {

@@ -98,11 +98,18 @@ export default defineEventHandler(async (event) => {
 
     if (existingConnection) {
       if (existingConnection.verified_at) {
-        // Already verified
-        setResponseStatus(event, 409)
+        // Already verified - return success so other browsers can reconnect
+        logger.debug('Site already verified for user, returning existing connection', { userId, siteId: site.id })
         return {
-          success: false,
-          error: 'This site is already connected to your account.'
+          success: true,
+          site: {
+            id: site.id,
+            url: site.url,
+            name: site.name
+          },
+          pending: false,
+          already_verified: true,
+          verified_at: existingConnection.verified_at
         }
       }
 

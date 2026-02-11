@@ -452,7 +452,16 @@ onMounted(async () => {
         // Site is pending - open Verify Site modal with pre-filled code
         openVerifySiteModal(matchedSite, verificationCodeParam)
       } else if (matchedSite) {
-        // Site is already verified - show notification
+        // Site is already verified — re-sync token with WordPress plugin
+        // so the plugin stores the JWT and recognizes the connection
+        try {
+          await $fetch(`/api/v2/sites/${matchedSite.id}/verify`, {
+            method: 'POST',
+            body: { verification_code: verificationCodeParam },
+          })
+        } catch {
+          // Token re-sync failed (e.g. code mismatch) — not critical
+        }
         openSiteAlreadyVerifiedModal(matchedSite)
       }
     }
