@@ -50,6 +50,7 @@
               :domain="domain"
               :base-url="baseUrl"
               :disable-rating-submission="config.disableRatingSubmission"
+              :unit-conversion-config="config.unitConversion"
               hide-attribution
               class="cs:w-full cs:h-full"
             />
@@ -84,6 +85,13 @@ interface Props {
     embedUrl?: string
     theme?: Record<string, string>
     disableRatingSubmission?: boolean
+    unitConversion?: {
+      enabled: boolean
+      default_system: 'auto' | 'us_customary' | 'metric'
+      source_system: 'us_customary' | 'metric'
+      label: string
+      conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+    }
   }
   storage?: any
 }

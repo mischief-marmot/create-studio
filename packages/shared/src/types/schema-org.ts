@@ -163,6 +163,14 @@ export type HowTo = {
     recipeIngredient?: (string | RecipeIngredient)[]; // for recipes (flat list) - supports both strings and objects with links
     recipeIngredientGroups?: Record<string, (string | RecipeIngredient)[]>; // for recipes (grouped by category) - supports both strings and objects with links
     recipeInstructions?: HowToStep[] | HowToSection[];
+    // Unit conversion data (from WordPress plugin)
+    unitConversions?: {
+        enabled: boolean;
+        default_system: 'auto' | 'us_customary' | 'metric';
+        source_system: 'us_customary' | 'metric';
+        label: string;
+        conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>;
+    };
     // Custom fields for interactive features
     difficulty?: 'easy' | 'medium' | 'hard';
     interactiveMode?: boolean;

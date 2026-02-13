@@ -23,8 +23,9 @@ const EMBED_ALLOWLIST = [
   'interactive-mode.js',
   'interactive-mode.css',
   'servings-adjuster.js',
-  'servings-adjuster.css'
-  // Add more widget files as needed
+  'servings-adjuster.css',
+  'unit-conversion.js',
+  'unit-conversion.css'
 ]
 
 // File type to content type mapping

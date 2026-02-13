@@ -34,6 +34,13 @@ interface WPCreationResponse {
   keywords?: string
   created?: string
   modified?: string
+  unit_conversions?: {
+    enabled: boolean
+    default_system: 'auto' | 'us_customary' | 'metric'
+    source_system: 'us_customary' | 'metric'
+    label: string
+    conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+  }
 }
 
 interface CachedCreation {

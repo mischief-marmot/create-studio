@@ -415,12 +415,90 @@ export class SharedStorageManager {
   }
 
   /**
+   * Unit preference management
+   *
+   * Always reads fresh from localStorage to handle multiple SharedStorageManager
+   * instances on the same page (e.g., UnitConversion and ServingsAdjuster each
+   * create their own instance). Same-tab localStorage writes don't fire the
+   * `storage` event, so in-memory caches go stale.
+   */
+  getUnitPreference(): 'metric' | 'imperial' | undefined {
+    this.refreshFromStorage()
+    return this.storage.preferences.units
+  }
+
+  setUnitPreference(system: 'metric' | 'imperial'): void {
+    this.setPreference('units', system)
+  }
+
+  /**
+   * Request unit preference from parent window (for iframe usage)
+   * Same postMessage pattern as requestServingsMultiplierFromParent()
+   */
+  async requestUnitPreferenceFromParent(): Promise<'metric' | 'imperial' | undefined> {
+    return new Promise((resolve) => {
+      if (typeof window === 'undefined' || window === window.top) {
+        resolve(this.getUnitPreference())
+        return
+      }
+
+      // Check if we're in a valid cross-origin iframe
+      let isSameOrigin = false
+      try {
+        isSameOrigin = window.parent.location.href.includes(window.location.hostname) ||
+                       window.parent === window.top
+      } catch {
+        // Cross-origin — this is expected for iframe mode
+        isSameOrigin = false
+      }
+      const hasValidParent = window.parent && window.parent !== window && !isSameOrigin
+
+      if (!hasValidParent) {
+        resolve(this.getUnitPreference())
+        return
+      }
+
+      const messageId = Math.random().toString(36).substr(2, 9)
+      let resolved = false
+
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.type === 'UNIT_PREFERENCE_RESPONSE' && event.data.messageId === messageId) {
+          window.removeEventListener('message', handleMessage)
+          if (!resolved) {
+            resolved = true
+            resolve(event.data.unitPreference || undefined)
+          }
+        }
+      }
+
+      window.addEventListener('message', handleMessage)
+
+      window.parent.postMessage({
+        type: 'REQUEST_UNIT_PREFERENCE',
+        messageId
+      }, '*')
+
+      // Reduced timeout for faster fallback
+      setTimeout(() => {
+        window.removeEventListener('message', handleMessage)
+        if (!resolved) {
+          resolved = true
+          resolve(undefined)
+        }
+      }, 200)
+    })
+  }
+
+  /**
    * Servings multiplier management
+   *
+   * Always reads fresh from localStorage (same reason as getUnitPreference).
    */
   getServingsMultiplier(creationKey?: string): number {
+    this.refreshFromStorage()
     const key = creationKey || this.currentCreationKey
     if (!key) return 1
-    
+
     const state = this.storage.state[key]
     return state ? state.servingsMultiplier : 1
   }
@@ -560,6 +638,28 @@ export class SharedStorageManager {
     this.currentCreationKey = null
   }
 
+
+  /**
+   * Re-read from localStorage to pick up changes made by other
+   * SharedStorageManager instances in the same tab.
+   */
+  private refreshFromStorage(): void {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return
+
+    try {
+      const stored = localStorage.getItem(SharedStorageManager.STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        this.storage = {
+          id: parsed.id || this.storage.id,
+          preferences: parsed.preferences || {},
+          state: parsed.state || {}
+        }
+      }
+    } catch {
+      // Silent fail — keep existing in-memory state
+    }
+  }
 
   /**
    * Storage persistence

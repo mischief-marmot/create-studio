@@ -51,6 +51,9 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('ServingsAdjusterWidget')) {
             return 'servings-adjuster'
           }
+          if (id.includes('UnitConversion/unit-conversion')) {
+            return 'unit-conversion'
+          }
           return undefined
         }
       }

@@ -31,6 +31,13 @@ interface WPCreationResponse {
   keywords?: string
   created?: string
   modified?: string
+  unit_conversions?: {
+    enabled: boolean
+    default_system: 'auto' | 'us_customary' | 'metric'
+    source_system: 'us_customary' | 'metric'
+    label: string
+    conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+  }
 }
 
 interface WPMediaResponse {
@@ -145,6 +152,10 @@ export async function transformCreationToHowTo(
   if (creation.nutrition && creation.nutrition.length > 0) {
     // Process nutrition data if available
     howTo.nutrition = processNutrition(creation.nutrition)
+  }
+
+  if (creation.unit_conversions && creation.unit_conversions.enabled) {
+    howTo.unitConversions = creation.unit_conversions
   }
   
   const totalTime = performance.now() - startTime

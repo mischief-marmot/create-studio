@@ -199,6 +199,7 @@ class WidgetSDK {
     this.registry.registerWidget('interactive-mode', () => import('../../components/InteractiveMode/InteractiveModeWidget.vue'))
     this.registry.registerWidget('interactive-experience', () => import('../../components/InteractiveExperience.vue'))
     this.registry.registerWidget('servings-adjuster', () => import('../../components/ServingsAdjuster/ServingsAdjusterWidget.vue'))
+    this.registry.registerWidget('unit-conversion', () => import('../../components/UnitConversion/unit-conversion.vue'))
   }
 
   private autoMountWidgets(): void {

@@ -166,12 +166,34 @@ const CreateStudio = {
         continue
       }
 
+      // Extract unit conversion config for InteractiveExperience (in-DOM mode)
+      let unitConversionConfig: any = undefined
+      const csConfigAttr = section.getAttribute('data-cs-config')
+      if (csConfigAttr) {
+        try {
+          const csConfig = JSON.parse(csConfigAttr)
+          if (csConfig.unitConversion?.enabled) {
+            unitConversionConfig = csConfig.unitConversion
+          }
+        } catch { /* ignore */ }
+      }
+      if (!unitConversionConfig) {
+        const legacyAttr = section.getAttribute('data-unit-conversions')
+        if (legacyAttr) {
+          try {
+            const parsed = JSON.parse(legacyAttr)
+            if (parsed?.enabled) unitConversionConfig = parsed
+          } catch { /* ignore */ }
+        }
+      }
+
       const config = {
         creationId,
         buttonText: section.getAttribute('data-button-text') || siteConfig.buttonText || 'Try Interactive Mode!',
         siteUrl: sdkInstance.getSiteUrl(),
         embedUrl: sdkInstance.getEmbedUrl(),
-        theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {}
+        theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {},
+        unitConversion: unitConversionConfig
       }
       logger.info('⚙️ Widget config:', config)
 
@@ -200,7 +222,7 @@ const CreateStudio = {
     return apps
   },
 
-  async mountServingsAdjuster(selector: string = 'section[id^="mv-creation-"][data-servings-adjustment]') {
+  async mountServingsAdjuster(selector: string = 'section[id^="mv-creation-"]') {
     if (!sdkInstance) {
       throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
     }
@@ -224,11 +246,33 @@ const CreateStudio = {
         continue
       }
 
-      // Check if servings adjuster should be shown
-      const servingsAdjustment = section.getAttribute('data-servings-adjustment')
-      if (!servingsAdjustment) {
-        continue
+      // Try consolidated config first, then fall back to legacy attribute
+      let servingsLabel: string | undefined
+      let defaultMultiplier = 1
+      let servingsEnabled = false
+
+      const csConfigAttr = section.getAttribute('data-cs-config')
+      if (csConfigAttr) {
+        try {
+          const csConfig = JSON.parse(csConfigAttr)
+          if (csConfig.servingsAdjustment?.enabled) {
+            servingsEnabled = true
+            servingsLabel = csConfig.servingsAdjustment.label
+            defaultMultiplier = csConfig.servingsAdjustment.defaultMultiplier || 1
+          }
+        } catch { /* ignore parse errors */ }
       }
+
+      // Fallback to legacy attributes
+      if (!servingsEnabled) {
+        const servingsAdjustment = section.getAttribute('data-servings-adjustment')
+        if (!servingsAdjustment) continue
+        servingsEnabled = true
+        defaultMultiplier = parseInt(servingsAdjustment) || 1
+        servingsLabel = section.getAttribute('data-servings-label') || undefined
+      }
+
+      if (!servingsEnabled) continue
 
       // Find the ingredients section to place the adjuster before it
       const ingredientsSection = section.querySelector('.mv-create-ingredients')
@@ -247,19 +291,102 @@ const CreateStudio = {
       // Create container for the adjuster before ingredients section
       const adjusterContainer = document.createElement('div')
       adjusterContainer.className = 'create-studio-widget cs-servings-adjuster-container'
-      
+
       // Insert before the ingredients section
       ingredientsSection.parentElement?.insertBefore(adjusterContainer, ingredientsSection)
 
       const config = {
         creationId,
-        defaultMultiplier: parseInt(servingsAdjustment) || 1,
+        defaultMultiplier,
         siteUrl: sdkInstance.getSiteUrl(),
         theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {},
-        label: section.getAttribute('data-servings-label') || undefined
+        label: servingsLabel
       }
 
       const app = await sdkInstance.mount({ type: 'servings-adjuster', selector: adjusterContainer, config })
+      if (app) apps.push(app)
+    }
+
+    return apps
+  },
+
+  async mountUnitConversion(selector: string = 'section[id^="mv-creation-"]') {
+    if (!sdkInstance) {
+      throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
+    }
+
+    // Check if unit conversion is enabled for this tier
+    const siteConfig = await sdkInstance.getSiteConfig()
+    if (siteConfig?.features?.unitConversion === false) {
+      logger.debug('Unit conversion disabled for this tier')
+      return []
+    }
+
+    const sections = document.querySelectorAll(selector)
+    const apps: any[] = []
+
+    for (const section of sections) {
+      // Extract creation ID from mv-creation-{id}
+      const idMatch = section.id.match(/^mv-creation-(\d+)$/)
+      const creationId = idMatch ? idMatch[1] : section.id
+
+      if (!creationId) continue
+
+      // Try consolidated config first, then fall back to legacy attribute
+      let unitConversionConfig: any = null
+      const csConfigAttr = section.getAttribute('data-cs-config')
+      if (csConfigAttr) {
+        try {
+          const csConfig = JSON.parse(csConfigAttr)
+          unitConversionConfig = csConfig.unitConversion
+        } catch { /* ignore parse errors */ }
+      }
+
+      if (!unitConversionConfig) {
+        const legacyAttr = section.getAttribute('data-unit-conversions')
+        if (legacyAttr) {
+          try {
+            unitConversionConfig = JSON.parse(legacyAttr)
+          } catch { /* ignore parse errors */ }
+        }
+      }
+
+      if (!unitConversionConfig || !unitConversionConfig.enabled) continue
+
+      // Find the ingredients section
+      const ingredientsContainer = section.querySelector('.mv-create-ingredients')
+      if (!ingredientsContainer) continue
+
+      // Avoid duplicate initialization
+      if (section.querySelector('.cs-unit-conversion')) continue
+
+      // Find or create the ingredients header wrapper
+      let headerWrapper = ingredientsContainer.querySelector('.mv-create-ingredients-header')
+      const ingredientsTitle = ingredientsContainer.querySelector('.mv-create-ingredients-title')
+
+      if (!headerWrapper && ingredientsTitle) {
+        // Create flex wrapper to contain both title and toggle (same as Preact code)
+        headerWrapper = document.createElement('div')
+        headerWrapper.className = 'mv-create-ingredients-header'
+        ingredientsTitle.parentNode?.insertBefore(headerWrapper, ingredientsTitle)
+        headerWrapper.appendChild(ingredientsTitle)
+      }
+
+      if (!headerWrapper) continue
+
+      // Create mount point for the toggle inside the flex wrapper
+      const mountPoint = document.createElement('div')
+      mountPoint.className = 'cs-unit-conversion-wrapper'
+      headerWrapper.appendChild(mountPoint)
+
+      const config = {
+        creationId,
+        siteUrl: sdkInstance.getSiteUrl(),
+        theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {},
+        unitConversion: unitConversionConfig
+      }
+
+      const app = await sdkInstance.mount({ type: 'unit-conversion', selector: mountPoint, config })
       if (app) apps.push(app)
     }
 
@@ -298,6 +425,38 @@ const CreateStudio = {
 if (typeof window !== 'undefined') {
   window.addEventListener('message', (event) => {
   
+    // Handle unit preference requests from iframe
+    if (event.data.type === 'REQUEST_UNIT_PREFERENCE') {
+      const { messageId } = event.data
+
+      const storageKey = 'create-studio'
+      try {
+        const storage = localStorage.getItem(storageKey)
+        let unitPreference: string | undefined
+
+        if (storage) {
+          const parsed = JSON.parse(storage)
+          unitPreference = parsed.preferences?.units
+        }
+
+        if (event.source) {
+          (event.source as Window).postMessage({
+            type: 'UNIT_PREFERENCE_RESPONSE',
+            messageId,
+            unitPreference
+          }, event.origin)
+        }
+      } catch (error) {
+        if (event.source) {
+          (event.source as Window).postMessage({
+            type: 'UNIT_PREFERENCE_RESPONSE',
+            messageId,
+            unitPreference: undefined
+          }, event.origin)
+        }
+      }
+    }
+
     if (event.data.type === 'REQUEST_SERVINGS_MULTIPLIER') {
       const { messageId, creationKey } = event.data
       
@@ -364,6 +523,8 @@ document.addEventListener('DOMContentLoaded', () => {
           window.CreateStudio.mountInteractiveMode()
           // Auto-mount servings adjuster widgets
           window.CreateStudio.mountServingsAdjuster()
+          // Auto-mount unit conversion widgets
+          window.CreateStudio.mountUnitConversion()
         })
     }
   }

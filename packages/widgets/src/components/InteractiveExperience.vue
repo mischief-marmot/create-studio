@@ -354,6 +354,8 @@ import IngredientText from './IngredientText.vue';
 import StepText from './StepText.vue';
 import { HowTo, HowToStep } from '@create-studio/shared';
 import { useAnalytics } from '../composables/useAnalytics';
+import { transformIngredientValue } from '@create-studio/shared/utils/ingredient-pipeline';
+import { getInitialSystem, preferenceToSystem, type UnitConversionConfig, type MeasurementSystem } from '@create-studio/shared/utils/unit-conversion';
 
 interface Props {
   creationId?: string
@@ -362,6 +364,13 @@ interface Props {
   hideAttribution?: boolean
   cacheBust?: boolean
   disableRatingSubmission?: boolean
+  unitConversionConfig?: {
+    enabled: boolean
+    default_system: 'auto' | 'us_customary' | 'metric'
+    source_system: 'us_customary' | 'metric'
+    label: string
+    conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+  }
   // Support SDK mounting with config wrapper
   config?: {
     creationId: string
@@ -370,6 +379,13 @@ interface Props {
     hideAttribution?: boolean
     cacheBust?: boolean
     disableRatingSubmission?: boolean
+    unitConversion?: {
+      enabled: boolean
+      default_system: 'auto' | 'us_customary' | 'metric'
+      source_system: 'us_customary' | 'metric'
+      label: string
+      conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+    }
   }
 }
 
@@ -390,6 +406,23 @@ const finalSiteUrl = computed(() => {
 })
 const finalCacheBust = computed(() => props.config?.cacheBust ?? props.cacheBust ?? false)
 const finalDisableRatingSubmission = computed(() => props.config?.disableRatingSubmission ?? props.disableRatingSubmission ?? false)
+
+// Resolve unit conversion config: prop > config wrapper > creation data > null
+const resolvedUnitConversionConfig = computed((): UnitConversionConfig | null => {
+    const fromProp = props.unitConversionConfig
+    if (fromProp?.enabled) return fromProp as UnitConversionConfig
+
+    const fromConfig = props.config?.unitConversion
+    if (fromConfig?.enabled) return fromConfig as UnitConversionConfig
+
+    const fromCreation = creation.value?.unitConversions
+    if (fromCreation?.enabled) return fromCreation as UnitConversionConfig
+
+    return null
+})
+
+// Active unit system - read from SharedStorageManager (set by card-level UnitConversionWidget)
+const activeUnitSystem = ref<MeasurementSystem | null>(null)
 
 // Detect if rendering in iframe or in-DOM
 const isInIframe = computed(() => {
@@ -518,32 +551,44 @@ const servingsMultiplier = computed(() => {
     return currentCreationState.value?.servingsMultiplier || 1;
 });
 
-// Adjust ingredients based on servings multiplier
+// Adjust ingredients based on servings multiplier + unit conversion via shared pipeline
 const adjustedIngredients = computed(() => {
-    if (!creation.value?.recipeIngredient || servingsMultiplier.value === 1) {
-        return creation.value?.recipeIngredient || [];
+    if (!creation.value?.recipeIngredient) return [];
+
+    const unitConfig = resolvedUnitConversionConfig.value
+    const targetSystem = activeUnitSystem.value
+    const multiplier = servingsMultiplier.value
+
+    // If no transformations active, return raw
+    if (multiplier === 1 && (!unitConfig || !targetSystem || targetSystem === unitConfig.source_system)) {
+        return creation.value.recipeIngredient;
     }
 
-    return creation.value.recipeIngredient.map(ingredient => {
-        return adjustIngredientAmount(ingredient, servingsMultiplier.value);
+    return creation.value.recipeIngredient.map((ingredient, idx) => {
+        const ingredientId = String(idx)
+        return transformIngredientValue(ingredient, ingredientId, unitConfig, targetSystem, multiplier);
     });
 });
 
-// Adjust grouped ingredients based on servings multiplier
+// Adjust grouped ingredients based on servings multiplier + unit conversion
 const adjustedIngredientsGroups = computed(() => {
-    if (!creation.value?.recipeIngredientGroups) {
-        return null;
-    }
+    if (!creation.value?.recipeIngredientGroups) return null;
 
-    if (servingsMultiplier.value === 1) {
+    const unitConfig = resolvedUnitConversionConfig.value
+    const targetSystem = activeUnitSystem.value
+    const multiplier = servingsMultiplier.value
+
+    // If no transformations active, return raw
+    if (multiplier === 1 && (!unitConfig || !targetSystem || targetSystem === unitConfig.source_system)) {
         return creation.value.recipeIngredientGroups;
     }
 
-    // Apply servings adjustment to each ingredient in each group
-    const adjusted: Record<string, string[]> = {};
+    const adjusted: Record<string, (string | { original_text: string; link?: string; nofollow?: boolean })[]> = {};
+    let idx = 0
     for (const [groupName, ingredients] of Object.entries(creation.value.recipeIngredientGroups)) {
-        adjusted[groupName] = ingredients.map(ingredient => {
-            return adjustIngredientAmount(ingredient, servingsMultiplier.value);
+        adjusted[groupName] = ingredients.map((ingredient) => {
+            const ingredientId = String(idx++)
+            return transformIngredientValue(ingredient, ingredientId, unitConfig, targetSystem, multiplier);
         });
     }
     return adjusted;
@@ -589,153 +634,9 @@ const adjustedYield = computed(() => {
     return originalYield;
 });
 
-// Helper function to adjust ingredient amounts
-function adjustIngredientAmount(ingredient: string | any, multiplier: number): string | any {
-    // If it's an object with link, adjust the original_text and return the whole object
-    if (typeof ingredient === 'object' && ingredient.original_text) {
-        const adjustedText = adjustIngredientAmountText(ingredient.original_text, multiplier);
-        return {
-            ...ingredient,
-            original_text: adjustedText
-        };
-    }
-
-    // If it's a string, adjust it directly
-    return adjustIngredientAmountText(ingredient, multiplier);
-}
-
-function adjustIngredientAmountText(ingredientText: string, multiplier: number): string {
-    // Extract amount from ingredient text
-    const amountMatch = ingredientText.match(/^([\d\s\/\.\-]+)(.*)$/);
-    if (!amountMatch) return ingredientText;
-
-    const numericPart = amountMatch[1].trim();
-    const restOfIngredient = amountMatch[2].trim();
-
-    const adjustedAmount = calculateAdjustedAmount(numericPart, multiplier);
-    if (adjustedAmount) {
-        return `${adjustedAmount} ${restOfIngredient}`;
-    }
-
-    return ingredientText;
-}
-
-// Calculate adjusted amount (reusing logic from ServingsAdjuster)
-function calculateAdjustedAmount(amount: string, multiplier: number): string | null {
-    // Check for mixed fractions first (e.g., "2 1/4")
-    if (/^\d+\s+\d+\/\d+$/.test(amount)) {
-        return adjustFraction(amount, multiplier);
-    }
-
-    // Handle simple fractions (e.g., "1/2")
-    if (amount.includes('/')) {
-        return adjustFraction(amount, multiplier);
-    }
-
-    // Handle ranges
-    if (amount.includes('-')) {
-        const parts = amount.split('-').map(p => p.trim());
-        const adjustedParts = parts.map(part => {
-            if (part.includes('/')) {
-                return adjustFraction(part, multiplier) || part;
-            }
-            const num = parseFloat(part);
-            if (!isNaN(num)) {
-                return formatNumber(num * multiplier);
-            }
-            return part;
-        });
-        return adjustedParts.join('-');
-    }
-
-    // Handle regular numbers
-    const num = parseFloat(amount);
-    if (!isNaN(num)) {
-        return formatNumber(num * multiplier);
-    }
-
-    return null;
-}
-
-function adjustFraction(fraction: string, multiplier: number): string | null {
-    // Handle mixed fractions like "2 1/4"
-    const mixedMatch = fraction.match(/^(\d+)\s+(\d+)\/(\d+)$/);
-    if (mixedMatch) {
-        const whole = parseInt(mixedMatch[1]);
-        const numerator = parseInt(mixedMatch[2]);
-        const denominator = parseInt(mixedMatch[3]);
-        const decimal = whole + (numerator / denominator);
-        const adjusted = decimal * multiplier;
-        return decimalToFraction(adjusted);
-    }
-
-    // Handle simple fractions like "1/2"
-    const simpleMatch = fraction.match(/^(\d+)\/(\d+)$/);
-    if (simpleMatch) {
-        const numerator = parseInt(simpleMatch[1]);
-        const denominator = parseInt(simpleMatch[2]);
-        const decimal = numerator / denominator;
-        const adjusted = decimal * multiplier;
-        return decimalToFraction(adjusted);
-    }
-
-    return null;
-}
-
-function decimalToFraction(decimal: number): string {
-    const whole = Math.floor(decimal);
-    const remainder = decimal - whole;
-
-    if (remainder === 0) {
-        return whole.toString();
-    }
-
-    // Common fractions
-    const fractions = [
-        { value: 0.125, str: '1/8' },
-        { value: 0.25, str: '1/4' },
-        { value: 0.333, str: '1/3' },
-        { value: 0.375, str: '3/8' },
-        { value: 0.5, str: '1/2' },
-        { value: 0.625, str: '5/8' },
-        { value: 0.666, str: '2/3' },
-        { value: 0.75, str: '3/4' },
-        { value: 0.875, str: '7/8' }
-    ];
-
-    // Find closest fraction
-    let closest = fractions[0];
-    let minDiff = Math.abs(remainder - fractions[0].value);
-
-    for (const frac of fractions) {
-        const diff = Math.abs(remainder - frac.value);
-        if (diff < minDiff) {
-            minDiff = diff;
-            closest = frac;
-        }
-    }
-
-    // If difference is too large, use decimal
-    if (minDiff > 0.05) {
-        return formatNumber(decimal);
-    }
-
-    if (whole > 0) {
-        return `${whole} ${closest.str}`;
-    }
-
-    return closest.str;
-}
-
-function formatNumber(num: number): string {
-    // Remove unnecessary decimals
-    if (num % 1 === 0) {
-        return num.toString();
-    }
-
-    // Round to 2 decimal places
-    return (Math.round(num * 100) / 100).toString();
-}
+// Note: Ingredient transformation logic (fractions, amounts, unit conversion)
+// has been extracted to @create-studio/shared/utils/ingredient-pipeline.ts
+// and is used via transformIngredientValue() in the computed properties above.
 
 // Get steps as HowToStep array for template usage
 const steps = computed(() => {
@@ -918,6 +819,20 @@ onMounted(async () => {
       }
     } catch (error) {
       // Silent fail for parent communication
+    }
+
+    // Resolve unit preference: from SharedStorageManager or parent iframe
+    try {
+      const parentUnitPref = await storageManager.requestUnitPreferenceFromParent();
+      const localUnitPref = parentUnitPref || storageManager.getUnitPreference()
+      const unitConfig = resolvedUnitConversionConfig.value
+      if (unitConfig && localUnitPref) {
+        activeUnitSystem.value = preferenceToSystem(localUnitPref)
+      } else if (unitConfig) {
+        activeUnitSystem.value = getInitialSystem(unitConfig.default_system)
+      }
+    } catch {
+      // Silent fail
     }
 
     if (creationState) {
