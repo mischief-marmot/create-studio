@@ -11,6 +11,7 @@ export default defineEventHandler((event) => {
     /^\/api\/v2\/timers/,
     /^\/api\/v2\/users\/.*/,
     /^\/api\/v2\/conversions\/.*/,
+    /^\/api\/v2\/nutrition\/.*/,
     /^\/api\/analytics\/.*/,
     /^\/api\/analytics\/events/,
   ]

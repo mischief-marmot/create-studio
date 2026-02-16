@@ -35,6 +35,22 @@ export default defineEventHandler(() => {
   // For now, return a static list of tips and announcements.
   const tips = [
     {
+      id: 'tip-keyboard-shortcuts',
+      type: 'feature',
+      title: 'Keyboard shortcuts available',
+      body: 'Press Shift + ? on any Create page to see available keyboard shortcuts for faster editing.',
+      path: '',
+      published_at: '2026-01-01T00:00:00Z',
+    },
+    {
+      id: 'tip-customize-colors',
+      type: 'tip',
+      title: 'Customize your card colors',
+      body: 'Match your cards to your brand by setting primary and secondary colors in Settings.',
+      path: 'settings?setting=mv_create_color',
+      published_at: '2026-01-01T00:00:00Z',
+    },
+    {
       id: 'tip-structured-data',
       type: 'tip',
       title: 'Add structured data to every post',
@@ -51,19 +67,11 @@ export default defineEventHandler(() => {
       published_at: '2026-01-01T00:00:00Z',
     },
     {
-      id: 'tip-customize-colors',
-      type: 'tip',
-      title: 'Customize your card colors',
-      body: 'Match your cards to your brand by setting primary and secondary colors in Settings.',
-      path: 'settings#appearance',
-      published_at: '2026-01-01T00:00:00Z',
-    },
-    {
       id: 'tip-reviews',
       type: 'tip',
       title: 'Add reviews to boost engagement',
       body: 'Enable reviews on your cards to let readers rate your recipes. Higher engagement signals help with SEO.',
-      path: 'settings#advanced',
+      path: 'settings?setting=mv_create_allow_reviews',
       published_at: '2026-01-01T00:00:00Z',
     },
     {
@@ -79,14 +87,6 @@ export default defineEventHandler(() => {
       type: 'feature',
       title: 'Drag to reorder your dashboard',
       body: 'You can drag and drop dashboard widgets to arrange them however you like. Your layout is saved automatically.',
-      path: 'dashboard',
-      published_at: '2026-01-01T00:00:00Z',
-    },
-    {
-      id: 'tip-keyboard-shortcuts',
-      type: 'feature',
-      title: 'Keyboard shortcuts available',
-      body: 'Press ? on any Create page to see available keyboard shortcuts for faster editing.',
       path: 'dashboard',
       published_at: '2026-01-01T00:00:00Z',
     },

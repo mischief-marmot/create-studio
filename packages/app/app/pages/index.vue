@@ -609,11 +609,11 @@
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
-                  Beautiful Cards
+                  5 Beautiful Card styles
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
-                  Recipes, How-Tos & Lists
+                  Recipe, How-To & List card types
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-success flex-shrink-0 mt-0.5" />
@@ -629,7 +629,7 @@
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <span class="text-error flex-shrink-0 ml-0.5">✕</span>
-                  <span class="opacity-50">Updates & Support</span>
+                  <span class="opacity-50">Email Support</span>
                 </li>
               </ul>
             </div>
