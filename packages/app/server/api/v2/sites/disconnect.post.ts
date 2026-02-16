@@ -15,25 +15,17 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SiteUserRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
-import { verifyJWT } from '~~/server/utils/auth'
+import { verifyAnyJWT, getTokenType } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
   const logger = useLogger('API:Sites:Disconnect', debug)
 
   try {
-    // Verify JWT token from plugin - contains both user_id and site_id
-    const tokenPayload = await verifyJWT(event)
-    const userId = tokenPayload.id
+    // Verify JWT token from plugin - accepts both user and site tokens
+    const tokenPayload = await verifyAnyJWT(event)
+    const tokenType = getTokenType(tokenPayload)
     const siteId = tokenPayload.site_id
-
-    if (!userId) {
-      setResponseStatus(event, 401)
-      return {
-        success: false,
-        error: 'Unauthorized'
-      }
-    }
 
     if (!siteId) {
       setResponseStatus(event, 400)
@@ -43,7 +35,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    logger.debug('Processing disconnect request', { userId, siteId })
+    logger.debug('Processing disconnect request', { siteId, tokenType })
 
     const siteRepo = new SiteRepository()
     const siteUserRepo = new SiteUserRepository()
@@ -56,6 +48,28 @@ export default defineEventHandler(async (event) => {
       return {
         success: false,
         error: 'Site not found'
+      }
+    }
+
+    if (tokenType === 'site') {
+      // Site token: unverify ALL SiteUser records for this site
+      await siteUserRepo.unverifyAllForSite(siteId)
+      logger.info('Unverified all site connections', { siteId, url: site.url })
+
+      return {
+        success: true,
+        message: 'Site disconnected successfully'
+      }
+    }
+
+    // User token: unverify only this user's record (existing behavior)
+    const userId = (tokenPayload as { id: number }).id
+
+    if (!userId) {
+      setResponseStatus(event, 401)
+      return {
+        success: false,
+        error: 'Unauthorized'
       }
     }
 

@@ -19,7 +19,7 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SiteUserRepository, UserRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
-import { generateToken } from '~~/server/utils/auth'
+import { generateSiteToken } from '~~/server/utils/auth'
 
 const VERIFY_TIMEOUT = 10000 // 10 seconds
 
@@ -111,7 +111,7 @@ export default defineEventHandler(async (event) => {
     // Call WordPress plugin to verify code (even if already verified, to re-sync the token)
     logger.debug('Verifying code with WordPress plugin', { siteId, url: site.url, alreadyVerified })
 
-    // Get user info for generating JWT
+    // Get user info for email validation update
     const user = await userRepo.findById(userId)
     if (!user) {
       setResponseStatus(event, 404)
@@ -121,13 +121,8 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Generate JWT token to send to the plugin
-    const token = await generateToken({
-      id: userId,
-      email: user.email,
-      validEmail: true,
-      site_id: siteId
-    })
+    // Generate site-only JWT token to send to the plugin
+    const token = await generateSiteToken(siteId)
 
     try {
       const controller = new AbortController()

@@ -716,6 +716,16 @@ export class SiteUserRepository {
   }
 
   /**
+   * Unverify all site-user connections for a site
+   * Used when disconnecting via a site-only token (no specific user)
+   */
+  async unverifyAllForSite(siteId: number) {
+    await db.update(schema.siteUsers)
+      .set({ verified_at: null })
+      .where(eq(schema.siteUsers.site_id, siteId))
+  }
+
+  /**
    * Delete a site-user connection
    */
   async delete(userId: number, siteId: number) {

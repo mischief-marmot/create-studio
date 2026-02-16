@@ -9,6 +9,11 @@ export interface JWTPayload {
   site_id?: number
 }
 
+export interface SiteJWTPayload {
+  site_id: number
+  type: 'site'
+}
+
 export interface TokenGenerationData {
   id: number
   email: string
@@ -49,6 +54,30 @@ export async function generateToken(data: TokenGenerationData): Promise<string> 
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .sign(secret)
+}
+
+/**
+ * Generate a site-only JWT token (no user info)
+ */
+export async function generateSiteToken(siteId: number): Promise<string> {
+  const secret = getSecret()
+
+  const payload: SiteJWTPayload = {
+    site_id: siteId,
+    type: 'site'
+  }
+
+  return await new SignJWT(payload as any)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .sign(secret)
+}
+
+/**
+ * Determine token type from decoded payload
+ */
+export function getTokenType(payload: any): 'user' | 'site' {
+  return payload.type === 'site' ? 'site' : 'user'
 }
 
 /**
@@ -104,6 +133,30 @@ export async function verifyJWT(event: any): Promise<JWTPayload> {
 
   try {
     return await verifyToken(token)
+  } catch (error) {
+    if (typeof useLogger !== 'undefined') {
+      const config = useRuntimeConfig()
+      const logger = useLogger('Auth', config.debug)
+      logger.error('JWT verification failed', { error })
+    }
+    throw createError({
+      statusCode: 401,
+      statusMessage: 'Unauthorized'
+    })
+  }
+}
+
+/**
+ * Middleware to verify JWT token in request (accepts both user and site tokens)
+ */
+export async function verifyAnyJWT(event: any): Promise<JWTPayload | SiteJWTPayload> {
+  const authHeader = getHeader(event, 'authorization')
+  const token = extractTokenFromHeader(authHeader)
+
+  try {
+    const secret = getSecret()
+    const { payload } = await jwtVerify(token, secret)
+    return payload as unknown as JWTPayload | SiteJWTPayload
   } catch (error) {
     if (typeof useLogger !== 'undefined') {
       const config = useRuntimeConfig()
