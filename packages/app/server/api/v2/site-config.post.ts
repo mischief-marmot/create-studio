@@ -43,12 +43,14 @@ export default defineEventHandler(async (event) => {
         showInteractiveMode = false
       }
 
+      // Free+ and Pro tiers get Interactive Mode
+      // Check if Interactive Mode is disabled by the publisher
+      if (!siteResult.interactive_mode_enabled) {
+        showInteractiveMode = false
+      }
+
       // Pro sites can customize Interactive Mode settings
       if (subscriptionTier === 'pro') {
-        // Check if Interactive Mode is disabled (0 means disabled, 1 or null means enabled)
-        if (siteResult.interactive_mode_enabled === 0) {
-          showInteractiveMode = false
-        }
         // Use custom button text if set
         if (siteResult.interactive_mode_button_text) {
           buttonText = siteResult.interactive_mode_button_text as string

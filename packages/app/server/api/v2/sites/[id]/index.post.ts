@@ -55,15 +55,16 @@ export default defineEventHandler(async (event) => {
 
     // Read body
     const body = await readBody(event)
-    const { php_version, wp_version, create_version } = body
+    const { php_version, wp_version, create_version, interactive_mode_enabled } = body
 
-    // Validate input - at least one version field must be provided
-    if (!php_version && !wp_version && !create_version) {
+    // Validate input - at least one field must be provided
+    const hasFields = php_version || wp_version || create_version || interactive_mode_enabled !== undefined
+    if (!hasFields) {
       setResponseStatus(event, 400)
-      logger.debug('No version fields to update')
+      logger.debug('No fields to update')
       return {
         success: false,
-        error: 'At least one version field must be provided'
+        error: 'At least one field must be provided'
       }
     }
 
@@ -88,6 +89,7 @@ export default defineEventHandler(async (event) => {
     if (php_version) updateData.php_version = php_version
     if (wp_version) updateData.wp_version = wp_version
     if (create_version) updateData.create_version = create_version
+    if (interactive_mode_enabled !== undefined) updateData.interactive_mode_enabled = !!interactive_mode_enabled
 
     logger.debug('Updating site versions', { siteIdParam, siteIdToUpdate, updateData })
 
