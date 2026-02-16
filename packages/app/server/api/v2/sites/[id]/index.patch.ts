@@ -120,6 +120,28 @@ export default defineEventHandler(async (event) => {
     // Update site
     const updatedSite = await siteRepo.update(siteId, updateData)
 
+    // Send settings_update webhook to WordPress plugin for pro field changes
+    if (hasProFields && existingSite.url) {
+      const webhookSettings: Record<string, unknown> = {}
+      if (interactive_mode_enabled !== undefined) {
+        webhookSettings.interactive_mode_enabled = !!interactive_mode_enabled
+      }
+      if (interactive_mode_button_text !== undefined) {
+        webhookSettings.interactive_mode_button_text = interactive_mode_button_text || ''
+      }
+
+      try {
+        const { sendWebhook } = await import('~~/server/utils/webhooks')
+        await sendWebhook(existingSite.url, {
+          type: 'settings_update',
+          data: { settings: webhookSettings },
+        })
+      } catch (webhookError) {
+        // Don't fail the request if webhook dispatch fails
+        logger.warn('Failed to send settings_update webhook', webhookError)
+      }
+    }
+
     // Return response
     setResponseStatus(event, 200)
     logger.debug('Site updated successfully', updatedSite)

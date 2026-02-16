@@ -55,10 +55,10 @@ export default defineEventHandler(async (event) => {
 
     // Read body
     const body = await readBody(event)
-    const { php_version, wp_version, create_version, interactive_mode_enabled } = body
+    const { php_version, wp_version, create_version, interactive_mode_enabled, interactive_mode_button_text } = body
 
     // Validate input - at least one field must be provided
-    const hasFields = php_version || wp_version || create_version || interactive_mode_enabled !== undefined
+    const hasFields = php_version || wp_version || create_version || interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
     if (!hasFields) {
       setResponseStatus(event, 400)
       logger.debug('No fields to update')
@@ -89,7 +89,8 @@ export default defineEventHandler(async (event) => {
     if (php_version) updateData.php_version = php_version
     if (wp_version) updateData.wp_version = wp_version
     if (create_version) updateData.create_version = create_version
-    if (interactive_mode_enabled !== undefined) updateData.interactive_mode_enabled = !!interactive_mode_enabled
+    if (interactive_mode_enabled !== undefined) updateData.interactive_mode_enabled = interactive_mode_enabled ? 1 : 0
+    if (interactive_mode_button_text !== undefined) updateData.interactive_mode_button_text = interactive_mode_button_text || null
 
     logger.debug('Updating site versions', { siteIdParam, siteIdToUpdate, updateData })
 

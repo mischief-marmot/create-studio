@@ -573,7 +573,7 @@ const loadSiteData = async () => {
         name: site.value.name || '',
         url: site.value.url || '',
         // Pro settings: default to enabled if not set (null/undefined treated as enabled)
-        interactive_mode_enabled: site.value.interactive_mode_enabled !== 0,
+        interactive_mode_enabled: !!site.value.interactive_mode_enabled,
         interactive_mode_button_text: site.value.interactive_mode_button_text || ''
       }
     }
