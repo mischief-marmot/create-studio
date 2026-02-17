@@ -32,7 +32,7 @@ function pemToArrayBuffer(pem: string): ArrayBuffer {
 /**
  * Sign a payload string with RS256 using the Web Crypto API.
  */
-async function signPayload(body: string, privateKeyPem: string): Promise<string> {
+export async function signPayload(body: string, privateKeyPem: string): Promise<string> {
   const keyData = pemToArrayBuffer(privateKeyPem)
 
   const key = await crypto.subtle.importKey(
@@ -98,4 +98,50 @@ export async function sendWebhook(siteUrl: string, payload: WebhookPayload): Pro
   } else {
     logger.debug(`Webhook delivered successfully to ${url}`)
   }
+}
+
+/**
+ * Send a signed webhook and return the parsed JSON response.
+ *
+ * Same signing logic as sendWebhook but returns the response body
+ * instead of discarding it. Used for request-response patterns like debug.
+ */
+export async function sendWebhookWithResponse<T = Record<string, unknown>>(
+  siteUrl: string,
+  payload: WebhookPayload,
+): Promise<T> {
+  const config = useRuntimeConfig()
+  const { debug } = config
+  const logger = useLogger('Webhooks', debug)
+
+  const privateKey = config.webhookPrivateKey
+  if (!privateKey) {
+    throw new Error('Webhook private key not configured')
+  }
+
+  const body = JSON.stringify(payload)
+  const timestamp = Math.floor(Date.now() / 1000).toString()
+  const signature = await signPayload(body, privateKey)
+
+  const baseUrl = siteUrl.replace(/\/+$/, '')
+  const url = `${baseUrl}/wp-json/mv-create/v1/webhooks/studio`
+
+  logger.debug(`Sending webhook (with response) type="${payload.type}" to ${url}`)
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Studio-Signature': signature,
+      'X-Studio-Timestamp': timestamp,
+    },
+    body,
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '')
+    throw new Error(`Webhook failed: ${response.status} ${response.statusText} - ${errorText}`)
+  }
+
+  return response.json() as Promise<T>
 }

@@ -49,9 +49,18 @@
             <span v-if="isLegacy" class="text-base-content/30">·</span>
             <span v-if="isLegacy" class="text-warning/70">Legacy</span>
           </div>
-          <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
-            {{ site.name || site.url }}
-          </h1>
+          <div class="flex items-center gap-4">
+            <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+              {{ site.name || site.url }}
+            </h1>
+            <NuxtLink
+              :to="`/debug/${site.id}`"
+              class="p-2 rounded-lg text-base-content/40 hover:text-primary hover:bg-primary/10 transition-all"
+              title="Debug this site"
+            >
+              <BugAntIcon class="w-5 h-5" />
+            </NuxtLink>
+          </div>
         </div>
       </div>
 
@@ -720,7 +729,8 @@ import {
   TrashIcon,
   PlusIcon,
   GlobeAltIcon,
-  CheckIcon
+  CheckIcon,
+  BugAntIcon,
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({

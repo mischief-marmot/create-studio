@@ -74,6 +74,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Admin-specific config
     adminSessionPassword: "",
+    // Main app URL for proxying API calls (e.g., debug webhooks)
+    mainAppUrl: "http://localhost:3000",
+    // Shared secret for service-to-service auth with main app
+    mainAppApiKey: "",
     // Session configuration for nuxt-auth-utils
     session: {
       password: process.env.NUXT_ADMIN_SESSION_PASSWORD || "",
