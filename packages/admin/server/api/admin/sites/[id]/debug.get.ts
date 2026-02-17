@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm'
 import { sites } from '~~/server/utils/admin-db'
+import { getAdminEnvironment } from '~~/server/utils/admin-env'
 
 /**
  * GET /api/admin/sites/[id]/debug
@@ -55,11 +56,14 @@ export default defineEventHandler(async (event) => {
   if (query.lines) params.set('lines', query.lines as string)
   if (query.search) params.set('search', query.search as string)
 
-  const mainAppUrl = config.mainAppUrl?.replace(/\/+$/, '')
+  // Pick the correct main app URL based on admin environment (production/preview toggle)
+  const adminEnv = getAdminEnvironment(event)
+  const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+  const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
   if (!mainAppUrl) {
     throw createError({
       statusCode: 500,
-      message: 'Main app URL not configured',
+      message: `Main app URL not configured for ${adminEnv} environment`,
     })
   }
 

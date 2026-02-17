@@ -62,6 +62,8 @@
     }
   ],
   "vars": {
-    "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio Admin"
+    "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio Admin",
+    "NUXT_MAIN_APP_URL": "https://create.studio",
+    "NUXT_MAIN_APP_PREVIEW_URL": "https://preview.create.studio"
   }
 }
