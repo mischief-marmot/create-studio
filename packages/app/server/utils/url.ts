@@ -54,7 +54,7 @@ function isPrivateOrReservedHost(hostname: string, allowedDomains: string[] = []
   }
 
   // Block link-local and reserved in production
-  if (hostname.endsWith('.local') || hostname.endsWith('.internal')) {
+  if (hostname.endsWith('.local') || hostname.endsWith('.internal') || hostname.endsWith('.test')) {
     return process.env.NODE_ENV === 'production'
   }
 
@@ -82,7 +82,7 @@ export function normalizeSiteUrl(input: string, options?: { allowedDomains?: str
     const isAllowed = allowedDomains.length > 0 && isAllowedTestDomain(hostname, allowedDomains)
 
     // Determine if this is a local/development host
-    const isLocalHost = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.endsWith('.local') || isAllowed
+    const isLocalHost = url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.endsWith('.local') || url.hostname.endsWith('.test') || isAllowed
 
     // Enforce HTTPS (required for secure plugin communication)
     if (url.protocol !== 'https:') {

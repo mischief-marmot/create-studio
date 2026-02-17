@@ -106,7 +106,7 @@ export default defineNuxtConfig({
       },
     ],
     server: {
-      allowedHosts: ["host.docker.internal", "localhost:3000", "localhost:8074", "localhost:8081", "localhost:8084", "7823d21b31b9.ngrok-free.app"],
+      allowedHosts: true,
       middlewareMode: true,
       hmr: {
         host: "localhost",
@@ -203,6 +203,10 @@ export default defineNuxtConfig({
     nixKey: "",
     session: {
       password: "",
+      cookie: {
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      },
     },
     stripeSecretKey: "",
     stripeWebhookSecret: "",

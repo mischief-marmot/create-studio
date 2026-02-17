@@ -132,7 +132,7 @@ export default defineEventHandler(async (event) => {
       let siteUrlWithProtocol = site.url
       if (!siteUrlWithProtocol.startsWith('http://') && !siteUrlWithProtocol.startsWith('https://')) {
         // Use HTTP for localhost/local domains, HTTPS for everything else
-        const isLocal = /^(localhost|127\.0\.0\.1)(:\d+)?/.test(siteUrlWithProtocol) || siteUrlWithProtocol.endsWith('.local')
+        const isLocal = /^(localhost|127\.0\.0\.1)(:\d+)?/.test(siteUrlWithProtocol) || siteUrlWithProtocol.endsWith('.local') || siteUrlWithProtocol.endsWith('.test')
         siteUrlWithProtocol = `${isLocal ? 'http' : 'https'}://${siteUrlWithProtocol}`
       }
 

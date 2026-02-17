@@ -36,6 +36,9 @@ export default defineNuxtConfig({
         plugins: [require("@tailwindcss/postcss")()],
       },
     },
+    server: {
+      allowedHosts: true,
+    },
   },
 
   app: {

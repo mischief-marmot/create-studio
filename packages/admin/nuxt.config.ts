@@ -28,6 +28,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: true,
+    },
   },
 
   css: ["./app/assets/main.css"],
@@ -82,6 +85,10 @@ export default defineNuxtConfig({
     // Session configuration for nuxt-auth-utils
     session: {
       password: process.env.NUXT_ADMIN_SESSION_PASSWORD || "",
+      cookie: {
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      },
     },
     public: {
       productName: "Create Studio Admin",
