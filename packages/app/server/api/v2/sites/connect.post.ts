@@ -148,7 +148,9 @@ export default defineEventHandler(async (event) => {
         body: {
           connect_token,
           jwt,
-          site_id: site.id
+          site_id: site.id,
+          user_token: verifiedResult.token,
+          user_email: user.email,
         },
         signal: controller.signal
       }).finally(() => clearTimeout(timeoutId))
