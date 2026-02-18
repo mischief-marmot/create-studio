@@ -68,9 +68,9 @@ export function setAdminEnvironment(event: H3Event, env: AdminEnvironment): void
  * Get the Cloudflare bindings for the current admin environment
  * Returns appropriate bindings based on the selected environment (production or preview)
  *
- * In dev mode (local or --remote), we use NuxtHub's auto-imported db and only support
- * the default environment. Multi-environment switching only works when deployed to
- * Cloudflare Workers where we have direct access to both DB and DB_PREVIEW bindings.
+ * In dev mode, wrangler miniflare provides D1 bindings via event.context.cloudflare.env.
+ * Multi-environment switching only works when deployed to Cloudflare Workers where we
+ * have direct access to both DB and DB_PREVIEW bindings.
  *
  * @param event - H3 event from the request
  * @returns Admin environment bindings with db, blob, kv, cache, and metadata
@@ -79,24 +79,7 @@ export function useAdminEnv(event: H3Event): AdminEnvBindings {
   const environment = getAdminEnvironment(event)
   const cloudflareEnv = event.context.cloudflare?.env as Record<string, unknown> | undefined
 
-  // Check if we're in development mode
-  // In dev mode, use NuxtHub's hubDatabase() which handles local/remote connections
-  const isDev = import.meta.dev
-
-  // Handle dev mode (local or --remote) - use NuxtHub's hubDatabase() mechanism
-  if (isDev) {
-    return {
-      db: undefined as unknown as D1Database,
-      adminDb: null, // Admin DB not available in local dev (uses hubDatabase instead)
-      blob: undefined as unknown as R2Bucket,
-      kv: undefined as unknown as KVNamespace,
-      cache: undefined as unknown as KVNamespace,
-      environment: 'production', // Only production available in dev
-      isLocal: true,
-    }
-  }
-
-  // In production, check if we have direct Cloudflare bindings
+  // Check if we have direct Cloudflare bindings (available in both dev via wrangler miniflare and production)
   const hasCloudflareBindings = cloudflareEnv && cloudflareEnv.DB
 
   // Fallback if no bindings available (shouldn't happen in production)

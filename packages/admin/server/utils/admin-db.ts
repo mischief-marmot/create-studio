@@ -2,8 +2,7 @@
  * Admin Database Factory
  *
  * Returns a Drizzle database instance for the selected admin environment.
- * In local development, falls back to the default NuxtHub database.
- * In production, creates a Drizzle instance from the environment-specific D1 binding.
+ * Always uses the D1 binding from wrangler (local dev) or Cloudflare Workers (production).
  */
 
 import { drizzle } from 'drizzle-orm/d1'
@@ -14,8 +13,8 @@ import type { H3Event } from 'h3'
 // Re-export app schema tables for convenience in API routes
 // Note: admins/auditLogs/Admin/NewAdmin/AuditLog/NewAuditLog are intentionally
 // excluded here to avoid collisions with admin-ops-db.ts exports
-export { users, sites, siteUsers, subscriptions } from '../../../app/server/db/schema'
-export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription } from '../../../app/server/db/schema'
+export { users, sites, siteUsers, subscriptions, broadcasts } from '../../../app/server/db/schema'
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, Broadcast, NewBroadcast } from '../../../app/server/db/schema'
 
 // Type for NuxtHub's auto-imported db
 type DrizzleDb = ReturnType<typeof drizzle>
@@ -36,15 +35,8 @@ type DrizzleDb = ReturnType<typeof drizzle>
  * ```
  */
 export function useAdminDb(event: H3Event): DrizzleDb {
-  const { db: d1Binding, isLocal } = useAdminEnv(event)
+  const { db: d1Binding } = useAdminEnv(event)
 
-  // In local development, use NuxtHub's auto-imported `db`
-  // The `db` is auto-imported from 'hub:db' in the server context
-  if (isLocal) {
-    // @ts-expect-error - db is auto-imported by NuxtHub at compile time
-    return db
-  }
-
-  // In production or preview, create a Drizzle instance from the D1 binding
+  // Create a Drizzle instance from the D1 binding (wrangler miniflare locally, Cloudflare Workers in production)
   return drizzle(d1Binding, { schema })
 }

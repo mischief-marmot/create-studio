@@ -42,12 +42,11 @@ export type AuditEnvironment = AdminEnvironment | 'local'
  * @returns The environment name ('production', 'preview', or 'local')
  */
 export function getAuditEnvironment(event: H3Event): AuditEnvironment {
-  const { isLocal, environment } = useAdminEnv(event)
-
-  if (isLocal) {
+  if (import.meta.dev) {
     return 'local'
   }
 
+  const { environment } = useAdminEnv(event)
   return environment
 }
 
@@ -131,10 +130,11 @@ function getLocalAdminOpsDb(): ReturnType<typeof drizzleSqlite> {
  * @returns Drizzle database instance configured for the admin operations database
  */
 export function useAdminOpsDb(event: H3Event): DrizzleDb {
-  const { adminDb, isLocal } = useAdminEnv(event)
+  const { adminDb } = useAdminEnv(event)
 
   // In local development, use a dedicated SQLite file for admin ops
-  if (isLocal) {
+  // (DB_ADMIN D1 binding is only available in production Cloudflare Workers)
+  if (import.meta.dev) {
     return getLocalAdminOpsDb()
   }
 
