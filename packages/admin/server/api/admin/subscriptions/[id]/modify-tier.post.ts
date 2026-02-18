@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
+import { getAdminEnvironment } from '~~/server/utils/admin-env'
 import Stripe from 'stripe'
 
 /**
@@ -68,10 +69,11 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    const config = useRuntimeConfig()
+
     // PATH 1: Has Stripe subscription - need to handle via Stripe
     if (hasStripeSubscription && tier === 'free') {
       // Downgrading to free with a Stripe subscription - cancel it in Stripe
-      const config = useRuntimeConfig()
       const stripe = new Stripe(config.stripeSecretKey, {
         apiVersion: '2024-11-20.acacia',
       })
@@ -134,6 +136,28 @@ export default defineEventHandler(async (event) => {
       })
     } catch (auditError) {
       console.warn('Failed to create audit log:', auditError)
+    }
+
+    // Notify the WordPress site of the tier change via the main app's webhook dispatcher
+    try {
+      const adminEnv = getAdminEnvironment(event)
+      const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+      const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+      if (mainAppUrl) {
+        const response = await fetch(`${mainAppUrl}/api/v2/internal/notify-subscription-change`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Api-Key': config.mainAppApiKey || '',
+          },
+          body: JSON.stringify({ siteId: currentSubscription.site_id, tier }),
+        })
+        if (!response.ok) {
+          console.warn(`Webhook notification failed: ${response.status} ${response.statusText}`)
+        }
+      }
+    } catch (webhookError) {
+      console.warn('Failed to notify site of tier change:', webhookError)
     }
 
     return {
