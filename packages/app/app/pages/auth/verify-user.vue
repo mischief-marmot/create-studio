@@ -9,10 +9,10 @@
 
     <!-- Not Logged In State -->
     <div v-if="!isAuthenticated && !success" class="alert alert-info">
-      <InformationCircleIcon class="h-5 w-5" />
+      <InformationCircleIcon class="w-5 h-5" />
       <div>
         <span>You need to log in or create an account to complete verification.</span>
-        <div class="mt-2 flex gap-2">
+        <div class="flex gap-2 mt-2">
           <NuxtLink :to="loginUrl" class="btn btn-sm btn-primary">Log In</NuxtLink>
           <NuxtLink :to="registerUrl" class="btn btn-sm btn-outline">Register</NuxtLink>
         </div>
@@ -29,7 +29,7 @@
             v-model="verificationCode"
             type="text"
             placeholder="XXXX-XXXX-XXXX-XXXX"
-            class="grow text-center tracking-wider uppercase"
+            class="grow tracking-wider text-center uppercase"
             maxlength="19"
             required
             @input="formatCode"
@@ -42,8 +42,8 @@
       </fieldset>
 
       <div class="bg-base-200/50 rounded-xl p-4">
-        <h4 class="font-medium text-sm mb-2">Where do I find this code?</h4>
-        <ol class="text-sm text-base-content/70 space-y-1 list-decimal list-inside">
+        <h4 class="mb-2 text-sm font-medium">Where do I find this code?</h4>
+        <ol class="text-base-content/70 space-y-1 text-sm list-decimal list-inside">
           <li>Go to your WordPress admin panel</li>
           <li>Navigate to <strong>Settings &rarr; Create</strong></li>
           <li>Click <strong>"Connect Your Account"</strong> in the Registration section</li>
@@ -52,7 +52,7 @@
       </div>
 
       <div v-if="errors.general" class="alert alert-error">
-        <ExclamationCircleIcon class="h-5 w-5" />
+        <ExclamationCircleIcon class="w-5 h-5" />
         <span>{{ errors.general }}</span>
       </div>
 
@@ -75,7 +75,7 @@
     </form>
 
     <!-- Success State -->
-    <div v-if="success" class="text-center py-8">
+    <div v-if="success" class="py-8 text-center">
       <div class="rounded-2xl bg-gradient-to-br from-success/20 to-success/5 size-20 flex items-center justify-center mx-auto mb-4">
         <CheckCircleIcon class="text-success size-12" />
       </div>
@@ -83,7 +83,7 @@
       <p class="text-base-content/70 mb-2 text-sm">
         Your WordPress site is now connected to your Create.Studio account.
       </p>
-      <p v-if="verifiedSite" class="text-base-content font-medium mb-6">
+      <p v-if="verifiedSite" class="text-base-content mb-6 font-medium">
         {{ verifiedSite.site_name }}
       </p>
 
@@ -139,12 +139,31 @@ const isCodeComplete = computed(() => {
   return codeLength.value === 16
 })
 
-// Pre-fill code from URL if provided
-onMounted(() => {
+const STORAGE_KEY = 'create_verify_code'
+
+// Pre-fill code from URL or sessionStorage, auto-verify if ready
+onMounted(async () => {
   const codeFromUrl = route.query.code as string
+
   if (codeFromUrl) {
+    // Save to sessionStorage as backup for auth redirect
+    try { sessionStorage.setItem(STORAGE_KEY, codeFromUrl) } catch {}
     verificationCode.value = codeFromUrl
     formatCode()
+  } else {
+    // Restore from sessionStorage (after login/register redirect)
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        verificationCode.value = stored
+        formatCode()
+      }
+    } catch {}
+  }
+
+  // Auto-submit if authenticated and code is complete (returning from auth redirect)
+  if (isAuthenticated.value && isCodeComplete.value && !success.value) {
+    await handleSubmit()
   }
 })
 
@@ -183,6 +202,7 @@ const handleSubmit = async () => {
 
     if (response.success) {
       success.value = true
+      try { sessionStorage.removeItem(STORAGE_KEY) } catch {}
       verifiedSite.value = {
         site_id: response.site_id!,
         site_name: response.site_name!,

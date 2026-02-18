@@ -10,7 +10,7 @@ import { eq, and, or, isNull, isNotNull, sql, like } from 'drizzle-orm'
 import type { SiteUser } from '../db/schema'
 
 // Re-export types from schema for convenience
-export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription } from '../db/schema'
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession } from '../db/schema'
 
 // Legacy interface types for backwards compatibility
 export interface CreateUserData {
@@ -296,6 +296,39 @@ export class SiteRepository {
     }
 
     return result
+  }
+
+  /**
+   * Find a site by its pending verification code
+   */
+  async findByPendingVerificationCode(code: string) {
+    return await db.select().from(schema.sites)
+      .where(eq(schema.sites.pending_verification_code, code))
+      .get()
+  }
+
+  /**
+   * Set a pending verification code on a site
+   */
+  async setPendingVerificationCode(siteId: number, code: string) {
+    const now = new Date().toISOString()
+
+    await db.update(schema.sites)
+      .set({ pending_verification_code: code, updatedAt: now })
+      .where(eq(schema.sites.id, siteId))
+
+    return this.findById(siteId)
+  }
+
+  /**
+   * Clear the pending verification code from a site
+   */
+  async clearPendingVerificationCode(siteId: number) {
+    const now = new Date().toISOString()
+
+    await db.update(schema.sites)
+      .set({ pending_verification_code: null, updatedAt: now })
+      .where(eq(schema.sites.id, siteId))
   }
 
   /**
@@ -585,12 +618,16 @@ export class SiteUserRepository {
   }
 
   /**
-   * Mark verified and generate user token
-   * Returns the generated token
+   * Mark verified and generate user token (or preserve existing token)
+   * Returns the token
    */
   async markVerifiedWithToken(userId: number, siteId: number): Promise<{ siteUser: SiteUser | undefined; token: string }> {
     const now = new Date().toISOString()
-    const token = generateSecureToken()
+
+    // Preserve existing token if already verified — prevents token rotation
+    // when multiple flows (link, site-connect, verify) call this method
+    const existing = await this.findByUserAndSite(userId, siteId)
+    const token = existing?.user_token || generateSecureToken()
 
     await db.update(schema.siteUsers)
       .set({
@@ -734,5 +771,62 @@ export class SiteUserRepository {
         eq(schema.siteUsers.user_id, userId),
         eq(schema.siteUsers.site_id, siteId)
       ))
+  }
+}
+
+/**
+ * LinkSession database operations
+ * Manages temporary sessions for the user verification redirect flow
+ */
+export class LinkSessionRepository {
+  async create(siteId: number, returnUrl: string) {
+    const now = new Date().toISOString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
+    const id = crypto.randomUUID()
+
+    await db.insert(schema.linkSessions).values({
+      id,
+      site_id: siteId,
+      return_url: returnUrl,
+      created_at: now,
+      expires_at: expiresAt,
+    })
+
+    return this.findById(id)
+  }
+
+  async findById(id: string) {
+    return await db.select().from(schema.linkSessions)
+      .where(eq(schema.linkSessions.id, id))
+      .get()
+  }
+
+  async findValidById(id: string) {
+    const now = new Date().toISOString()
+    return await db.select().from(schema.linkSessions)
+      .where(and(
+        eq(schema.linkSessions.id, id),
+        sql`${schema.linkSessions.expires_at} > ${now}`
+      ))
+      .get()
+  }
+
+  async complete(id: string, userId: number, userToken: string) {
+    await db.update(schema.linkSessions)
+      .set({ user_id: userId, user_token: userToken })
+      .where(eq(schema.linkSessions.id, id))
+
+    return this.findById(id)
+  }
+
+  async delete(id: string) {
+    await db.delete(schema.linkSessions)
+      .where(eq(schema.linkSessions.id, id))
+  }
+
+  async deleteExpired() {
+    const now = new Date().toISOString()
+    await db.delete(schema.linkSessions)
+      .where(sql`${schema.linkSessions.expires_at} <= ${now}`)
   }
 }

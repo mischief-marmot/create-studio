@@ -5,30 +5,19 @@
  * This endpoint is called from the Create Studio frontend when a user
  * enters their verification code obtained from the WordPress plugin.
  *
+ * The code is stored on the site record (not tied to any specific user).
+ * Whoever is logged in and submits the correct code gets linked to the site.
+ *
  * Request body:
  * {
  *   verification_code: string - The code from WordPress (format: XXXX-XXXX-XXXX-XXXX)
- * }
- *
- * Response (200):
- * {
- *   success: true,
- *   site_name: string,
- *   site_url: string,
- *   redirect_url: string - URL to redirect user to site dashboard
- * }
- *
- * Response (404):
- * {
- *   error: "invalid_code",
- *   message: "Verification code not found or already used"
  * }
  *
  * Requires: Authenticated session (user must be logged in)
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SiteUserRepository, SiteRepository, UserRepository } from '~~/server/utils/database'
+import { SiteUserRepository, SiteRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
 
@@ -89,19 +78,15 @@ export default defineEventHandler(async (event) => {
 
     const siteUserRepo = new SiteUserRepository()
     const siteRepo = new SiteRepository()
-    const userRepo = new UserRepository()
 
-    // Find SiteUser by verification code
-    // First try with formatted dashes
-    let siteUser = await siteUserRepo.findByVerificationCode(formattedCode)
-
-    // If not found, try without dashes (in case it was stored differently)
-    if (!siteUser) {
-      siteUser = await siteUserRepo.findByVerificationCode(verification_code)
+    // Find site by pending verification code (try both formats)
+    let site = await siteRepo.findByPendingVerificationCode(formattedCode)
+    if (!site) {
+      site = await siteRepo.findByPendingVerificationCode(verification_code)
     }
 
-    if (!siteUser) {
-      logger.debug('Verification code not found', { code: formattedCode })
+    if (!site) {
+      logger.debug('No site found with pending verification code', { code: formattedCode })
       setResponseStatus(event, 404)
       return {
         success: false,
@@ -110,62 +95,37 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Check if already verified
-    if (siteUser.verified_at) {
-      logger.debug('SiteUser already verified', { siteId: siteUser.site_id, userId: siteUser.user_id })
-      setResponseStatus(event, 400)
+    // Create or update SiteUser for the logged-in user
+    let siteUser = await siteUserRepo.findByUserAndSite(userId, site.id)
+
+    if (siteUser && siteUser.verified_at) {
+      // Already verified — clear the pending code and return success
+      await siteRepo.clearPendingVerificationCode(site.id)
+
+      logger.debug('User already verified for this site', { siteId: site.id, userId })
       return {
-        success: false,
-        error: 'already_verified',
-        message: 'This verification code has already been used'
+        success: true,
+        site_id: site.id,
+        site_name: site.name || new URL(site.url || '').hostname,
+        site_url: site.url,
+        redirect_url: `/admin?site=${site.id}`
       }
     }
 
-    // Verify the SiteUser record is for the logged-in user
-    // The verification code should be associated with the user making the request
-    if (siteUser.user_id !== userId) {
-      // Check if the user's email matches - if so, we can link them
-      const sessionUser = await userRepo.findById(userId)
-      const siteOwnerUser = await userRepo.findById(siteUser.user_id)
-
-      if (!sessionUser || !siteOwnerUser || sessionUser.email.toLowerCase() !== siteOwnerUser.email.toLowerCase()) {
-        logger.warn('Verification code belongs to different user', {
-          codeUserId: siteUser.user_id,
-          sessionUserId: userId
-        })
-        setResponseStatus(event, 403)
-        return {
-          success: false,
-          error: 'wrong_user',
-          message: 'This verification code is for a different account. Please log in with the correct account.'
-        }
-      }
-
-      // Same email, different user IDs - use the site user ID
-      logger.debug('Email match found, proceeding with original user', {
-        siteUserId: siteUser.user_id,
-        sessionUserId: userId
-      })
-    }
-
-    // Get site details
-    const site = await siteRepo.findById(siteUser.site_id)
-    if (!site) {
-      logger.error('Site not found for verification', { siteId: siteUser.site_id })
-      setResponseStatus(event, 500)
-      return {
-        success: false,
-        error: 'site_not_found',
-        message: 'Associated site not found'
-      }
+    if (!siteUser) {
+      // Create a new SiteUser record
+      await siteUserRepo.createPending(userId, site.id, 'owner')
     }
 
     // Mark as verified and generate user token
-    const { token } = await siteUserRepo.markVerifiedWithToken(siteUser.user_id, siteUser.site_id)
+    const { token } = await siteUserRepo.markVerifiedWithToken(userId, site.id)
+
+    // Clear the pending verification code from the site
+    await siteRepo.clearPendingVerificationCode(site.id)
 
     logger.info('User verification completed', {
       siteId: site.id,
-      userId: siteUser.user_id,
+      userId,
       siteName: site.name || site.url
     })
 

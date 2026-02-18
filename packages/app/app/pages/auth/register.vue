@@ -163,6 +163,10 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const { login } = useAuth()
+const { storeRedirect, consumeRedirect } = useAuthRedirect()
+
+// Persist ?redirect= so it survives navigating to login/reset
+storeRedirect()
 
 const email = ref('')
 const firstName = ref('')
@@ -251,13 +255,9 @@ const handleSubmit = async () => {
         router.push(`/admin?site_url=${encodeURIComponent(response.site.url)}`)
       }
       else {
-        // Redirect to requested page or admin dashboard
-        const redirectTo = route.query.redirect as string
-        if (redirectTo && redirectTo.startsWith('/')) {
-          router.push(redirectTo)
-        } else {
-          router.push('/admin')
-        }
+        // Redirect to stored path or admin dashboard
+        const redirectTo = consumeRedirect()
+        router.push(redirectTo || '/admin')
       }
     }
     else if (response.passwordResetSent) {

@@ -43,8 +43,6 @@ export default defineNuxtConfig({
   ],
 
   hub: {
-    // Share database and KV with main app
-    dir: "../app/.data/hub",
     kv: true,
     db: {
       dialect: "sqlite",

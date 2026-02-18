@@ -42,6 +42,7 @@ export const sites = sqliteTable('Sites', {
   php_version: text('php_version'),
   interactive_mode_enabled: integer('interactive_mode_enabled', { mode: 'boolean' }).default(true),
   interactive_mode_button_text: text('interactive_mode_button_text'),
+  pending_verification_code: text('pending_verification_code'),
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 }, (table) => [
@@ -87,6 +88,20 @@ export const subscriptions = sqliteTable('Subscriptions', {
   index('idx_subscriptions_status').on(table.status),
 ])
 
+// LinkSessions table (for user verification redirect flow)
+export const linkSessions = sqliteTable('LinkSessions', {
+  id: text('id').primaryKey(), // UUID
+  site_id: integer('site_id').notNull().references(() => sites.id, { onDelete: 'cascade' }),
+  user_id: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  user_token: text('user_token'),
+  return_url: text('return_url').notNull(),
+  created_at: text('created_at').notNull(),
+  expires_at: text('expires_at').notNull(),
+}, (table) => [
+  index('idx_link_sessions_site_id').on(table.site_id),
+  index('idx_link_sessions_expires_at').on(table.expires_at),
+])
+
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
 
 // Type exports for use in application code
@@ -98,3 +113,5 @@ export type SiteUser = typeof siteUsers.$inferSelect
 export type NewSiteUser = typeof siteUsers.$inferInsert
 export type Subscription = typeof subscriptions.$inferSelect
 export type NewSubscription = typeof subscriptions.$inferInsert
+export type LinkSession = typeof linkSessions.$inferSelect
+export type NewLinkSession = typeof linkSessions.$inferInsert

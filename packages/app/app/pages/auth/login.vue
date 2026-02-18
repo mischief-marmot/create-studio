@@ -84,6 +84,10 @@ definePageMeta({
 const router = useRouter()
 const route = useRoute()
 const { login } = useAuth()
+const { storeRedirect, consumeRedirect } = useAuthRedirect()
+
+// Persist ?redirect= so it survives navigating to register/reset
+storeRedirect()
 
 // Check for account-exists message from registration redirect
 const accountExistsMessage = computed(() => route.query.message === 'account-exists')
@@ -115,13 +119,9 @@ const handleSubmit = async () => {
         setSelectedSiteId(response.sites[0].id)
       }
 
-      // Redirect to requested page or admin dashboard
-      const redirectTo = route.query.redirect as string
-      if (redirectTo && redirectTo.startsWith('/')) {
-        router.push(redirectTo)
-      } else {
-        router.push('/admin')
-      }
+      // Redirect to stored path or admin dashboard
+      const redirectTo = consumeRedirect()
+      router.push(redirectTo || '/admin')
     } else {
       errors.value.general = response.error || 'Login failed'
     }
