@@ -300,6 +300,7 @@ describe('Premium Feature Visibility', () => {
     'Featured Reviews Block',
     'Products in Lists',
     'Bulk Import List Items',
+    'Custom CSS',
   ]
 
   const PRO_ONLY_FEATURES = [
@@ -330,7 +331,7 @@ describe('Premium Feature Visibility', () => {
   })
 
   it('should have all expected premium features', () => {
-    expect(PREMIUM_FEATURES.length).toBe(9)
+    expect(PREMIUM_FEATURES.length).toBe(10)
   })
 
   it('should have all expected pro-only features', () => {

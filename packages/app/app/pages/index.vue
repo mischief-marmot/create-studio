@@ -691,6 +691,10 @@
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Custom CSS
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
                   Updates & Support
                 </li>
               </ul>
