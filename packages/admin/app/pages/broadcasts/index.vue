@@ -267,6 +267,8 @@
                   <option value="feature">Feature</option>
                   <option value="promotion">Promotion</option>
                   <option value="beta">Beta</option>
+                  <option value="urgent">Urgent Update</option>
+                  <option value="bug">Known Issue</option>
                 </select>
               </div>
               <div class="form-control">
@@ -524,6 +526,8 @@ const typeOptions = [
   { value: 'feature', label: 'Feature' },
   { value: 'promotion', label: 'Promotion' },
   { value: 'beta', label: 'Beta' },
+  { value: 'urgent', label: 'Urgent Update' },
+  { value: 'bug', label: 'Known Issue' },
 ]
 
 // Form state
@@ -786,6 +790,8 @@ const getTypeBadgeClass = (type: string): string => {
     feature: 'badge-primary',
     promotion: 'badge-warning',
     beta: 'badge-success',
+    urgent: 'badge-error',
+    bug: 'badge-warning',
   }
   return map[type] || 'badge-ghost'
 }
