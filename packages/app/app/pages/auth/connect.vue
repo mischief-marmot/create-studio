@@ -24,7 +24,8 @@
         </div>
       </div>
       <button class="btn btn-primary w-full" @click="handleConnect">Connect Site</button>
-      <NuxtLink to="/admin" class="btn btn-ghost w-full mt-2">Cancel</NuxtLink>
+      <a v-if="returnUrl" :href="returnUrl" class="btn btn-ghost w-full mt-2">Cancel</a>
+      <NuxtLink v-else to="/admin" class="btn btn-ghost w-full mt-2">Cancel</NuxtLink>
     </div>
 
     <!-- Connecting State -->
@@ -51,7 +52,8 @@
       </div>
       <h3 class="mb-2 font-serif text-2xl">Something went wrong</h3>
       <p class="text-base-content/70 mb-6 text-sm">{{ errorMessage }}</p>
-      <NuxtLink to="/admin" class="btn btn-primary">Go to Dashboard</NuxtLink>
+      <a v-if="returnUrl" :href="returnUrl" class="btn btn-primary">Back to WordPress</a>
+      <NuxtLink v-else to="/admin" class="btn btn-primary">Go to Dashboard</NuxtLink>
     </div>
   </div>
 </template>
