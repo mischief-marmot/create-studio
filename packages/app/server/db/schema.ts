@@ -102,6 +102,33 @@ export const linkSessions = sqliteTable('LinkSessions', {
   index('idx_link_sessions_expires_at').on(table.expires_at),
 ])
 
+// Broadcasts table (admin-managed announcements delivered to plugin instances)
+export const broadcasts = sqliteTable('Broadcasts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  type: text('type').notNull().default('announcement'), // announcement, feature, promotion, beta
+  status: text('status').notNull().default('draft'), // draft, published, archived
+  priority: integer('priority').notNull().default(0),
+  url: text('url'),
+  path: text('path'),
+  cta_text: text('cta_text'),
+  target_tiers: text('target_tiers', { mode: 'json' }).$type<string[]>().default(['all']),
+  target_create_version_min: text('target_create_version_min'),
+  target_create_version_max: text('target_create_version_max'),
+  targeting: text('targeting', { mode: 'json' }).$type<Record<string, any>>(),
+  published_at: text('published_at'),
+  expires_at: text('expires_at'),
+  createdAt: text('createdAt'),
+  updatedAt: text('updatedAt'),
+}, (table) => [
+  index('idx_broadcasts_status').on(table.status),
+  index('idx_broadcasts_type').on(table.type),
+  index('idx_broadcasts_published_at').on(table.published_at),
+  index('idx_broadcasts_expires_at').on(table.expires_at),
+  index('idx_broadcasts_priority').on(table.priority),
+])
+
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
 
 // Type exports for use in application code
@@ -115,3 +142,5 @@ export type Subscription = typeof subscriptions.$inferSelect
 export type NewSubscription = typeof subscriptions.$inferInsert
 export type LinkSession = typeof linkSessions.$inferSelect
 export type NewLinkSession = typeof linkSessions.$inferInsert
+export type Broadcast = typeof broadcasts.$inferSelect
+export type NewBroadcast = typeof broadcasts.$inferInsert

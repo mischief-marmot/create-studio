@@ -6,6 +6,7 @@ import {
   UsersIcon,
   CreditCardIcon,
   GlobeAltIcon,
+  MegaphoneIcon,
   DocumentTextIcon,
   ChartBarIcon,
   ArrowLeftStartOnRectangleIcon,
@@ -31,6 +32,7 @@ const navigation = [
   { name: 'Users', href: '/users', icon: UsersIcon },
   { name: 'Subscriptions', href: '/subscriptions', icon: CreditCardIcon },
   { name: 'Sites', href: '/sites', icon: GlobeAltIcon },
+  { name: 'Broadcasts', href: '/broadcasts', icon: MegaphoneIcon },
   { name: 'Audit Logs', href: '/audit-logs', icon: DocumentTextIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
 ]
