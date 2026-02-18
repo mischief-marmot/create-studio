@@ -547,7 +547,7 @@
               Showing last {{ logsData.lines.length }} of {{ logsData.total_lines }} lines ({{ formatBytes(logsData.total_size) }} total)
             </div>
             <div class="bg-neutral text-neutral-content rounded-lg overflow-auto max-h-[600px] p-4">
-              <pre class="text-xs leading-relaxed font-mono whitespace-pre-wrap break-words">{{ logsData.lines.join('\n') }}</pre>
+              <pre class="text-xs leading-relaxed font-mono whitespace-pre-wrap break-words">{{ [...logsData.lines].reverse().join('\n') }}</pre>
             </div>
           </div>
 
