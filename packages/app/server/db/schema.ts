@@ -129,6 +129,30 @@ export const broadcasts = sqliteTable('Broadcasts', {
   index('idx_broadcasts_priority').on(table.priority),
 ])
 
+// FeedbackReports table (error reports submitted from plugin admin UI)
+export const feedbackReports = sqliteTable('FeedbackReports', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  site_id: integer('site_id').notNull().references(() => sites.id, { onDelete: 'cascade' }),
+  error_message: text('error_message').notNull(),
+  stack_trace: text('stack_trace'),
+  component_stack: text('component_stack'),
+  create_version: text('create_version'),
+  wp_version: text('wp_version'),
+  php_version: text('php_version'),
+  browser_info: text('browser_info', { mode: 'json' }).$type<{ userAgent: string; platform: string; language: string }>(),
+  current_url: text('current_url'),
+  user_message: text('user_message'),
+  screenshot_base64: text('screenshot_base64'),
+  status: text('status').notNull().default('new'), // new, acknowledged, resolved
+  admin_notes: text('admin_notes'),
+  createdAt: text('createdAt'),
+  updatedAt: text('updatedAt'),
+}, (table) => [
+  index('idx_feedback_site_id').on(table.site_id),
+  index('idx_feedback_status').on(table.status),
+  index('idx_feedback_created_at').on(table.createdAt),
+])
+
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
 
 // Type exports for use in application code
@@ -144,3 +168,5 @@ export type LinkSession = typeof linkSessions.$inferSelect
 export type NewLinkSession = typeof linkSessions.$inferInsert
 export type Broadcast = typeof broadcasts.$inferSelect
 export type NewBroadcast = typeof broadcasts.$inferInsert
+export type FeedbackReport = typeof feedbackReports.$inferSelect
+export type NewFeedbackReport = typeof feedbackReports.$inferInsert
