@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
+import { getAdminEnvironment } from '~~/server/utils/admin-env'
 
 /**
  * POST /api/admin/subscriptions/create
@@ -103,6 +104,29 @@ export default defineEventHandler(async (event) => {
     } catch (auditError) {
       // Log but don't fail the operation - audit log FK errors can happen with stale sessions
       console.warn('Failed to create audit log:', auditError)
+    }
+
+    // Notify the WordPress site of the tier change via the main app's webhook dispatcher
+    try {
+      const config = useRuntimeConfig()
+      const adminEnv = getAdminEnvironment(event)
+      const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+      const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+      if (mainAppUrl) {
+        const response = await fetch(`${mainAppUrl}/api/v2/internal/notify-subscription-change`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Admin-Api-Key': config.mainAppApiKey || '',
+          },
+          body: JSON.stringify({ siteId, tier }),
+        })
+        if (!response.ok) {
+          console.warn(`Webhook notification failed: ${response.status} ${response.statusText}`)
+        }
+      }
+    } catch (webhookError) {
+      console.warn('Failed to notify site of tier change:', webhookError)
     }
 
     return {
