@@ -75,8 +75,8 @@ Documentation site built with Nuxt Content.
 ### Styling
 - **Tailwind CSS v4** - Utility-first CSS with `@tailwindcss/vite`
 - **DaisyUI** - Component library with custom themes
-  - "claudette" (light theme)
-  - "claudia" (dark theme)
+  - "light" (light theme)
+  - "dark" (dark theme)
 
 ### State & Data
 - **Pinia** - State management

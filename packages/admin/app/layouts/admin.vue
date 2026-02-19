@@ -20,12 +20,10 @@ import {
 const route = useRoute()
 const { adminUser, logout, isAuthenticated } = useAdminAuth()
 const { environment, fetchEnvironment } = useAdminEnvironment()
+const { currentTheme, initializeTheme, toggleTheme } = useAdminTheme()
 
 // Mobile drawer state
 const isDrawerOpen = ref(false)
-
-// Theme state
-const theme = ref<'claudette' | 'claudia'>('claudette')
 
 // Navigation items
 const navigation = [
@@ -47,21 +45,9 @@ const isActiveRoute = (href: string) => {
   return route.path.startsWith(href)
 }
 
-// Toggle theme
-const toggleTheme = () => {
-  const newTheme = theme.value === 'claudette' ? 'claudia' : 'claudette'
-  theme.value = newTheme
-  localStorage.setItem('admin-theme', newTheme)
-  document.documentElement.setAttribute('data-theme', newTheme)
-}
-
 // Initialize theme and environment
 onMounted(() => {
-  const savedTheme = localStorage.getItem('admin-theme') as 'claudette' | 'claudia' | null
-  if (savedTheme) {
-    theme.value = savedTheme
-    document.documentElement.setAttribute('data-theme', savedTheme)
-  }
+  initializeTheme()
   fetchEnvironment()
 })
 
@@ -115,11 +101,8 @@ const handleLogout = async () => {
             @click="toggleTheme"
             aria-label="Toggle theme"
           >
-            <label class="swap swap-rotate">
-              <input type="checkbox" :checked="theme === 'claudia'" />
-              <SunIcon class="swap-off h-6 w-6" />
-              <MoonIcon class="swap-on h-6 w-6" />
-            </label>
+            <SunIcon v-if="currentTheme === 'light'" class="h-6 w-6" />
+            <MoonIcon v-else class="h-6 w-6" />
           </button>
         </div>
       </div>
@@ -221,11 +204,8 @@ const handleLogout = async () => {
             @click="toggleTheme"
             aria-label="Toggle theme"
           >
-            <label class="swap swap-rotate">
-              <input type="checkbox" :checked="theme === 'claudia'" />
-              <SunIcon class="swap-off h-6 w-6" />
-              <MoonIcon class="swap-on h-6 w-6" />
-            </label>
+            <SunIcon v-if="currentTheme === 'light'" class="h-6 w-6" />
+            <MoonIcon v-else class="h-6 w-6" />
           </button>
         </div>
       </div>

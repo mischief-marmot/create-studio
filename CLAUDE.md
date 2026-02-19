@@ -37,7 +37,7 @@ npm test tests/unit/nutrition-api.test.ts
 - **Nuxt 4** (v4.4) - Vue.js meta-framework
 - **TypeScript** - Type safety throughout
 - **Tailwind CSS v4** - Utility-first CSS with `@tailwindcss/vite`
-- **DaisyUI** - Component library with custom themes ("claudette" light, "claudia" dark)
+- **DaisyUI** - Component library with custom themes ("light" light, "dark" dark)
 - **Pinia** - State management
 
 ### Key Directories
