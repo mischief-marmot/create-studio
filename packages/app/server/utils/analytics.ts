@@ -68,7 +68,7 @@ export function getMonthString(date: Date = new Date()): string {
  * Increment a counter in KV (atomic operation)
  */
 export async function incrementCounter(key: string, amount: number = 1): Promise<void> {
-  const kv = hubKV()
+  
 
   const current = await kv.get<ApiCounter>(key)
   const newValue: ApiCounter = {
@@ -87,7 +87,7 @@ export async function incrementCounter(key: string, amount: number = 1): Promise
  * Increment error counter
  */
 export async function incrementErrorCounter(key: string): Promise<void> {
-  const kv = hubKV()
+  
 
   const current = await kv.get<ApiCounter>(key)
   const newValue: ApiCounter = {
@@ -105,7 +105,7 @@ export async function incrementErrorCounter(key: string): Promise<void> {
  * Get counter value
  */
 export async function getCounter(key: string): Promise<number> {
-  const kv = hubKV()
+  
   const data = await kv.get<ApiCounter>(key)
   return data?.count || 0
 }
@@ -114,7 +114,7 @@ export async function getCounter(key: string): Promise<number> {
  * Store session data
  */
 export async function storeSession(sessionData: SessionData): Promise<void> {
-  const kv = hubKV()
+  
   const key = getAnalyticsKey(['session', sessionData.userId, sessionData.sessionId])
 
   await kv.set(key, sessionData, {
@@ -127,7 +127,7 @@ export async function storeSession(sessionData: SessionData): Promise<void> {
  * Update daily aggregate for a site/creation
  */
 export async function updateDailyAggregate(sessionData: SessionData): Promise<void> {
-  const kv = hubKV()
+  
   const date = getDateString(new Date(sessionData.endTime))
   const key = getAnalyticsKey(['site', sessionData.domain, sessionData.creationId, date])
 
@@ -188,7 +188,7 @@ export async function updateDailyAggregate(sessionData: SessionData): Promise<vo
  * Update global daily summary
  */
 export async function updateGlobalSummary(sessionData: SessionData): Promise<void> {
-  const kv = hubKV()
+  
   const date = getDateString(new Date(sessionData.endTime))
   const key = getAnalyticsKey(['summary', 'global', date])
 
@@ -234,7 +234,7 @@ export function calculateConversionRate(shown: number, submitted: number): numbe
  * Get date range of keys (for dashboard queries)
  */
 export async function getDateRangeData(prefix: string, startDate: string, endDate: string): Promise<Map<string, any>> {
-  const kv = hubKV()
+  
   const results = new Map()
 
   const start = new Date(startDate)

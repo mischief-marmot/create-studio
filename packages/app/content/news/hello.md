@@ -78,26 +78,26 @@ And this is just the beginning! After that, we'll see importer improvements, enh
 
 <!-- Read more in the [2025 Q4 Roadmap Post](/2025-q4-roadmap)! -->
 
-## Keeping Create Free
+## Keeping Create Accessible
 
 ::callout{type="info"}
-I want you to know that **accessibility** and **equity** are core principles guiding every decision I make. I will do everything I can to ensure that cost is never a barrier to using any of Create's features!
+I want you to know that **accessibility** and **equity** are core principles guiding every decision I make. I will do everything I can to ensure that cost is never a barrier to using any of Create's core features!
 ::
- 
-As independent content creators, you are familiar with the need to support yourself or your family while providing high-value content for your readers at no cost. I see Create as the same situation: you shouldn't have to pay for "premium" features like user ratings and nutrition calculation. At the same time, I have three growing boys to feed! 😂
+
+As independent content creators, you are familiar with the need to support yourself or your family while providing high-value content for your readers at no cost. I see Create as the same situation: you shouldn't have to pay for "premium" features like user ratings and nutrition calculation. At the same time, I have three growing boys (and a baby girl on the way!) to feed 😅
 
 That's why I have spent countless hours brainstorming, talking with publishers and friends, and losing sleep trying to figure out the best ways to accomplish both.
 
 And, while I'm not quite ready to share all the details of the monetization plan **today**, I'm so excited to unveil the plan that will always provide an option allowing content creators to utilize the **full** suite of features at no direct cost.
 
-More details coming very soon!
+More details coming soon!
 
 ## Let's Build This Together
 
 In the meantime, while I'm busily wrapping up the upcoming 2.0 release, I'm here to listen, learn, and build something great with your input. Create's future will be shaped by the Create-ers who use it every day–including you!
 
 ::callout{type="tip" title="Get In Touch"}
-- Email me at [jm@create.studio](mailto:jm@create.studio)
+- Email me at [support@create.studio](mailto:support@create.studio)
 - Or join the conversation in the [Facebook group](https://www.facebook.com/groups/createstudioapp/)
 ::
 

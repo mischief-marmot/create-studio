@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 
 /**
  * Test suite for API Ninjas Nutrition API integration
- * Tests the migration from Nutritionix to API Ninjas
+ * Tests the API Ninjas nutrition data integration
  *
  * Note: Integration tests with actual API calls require NUXT_API_NINJAS_KEY env var
  * These unit tests focus on data structure validation and field mapping
@@ -361,7 +361,7 @@ describe('API Ninjas Nutrition Service', () => {
   })
 
   describe('Backward Compatibility', () => {
-    it('should maintain same function signature as nutritionix service', () => {
+    it('should maintain expected function signature', () => {
       // The signature should be:
       // calculateRecipeNutrition(data: RecipeData, userId: number): Promise<NutritionResult>
 

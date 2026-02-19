@@ -1,42 +1,18 @@
 /**
- * Database utility functions for D1 integration
+ * Database utility functions using Drizzle ORM
  * Provides methods for user management and site management
  *
- * Note: Migrations are handled automatically by NuxtHub from server/database/migrations/
+ * NuxtHub v0.10+ exports `db` and `schema` from 'hub:db'
+ * Migrations are handled automatically by NuxtHub from server/db/migrations/
  */
 
-// Types matching the original Sequelize models
-export interface User {
-  id?: number
-  email: string
-  password?: string
-  password_reset_token?: string
-  password_reset_expires?: string
-  firstname?: string
-  lastname?: string
-  avatar?: string
-  mediavine_publisher?: boolean
-  validEmail?: boolean
-  marketing_opt_in?: boolean
-  consent_tos_accepted_at?: string
-  consent_privacy_accepted_at?: string
-  consent_cookies_accepted_at?: string
-  createdAt?: string
-  updatedAt?: string
-}
+import { eq, and, or, isNull, isNotNull, sql, like } from 'drizzle-orm'
+import type { SiteUser } from '../db/schema'
 
-export interface Site {
-  id?: number
-  name?: string
-  url?: string
-  user_id: number
-  create_version?: string
-  wp_version?: string
-  php_version?: string
-  createdAt?: string
-  updatedAt?: string
-}
+// Re-export types from schema for convenience
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession } from '../db/schema'
 
+// Legacy interface types for backwards compatibility
 export interface CreateUserData {
   email: string
   firstname?: string
@@ -44,6 +20,7 @@ export interface CreateUserData {
   avatar?: string
   mediavine_publisher?: boolean
   marketing_opt_in?: boolean
+  metadata?: Record<string, any>
   consent_tos_accepted_at?: string
   consent_privacy_accepted_at?: string
   consent_cookies_accepted_at?: string
@@ -58,20 +35,6 @@ export interface CreateSiteData {
   php_version?: string
 }
 
-export interface Subscription {
-  id?: number
-  site_id: number
-  stripe_customer_id?: string
-  stripe_subscription_id?: string
-  status: string
-  tier: string
-  current_period_start?: string
-  current_period_end?: string
-  cancel_at_period_end?: boolean
-  createdAt?: string
-  updatedAt?: string
-}
-
 export interface CreateSubscriptionData {
   site_id: number
   stripe_customer_id?: string
@@ -83,114 +46,107 @@ export interface CreateSubscriptionData {
   cancel_at_period_end?: boolean
 }
 
-
 /**
  * User database operations
  */
 export class UserRepository {
-  private db = hubDatabase()
-
-  async findByEmail(email: string): Promise<User | null> {
-    const result = await this.db.prepare('SELECT * FROM Users WHERE email = ?').bind(email).first()
-    return result ? this.normalizeUser(result) : null
+  async findByEmail(email: string) {
+    return await db.select().from(schema.users).where(eq(schema.users.email, email)).get()
   }
 
-  async findById(id: number): Promise<User | null> {
-    const result = await this.db.prepare('SELECT * FROM Users WHERE id = ?').bind(id).first()
-    return result ? this.normalizeUser(result) : null
+  async findById(id: number) {
+    return await db.select().from(schema.users).where(eq(schema.users.id, id)).get()
   }
 
-  async create(userData: CreateUserData): Promise<User> {
+  async create(userData: CreateUserData) {
     const now = new Date().toISOString()
 
-    const result = await this.db.prepare(`
-      INSERT INTO Users (email, firstname, lastname, mediavine_publisher, marketing_opt_in, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      RETURNING *
-    `).bind(
-      userData.email,
-      userData.firstname || null,
-      userData.lastname || null,
-      userData.mediavine_publisher ? 1 : 0,
-      userData.marketing_opt_in ? 1 : 0,
-      now,
-      now
-    ).first()
+    const result = await db.insert(schema.users).values({
+      email: userData.email,
+      firstname: userData.firstname || null,
+      lastname: userData.lastname || null,
+      mediavine_publisher: userData.mediavine_publisher || false,
+      marketing_opt_in: userData.marketing_opt_in || false,
+      metadata: userData.metadata || null,
+      createdAt: now,
+      updatedAt: now,
+    }).returning().get()
 
     if (!result) {
       throw new Error('Failed to create user')
     }
 
-    return this.normalizeUser(result)
+    return result
   }
 
-  async updateEmailValidation(id: number, validEmail: boolean): Promise<User | null> {
+  async updateEmailValidation(id: number, validEmail: boolean) {
     const now = new Date().toISOString()
 
-    await this.db.prepare(`
-      UPDATE Users
-      SET validEmail = ?, updatedAt = ?
-      WHERE id = ?
-    `).bind(validEmail ? 1 : 0, now, id).run()
+    await db.update(schema.users)
+      .set({ validEmail, updatedAt: now })
+      .where(eq(schema.users.id, id))
 
     return this.findById(id)
   }
 
-  async findByIdWithSites(id: number): Promise<(User & { Sites?: Site[] }) | null> {
+  async findByIdWithSites(id: number) {
     const user = await this.findById(id)
     if (!user) return null
 
-    const sites = await this.db.prepare('SELECT * FROM Sites WHERE user_id = ?').bind(id).all()
+    const sites = await db.select().from(schema.sites).where(eq(schema.sites.user_id, id)).all()
 
     return {
       ...user,
-      Sites: sites.results.map(site => this.normalizeSite(site))
+      Sites: sites
     }
   }
 
-  async setPassword(id: number, passwordHash: string): Promise<User | null> {
+  async setPassword(id: number, passwordHash: string) {
     const now = new Date().toISOString()
 
-    await this.db.prepare(`
-      UPDATE Users
-      SET password = ?, updatedAt = ?
-      WHERE id = ?
-    `).bind(passwordHash, now, id).run()
+    await db.update(schema.users)
+      .set({ password: passwordHash, updatedAt: now })
+      .where(eq(schema.users.id, id))
 
     return this.findById(id)
   }
 
-  async setPasswordResetToken(id: number, token: string, expiresAt: string): Promise<void> {
+  async setPasswordResetToken(id: number, token: string, expiresAt: string) {
     const now = new Date().toISOString()
 
-    await this.db.prepare(`
-      UPDATE Users
-      SET password_reset_token = ?, password_reset_expires = ?, updatedAt = ?
-      WHERE id = ?
-    `).bind(token, expiresAt, now, id).run()
+    await db.update(schema.users)
+      .set({
+        password_reset_token: token,
+        password_reset_expires: expiresAt,
+        updatedAt: now
+      })
+      .where(eq(schema.users.id, id))
   }
 
-  async findByPasswordResetToken(token: string): Promise<User | null> {
-    const result = await this.db.prepare(`
-      SELECT * FROM Users
-      WHERE password_reset_token = ?
-      AND password_reset_expires > datetime('now')
-    `).bind(token).first()
-
-    return result ? this.normalizeUser(result) : null
-  }
-
-  async clearPasswordResetToken(id: number): Promise<void> {
+  async findByPasswordResetToken(token: string) {
     const now = new Date().toISOString()
 
-    await this.db.prepare(`
-      UPDATE Users
-      SET password_reset_token = NULL, password_reset_expires = NULL, updatedAt = ?
-      WHERE id = ?
-    `).bind(now, id).run()
+    return await db.select().from(schema.users)
+      .where(and(
+        eq(schema.users.password_reset_token, token),
+        sql`${schema.users.password_reset_expires} > ${now}`
+      ))
+      .get()
   }
 
-  async verifyUserPassword(email: string, password: string): Promise<User | null> {
+  async clearPasswordResetToken(id: number) {
+    const now = new Date().toISOString()
+
+    await db.update(schema.users)
+      .set({
+        password_reset_token: null,
+        password_reset_expires: null,
+        updatedAt: now
+      })
+      .where(eq(schema.users.id, id))
+  }
+
+  async verifyUserPassword(email: string, password: string) {
     const user = await this.findByEmail(email)
     if (!user || !user.password) {
       return null
@@ -202,97 +158,29 @@ export class UserRepository {
     return isValid ? user : null
   }
 
-  async update(id: number, updates: Partial<User>): Promise<User> {
+  async update(id: number, updates: Partial<{
+    email: string
+    firstname: string | null
+    lastname: string | null
+    avatar: string | null
+    mediavine_publisher: boolean
+    validEmail: boolean
+    marketing_opt_in: boolean
+    metadata: Record<string, any> | null
+    consent_tos_accepted_at: string | null
+    consent_privacy_accepted_at: string | null
+    consent_cookies_accepted_at: string | null
+  }>) {
     const now = new Date().toISOString()
 
-    // Build dynamic update query
-    const updateFields = []
-    const values = []
-
-    if (updates.email !== undefined) {
-      updateFields.push('email = ?')
-      values.push(updates.email)
-    }
-
-    if (updates.firstname !== undefined) {
-      updateFields.push('firstname = ?')
-      values.push(updates.firstname || null)
-    }
-
-    if (updates.lastname !== undefined) {
-      updateFields.push('lastname = ?')
-      values.push(updates.lastname || null)
-    }
-
-    if (updates.avatar !== undefined) {
-      updateFields.push('avatar = ?')
-      values.push(updates.avatar || null)
-    }
-
-    if (updates.mediavine_publisher !== undefined) {
-      updateFields.push('mediavine_publisher = ?')
-      values.push(updates.mediavine_publisher ? 1 : 0)
-    }
-
-    if (updates.validEmail !== undefined) {
-      updateFields.push('validEmail = ?')
-      values.push(updates.validEmail ? 1 : 0)
-    }
-
-    if (updates.marketing_opt_in !== undefined) {
-      updateFields.push('marketing_opt_in = ?')
-      values.push(updates.marketing_opt_in ? 1 : 0)
-    }
-
-    if (updates.consent_tos_accepted_at !== undefined) {
-      updateFields.push('consent_tos_accepted_at = ?')
-      values.push(updates.consent_tos_accepted_at || null)
-    }
-
-    if (updates.consent_privacy_accepted_at !== undefined) {
-      updateFields.push('consent_privacy_accepted_at = ?')
-      values.push(updates.consent_privacy_accepted_at || null)
-    }
-
-    if (updates.consent_cookies_accepted_at !== undefined) {
-      updateFields.push('consent_cookies_accepted_at = ?')
-      values.push(updates.consent_cookies_accepted_at || null)
-    }
-
-    if (updateFields.length === 0) {
-      const user = await this.findById(id)
-      if (!user) throw new Error('User not found')
-      return user
-    }
-
-    updateFields.push('updatedAt = ?')
-    values.push(now, id)
-
-    await this.db.prepare(`
-      UPDATE Users
-      SET ${updateFields.join(', ')}
-      WHERE id = ?
-    `).bind(...values).run()
+    await db.update(schema.users)
+      .set({ ...updates, updatedAt: now })
+      .where(eq(schema.users.id, id))
 
     const updatedUser = await this.findById(id)
     if (!updatedUser) throw new Error('Failed to update user')
 
     return updatedUser
-  }
-
-  private normalizeUser(row: any): User {
-    return {
-      ...row,
-      mediavine_publisher: Boolean(row.mediavine_publisher),
-      validEmail: Boolean(row.validEmail),
-      marketing_opt_in: Boolean(row.marketing_opt_in)
-    }
-  }
-
-  private normalizeSite(row: any): Site {
-    return {
-      ...row
-    }
   }
 }
 
@@ -300,16 +188,15 @@ export class UserRepository {
  * Site database operations
  */
 export class SiteRepository {
-  private db = hubDatabase()
-
-  async findById(id: number): Promise<Site | null> {
-    const result = await this.db.prepare('SELECT * FROM Sites WHERE id = ?').bind(id).first() as Site
-    return result || null
+  async findById(id: number) {
+    return await db.select().from(schema.sites).where(eq(schema.sites.id, id)).get()
   }
 
-  async findOrCreateByUserAndUrl(userId: number, url: string): Promise<Site> {
+  async findOrCreateByUserAndUrl(userId: number, url: string) {
     // Try to find existing site
-    const existing = await this.db.prepare('SELECT * FROM Sites WHERE user_id = ? AND url = ?').bind(userId, url).first() as ite
+    const existing = await db.select().from(schema.sites)
+      .where(and(eq(schema.sites.user_id, userId), eq(schema.sites.url, url)))
+      .get()
 
     if (existing) {
       return existing
@@ -317,11 +204,12 @@ export class SiteRepository {
 
     // Create new site
     const now = new Date().toISOString()
-    const result = await this.db.prepare(`
-      INSERT INTO Sites (url, user_id, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?)
-      RETURNING *
-    `).bind(url, userId, now, now).first() as Site
+    const result = await db.insert(schema.sites).values({
+      url,
+      user_id: userId,
+      createdAt: now,
+      updatedAt: now,
+    }).returning().get()
 
     if (!result) {
       throw new Error('Failed to create site')
@@ -330,50 +218,20 @@ export class SiteRepository {
     return result
   }
 
-  async update(id: number, updates: Partial<Site>): Promise<Site | null> {
+  async update(id: number, updates: Partial<{
+    name: string | null
+    url: string
+    wp_version: string | null
+    php_version: string | null
+    create_version: string | null
+    interactive_mode_enabled: boolean
+    interactive_mode_button_text: string | null
+  }>) {
     const now = new Date().toISOString()
 
-    // Build dynamic update query
-    const updateFields = []
-    const values = []
-
-    if (updates.name !== undefined) {
-      updateFields.push('name = ?')
-      values.push(updates.name || null)
-    }
-
-    if (updates.url !== undefined) {
-      updateFields.push('url = ?')
-      values.push(updates.url)
-    }
-
-    if (updates.wp_version !== undefined) {
-      updateFields.push('wp_version = ?')
-      values.push(updates.wp_version || null)
-    }
-
-    if (updates.php_version !== undefined) {
-      updateFields.push('php_version = ?')
-      values.push(updates.php_version || null)
-    }
-
-    if (updates.create_version !== undefined) {
-      updateFields.push('create_version = ?')
-      values.push(updates.create_version || null)
-    }
-
-    if (updateFields.length === 0) {
-      return this.findById(id)
-    }
-
-    updateFields.push('updatedAt = ?')
-    values.push(now, id)
-
-    await this.db.prepare(`
-      UPDATE Sites
-      SET ${updateFields.join(', ')}
-      WHERE id = ?
-    `).bind(...values).run()
+    await db.update(schema.sites)
+      .set({ ...updates, updatedAt: now })
+      .where(eq(schema.sites.id, id))
 
     return this.findById(id)
   }
@@ -381,39 +239,139 @@ export class SiteRepository {
   /**
    * V2 API: Find canonical site by URL
    * Canonical sites have canonical_site_id = NULL
+   * Matches by host (hostname + port), ignoring protocol differences
    */
-  async findCanonicalSite(url: string): Promise<Site | null> {
-    const result = await this.db.prepare(`
-      SELECT * FROM Sites
-      WHERE url = ? AND canonical_site_id IS NULL
-    `).bind(url).first() as Site
-    return result || null
+  async findCanonicalSite(url: string) {
+    // Extract host from URL for flexible matching
+    let host: string
+    try {
+      const parsed = new URL(url)
+      host = parsed.host // includes port if non-default
+    } catch {
+      // If URL parsing fails, try exact match
+      return await db.select().from(schema.sites)
+        .where(and(eq(schema.sites.url, url), isNull(schema.sites.canonical_site_id)))
+        .get()
+    }
+
+    // Try to find by host pattern (matches http:// or https://)
+    return await db.select().from(schema.sites)
+      .where(and(
+        or(
+          eq(schema.sites.url, url),
+          eq(schema.sites.url, `https://${host}`),
+          eq(schema.sites.url, `http://${host}`),
+          like(schema.sites.url, `%://${host}%`)
+        ),
+        isNull(schema.sites.canonical_site_id)
+      ))
+      .orderBy(schema.sites.id)
+      .limit(1)
+      .get()
+  }
+
+  /**
+   * V2 API: Find or create canonical site by URL
+   * Creates a new canonical site if one doesn't exist for this URL
+   */
+  async findOrCreateCanonicalSite(url: string, userId: number) {
+    // Try to find existing canonical site
+    const existing = await this.findCanonicalSite(url)
+    if (existing) {
+      return existing
+    }
+
+    // Create new canonical site
+    const now = new Date().toISOString()
+    const result = await db.insert(schema.sites).values({
+      url,
+      user_id: userId,
+      canonical_site_id: null,
+      createdAt: now,
+      updatedAt: now,
+    }).returning().get()
+
+    if (!result) {
+      throw new Error('Failed to create canonical site')
+    }
+
+    return result
+  }
+
+  /**
+   * Find a site by its pending verification code
+   */
+  async findByPendingVerificationCode(code: string) {
+    return await db.select().from(schema.sites)
+      .where(eq(schema.sites.pending_verification_code, code))
+      .get()
+  }
+
+  /**
+   * Set a pending verification code on a site
+   */
+  async setPendingVerificationCode(siteId: number, code: string) {
+    const now = new Date().toISOString()
+
+    await db.update(schema.sites)
+      .set({ pending_verification_code: code, updatedAt: now })
+      .where(eq(schema.sites.id, siteId))
+
+    return this.findById(siteId)
+  }
+
+  /**
+   * Clear the pending verification code from a site
+   */
+  async clearPendingVerificationCode(siteId: number) {
+    const now = new Date().toISOString()
+
+    await db.update(schema.sites)
+      .set({ pending_verification_code: null, updatedAt: now })
+      .where(eq(schema.sites.id, siteId))
   }
 
   /**
    * V2 API: Get all canonical sites a user has access to
    * Uses SiteUsers pivot table
    */
-  async getUserCanonicalSites(userId: number): Promise<Site[]> {
-    const results = await this.db.prepare(`
-      SELECT s.*
-      FROM Sites s
-      INNER JOIN SiteUsers su ON s.id = su.site_id
-      WHERE su.user_id = ? AND s.canonical_site_id IS NULL
-      ORDER BY s.id ASC
-    `).bind(userId).all()
+  async getUserCanonicalSites(userId: number) {
+    const results = await db.select({
+      id: schema.sites.id,
+      name: schema.sites.name,
+      url: schema.sites.url,
+      user_id: schema.sites.user_id,
+      canonical_site_id: schema.sites.canonical_site_id,
+      create_version: schema.sites.create_version,
+      wp_version: schema.sites.wp_version,
+      php_version: schema.sites.php_version,
+      interactive_mode_enabled: schema.sites.interactive_mode_enabled,
+      interactive_mode_button_text: schema.sites.interactive_mode_button_text,
+      createdAt: schema.sites.createdAt,
+      updatedAt: schema.sites.updatedAt,
+    })
+      .from(schema.sites)
+      .innerJoin(schema.siteUsers, eq(schema.sites.id, schema.siteUsers.site_id))
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        isNull(schema.sites.canonical_site_id)
+      ))
+      .orderBy(schema.sites.id)
+      .all()
 
-    return results.results as Site[]
+    return results
   }
 
   /**
    * V2 API: Check if user has access to a canonical site
    */
-  async userHasAccessToSite(userId: number, canonicalSiteId: number): Promise<boolean> {
-    const result = await this.db.prepare(`
-      SELECT 1 FROM SiteUsers
-      WHERE site_id = ? AND user_id = ?
-    `).bind(canonicalSiteId, userId).first()
+  async userHasAccessToSite(userId: number, canonicalSiteId: number) {
+    const result = await db.select().from(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.site_id, canonicalSiteId),
+        eq(schema.siteUsers.user_id, userId)
+      ))
+      .get()
 
     return !!result
   }
@@ -421,11 +379,13 @@ export class SiteRepository {
   /**
    * V2 API: Get user's role for a canonical site
    */
-  async getUserRole(userId: number, canonicalSiteId: number): Promise<string | null> {
-    const result = await this.db.prepare(`
-      SELECT role FROM SiteUsers
-      WHERE site_id = ? AND user_id = ?
-    `).bind(canonicalSiteId, userId).first()
+  async getUserRole(userId: number, canonicalSiteId: number) {
+    const result = await db.select({ role: schema.siteUsers.role }).from(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.site_id, canonicalSiteId),
+        eq(schema.siteUsers.user_id, userId)
+      ))
+      .get()
 
     return result?.role || null
   }
@@ -433,38 +393,45 @@ export class SiteRepository {
   /**
    * V2 API: Add user to canonical site
    */
-  async addUserToSite(canonicalSiteId: number, userId: number, role: string = 'admin'): Promise<void> {
+  async addUserToSite(canonicalSiteId: number, userId: number, role: string = 'admin') {
     const now = new Date().toISOString()
 
-    await this.db.prepare(`
-      INSERT INTO SiteUsers (site_id, user_id, role, joined_at)
-      VALUES (?, ?, ?, ?)
-      ON CONFLICT (site_id, user_id) DO UPDATE SET role = excluded.role
-    `).bind(canonicalSiteId, userId, role, now).run()
+    await db.insert(schema.siteUsers).values({
+      site_id: canonicalSiteId,
+      user_id: userId,
+      role,
+      joined_at: now,
+    }).onConflictDoUpdate({
+      target: [schema.siteUsers.site_id, schema.siteUsers.user_id],
+      set: { role }
+    })
   }
 
   /**
    * V2 API: Remove user from canonical site
    */
-  async removeUserFromSite(canonicalSiteId: number, userId: number): Promise<void> {
-    await this.db.prepare(`
-      DELETE FROM SiteUsers
-      WHERE site_id = ? AND user_id = ?
-    `).bind(canonicalSiteId, userId).run()
+  async removeUserFromSite(canonicalSiteId: number, userId: number) {
+    await db.delete(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.site_id, canonicalSiteId),
+        eq(schema.siteUsers.user_id, userId)
+      ))
   }
 
   /**
    * V2 API: Get all users for a canonical site
    */
-  async getSiteUsers(canonicalSiteId: number): Promise<Array<{ userId: number, role: string, joinedAt: string }>> {
-    const results = await this.db.prepare(`
-      SELECT user_id as userId, role, joined_at as joinedAt
-      FROM SiteUsers
-      WHERE site_id = ?
-      ORDER BY joined_at ASC
-    `).bind(canonicalSiteId).all()
+  async getSiteUsers(canonicalSiteId: number) {
+    const results = await db.select({
+      userId: schema.siteUsers.user_id,
+      role: schema.siteUsers.role,
+      joinedAt: schema.siteUsers.joined_at,
+    }).from(schema.siteUsers)
+      .where(eq(schema.siteUsers.site_id, canonicalSiteId))
+      .orderBy(schema.siteUsers.joined_at)
+      .all()
 
-    return results.results as Array<{ userId: number, role: string, joinedAt: string }>
+    return results
   }
 }
 
@@ -472,101 +439,55 @@ export class SiteRepository {
  * Subscription database operations
  */
 export class SubscriptionRepository {
-  private db = hubDatabase()
-
-  async getBySiteId(siteId: number): Promise<Subscription | null> {
-    const result = await this.db.prepare('SELECT * FROM Subscriptions WHERE site_id = ?').bind(siteId).first()
-    return result ? this.normalizeSubscription(result) : null
+  async getBySiteId(siteId: number) {
+    return await db.select().from(schema.subscriptions)
+      .where(eq(schema.subscriptions.site_id, siteId))
+      .get()
   }
 
-  async getByStripeSubscriptionId(stripeSubId: string): Promise<Subscription | null> {
-    const result = await this.db.prepare('SELECT * FROM Subscriptions WHERE stripe_subscription_id = ?').bind(stripeSubId).first()
-    return result ? this.normalizeSubscription(result) : null
+  async getByStripeSubscriptionId(stripeSubId: string) {
+    return await db.select().from(schema.subscriptions)
+      .where(eq(schema.subscriptions.stripe_subscription_id, stripeSubId))
+      .get()
   }
 
-  async create(data: CreateSubscriptionData): Promise<Subscription> {
+  async create(data: CreateSubscriptionData) {
     const now = new Date().toISOString()
 
-    const result = await this.db.prepare(`
-      INSERT INTO Subscriptions (
-        site_id, stripe_customer_id, stripe_subscription_id, status, tier,
-        current_period_start, current_period_end, cancel_at_period_end, createdAt, updatedAt
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      RETURNING *
-    `).bind(
-      data.site_id,
-      data.stripe_customer_id || null,
-      data.stripe_subscription_id || null,
-      data.status,
-      data.tier,
-      data.current_period_start || null,
-      data.current_period_end || null,
-      data.cancel_at_period_end ? 1 : 0,
-      now,
-      now
-    ).first()
+    const result = await db.insert(schema.subscriptions).values({
+      site_id: data.site_id,
+      stripe_customer_id: data.stripe_customer_id || null,
+      stripe_subscription_id: data.stripe_subscription_id || null,
+      status: data.status,
+      tier: data.tier,
+      current_period_start: data.current_period_start || null,
+      current_period_end: data.current_period_end || null,
+      cancel_at_period_end: data.cancel_at_period_end || false,
+      createdAt: now,
+      updatedAt: now,
+    }).returning().get()
 
     if (!result) {
       throw new Error('Failed to create subscription')
     }
 
-    return this.normalizeSubscription(result)
+    return result
   }
 
-  async update(siteId: number, updates: Partial<Subscription>): Promise<Subscription | null> {
+  async update(siteId: number, updates: Partial<{
+    stripe_customer_id: string | null
+    stripe_subscription_id: string | null
+    status: string
+    tier: string
+    current_period_start: string | null
+    current_period_end: string | null
+    cancel_at_period_end: boolean
+  }>) {
     const now = new Date().toISOString()
 
-    const updateFields = []
-    const values = []
-
-    if (updates.stripe_customer_id !== undefined) {
-      updateFields.push('stripe_customer_id = ?')
-      values.push(updates.stripe_customer_id)
-    }
-
-    if (updates.stripe_subscription_id !== undefined) {
-      updateFields.push('stripe_subscription_id = ?')
-      values.push(updates.stripe_subscription_id)
-    }
-
-    if (updates.status !== undefined) {
-      updateFields.push('status = ?')
-      values.push(updates.status)
-    }
-
-    if (updates.tier !== undefined) {
-      updateFields.push('tier = ?')
-      values.push(updates.tier)
-    }
-
-    if (updates.current_period_start !== undefined) {
-      updateFields.push('current_period_start = ?')
-      values.push(updates.current_period_start)
-    }
-
-    if (updates.current_period_end !== undefined) {
-      updateFields.push('current_period_end = ?')
-      values.push(updates.current_period_end)
-    }
-
-    if (updates.cancel_at_period_end !== undefined) {
-      updateFields.push('cancel_at_period_end = ?')
-      values.push(updates.cancel_at_period_end ? 1 : 0)
-    }
-
-    if (updateFields.length === 0) {
-      return this.getBySiteId(siteId)
-    }
-
-    updateFields.push('updatedAt = ?')
-    values.push(now, siteId)
-
-    await this.db.prepare(`
-      UPDATE Subscriptions
-      SET ${updateFields.join(', ')}
-      WHERE site_id = ?
-    `).bind(...values).run()
+    await db.update(schema.subscriptions)
+      .set({ ...updates, updatedAt: now })
+      .where(eq(schema.subscriptions.site_id, siteId))
 
     return this.getBySiteId(siteId)
   }
@@ -585,12 +506,327 @@ export class SubscriptionRepository {
 
     return 'free'
   }
+}
 
-  private normalizeSubscription(row: any): Subscription {
-    return {
-      ...row,
-      cancel_at_period_end: Boolean(row.cancel_at_period_end)
+/**
+ * Generate a secure random token for user authentication
+ */
+function generateSecureToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let token = ''
+  const randomValues = new Uint8Array(64)
+  crypto.getRandomValues(randomValues)
+  for (let i = 0; i < 64; i++) {
+    token += chars[randomValues[i] % chars.length]
+  }
+  return token
+}
+
+/**
+ * SiteUser database operations
+ * Manages the many-to-many relationship between users and canonical sites
+ */
+export class SiteUserRepository {
+  /**
+   * Find a SiteUser record by user and site
+   */
+  async findByUserAndSite(userId: number, siteId: number) {
+    return await db.select().from(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+      .get()
+  }
+
+  /**
+   * Find a SiteUser record by user_token
+   */
+  async findByUserToken(userToken: string) {
+    return await db.select().from(schema.siteUsers)
+      .where(eq(schema.siteUsers.user_token, userToken))
+      .get()
+  }
+
+  /**
+   * Find a SiteUser record by verification_code
+   * Used for frontend user verification flow
+   */
+  async findByVerificationCode(verificationCode: string) {
+    return await db.select().from(schema.siteUsers)
+      .where(eq(schema.siteUsers.verification_code, verificationCode))
+      .get()
+  }
+
+  /**
+   * Find a SiteUser record by site and email (via user lookup)
+   */
+  async findBySiteAndEmail(siteId: number, email: string) {
+    const userRepo = new UserRepository()
+    const user = await userRepo.findByEmail(email)
+    if (!user) return null
+
+    return await this.findByUserAndSite(user.id, siteId)
+  }
+
+  /**
+   * Set verification code for a SiteUser
+   */
+  async setVerificationCode(userId: number, siteId: number, code: string) {
+    await db.update(schema.siteUsers)
+      .set({ verification_code: code })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
+   * Generate and set a user token for authenticated API calls
+   */
+  async generateUserToken(userId: number, siteId: number): Promise<string> {
+    const token = generateSecureToken()
+
+    await db.update(schema.siteUsers)
+      .set({ user_token: token })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return token
+  }
+
+  /**
+   * Clear verification code and token (for disconnect)
+   */
+  async clearVerification(userId: number, siteId: number) {
+    await db.update(schema.siteUsers)
+      .set({
+        verification_code: null,
+        user_token: null,
+        verified_at: null
+      })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
+   * Mark verified and generate user token (or preserve existing token)
+   * Returns the token
+   */
+  async markVerifiedWithToken(userId: number, siteId: number): Promise<{ siteUser: SiteUser | undefined; token: string }> {
+    const now = new Date().toISOString()
+
+    // Preserve existing token if already verified — prevents token rotation
+    // when multiple flows (link, site-connect, verify) call this method
+    const existing = await this.findByUserAndSite(userId, siteId)
+    const token = existing?.user_token || generateSecureToken()
+
+    await db.update(schema.siteUsers)
+      .set({
+        verified_at: now,
+        verification_code: null,
+        user_token: token
+      })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    const siteUser = await this.findByUserAndSite(userId, siteId)
+    return { siteUser, token }
+  }
+
+  /**
+   * Create a pending (unverified) site-user connection
+   */
+  async createPending(userId: number, siteId: number, role: 'owner' | 'admin' | 'editor' = 'owner') {
+    const now = new Date().toISOString()
+
+    // Check if already exists
+    const existing = await this.findByUserAndSite(userId, siteId)
+    if (existing) {
+      return existing
     }
+
+    await db.insert(schema.siteUsers).values({
+      site_id: siteId,
+      user_id: userId,
+      role,
+      verified_at: null,
+      joined_at: now,
+    })
+
+    const created = await this.findByUserAndSite(userId, siteId)
+    if (!created) {
+      throw new Error('Failed to create SiteUser record')
+    }
+
+    return created
+  }
+
+  /**
+   * Mark a site-user connection as verified
+   */
+  async markVerified(userId: number, siteId: number) {
+    const now = new Date().toISOString()
+
+    await db.update(schema.siteUsers)
+      .set({ verified_at: now })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
+   * Mark a site-user connection as unverified (clear verified_at)
+   * This allows the user to reconnect later without losing the site association
+   */
+  async unverify(userId: number, siteId: number) {
+    await db.update(schema.siteUsers)
+      .set({ verified_at: null })
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
+
+    return this.findByUserAndSite(userId, siteId)
+  }
+
+  /**
+   * Get all pending (unverified) connections for a user
+   */
+  async getUserPendingConnections(userId: number) {
+    return await db.select().from(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        isNull(schema.siteUsers.verified_at)
+      ))
+      .all()
+  }
+
+  /**
+   * Get all verified connections for a user
+   */
+  async getUserVerifiedConnections(userId: number) {
+    return await db.select().from(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        isNotNull(schema.siteUsers.verified_at)
+      ))
+      .all()
+  }
+
+  /**
+   * Get all connections for a user (both verified and pending)
+   */
+  async getUserConnections(userId: number) {
+    return await db.select().from(schema.siteUsers)
+      .where(eq(schema.siteUsers.user_id, userId))
+      .orderBy(sql`${schema.siteUsers.joined_at} DESC`)
+      .all()
+  }
+
+  /**
+   * Check if a user has verified access to a site
+   */
+  async isUserVerified(userId: number, siteId: number) {
+    const result = await db.select().from(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId),
+        isNotNull(schema.siteUsers.verified_at)
+      ))
+      .get()
+
+    return !!result
+  }
+
+  /**
+   * Unverify all site-user connections for a site
+   * Used when disconnecting via a site-only token (no specific user)
+   */
+  async unverifyAllForSite(siteId: number) {
+    await db.update(schema.siteUsers)
+      .set({ verified_at: null })
+      .where(eq(schema.siteUsers.site_id, siteId))
+  }
+
+  /**
+   * Delete a site-user connection
+   */
+  async delete(userId: number, siteId: number) {
+    await db.delete(schema.siteUsers)
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        eq(schema.siteUsers.site_id, siteId)
+      ))
   }
 }
 
+/**
+ * LinkSession database operations
+ * Manages temporary sessions for the user verification redirect flow
+ */
+export class LinkSessionRepository {
+  async create(siteId: number, returnUrl: string) {
+    const now = new Date().toISOString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString() // 10 minutes
+    const id = crypto.randomUUID()
+
+    await db.insert(schema.linkSessions).values({
+      id,
+      site_id: siteId,
+      return_url: returnUrl,
+      created_at: now,
+      expires_at: expiresAt,
+    })
+
+    return this.findById(id)
+  }
+
+  async findById(id: string) {
+    return await db.select().from(schema.linkSessions)
+      .where(eq(schema.linkSessions.id, id))
+      .get()
+  }
+
+  async findValidById(id: string) {
+    const now = new Date().toISOString()
+    return await db.select().from(schema.linkSessions)
+      .where(and(
+        eq(schema.linkSessions.id, id),
+        sql`${schema.linkSessions.expires_at} > ${now}`
+      ))
+      .get()
+  }
+
+  async complete(id: string, userId: number, userToken: string) {
+    await db.update(schema.linkSessions)
+      .set({ user_id: userId, user_token: userToken })
+      .where(eq(schema.linkSessions.id, id))
+
+    return this.findById(id)
+  }
+
+  async delete(id: string) {
+    await db.delete(schema.linkSessions)
+      .where(eq(schema.linkSessions.id, id))
+  }
+
+  async deleteExpired() {
+    const now = new Date().toISOString()
+    await db.delete(schema.linkSessions)
+      .where(sql`${schema.linkSessions.expires_at} <= ${now}`)
+  }
+}

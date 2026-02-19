@@ -1,13 +1,13 @@
 /**
- * POST /api/v1/auth/reset-password
- * Reset password using token
+ * POST /api/v2/auth/reset-password
+ * Reset password using token and automatically authenticate the user
  *
  * Request body: { token: string, password: string }
- * Response: { success: boolean, error?: string }
+ * Response: { success: boolean, user?: { id, email }, error?: string }
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { UserRepository} from '~~/server/utils/database'
+import { UserRepository, SiteRepository } from '~~/server/utils/database'
 import { verifyPasswordResetToken, hashUserPassword } from '~~/server/utils/auth'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
@@ -68,10 +68,39 @@ export default defineEventHandler(async (event) => {
     // Clear reset token
     await userRepo.clearPasswordResetToken(user.id!)
 
-    logger.debug('Password reset successfully for user', user.id)
+    // Link user to all their sites in SiteUsers
+    // Use canonical site ID if the site is non-canonical to ensure proper lookup
+    const siteRepo = new SiteRepository()
+    const userSitesData = await userRepo.findByIdWithSites(user.id!)
+
+    if (userSitesData?.Sites) {
+      for (const site of userSitesData.Sites) {
+        const siteIdToLink = site.canonical_site_id || site.id!
+        await siteRepo.addUserToSite(siteIdToLink, user.id!, 'admin')
+      }
+    }
+
+    // Automatically authenticate the user after password reset
+    await setUserSession(event, {
+      user: {
+        id: user.id,
+        email: user.email,
+        validEmail: Boolean(user.validEmail),
+        firstname: user.firstname,
+        lastname: user.lastname,
+        avatar: user.avatar,
+        createdAt: user.createdAt
+      }
+    })
+
+    logger.debug('Password reset successfully and user authenticated for user', user.id)
 
     return {
-      success: true
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email
+      }
     }
 
   } catch (error: any) {

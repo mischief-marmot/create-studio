@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
       try {
         // Extract just the path part (remove any base URL)
         const oldPath = user.avatar.replace(/^.*?avatars\//, 'avatars/')
-        await hubBlob().del(oldPath)
+        await blob.del(oldPath)
         logger.debug('Deleted old avatar', oldPath)
       } catch (error) {
         logger.error('Error deleting old avatar:', error)
@@ -95,7 +95,7 @@ export default defineEventHandler(async (event) => {
     const fileBlob = new Blob([fileField.data], { type: contentType })
 
     // Upload to NuxtHub blob storage
-    const blob = await hubBlob().put(filename, fileBlob, {
+    await blob.put(filename, fileBlob, {
       addRandomSuffix: false
     })
 
@@ -114,16 +114,18 @@ export default defineEventHandler(async (event) => {
         validEmail: Boolean(updatedUser.validEmail),
         firstname: updatedUser.firstname,
         lastname: updatedUser.lastname,
-        avatar: updatedUser.avatar
+        avatar: updatedUser.avatar,
+        createdAt: updatedUser.createdAt
       }
     })
 
-    // Return response
+    // Return response - use /avatars/ route which strips the avatars/ prefix
+    const avatarFilename = filename.replace('avatars/', '')
     setResponseStatus(event, 200)
     return {
       success: true,
       avatar: filename,
-      url: `/api/_hub/blob/${filename}`
+      url: `/avatars/${avatarFilename}`
     }
 
   } catch (error) {

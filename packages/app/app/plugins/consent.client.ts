@@ -1,60 +1,49 @@
 /**
- * Client-side plugin for initializing Google Analytics with consent trigger
- * Uses @nuxt/scripts useScriptTriggerConsent for GDPR-compliant loading
- *
- * The script only loads when the user grants analytics consent through the
- * consent store. Uses a computed ref to reactively track consent state.
- *
- * In development mode, uses mock mode (trigger: 'manual') to avoid loading
- * the real GA script while still allowing the API to be tested.
+ * Client-side plugin for managing consent and triggering scripts
+ * Integrates with @nuxt/scripts consent system
  */
 
 import { useConsentStore } from '~/stores/consent'
 
-export default defineNuxtPlugin({
-  name: 'consent-analytics',
-  // Run after Pinia persist plugin so localStorage state is restored
-  dependsOn: ['pinia-persist'],
-  setup() {
-    const consentStore = useConsentStore()
+export default defineNuxtPlugin((nuxtApp) => {
+  // Defer watchers to after Pinia is fully ready
+  if (process.client) {
+    nuxtApp.hook('app:created', () => {
+      const consentStore = useConsentStore()
 
-    // Get GA ID from runtime config
-    const config = useRuntimeConfig()
-    const gaId = config.public.scripts?.googleAnalytics?.id
-
-    // In development, use mock mode - don't load the real GA script
-    if (import.meta.dev) {
-      useScriptGoogleAnalytics({
-        id: gaId || 'G-MOCK-DEV',
-        scriptOptions: {
-          trigger: 'manual',
-          skipValidation: true,
+      // Trigger consent for scripts based on stored preferences
+      watch(
+        () => consentStore.analytics,
+        (analytics) => {
+          if (analytics === true) {
+            triggerGoogleAnalytics(nuxtApp)
+          }
         },
+        { immediate: true },
+      )
+
+      // Watch marketing consent for future use
+      watch(() => consentStore.marketing, (marketing) => {
+        // Handle marketing scripts/cookies here when needed
+        if (marketing === true) {
+          // Future: trigger marketing scripts
+        }
       })
-      return
-    }
-
-    // In production, only initialize GA if we have an ID configured
-    if (!gaId) {
-      return
-    }
-
-    // Create a computed ref that resolves to true when analytics consent is granted
-    // useScriptTriggerConsent accepts a reactive ref as the consent option
-    const analyticsConsent = computed(() => consentStore.analytics === true)
-
-    // Create the consent trigger - script will only load when analyticsConsent becomes true
-    const consentTrigger = useScriptTriggerConsent({
-      consent: analyticsConsent,
     })
-
-    // Initialize Google Analytics with the consent trigger
-    // The script won't load until the user grants consent
-    useScriptGoogleAnalytics({
-      id: gaId,
-      scriptOptions: {
-        trigger: consentTrigger,
-      },
-    })
-  },
+  }
 })
+
+/**
+ * Trigger Google Analytics based on consent
+ */
+function triggerGoogleAnalytics(nuxtApp: any) {
+  try {
+    // Use the @nuxt/scripts consent trigger
+    const { useScriptTriggerConsent } = nuxtApp
+    if (useScriptTriggerConsent) {
+      useScriptTriggerConsent('analytics')
+    }
+  } catch (error) {
+    console.error('Failed to trigger Google Analytics:', error)
+  }
+}

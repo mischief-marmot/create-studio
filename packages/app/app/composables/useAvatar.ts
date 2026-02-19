@@ -64,7 +64,8 @@ export function useAvatar(options: AvatarOptions) {
     if (options.avatar) {
       // If avatar starts with 'avatars/', it's a blob storage path
       if (options.avatar.startsWith('avatars/')) {
-        avatarUrl.value = `/api/_hub/blob/${options.avatar}`
+        // Use /avatars/ route which strips the avatars/ prefix
+        avatarUrl.value = `/avatars/${options.avatar.replace('avatars/', '')}`
         avatarType.value = 'stored'
         loading.value = false
         return
@@ -125,7 +126,9 @@ export function useAvatar(options: AvatarOptions) {
       if (response.success && response.avatar) {
         // Update local state
         options.avatar = response.avatar
-        avatarUrl.value = response.url || `/api/_hub/blob/${response.avatar}`
+        // Use /avatars/ route which strips the avatars/ prefix
+        const avatarPath = response.avatar.replace('avatars/', '')
+        avatarUrl.value = response.url || `/avatars/${avatarPath}`
         avatarType.value = 'stored'
         return { success: true, url: avatarUrl.value }
       }

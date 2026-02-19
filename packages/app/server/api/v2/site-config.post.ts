@@ -1,8 +1,11 @@
+/// <reference path="../../hub.d.ts" />
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SiteRepository, SubscriptionRepository } from '~~/server/utils/database'
+import { SubscriptionRepository } from '~~/server/utils/database'
+import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
-  const logger = useLogger('SiteConfig')
+  const runtimeConfig = useRuntimeConfig()
+  const logger = useLogger('SiteConfig', runtimeConfig.debug)
 
   // Set CORS headers to allow cross-origin requests from embedded scripts
   setResponseHeaders(event, {
@@ -24,43 +27,62 @@ export default defineEventHandler(async (event) => {
   // Look up site and subscription tier
   let subscriptionTier = 'free'
   let renderMode: 'iframe' | 'in-dom' = 'iframe'
+  let showInteractiveMode = true
+  let buttonText = 'Try Interactive Mode!'
 
   try {
     // Find site by URL - need to look up across all users
-    const db = hubDatabase()
-    const siteResult = await db.prepare('SELECT * FROM Sites WHERE url = ?').bind(siteUrl).first()
+    const siteResult = await db.select().from(schema.sites).where(eq(schema.sites.url, siteUrl)).get()
 
     if (siteResult) {
       const subscriptionRepo = new SubscriptionRepository()
       subscriptionTier = await subscriptionRepo.getActiveTier(siteResult.id as number)
 
-      // Pro tier gets in-DOM rendering
-      if (subscriptionTier === 'pro') {
-        renderMode = 'in-dom'
+      // Free tier gets no interactive mode at all
+      if (subscriptionTier === 'free') {
+        showInteractiveMode = false
       }
 
-      logger.debug(`Site ${siteUrl} has tier: ${subscriptionTier}, render mode: ${renderMode}`)
+      // Free+ and Pro tiers get Interactive Mode
+      // Check if Interactive Mode is disabled by the publisher
+      if (!siteResult.interactive_mode_enabled) {
+        showInteractiveMode = false
+      }
+
+      // Pro sites can customize Interactive Mode settings
+      if (subscriptionTier === 'pro') {
+        // Use custom button text if set
+        if (siteResult.interactive_mode_button_text) {
+          buttonText = siteResult.interactive_mode_button_text as string
+        }
+      }
+
+      logger.debug(`Site ${siteUrl} has tier: ${subscriptionTier}, interactive mode: ${showInteractiveMode}`)
     }
   } catch (error) {
     logger.error('Error looking up site subscription:', error)
     // Continue with free tier defaults
   }
 
+  // Pro tier gets in-DOM rendering
+  if (subscriptionTier === 'pro') {
+    renderMode = 'in-dom'
+  }
+
   const config = {
-    showInteractiveMode: true,
-    buttonText: "Try Interactive Mode!",
-    baseUrl: process.env.CREATE_STUDIO_BASE_URL || 'https://create.studio',
+    showInteractiveMode,
+    buttonText,
+    baseUrl: runtimeConfig.public.rootUrl,
     subscriptionTier,
     renderMode,
     features: {
       inDomRendering: renderMode === 'in-dom',
-      customStyling: subscriptionTier !== 'free',
+      customStyling: subscriptionTier === 'pro',
+      servingsAdjustment: subscriptionTier !== 'free',
+      unitConversion: subscriptionTier !== 'free',
       analytics: true,
     }
   }
-
-  // Log for debugging
-  logger.debug(`Site config requested for: ${siteUrl}`)
 
   return {
     success: true,

@@ -30,7 +30,8 @@ export default defineEventHandler(async (event) => {
   logger.start('Starting canonical sites migration...')
 
   try {
-    const db = hubDatabase()
+    // @ts-expect-error - database is auto-imported by NuxtHub
+    const d1 = db.$client as D1Database
 
     // Parse request body for pagination and filters
     const body = (await readBody<MigrationRequest>(event).catch(() => ({}))) as MigrationRequest
@@ -70,7 +71,7 @@ export default defineEventHandler(async (event) => {
     urlsQuery += ` ORDER BY url LIMIT ? OFFSET ?`
     queryParams.push(limit, offset)
 
-    const urlsResult = await db.prepare(urlsQuery).bind(...queryParams).all()
+    const urlsResult = await d1.prepare(urlsQuery).bind(...queryParams).all()
     const urls = urlsResult.results.map((row: any) => row.url)
 
     logger.info(`Found ${urls.length} unique URLs to process`)
@@ -84,11 +85,13 @@ export default defineEventHandler(async (event) => {
       logger.info(`Processing URL: ${url}`)
 
       // Find all sites for this URL, ordered by id (oldest first)
-      const sitesResult = await db.prepare(`
-        SELECT id, user_id, canonical_site_id
-        FROM Sites
-        WHERE url = ?
-        ORDER BY id ASC
+      // Include createdAt and user's createdAt to determine joined_at
+      const sitesResult = await d1.prepare(`
+        SELECT s.id, s.user_id, s.canonical_site_id, s.createdAt as siteCreatedAt, u.createdAt as userCreatedAt
+        FROM Sites s
+        LEFT JOIN Users u ON s.user_id = u.id
+        WHERE s.url = ?
+        ORDER BY s.id ASC
       `).bind(url).all()
 
       const sites = sitesResult.results
@@ -104,7 +107,7 @@ export default defineEventHandler(async (event) => {
 
       // Ensure canonical site has canonical_site_id = NULL
       if (canonicalSite.canonical_site_id !== null) {
-        await db.prepare(`
+        await d1.prepare(`
           UPDATE Sites
           SET canonical_site_id = NULL
           WHERE id = ?
@@ -118,7 +121,7 @@ export default defineEventHandler(async (event) => {
           const legacySite = sites[i] as any
 
           if (legacySite.canonical_site_id !== canonicalSiteId) {
-            await db.prepare(`
+            await d1.prepare(`
               UPDATE Sites
               SET canonical_site_id = ?
               WHERE id = ?
@@ -138,15 +141,18 @@ export default defineEventHandler(async (event) => {
         // Determine role: first user (owner of canonical site) is 'owner', others are 'admin'
         const role = siteData.id === canonicalSiteId ? 'owner' : 'admin'
 
+        // Use the user's createdAt, falling back to the site's createdAt
+        const joinedAt = siteData.userCreatedAt || siteData.siteCreatedAt || null
+
         try {
           // Insert into SiteUsers (ignore if already exists)
-          await db.prepare(`
-            INSERT INTO SiteUsers (site_id, user_id, role)
-            VALUES (?, ?, ?)
+          await d1.prepare(`
+            INSERT INTO SiteUsers (site_id, user_id, role, joined_at)
+            VALUES (?, ?, ?, ?)
             ON CONFLICT (site_id, user_id) DO NOTHING
-          `).bind(canonicalSiteId, userId, role).run()
+          `).bind(canonicalSiteId, userId, role, joinedAt).run()
 
-          logger.info(`  Added user ${userId} with role '${role}' to canonical site ${canonicalSiteId}`)
+          logger.info(`  Added user ${userId} with role '${role}' to canonical site ${canonicalSiteId} (joined: ${joinedAt})`)
           siteUserCount++
         } catch (error) {
           logger.warn(`  Failed to add user ${userId} to site ${canonicalSiteId}:`, error)
@@ -161,13 +167,13 @@ export default defineEventHandler(async (event) => {
         if (siteId === canonicalSiteId) continue
 
         // Check if there's a subscription for this legacy site
-        const subResult = await db.prepare(`
+        const subResult = await d1.prepare(`
           SELECT id FROM Subscriptions WHERE site_id = ?
         `).bind(siteId).first()
 
         if (subResult) {
           // Move subscription to canonical site
-          await db.prepare(`
+          await d1.prepare(`
             UPDATE Subscriptions
             SET site_id = ?
             WHERE site_id = ?
@@ -177,6 +183,21 @@ export default defineEventHandler(async (event) => {
           subscriptionCount++
         }
       }
+    }
+
+    // Backfill joined_at for any existing SiteUsers rows where it's NULL
+    // This handles rows created by a previous run of this script that didn't set joined_at
+    const backfillResult = await d1.prepare(`
+      UPDATE SiteUsers
+      SET joined_at = COALESCE(
+        (SELECT u.createdAt FROM Users u WHERE u.id = SiteUsers.user_id),
+        (SELECT s.createdAt FROM Sites s WHERE s.id = SiteUsers.site_id)
+      )
+      WHERE joined_at IS NULL
+    `).run()
+    const backfilledCount = backfillResult.meta?.changes || 0
+    if (backfilledCount > 0) {
+      logger.info(`  Backfilled joined_at for ${backfilledCount} existing SiteUsers rows`)
     }
 
     // Check if there are more URLs to process (respecting filters)
@@ -198,8 +219,8 @@ export default defineEventHandler(async (event) => {
     }
 
     const remainingResult = remainingParams.length > 0
-      ? await db.prepare(remainingQuery).bind(...remainingParams).first()
-      : await db.prepare(remainingQuery).first()
+      ? await d1.prepare(remainingQuery).bind(...remainingParams).first()
+      : await d1.prepare(remainingQuery).first()
     const totalRemaining = (remainingResult as any)?.count || 0
     const hasMore = totalRemaining > (offset + limit)
     const nextOffset = hasMore ? offset + limit : null
@@ -210,6 +231,7 @@ export default defineEventHandler(async (event) => {
     logger.info(`  - Legacy sites: ${legacyCount}`)
     logger.info(`  - SiteUsers entries created: ${siteUserCount}`)
     logger.info(`  - Subscriptions moved: ${subscriptionCount}`)
+    logger.info(`  - Backfilled joined_at: ${backfilledCount}`)
     logger.info(`  - URLs processed: ${urls.length}/${totalRemaining} remaining`)
 
     return {
@@ -219,7 +241,8 @@ export default defineEventHandler(async (event) => {
         canonicalSites: canonicalCount,
         legacySites: legacyCount,
         siteUsersCreated: siteUserCount,
-        subscriptionsMoved: subscriptionCount
+        subscriptionsMoved: subscriptionCount,
+        backfilledJoinedAt: backfilledCount
       },
       pagination: {
         processed: urls.length,

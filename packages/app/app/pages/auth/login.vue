@@ -1,16 +1,20 @@
 <template>
   <div class="flex flex-col space-y-4">
     <div>
-      <h2 class="text-center font-serif text-4xl">Login</h2>
-      <p class="text-md text-center mb-4">
+      <h2 class="font-serif text-4xl text-center">Login</h2>
+      <p class="text-md mb-4 text-center">
         Manage your Create sites
       </p>
+    </div>
+
+    <div v-if="accountExistsMessage" class="alert alert-info">
+      <span>An account already exists with this email. Please log in or <NuxtLink to="/auth/request-reset" class="link">reset your password</NuxtLink> if you've forgotten it.</span>
     </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <fieldset class="fieldset">
             <legend class="fieldset-legend">Email</legend>
-            <label class="input input-lg w-full validator">
+            <label class="input input-lg validator w-full">
               <EnvelopeIcon class="h-8 opacity-50" />
               <input
                 v-model="email"
@@ -25,7 +29,7 @@
 
           <fieldset class="fieldset">
             <legend class="fieldset-legend">Password</legend>
-            <label class="input input-lg w-full validator">
+            <label class="input input-lg validator w-full">
               <LockClosedIcon class="h-8 opacity-50" />
               <input
                 v-model="password"
@@ -45,7 +49,7 @@
           <div class="form-control mt-8 text-center">
             <button
               type="submit"
-              class="btn btn-accent btn-xl"
+              class="btn btn-primary btn-xl"
               :disabled="loading"
             >
               <span v-if="loading" class="loading loading-spinner"></span>
@@ -53,11 +57,13 @@
             </button>
           </div>
 
-          <div class="divider text-sm pt-8 pb-3">Forgot password?</div>
-
-          <div class="text-center">
-            <NuxtLink to="/auth/request-reset" class="link link-base-content text-sm">
-              Reset your password
+          <div class="flex items-center justify-center gap-4 mt-6 text-sm">
+            <NuxtLink to="/auth/register" class="link link-base-content">
+              Register
+            </NuxtLink>
+            <span class="text-base-content/20">•</span>
+            <NuxtLink to="/auth/request-reset" class="link link-base-content">
+              Forgot password?
             </NuxtLink>
           </div>
         </form>
@@ -65,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { EnvelopeIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { useAuth } from '~/composables/useAuth'
@@ -76,9 +82,17 @@ definePageMeta({
 })
 
 const router = useRouter()
+const route = useRoute()
 const { login } = useAuth()
+const { storeRedirect, consumeRedirect } = useAuthRedirect()
 
-const email = ref('')
+// Persist ?redirect= so it survives navigating to register/reset
+storeRedirect()
+
+// Check for account-exists message from registration redirect
+const accountExistsMessage = computed(() => route.query.message === 'account-exists')
+
+const email = ref((route.query.email as string) || '')
 const password = ref('')
 const loading = ref(false)
 const errors = ref<Record<string, string>>({})
@@ -105,8 +119,9 @@ const handleSubmit = async () => {
         setSelectedSiteId(response.sites[0].id)
       }
 
-      // Redirect to admin dashboard
-      router.push('/admin')
+      // Redirect to stored path or admin dashboard
+      const redirectTo = consumeRedirect()
+      router.push(redirectTo || '/admin')
     } else {
       errors.value.general = response.error || 'Login failed'
     }

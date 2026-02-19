@@ -31,6 +31,13 @@ interface WPCreationResponse {
   keywords?: string
   created?: string
   modified?: string
+  unit_conversions?: {
+    enabled: boolean
+    default_system: 'auto' | 'us_customary' | 'metric'
+    source_system: 'us_customary' | 'metric'
+    label: string
+    conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+  }
 }
 
 interface WPMediaResponse {
@@ -78,7 +85,8 @@ export async function transformCreationToHowTo(
   
   // Parse ingredients from description or a dedicated field
   const ingredients = parseIngredients(creation)
-  
+  const ingredientsWithGroups = parseIngredientsWithGroups(creation)
+
   // Build the HowTo object
   const howTo: HowTo = {
     '@context': 'https://schema.org',
@@ -91,6 +99,7 @@ export async function transformCreationToHowTo(
     interactiveMode: true,
     step: stepsWithImages,
     recipeIngredient: ingredients,
+    recipeIngredientGroups: ingredientsWithGroups, // Add grouped ingredients
     supply: ingredients.map(ing => ({
       '@type': 'HowToSupply' as const,
       name: ing
@@ -144,6 +153,10 @@ export async function transformCreationToHowTo(
     // Process nutrition data if available
     howTo.nutrition = processNutrition(creation.nutrition)
   }
+
+  if (creation.unit_conversions && creation.unit_conversions.enabled) {
+    howTo.unitConversions = creation.unit_conversions
+  }
   
   const totalTime = performance.now() - startTime
   logger.info(`${totalTime.toFixed(2)}ms Total transform time`)
@@ -156,11 +169,11 @@ function parseInstructions(instructionsHtml: string): {
 } {
   const stepImageMap = new Map<number, number>()
   const steps: HowToStep[] = []
-  
+
   // Extract list items using regex (works in server environment)
   const listItemRegex = /<li[^>]*>(.*?)<\/li>/gis
   const matches = Array.from(instructionsHtml.matchAll(listItemRegex))
-  
+
   if (matches.length > 0) {
     // Process list items
     matches.forEach((match, index) => {
@@ -172,13 +185,21 @@ function parseInstructions(instructionsHtml: string): {
         stepImageMap.set(index, imageId) // Map this step index to its image ID
       }
 
+      // Extract links BEFORE removing HTML tags
+      const links = extractLinksFromHtml(textWithoutShortcode)
+
       // Now remove HTML tags from the text that has shortcode already removed
-      const cleanText = textWithoutShortcode.replace(/<[^>]*>/g, ' ').trim()
+      const cleanText = textWithoutShortcode.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
 
       const step: HowToStep = {
         '@type': 'HowToStep',
         text: cleanText,
         position: index + 1
+      }
+
+      // Add links if any were found
+      if (links.length > 0) {
+        step.links = links
       }
 
       // Parse timer from text using enhanced detection
@@ -190,7 +211,7 @@ function parseInstructions(instructionsHtml: string): {
           autoStart: false
         }
       }
-      
+
       steps.push(step)
     })
   } else {
@@ -199,19 +220,19 @@ function parseInstructions(instructionsHtml: string): {
       .replace(/<[^>]*>/g, '\n')
       .split(/\n+/)
       .filter(line => line.trim())
-    
+
     lines.forEach((line, index) => {
       const { text, imageId } = extractImageFromText(line)
       if (imageId) {
         stepImageMap.set(index, imageId) // Map this step index to its image ID
       }
-      
+
       const step: HowToStep = {
         '@type': 'HowToStep',
         text: text.trim(),
         position: index + 1
       }
-      
+
       // Parse timer from text using enhanced detection
       const timerInfo = parseTimerFromText(text)
       if (timerInfo && timerInfo.duration) {
@@ -221,12 +242,51 @@ function parseInstructions(instructionsHtml: string): {
           autoStart: false
         }
       }
-      
+
       steps.push(step)
     })
   }
-  
+
   return { steps, stepImageMap }
+}
+
+// Extract links from HTML content
+function extractLinksFromHtml(html: string): { text: string; href: string; target?: string; rel?: string }[] {
+  const links: { text: string; href: string; target?: string; rel?: string }[] = []
+
+  // Match anchor tags with their attributes and content
+  const linkRegex = /<a\s+([^>]*)>(.*?)<\/a>/gi
+  let match
+
+  while ((match = linkRegex.exec(html)) !== null) {
+    const attributes = match[1]
+    const linkText = match[2].replace(/<[^>]*>/g, '').trim() // Remove any nested tags
+
+    // Extract href
+    const hrefMatch = attributes.match(/href=["']([^"']*)["']/i)
+    if (hrefMatch) {
+      const link: { text: string; href: string; target?: string; rel?: string } = {
+        text: linkText,
+        href: hrefMatch[1]
+      }
+
+      // Extract target if present
+      const targetMatch = attributes.match(/target=["']([^"']*)["']/i)
+      if (targetMatch) {
+        link.target = targetMatch[1]
+      }
+
+      // Extract rel if present
+      const relMatch = attributes.match(/rel=["']([^"']*)["']/i)
+      if (relMatch) {
+        link.rel = relMatch[1]
+      }
+
+      links.push(link)
+    }
+  }
+
+  return links
 }
 
 function extractImageFromText(text: string): {
@@ -306,21 +366,64 @@ function formatTimerDuration(seconds: number): string {
 }
 
 
-function parseIngredients(creation: WPCreationResponse): string[] {
-  const ingredients: string[] = []
-  
+function parseIngredients(creation: WPCreationResponse): (string | import('~/types/schema-org').RecipeIngredient)[] {
+  const ingredients: (string | import('~/types/schema-org').RecipeIngredient)[] = []
+
   // Get ingredients from the supplies array
   if (creation.supplies && Array.isArray(creation.supplies) && creation.supplies.length > 0) {
     creation.supplies.forEach((supply: any) => {
       if (supply.original_text) {
-        ingredients.push(supply.original_text)
+        // If there's a link, preserve it as an object
+        if (supply.link) {
+          ingredients.push({
+            original_text: supply.original_text,
+            link: supply.link,
+            nofollow: supply.nofollow || false
+          })
+        } else {
+          // Otherwise just use the text
+          ingredients.push(supply.original_text)
+        }
       } else if (supply.title || supply.name) {
         ingredients.push(supply.title || supply.name)
       }
     })
   }
-  
+
   return ingredients
+}
+
+// Parse ingredients with their groups preserved
+function parseIngredientsWithGroups(creation: WPCreationResponse): Record<string, (string | import('~/types/schema-org').RecipeIngredient)[]> {
+  const groups: Record<string, (string | import('~/types/schema-org').RecipeIngredient)[]> = {}
+
+  // Get ingredients from the supplies array
+  if (creation.supplies && Array.isArray(creation.supplies) && creation.supplies.length > 0) {
+    creation.supplies.forEach((supply: any) => {
+      const groupName = supply.group || '' // Empty string for ungrouped items
+      const ingredientText = supply.original_text || supply.title || supply.name
+
+      if (ingredientText) {
+        if (!groups[groupName]) {
+          groups[groupName] = []
+        }
+
+        // If there's a link, preserve it as an object
+        if (supply.link) {
+          groups[groupName].push({
+            original_text: ingredientText,
+            link: supply.link,
+            nofollow: supply.nofollow || false
+          })
+        } else {
+          // Otherwise just use the text
+          groups[groupName].push(ingredientText)
+        }
+      }
+    })
+  }
+
+  return groups
 }
 
 function cleanHtml(html: string): string {

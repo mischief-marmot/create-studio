@@ -9,7 +9,7 @@
 
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { createCheckoutSession } from '~~/server/utils/stripe'
-import { SiteRepository } from '~~/server/utils/database'
+import { SiteRepository, SiteUserRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
@@ -60,6 +60,17 @@ export default defineEventHandler(async (event) => {
       return {
         success: false,
         error: 'Only site owners can manage subscriptions'
+      }
+    }
+
+    // Verify site connection is verified (not pending)
+    const siteUserRepo = new SiteUserRepository()
+    const isVerified = await siteUserRepo.isUserVerified(user.id, siteId)
+    if (!isVerified) {
+      setResponseStatus(event, 403)
+      return {
+        success: false,
+        error: 'Site must be verified before upgrading. Please complete site verification first.'
       }
     }
 

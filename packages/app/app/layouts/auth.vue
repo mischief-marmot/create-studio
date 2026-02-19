@@ -1,6 +1,6 @@
 <template>
-  <div class="bg-base-100 text-base-content flex items-center justify-center min-h-screen p-3">
-    <div class="w-full max-w-md">
+  <div class="bg-base-100 text-base-content sm:p-3 flex items-center justify-center min-h-screen p-2">
+    <div class="w-full max-w-xl">
       <!-- Logo/Brand -->
       <div class="text-center">
         <NuxtLink to="/" class="inline-flex items-center justify-center space-x-2">
@@ -9,10 +9,10 @@
       </div>
 
       <!-- Content Card -->
-      <div class="card bg-base-100 rounded-4xl relative p-3 overflow-hidden shadow-xl">
+      <div class="card bg-base-100 rounded-4xl sm:p-3 relative p-1 overflow-hidden shadow-xl">
         <AbsoluteGradient
           animate
-          :speed=3
+          :speed=5
           :color="gradientColor"
           :angle="gradientAngle"
         />

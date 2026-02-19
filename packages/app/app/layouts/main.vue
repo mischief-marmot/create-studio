@@ -38,10 +38,20 @@
 					</li>
 				</ul>
 			</div>
-			<div class="navbar-end">
-				<a href="/auth/login" class="btn btn-primary btn-sm sm:btn-md hidden rounded-full" :class="[
-                    scrollPosition > 64 ? 'hidden' : ''
-                ]">Sign In</a>
+			<div class="navbar-end gap-2">
+				<template v-if="loggedIn">
+					<NuxtLink to="/admin" class="btn btn-primary rounded-full" :class="[
+						scrollPosition > 64 ? 'btn-md bg-base-100 text-base-content ring-1 ring-base-content hover:bg-base-200 border-none shadow-none' : 'btn-sm'
+					]">Dashboard</NuxtLink>
+				</template>
+				<template v-else>
+					<NuxtLink to="/auth/login" class="btn btn-ghost rounded-full" :class="[
+						scrollPosition > 64 ? 'btn-md bg-base-100 ring-1 ring-base-content' : 'btn-sm'
+					]">Sign In</NuxtLink>
+					<NuxtLink to="/auth/register" class="btn btn-primary rounded-full" :class="[
+						scrollPosition > 64 ? 'btn-md' : 'btn-sm'
+					]">Get Started</NuxtLink>
+				</template>
 			</div>
 		</nav>
 		<main>
@@ -69,7 +79,16 @@
 						<NuxtLink class="link link-hover" href="/about">About</NuxtLink>
 						<NuxtLink class="link link-hover" href="/news">News</NuxtLink>
 					</nav>
-					<nav></nav>
+					<nav>
+						<h6 class="footer-title">Account</h6>
+						<template v-if="loggedIn">
+							<NuxtLink class="link link-hover" to="/admin">Dashboard</NuxtLink>
+						</template>
+						<template v-else>
+							<NuxtLink class="link link-hover" to="/auth/login">Sign In</NuxtLink>
+							<NuxtLink class="link link-hover" to="/auth/register">Create Account</NuxtLink>
+						</template>
+					</nav>
 				</footer>
 				<footer class="footer bg-base-200 text-base-content border-base-300 sm:flex-row flex flex-col items-center justify-between gap-4 px-10 py-4 border-t">
 					<aside class="items-center grid-flow-col">
@@ -87,7 +106,7 @@
 					<nav class="flex flex-wrap justify-center gap-4 text-sm">
 						<NuxtLink to="/legal/privacy" class="link link-hover">Privacy Policy</NuxtLink>
 						<NuxtLink to="/legal/cookies" class="link link-hover">Cookies</NuxtLink>
-						<NuxtLink to="/legal/terms" class="link link-hover">Terms</NuxtLink>
+						<NuxtLink to="/legal/terms" class="link link-hover">Terms of Service</NuxtLink>
 						<button @click="openCookieSettings" class="link link-hover cursor-pointer">
 							Cookie Settings
 						</button>
@@ -144,6 +163,8 @@ interface NavLinksMap {
 
 const attrs = useAttrs()
 const navLinks = computed(() => attrs.navLinks as NavLinksMap | undefined)
+
+const { loggedIn } = useAuth()
 
 const scrollPosition = ref(0)
 const scrollToTop = () => {

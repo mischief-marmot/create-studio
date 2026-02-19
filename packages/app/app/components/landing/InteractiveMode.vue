@@ -1,121 +1,215 @@
 <template>
-    <div id="interactive-mode" class="bg-base-100 sm:py-24 py-16">
-        <div class="max-w-7xl lg:px-8 px-3 mx-auto">
-            <div class="max-w-4xl mx-auto text-center">
-                <div class="badge badge-md badge-accent mb-2">Coming Soon!</div>
-                <h2 v-if="eyebrow" class="text-md text-secondary font-semibold">{{ eyebrow }}</h2>
+  <section id="interactive-mode" class="bg-base-100 sm:py-24 py-16">
+    <div class="max-w-7xl lg:px-8 sm:px-6 mx-auto">
+      <!-- Header -->
+      <div class="max-w-3xl mx-auto text-center">
+        <span class="badge badge-primary badge-lg gap-2 mb-4 font-bold">
+          All-New Feature!
+        </span>
+        <span v-if="eyebrow" class="text-primary-content dark:text-primary block mb-2 text-sm font-semibold tracking-wider uppercase">{{ eyebrow }}</span>
+        <h2 class="sm:text-5xl lg:text-6xl text-base-content font-serif text-4xl">{{ title }}</h2>
+        <p v-if="description" class="text-base-content mt-6 text-lg leading-relaxed">{{ description }}</p>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="lg:grid lg:grid-cols-2 lg:gap-16 items-start mt-16">
+        <!-- Features List -->
+        <div class="space-y-3">
+          <div
+            v-for="(feature, index) in features"
+            :key="index"
+            class="group relative"
+            :style="{ animationDelay: `${index * 0.1}s` }"
+          >
+            <!-- Desktop: Content + Number Layout -->
+            <div class="lg:flex lg:gap-6 rounded-2xl hover:shadow-sm hover:-mx-2 hover:px-8 items-center justify-between hidden p-6 transition-all duration-300" :class="getFeatureColors()">
+              <!-- Content -->
+              <div class="flex-1 min-w-0">
+                <h3 class="text-primary-content group-hover:text-primary-content/70 dark:group-hover:text-primary dark:text-primary/70 mb-2 font-serif text-3xl tracking-wider transition-colors">{{ feature.name }}</h3>
+                <p class="text-base-content/80 text-sm leading-relaxed" v-html="feature.description" />
+              </div>
+
+              <!-- Number Badge -->
+              <div class="flex-shrink-0 text-right">
+                <span class="text-primary-content group-hover:text-primary-content/70 dark:text-primary/70 dark:group-hover:text-primary font-serif text-3xl font-light transition-colors">
+                  {{ String(index + 1).padStart(2, '0') }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Mobile: Accordion Layout -->
+            <div class="lg:hidden collapse rounded-2xl overflow-hidden" :class="getFeatureColors()">
+              <input
+              class="p-0"
+                type="checkbox"
+                :checked="activeFeature === index"
+                @change="activeFeature = activeFeature === index ? null : index"
+              />
+              <div class="collapse-title lg:gap-4 lg:p-5 flex items-center justify-between gap-0 px-5 text-sm font-semibold">
+                <span class="flex-1 min-w-0">{{ feature.name }}</span>
+                <span class="text-primary flex-shrink-0 font-mono text-xl font-light">
+                  {{ String(index + 1).padStart(2, '0') }}
+                </span>
+              </div>
+              <div class="collapse-content lg:p-5 lg:pt-0 min-w-0 px-5 pt-0">
                 <p
-                    class="sm:text-7xl text-pretty text-base-content md:text-8xl sm:text-balance mt-2 font-serif text-6xl">
-                    {{ title }}</p>
-                <p v-if="description" class="sm:mt-6 text-lg/8 text-pretty max-w-2xl mx-auto mt-4">{{ description }}</p>
-
-                <!-- Slot for custom header content -->
-                <div v-if="$slots.header" class="mt-6">
-                    <slot name="header" />
-                </div>
+                v-html="feature.description"
+                 class="text-base-content/80 text-xs leading-relaxed break-words" />
+              </div>
             </div>
+          </div>
         </div>
-        <div class="relative py-12 overflow-hidden">
-            <div class="max-w-7xl lg:px-8 w-full px-4 mx-auto">
-                <div class="relative rounded-xl shadow-2xl shadow-base-200 ring-1 ring-base-200 overflow-hidden max-w-[412px] max-h-[820px] w-full h-screen md:max-h-[720px] md:max-w-none mx-auto"
-                :class="[
-                    showIframe ? '' : 'p-3'
-                ]"
-                >
-                    <AbsoluteGradient v-if="!showIframe" />
 
-                    <!-- Button placeholder before iframe loads -->
-                    <div v-if="!showIframe" class="size-full dark:bg-base-200 rounded-xl relative z-10 flex flex-col items-center justify-center space-y-6 bg-white">
-                        <p class="text-pretty text-lg text-center">Click the button to try Interactive Mode!</p>
-                        <button @click="showIframe = true" 
-                        :class="[
-                            'btn btn-primary font-normal text-xl sm:text-3xl btn-xl sm:btn-2xl gap-2 py-10',
-                            ]"
-                        >
-                            Try Interactive Mode
-                        </button>
+        <!-- Demo Area -->
+        <div class="lg:mt-0 mt-12">
+          <div
+            class="rounded-3xl shadow-base-300 relative overflow-hidden"
+            :class="showIframe ? 'h-[915px] w-[415px] mx-auto' : 'p-1 sm:p-3'"
+          >
+            <AbsoluteGradient v-if="!showIframe" />
+            <!-- Placeholder -->
+            <div v-if="!showIframe" class="bg-gradient-to-br rounded-2xl from-base-200 to-base-300 sm:p-8 min-h-80 relative p-3">
+              <!-- Phone Mockup -->
+              <div class="sm:block hidden max-w-[415px] mx-auto">
+                <div class="bg-base-100 rounded-[2.5rem] p-2 shadow-xl ring-1 ring-base-300">
+                  <!-- Notch -->
+                  <div class="flex justify-center mb-2">
+                    <div class="bg-base-content min-w-24 h-6 rounded-full" />
+                  </div>
+                  <!-- Screen -->
+                  <div class="bg-base-200 rounded-[2rem] p-6 min-h-[730px] flex flex-col">
+                    <div class="flex flex-col items-center justify-center flex-1 space-y-6 text-center">
+                      <div class="space-y-2">
+                        <div class="text-accent text-xs font-medium tracking-wider uppercase">Step 1</div>
+                        <div class="text-base-content font-serif text-lg">Prepare the glaze</div>
+                      </div>
+                      <div class="bg-base-300 flex items-center gap-2 px-4 py-2 text-sm rounded-full">
+                        <ClockIcon class="size-4 text-accent" />
+                        <span class="font-mono">5:00</span>
+                      </div>
                     </div>
-
-                    <!-- Iframe loads on button click -->
-                    <iframe v-if="showIframe" :src="demoRecipeUrlWithDisableRating" class="md:aspect-video rounded-xl relative z-10 w-full h-full overflow-hidden border-0"
-                        frameborder="0"
-                        allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        title="Interactive Mode Demo" loading="lazy" />
+                    <!-- Progress Dots -->
+                    <div class="flex justify-center gap-2 pt-4">
+                      <div class="size-2 bg-primary rounded-full" />
+                      <div class="size-2 bg-base-300 rounded-full" />
+                      <div class="size-2 bg-base-300 rounded-full" />
+                      <div class="size-2 bg-base-300 rounded-full" />
+                    </div>
+                  </div>
                 </div>
-                <p v-if="showIframe" class="text-base-content pt-4 text-sm italic text-center">Try it out! Interact with the recipe above (from <a href="https://thesweetestoccasion.com/" target="_blank">The Sweetest Occasion</a>).</p>
+              </div>
 
-                <!-- <img v-if="screenshot && !screenshotLight && !screenshotDark" :src="screenshot" :alt="screenshotAlt" class="rounded-xl ring-1 ring-base-300 shadow-2xl" width="2432" height="1442" /> -->
-            </div>
-        </div>
-        <div class="max-w-7xl sm:mt-12 md:mt-16 lg:px-8 px-6 mx-auto mt-10">
-            <dl v-if="features && features.length > 0"
-                class="gap-x-6 gap-y-10 text-md text-pretty sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3 lg:gap-x-8 lg:gap-y-16 grid max-w-2xl grid-cols-1 mx-auto">
-                <div v-for="feature, i in features" :key="i + feature.name" class="pl-9 relative">
-                    <dt class="text-base-content inline font-semibold">
-                        <component v-if="feature.icon" :is="feature.icon"
-                            class="top-1 left-1 size-6 text-secondary absolute" aria-hidden="true" />
-                        {{ feature.name }}.
-                    </dt>
-                    {{ ' ' }}
-                    <dd class="inline" v-html="feature.description"></dd>
+              <!-- CTA Button -->
+              <div class="h-80 sm:h-auto sm:mt-8 flex flex-col items-center justify-center gap-4 text-center">
+                <div class="sm:hidden font-serif text-xl tracking-wide">
+                  Click the button below to try Interactive Mode for yourself!
                 </div>
-            </dl>
-
-            <!-- Slot for custom features content -->
-            <div v-if="$slots.features">
-                <slot name="features" />
+                <button
+                  @click="showIframe = true"
+                  class="btn btn-primary btn-lg w-fit gap-3"
+                >
+                  <PlayIcon class="size-5" />
+                  Try Interactive Mode
+                </button>
+              </div>
             </div>
 
-            <!-- Default slot for any additional content -->
-            <div v-if="$slots.default" class="mt-16">
-                <slot />
+            <!-- Iframe -->
+            <div v-else class="size-full relative max-w-[415px] mx-auto px-5">
+              <button
+                @click="showIframe = false"
+                class="top-6 right-10 btn btn-circle btn-md bg-base-100/80 backdrop-blur z-100 absolute"
+              >
+                <XMarkIcon class="size-7" />
+              </button>
+              <iframe
+                :src="demoRecipeUrlWithParams"
+                class="border-base-content/20 rounded-2xl w-full h-full border shadow-sm"
+                frameborder="0"
+                allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                title="Interactive Mode Demo"
+                loading="lazy"
+              />
             </div>
+          </div>
+
+          <p v-if="showIframe" class="text-base-content/50 mt-4 text-sm italic text-center">
+            Try it out! Interact with the recipe above (from <a href="https://thesweetestoccasion.com/" target="_blank" class="hover:text-accent underline">The Sweetest Occasion</a>).
+          </p>
         </div>
+      </div>
     </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { BellAlertIcon, ClockIcon, CodeBracketIcon, CurrencyDollarIcon, DevicePhoneMobileIcon, WindowIcon } from '@heroicons/vue/20/solid'
-
-const features: Feature[] = [
-        { name: 'Engaging experience', description: `Your readers swipe through steps, interacting with your recipes in an immersive experience&mdash;increasing engagement and reducing frustration`, icon: CodeBracketIcon },
-        { name: 'Smart timers', description: 'Create Studio parses your instructions to generate built-in timers to keep readers on-page', icon: BellAlertIcon },
-        { name: 'Saved progress', description: 'Readers can close Interactive Mode, pause timers, or refresh the page and pick up where they left off next time they open it', icon: WindowIcon },
-        { name: 'Distraction-free view', description: 'Clean, focused interface keeps readers cooking instead of scrolling past ads and pop-ups, losing their place and getting frustrated', icon: DevicePhoneMobileIcon },
-        { name: 'Longer site visits', description: 'Readers stay engaged with your content throughout the entire cooking process', icon: ClockIcon },
-        // { name: 'Ad supported', description: `You get free access to all of Create's premium features, just from the ads on this feature. Or use your ads for a small fee!'`, icon: CurrencyDollarIcon },
-]
-
-interface Feature {
-    name: string
-    description: string
-    icon?: any
-}
+import { ref, computed } from 'vue'
+import {
+  PlayIcon,
+  XMarkIcon,
+  ClockIcon,
+  CodeBracketIcon,
+  BellAlertIcon,
+  WindowIcon,
+  DevicePhoneMobileIcon,
+  ComputerDesktopIcon
+} from '@heroicons/vue/20/solid'
 
 interface Props {
-    eyebrow?: string
-    title: string
-    description?: string
-    screenshot?: string
-    screenshotLight?: string
-    screenshotDark?: string
-    screenshotAlt?: string
-    demoRecipeUrl?: string
+  eyebrow?: string
+  title: string
+  description?: string
+  demoRecipeUrl?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
-    screenshotAlt: 'App screenshot'
-})
+const props = defineProps<Props>()
 
 const showIframe = ref(false)
+const activeFeature = ref<number | null>(0)
 
-// Add disableRatingSubmission and cache_bust parameters to demo URL
-const demoRecipeUrlWithDisableRating = computed(() => {
-    if (!props.demoRecipeUrl) return ''
-    const url = new URL(props.demoRecipeUrl)
-    url.searchParams.set('disableRatingSubmission', 'true')
-    url.searchParams.set('cache_bust', 'true')
-    return url.toString()
+const features = [
+  {
+    name: 'Engaging experience',
+    description: 'Your readers swipe through steps, interacting with your recipes in an immersive experience&mdash;increasing engagement and reducing frustration.',
+    icon: CodeBracketIcon
+  },
+  {
+    name: 'Smart timers',
+    description: 'Create Studio parses your instructions to generate built-in timers to keep readers on-page and cooking with confidence.',
+    icon: BellAlertIcon
+  },
+  {
+    name: 'Saved progress',
+    description: 'Readers can close Interactive Mode, pause timers, or refresh the page and pick up where they left off next time they open it.',
+    icon: WindowIcon
+  },
+  {
+    name: 'Distraction-free view',
+    description: 'Clean, focused interface keeps readers cooking instead of scrolling past ads and pop-ups, losing their place and getting frustrated.',
+    icon: DevicePhoneMobileIcon
+  },
+  {
+    name: 'Longer site visits',
+    description: 'Readers stay engaged with your content throughout the entire cooking process, increasing time on site and reducing bounce rates.',
+    icon: ClockIcon
+  },
+  {
+    name: 'Ad-supported experience',
+    description: `<strong>Create 2.0 Free+ plan</strong>: Create shows ads in Interactive Mode while your site ads run elsewhere. <br/><strong>Create 2.0 Pro plan</strong>: Use your own ad network or disable Interactive Mode entirely for complete control.`,
+    icon: ComputerDesktopIcon
+  },
+]
+
+const demoRecipeUrlWithParams = computed(() => {
+  if (!props.demoRecipeUrl) return ''
+  const url = new URL(props.demoRecipeUrl)
+  url.searchParams.set('disableRatingSubmission', 'true')
+  url.searchParams.set('cache_bust', 'true')
+  return url.toString()
 })
+
+// Helper function to get background color for feature card
+const getFeatureColors = () => {
+  return 'bg-base-200'
+}
 </script>

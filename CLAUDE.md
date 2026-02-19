@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Create Studio is an application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 3, TypeScript, Tailwind CSS v4, DaisyUI, Clerk Auth, and deployed on NuxtHub/Cloudflare.
+Create Studio is an application that allows publishers and bloggers to create structured data cards (recipes, how-to guides, FAQs) with automatic JSON-LD generation and embeddable, interactive visual cards. Built with Nuxt 4, TypeScript, Tailwind CSS v4, DaisyUI, Clerk Auth, and deployed on NuxtHub/Cloudflare.
 
 **Project Plan**: See PROJECT_PLAN.md for detailed phased development approach and current progress.
 
@@ -34,10 +34,10 @@ npm test tests/unit/nutrition-api.test.ts
 ## Architecture
 
 ### Framework Stack
-- **Nuxt 3** (v3.17.3) - Vue.js meta-framework
+- **Nuxt 4** (v4.4) - Vue.js meta-framework
 - **TypeScript** - Type safety throughout
 - **Tailwind CSS v4** - Utility-first CSS with `@tailwindcss/vite`
-- **DaisyUI** - Component library with custom themes ("claudette" light, "claudia" dark)
+- **DaisyUI** - Component library with custom themes ("light" light, "dark" dark)
 - **Pinia** - State management
 
 ### Key Directories
@@ -55,6 +55,18 @@ npm test tests/unit/nutrition-api.test.ts
 - `tsconfig.json` - TypeScript configuration
 - `vitest.config.ts` - Vitest test configuration
 - `eslint.config.mjs` - ESLint rules
+
+## Database
+
+- **Database Dialect**: The database dialect is set in the `nuxt.config.ts` file, within the `hub.db` option or `hub.db.dialect` property.
+- **Drizzle Config**: Don't generate the `drizzle.config.ts` file manually, it is generated automatically by NuxtHub.
+- **Generate Migrations**: Use `npx nuxt db generate` to automatically generate database migrations from schema changes
+- **Never Write Manual Migrations**: Do not manually create SQL migration files in the `server/db/migrations/` directory
+- **Workflow**:
+  1. Create or modify the database schema in `server/db/schema.ts` or any other schema file in the `server/db/schema/` directory
+  2. Run `npx nuxt db generate` to generate the migration
+  3. Run `npx nuxt db migrate` to apply the migration to the database, or run `npx nuxt dev` to apply the migration during development
+- **Access the database**: Use the `db` instance from `hub:db` to query the database, it is a Drizzle ORM instance.
 
 ## Development Methodology
 

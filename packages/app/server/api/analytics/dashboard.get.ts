@@ -61,7 +61,7 @@ async function getApiUsageData(startDate: string, endDate: string) {
   for (const date of dates) {
     // Get all keys with the analytics:api prefix and filter in code
     // Note: KV keys() doesn't support wildcards in the middle, only prefix matching
-    const allApiKeys = await hubKV().keys('analytics:api')
+    const allApiKeys = await kv.keys('analytics:api')
 
     // Filter for v1 keys matching this date (not error keys, not hourly keys)
     const v1Keys = allApiKeys.filter(key => {
@@ -84,11 +84,11 @@ async function getApiUsageData(startDate: string, endDate: string) {
       const parts = key.split(':')
       const endpoint = parts[3] // analytics:api:v1:{endpoint}:{date}
 
-      const counterData = await hubKV().get<ApiCounter>(key)
+      const counterData = await kv.get<ApiCounter>(key)
       const count = counterData?.count || 0
 
       const errorKey = getAnalyticsKey(['api', 'v1', endpoint, date, 'errors'])
-      const errorData = await hubKV().get<ApiCounter>(errorKey)
+      const errorData = await kv.get<ApiCounter>(errorKey)
       const errors = errorData?.count || 0
 
       v1Total += count
@@ -105,7 +105,7 @@ async function getApiUsageData(startDate: string, endDate: string) {
       // Skip error keys (they end with :errors)
       if (key.endsWith(':errors')) continue
 
-      const counterData = await hubKV().get<ApiCounter>(key)
+      const counterData = await kv.get<ApiCounter>(key)
       const count = counterData?.count || 0
       v2Total += count
     }
@@ -130,7 +130,7 @@ async function getInteractiveData(startDate: string, endDate: string) {
 
   // Get all analytics keys and filter for sessions
   // (KV keys() only does prefix matching, so we need to filter in code)
-  const allKeys = await hubKV().keys('analytics')
+  const allKeys = await kv.keys('analytics')
   const allSessionKeys = allKeys.filter(k => k.startsWith('analytics:session:'))
 
   // Create date range timestamps for filtering
@@ -139,7 +139,7 @@ async function getInteractiveData(startDate: string, endDate: string) {
   const endTimestamp = new Date(endDate + 'T23:59:59.999Z').getTime()
 
   for (const key of allSessionKeys) {
-    const sessionData = await hubKV().get<SessionData>(key)
+    const sessionData = await kv.get<SessionData>(key)
 
     if (sessionData) {
       // Filter by endTime to match date range
@@ -176,7 +176,7 @@ async function getTimerData(startDate: string, endDate: string) {
   let completed = 0
 
   // Get all analytics keys once and filter for events
-  const allKeys = await hubKV().keys('analytics')
+  const allKeys = await kv.keys('analytics')
   const allEventKeys = allKeys.filter(k => k.startsWith('analytics:events:'))
 
   for (const date of dates) {
@@ -196,14 +196,14 @@ async function getTimerData(startDate: string, endDate: string) {
 
     // Count start events
     for (const key of startKeys) {
-      const counterData = await hubKV().get<ApiCounter>(key)
+      const counterData = await kv.get<ApiCounter>(key)
       const count = counterData?.count || 0
       started += count
     }
 
     // Count complete events
     for (const key of completeKeys) {
-      const counterData = await hubKV().get<ApiCounter>(key)
+      const counterData = await kv.get<ApiCounter>(key)
       const count = counterData?.count || 0
       completed += count
     }
@@ -225,7 +225,7 @@ async function getRatingData(startDate: string, endDate: string) {
   let submitted = 0
 
   // Get all analytics keys once and filter for events
-  const allKeys = await hubKV().keys('analytics')
+  const allKeys = await kv.keys('analytics')
   const allEventKeys = allKeys.filter(k => k.startsWith('analytics:events:'))
 
   for (const date of dates) {
@@ -244,14 +244,14 @@ async function getRatingData(startDate: string, endDate: string) {
 
     // Count screens shown
     for (const key of shownKeys) {
-      const counterData = await hubKV().get<ApiCounter>(key)
+      const counterData = await kv.get<ApiCounter>(key)
       const count = counterData?.count || 0
       screensShown += count
     }
 
     // Count submissions
     for (const key of submittedKeys) {
-      const counterData = await hubKV().get<ApiCounter>(key)
+      const counterData = await kv.get<ApiCounter>(key)
       const count = counterData?.count || 0
       submitted += count
     }

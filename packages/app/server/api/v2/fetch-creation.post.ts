@@ -34,6 +34,13 @@ interface WPCreationResponse {
   keywords?: string
   created?: string
   modified?: string
+  unit_conversions?: {
+    enabled: boolean
+    default_system: 'auto' | 'us_customary' | 'metric'
+    source_system: 'us_customary' | 'metric'
+    label: string
+    conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+  }
 }
 
 interface CachedCreation {
@@ -47,6 +54,11 @@ export default defineEventHandler(async (event) => {
   const logger = useLogger('FetchCreation', config.debug)
   const startTime = performance.now()
   const checkpoints: Record<string, number> = {}
+
+  // Set CORS headers
+  setHeader(event, 'Access-Control-Allow-Origin', '*')
+  setHeader(event, 'Access-Control-Allow-Methods', 'POST, OPTIONS')
+  setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control')
 
   // Set cache control headers - 30 days to match HubKV TTL
   setHeader(event, 'Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400')
@@ -64,7 +76,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // Initialize KV storage
-  const storage = hubKV()
+  const storage = kv
   const cacheKey = `creation:${site_url}:${creation_id}`
   const TTL = 30 * 24 * 60 * 60 // 30 days in seconds
 

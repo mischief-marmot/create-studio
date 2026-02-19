@@ -64,14 +64,20 @@ export const submitReview = async (
       ? { ...data, edited_by_user: 1 } // Update existing review
       : data // Create new review
 
-    // Make the API request
-    const response = await $fetch(endpoint, {
+    // Make the API request using fetch
+    const fetchResponse = await fetch(endpoint, {
       method: 'POST',
-      body: requestData,
+      body: JSON.stringify(requestData),
       headers: {
         'Content-Type': 'application/json',
       }
     })
+
+    if (!fetchResponse.ok) {
+      throw new Error(`HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`)
+    }
+
+    const response = await fetchResponse.json()
 
     // Save successful response to localStorage using MV state structure
     const reviewData = {

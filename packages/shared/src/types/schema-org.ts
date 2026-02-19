@@ -53,6 +53,13 @@ export type HowToTip = {
     text: string;
 };
 
+export type StepLink = {
+    text: string;
+    href: string;
+    target?: string;
+    rel?: string;
+};
+
 export type HowToStep = {
     '@type': 'HowToStep';
     name?: string;
@@ -74,6 +81,7 @@ export type HowToStep = {
         type: 'tip' | 'warning' | 'info';
         text: string;
     }[];
+    links?: StepLink[]; // Links extracted from step HTML
 };
 
 export type HowToSection = {
@@ -121,6 +129,12 @@ export type NutritionInformation = {
     [key: string]: any;
 };
 
+export type RecipeIngredient = {
+    original_text: string;
+    link?: string;
+    nofollow?: boolean;
+};
+
 export type HowTo = {
     '@context': 'https://schema.org';
     '@type': 'HowTo' | 'Recipe';
@@ -146,8 +160,17 @@ export type HowTo = {
     nutrition?: NutritionInformation;
     recipeCategory?: string;
     recipeCuisine?: string;
-    recipeIngredient?: string[]; // for recipes
+    recipeIngredient?: (string | RecipeIngredient)[]; // for recipes (flat list) - supports both strings and objects with links
+    recipeIngredientGroups?: Record<string, (string | RecipeIngredient)[]>; // for recipes (grouped by category) - supports both strings and objects with links
     recipeInstructions?: HowToStep[] | HowToSection[];
+    // Unit conversion data (from WordPress plugin)
+    unitConversions?: {
+        enabled: boolean;
+        default_system: 'auto' | 'us_customary' | 'metric';
+        source_system: 'us_customary' | 'metric';
+        label: string;
+        conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>;
+    };
     // Custom fields for interactive features
     difficulty?: 'easy' | 'medium' | 'hard';
     interactiveMode?: boolean;
