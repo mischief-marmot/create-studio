@@ -42,9 +42,11 @@ function isPrivateOrReservedHost(hostname: string, allowedDomains: string[] = []
     return false
   }
 
+  const isProduction = import.meta.prod ?? process.env.NODE_ENV === 'production'
+
   // Block localhost variants in production
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
-    return process.env.NODE_ENV === 'production'
+    return isProduction
   }
 
   // Block private IP ranges
@@ -55,7 +57,7 @@ function isPrivateOrReservedHost(hostname: string, allowedDomains: string[] = []
 
   // Block link-local and reserved in production
   if (hostname.endsWith('.local') || hostname.endsWith('.internal') || hostname.endsWith('.test')) {
-    return process.env.NODE_ENV === 'production'
+    return isProduction
   }
 
   return false
@@ -135,11 +137,11 @@ export function normalizeSiteUrl(input: string, options?: { allowedDomains?: str
  * @param url - The URL string to validate
  * @returns True if the URL is valid, false otherwise
  */
-export function isValidWordPressSiteUrl(url: string): boolean {
-  const normalized = normalizeSiteUrl(url)
+export function isValidWordPressSiteUrl(url: string, options?: { allowedDomains?: string[] }): boolean {
+  const normalized = normalizeSiteUrl(url, options)
   if (!normalized) return false
 
-  // Must have a valid TLD (or be localhost in dev)
+  // Must have a valid TLD (or be localhost/allowed test domain in dev)
   const parsed = new URL(normalized)
   const hostname = parsed.hostname
 

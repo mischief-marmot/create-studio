@@ -126,12 +126,12 @@ async function handleConnect() {
       }, 1000)
     } else {
       state.value = 'error'
-      errorMessage.value = response.message || 'Failed to connect your site. Please try again.'
+      errorMessage.value = response.error || response.message || 'Failed to connect your site. Please try again.'
     }
   } catch (error: any) {
     state.value = 'error'
     const data = error.data
-    errorMessage.value = data?.message || error.message || 'An error occurred. Please try again.'
+    errorMessage.value = data?.error || data?.message || error.message || 'An error occurred. Please try again.'
   }
 }
 

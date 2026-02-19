@@ -402,7 +402,9 @@ const finalDomain = computed(() => props.config?.domain || props.domain || '')
 const finalBaseUrl = computed(() => props.config?.baseUrl || props.baseUrl || '')
 const finalHideAttribution = computed(() => props.config?.hideAttribution ?? props.hideAttribution ?? false)
 const finalSiteUrl = computed(() => {
-    return finalDomain.value === 'localhost' ? 'http://localhost:8074' : `https://${finalDomain.value}`
+    if (finalDomain.value === 'localhost') return 'http://localhost:8074'
+    const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:'
+    return `${protocol}//${finalDomain.value}`
 })
 const finalCacheBust = computed(() => props.config?.cacheBust ?? props.cacheBust ?? false)
 const finalDisableRatingSubmission = computed(() => props.config?.disableRatingSubmission ?? props.disableRatingSubmission ?? false)

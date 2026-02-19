@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    if (!isValidWordPressSiteUrl(normalizedUrl)) {
+    if (!isValidWordPressSiteUrl(normalizedUrl, { allowedDomains })) {
       setResponseStatus(event, 400)
       return {
         success: false,
