@@ -6,7 +6,7 @@
  * Migrations are handled automatically by NuxtHub from server/db/migrations/
  */
 
-import { eq, and, or, isNull, isNotNull, sql, like } from 'drizzle-orm'
+import { eq, and, or, isNull, isNotNull, sql } from 'drizzle-orm'
 import type { SiteUser } from '../db/schema'
 
 // Re-export types from schema for convenience
@@ -261,7 +261,6 @@ export class SiteRepository {
           eq(schema.sites.url, url),
           eq(schema.sites.url, `https://${host}`),
           eq(schema.sites.url, `http://${host}`),
-          like(schema.sites.url, `%://${host}%`)
         ),
         isNull(schema.sites.canonical_site_id)
       ))
