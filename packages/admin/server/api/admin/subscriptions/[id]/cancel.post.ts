@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
-import { subscriptions } from "~~/server/utils/admin-db"
+import { useAdminDb, subscriptions } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
-import Stripe from 'stripe'
+import { getAdminStripeClient } from '~~/server/utils/stripe'
 
 /**
  * POST /api/admin/subscriptions/[id]/cancel
@@ -70,10 +70,7 @@ export default defineEventHandler(async (event) => {
 
     // PATH 1: Has Stripe subscription - cancel via Stripe API
     if (hasStripeSubscription) {
-      const config = useRuntimeConfig()
-      const stripe = new Stripe(config.stripeSecretKey, {
-        apiVersion: '2024-11-20.acacia',
-      })
+      const stripe = getAdminStripeClient()
 
       try {
         // Cancel at period end to allow access until current period expires

@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { feedbackReports } from '~~/server/utils/admin-db'
+import { useAdminDb, feedbackReports } from '~~/server/utils/admin-db'
 
 const VALID_STATUSES = ['new', 'acknowledged', 'resolved']
 

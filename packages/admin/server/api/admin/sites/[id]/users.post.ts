@@ -1,5 +1,5 @@
 import { eq, and } from 'drizzle-orm'
-import { sites, users, siteUsers } from "~~/server/utils/admin-db"
+import { useAdminDb, sites, users, siteUsers } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**

@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
-import { subscriptions } from '~~/server/utils/admin-db'
+import { useAdminDb, subscriptions } from '~~/server/utils/admin-db'
 import Stripe from 'stripe'
+import { getAdminStripeClient } from '~~/server/utils/stripe'
 
 /**
  * GET /api/admin/subscriptions/[id]/revenue
@@ -53,10 +54,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const config = useRuntimeConfig()
-    const stripe = new Stripe(config.stripeSecretKey, {
-      apiVersion: '2024-11-20.acacia',
-    })
+    const stripe = getAdminStripeClient()
 
     // Fetch subscription details (plan/price info)
     const stripeSubscription = await stripe.subscriptions.retrieve(

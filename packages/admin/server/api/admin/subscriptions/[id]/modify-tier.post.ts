@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
-import { subscriptions, sites } from "~~/server/utils/admin-db"
+import { useAdminDb, subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import { getAdminEnvironment } from '~~/server/utils/admin-env'
-import Stripe from 'stripe'
+import { getAdminStripeClient } from '~~/server/utils/stripe'
 
 /**
  * POST /api/admin/subscriptions/[id]/modify-tier
@@ -74,15 +74,16 @@ export default defineEventHandler(async (event) => {
     // PATH 1: Has Stripe subscription - need to handle via Stripe
     if (hasStripeSubscription && tier === 'free') {
       // Downgrading to free with a Stripe subscription - cancel it in Stripe
-      const stripe = new Stripe(config.stripeSecretKey, {
-        apiVersion: '2024-11-20.acacia',
-      })
+      const stripe = getAdminStripeClient()
 
       try {
         await stripe.subscriptions.cancel(currentSubscription.stripe_subscription_id!)
       } catch (stripeError: any) {
         console.error('Stripe cancellation error:', stripeError)
-        // Continue with database update even if Stripe fails
+        throw createError({
+          statusCode: 502,
+          message: 'Failed to cancel Stripe subscription. Database was not updated to avoid billing state mismatch.',
+        })
       }
     }
 

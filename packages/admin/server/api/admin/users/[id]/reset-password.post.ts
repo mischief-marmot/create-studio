@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { users } from "~~/server/utils/admin-db"
+import { useAdminDb, users } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import { randomBytes } from 'crypto'
 

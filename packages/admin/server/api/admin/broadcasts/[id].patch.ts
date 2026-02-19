@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { broadcasts } from '~~/server/utils/admin-db'
+import { useAdminDb, broadcasts } from '~~/server/utils/admin-db'
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 const VALID_TYPES = ['announcement', 'feature', 'promotion', 'beta', 'urgent', 'bug']

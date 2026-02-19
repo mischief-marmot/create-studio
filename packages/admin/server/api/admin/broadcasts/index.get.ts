@@ -1,5 +1,5 @@
 import { eq, like, or, desc, count, and } from 'drizzle-orm'
-import { broadcasts } from '~~/server/utils/admin-db'
+import { useAdminDb, broadcasts } from '~~/server/utils/admin-db'
 
 /**
  * GET /api/admin/broadcasts

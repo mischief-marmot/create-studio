@@ -1,5 +1,5 @@
 import { eq, desc, count, inArray } from 'drizzle-orm'
-import { users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
+import { useAdminDb, users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs } from "~~/server/utils/admin-ops-db"
 
 /**
@@ -49,24 +49,50 @@ export default defineEventHandler(async (event) => {
 
     const user = userResult[0]
 
-    // Get user's sites via siteUsers pivot table (finds ALL associated sites, not just owned)
-    const userSites = await db
-      .select({
-        id: sites.id,
-        name: sites.name,
-        url: sites.url,
-        createdAt: sites.createdAt,
-        verifiedAt: siteUsers.verified_at,
-        role: siteUsers.role,
-        create_version: sites.create_version,
-        wp_version: sites.wp_version,
-      })
-      .from(siteUsers)
-      .innerJoin(sites, eq(siteUsers.site_id, sites.id))
-      .where(eq(siteUsers.user_id, userId))
-      .orderBy(desc(sites.createdAt))
+    // Run independent queries in parallel: sites + audit log queries don't depend on each other
+    const adminOpsDb = useAdminOpsDb(event)
 
-    // Get subscription info for user's associated sites
+    const [userSites, auditLogCountResult, lastAuditAction] = await Promise.all([
+      // Get user's sites via siteUsers pivot table (finds ALL associated sites, not just owned)
+      db
+        .select({
+          id: sites.id,
+          name: sites.name,
+          url: sites.url,
+          createdAt: sites.createdAt,
+          verifiedAt: siteUsers.verified_at,
+          role: siteUsers.role,
+          create_version: sites.create_version,
+          wp_version: sites.wp_version,
+        })
+        .from(siteUsers)
+        .innerJoin(sites, eq(siteUsers.site_id, sites.id))
+        .where(eq(siteUsers.user_id, userId))
+        .orderBy(desc(sites.createdAt)),
+
+      // Get audit log count for this user (from admin ops DB)
+      adminOpsDb
+        .select({ count: count() })
+        .from(auditLogs)
+        .where(eq(auditLogs.entity_type, 'user'))
+        .where(eq(auditLogs.entity_id, userId)),
+
+      // Get last audit action
+      adminOpsDb
+        .select({
+          action: auditLogs.action,
+          createdAt: auditLogs.createdAt,
+        })
+        .from(auditLogs)
+        .where(eq(auditLogs.entity_type, 'user'))
+        .where(eq(auditLogs.entity_id, userId))
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(1),
+    ])
+
+    const totalAuditActions = auditLogCountResult[0]?.count || 0
+
+    // Get subscription info for user's associated sites (depends on sites query)
     const siteIds = userSites.map(s => s.id)
     let userSubscriptions: {
       id: number
@@ -92,27 +118,6 @@ export default defineEventHandler(async (event) => {
         .from(subscriptions)
         .where(inArray(subscriptions.site_id, siteIds))
     }
-
-    // Get audit log summary for this user (from admin ops DB)
-    const adminOpsDb = useAdminOpsDb(event)
-    const auditLogCountResult = await adminOpsDb
-      .select({ count: count() })
-      .from(auditLogs)
-      .where(eq(auditLogs.entity_type, 'user'))
-      .where(eq(auditLogs.entity_id, userId))
-    const totalAuditActions = auditLogCountResult[0]?.count || 0
-
-    // Get last audit action
-    const lastAuditAction = await adminOpsDb
-      .select({
-        action: auditLogs.action,
-        createdAt: auditLogs.createdAt,
-      })
-      .from(auditLogs)
-      .where(eq(auditLogs.entity_type, 'user'))
-      .where(eq(auditLogs.entity_id, userId))
-      .orderBy(desc(auditLogs.createdAt))
-      .limit(1)
 
     return {
       id: user.id,

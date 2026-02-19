@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { feedbackReports, sites } from '~~/server/utils/admin-db'
+import { useAdminDb, feedbackReports, sites } from '~~/server/utils/admin-db'
 
 /**
  * GET /api/admin/feedback/:id

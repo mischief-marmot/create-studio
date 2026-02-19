@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { sites } from "~~/server/utils/admin-db"
+import { useAdminDb, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**

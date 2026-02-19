@@ -1,5 +1,5 @@
 import { eq, like } from 'drizzle-orm'
-import { users } from "~~/server/utils/admin-db"
+import { useAdminDb, users } from "~~/server/utils/admin-db"
 
 /**
  * GET /api/admin/users/search
