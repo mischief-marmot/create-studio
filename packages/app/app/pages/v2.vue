@@ -789,6 +789,7 @@ import {
   BoltIcon,
   PlayIcon,
 } from '@heroicons/vue/20/solid'
+import { createCreationKey } from '@create-studio/shared'
 
 const config = useRuntimeConfig().public
 
@@ -849,17 +850,6 @@ const proPricing: Record<string, { price: string; note: string }> = {
 // Comparison state
 const expandedProduct = ref<'create' | 'wprm' | 'tasty' | null>(null)
 
-// Helper function to scale ingredient amounts
-const getScaledAmount = (baseAmount: string, unit: string) => {
-  const base = parseFloat(baseAmount)
-  const scaled = base * servingsMultiplier.value
-
-  // Format nicely - if it's a whole number, show without decimals
-  const formatted = scaled % 1 === 0 ? scaled.toString() : scaled.toFixed(2)
-
-  return `${formatted} ${unit}`
-}
-
 // Metric conversion map from imperial units
 const metricConversions: Record<string, { factor: number; unit: string }> = {
   lbs: { factor: 453.592, unit: 'g' },
@@ -882,15 +872,11 @@ const getConvertedUnit = (baseAmount: number, imperialUnit: string) => {
   return `${formatted} ${imperialUnit}`
 }
 
-// Demo recipe URL - hardcoded for now until createCreationKey is available
-const demoRecipeUrl = computed(() => {
-  const demoRecipes = [44, 59, 55]
-  const randomRecipeId = demoRecipes[Math.floor(Math.random() * demoRecipes.length)]
-  // Using a base64-encoded format similar to createCreationKey
-  const keyString = `thesweetestoccasion.com:${randomRecipeId}`
-  const creationKey = btoa(keyString)
-  return `${config.rootUrl}/creations/${creationKey}/interactive`
-})
+// Demo recipe URL
+const demoRecipes = [44, 59, 55]
+const randomRecipeId = demoRecipes[Math.floor(Math.random() * demoRecipes.length)]
+const creationKey = createCreationKey('thesweetestoccasion.com', randomRecipeId)
+const demoRecipeUrl = `${config.rootUrl}/creations/${creationKey}/interactive`
 
 // Navigation links
 const navLinks = {
@@ -921,7 +907,7 @@ const comparisonFeatures = [
 
 // Page meta
 definePageMeta({
-  name: 'home'
+  name: 'v2-home'
 })
 </script>
 
