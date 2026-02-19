@@ -188,8 +188,8 @@ function parseInstructions(instructionsHtml: string): {
       // Extract links BEFORE removing HTML tags
       const links = extractLinksFromHtml(textWithoutShortcode)
 
-      // Now remove HTML tags from the text that has shortcode already removed
-      const cleanText = textWithoutShortcode.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+      // Now remove HTML tags and decode HTML entities from the text
+      const cleanText = decodeHtmlEntities(textWithoutShortcode.replace(/<[^>]*>/g, ' ')).replace(/\s+/g, ' ').trim()
 
       const step: HowToStep = {
         '@type': 'HowToStep',
@@ -229,7 +229,7 @@ function parseInstructions(instructionsHtml: string): {
 
       const step: HowToStep = {
         '@type': 'HowToStep',
-        text: text.trim(),
+        text: decodeHtmlEntities(text).trim(),
         position: index + 1
       }
 
@@ -426,17 +426,21 @@ function parseIngredientsWithGroups(creation: WPCreationResponse): Record<string
   return groups
 }
 
-function cleanHtml(html: string): string {
-  // Remove HTML tags but preserve text
-  return html
-    .replace(/<[^>]*>/g, '')
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .trim()
+    .replace(/&apos;/g, "'")
+}
+
+function cleanHtml(html: string): string {
+  // Remove HTML tags but preserve text
+  return decodeHtmlEntities(html.replace(/<[^>]*>/g, '')).trim()
 }
 
 function mapDifficulty(difficulty?: string): 'easy' | 'medium' | 'hard' {
