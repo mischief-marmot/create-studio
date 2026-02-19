@@ -38,7 +38,7 @@
 					</li>
 				</ul>
 			</div>
-			<div class="navbar-end gap-2">
+			<div class="navbar-end gap-2" :class="{ 'invisible': isHomePage }">
 				<template v-if="loggedIn">
 					<NuxtLink to="/admin" class="btn btn-primary rounded-full" :class="[
 						scrollPosition > 64 ? 'btn-md bg-base-100 text-base-content ring-1 ring-base-content hover:bg-base-200 border-none shadow-none' : 'btn-sm'
@@ -79,7 +79,7 @@
 						<NuxtLink class="link link-hover" href="/about">About</NuxtLink>
 						<NuxtLink class="link link-hover" href="/news">News</NuxtLink>
 					</nav>
-					<nav>
+					<nav v-if="!isHomePage">
 						<h6 class="footer-title">Account</h6>
 						<template v-if="loggedIn">
 							<NuxtLink class="link link-hover" to="/admin">Dashboard</NuxtLink>
@@ -165,6 +165,8 @@ const attrs = useAttrs()
 const navLinks = computed(() => attrs.navLinks as NavLinksMap | undefined)
 
 const { loggedIn } = useAuth()
+const route = useRoute()
+const isHomePage = computed(() => route.path === '/')
 
 const scrollPosition = ref(0)
 const scrollToTop = () => {
