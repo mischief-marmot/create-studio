@@ -199,8 +199,6 @@ export default defineNuxtConfig({
     servicesApiJwtSecret: "",
     postmarkKey: "",
     sendingAddress: "hello@create.studio",
-    nixId: "",
-    nixKey: "",
     session: {
       password: "",
       cookie: {
