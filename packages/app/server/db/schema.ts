@@ -142,6 +142,7 @@ export const feedbackReports = sqliteTable('FeedbackReports', {
   browser_info: text('browser_info', { mode: 'json' }).$type<{ userAgent: string; platform: string; language: string }>(),
   current_url: text('current_url'),
   user_message: text('user_message'),
+  user_email: text('user_email'),
   screenshot_base64: text('screenshot_base64'),
   status: text('status').notNull().default('new'), // new, acknowledged, resolved
   admin_notes: text('admin_notes'),

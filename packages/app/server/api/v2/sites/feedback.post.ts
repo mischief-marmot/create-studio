@@ -58,6 +58,7 @@ export default defineEventHandler(async (event) => {
       browser_info: body.browser_info || null,
       current_url: body.current_url || null,
       user_message: body.user_message || null,
+      user_email: body.user_email || null,
       screenshot_base64: body.screenshot_base64 || null,
       status: 'new',
       createdAt: now,
