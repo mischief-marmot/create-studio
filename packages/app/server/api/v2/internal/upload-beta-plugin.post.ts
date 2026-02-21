@@ -24,9 +24,11 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const logger = useLogger('BetaPluginUpload', config.debug)
 
-  // Authenticate with API key
+  // Authenticate with API key (accepts either dedicated beta key or admin API key)
   const apiKey = getHeader(event, 'X-Beta-Upload-Key')
-  if (!apiKey || !config.betaUploadApiKey || apiKey !== config.betaUploadApiKey) {
+  const isValidBetaKey = apiKey && config.betaUploadApiKey && apiKey === config.betaUploadApiKey
+  const isValidAdminKey = apiKey && config.adminApiKey && apiKey === config.adminApiKey
+  if (!isValidBetaKey && !isValidAdminKey) {
     throw createError({
       statusCode: 401,
       statusMessage: 'Unauthorized',
@@ -84,9 +86,11 @@ export default defineEventHandler(async (event) => {
     const version = getHeader(event, 'X-Beta-Version') || 'unknown'
 
     // Upload to blob storage, overwriting any existing beta
+    // Convert Buffer to Uint8Array for NuxtHub blob compatibility
+    const fileData = new Uint8Array(filePart.data)
     const uploadResult = await blob.put(
       BETA_BLOB_KEY,
-      filePart.data,
+      fileData,
       {
         addRandomSuffix: false,
         contentType: 'application/zip',

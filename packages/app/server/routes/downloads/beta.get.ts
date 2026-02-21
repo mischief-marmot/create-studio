@@ -5,11 +5,6 @@ import { useLogger } from '@create-studio/shared/utils/logger'
  *
  * Serves the beta version of the Create plugin from blob storage.
  * The beta zip is stored as 'create-plugin-beta.zip' in blob storage.
- *
- * Security:
- * - Public endpoint (no auth required)
- * - Only serves a single known file
- * - CORS enabled for cross-origin access
  */
 
 const BETA_BLOB_KEY = 'create-plugin-beta.zip'
@@ -31,18 +26,19 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const headers: Record<string, string> = {
+    // Read the full blob into an ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer()
+
+    setResponseHeaders(event, {
       'Content-Type': 'application/zip',
-      'Cache-Control': config.debug ? 'public, max-age=0' : 'public, max-age=86400',
+      'Content-Length': String(arrayBuffer.byteLength),
       'Content-Disposition': `attachment; filename="${BETA_BLOB_KEY}"`,
+      'Cache-Control': config.debug ? 'public, max-age=0' : 'public, max-age=86400',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    }
+    })
 
-    setResponseHeaders(event, headers)
-
-    return file.stream()
+    return send(event, Buffer.from(arrayBuffer), 'application/zip')
   } catch (error) {
     if (error && typeof error === 'object' && 'statusCode' in error) {
       throw error

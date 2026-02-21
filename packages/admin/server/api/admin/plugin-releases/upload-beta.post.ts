@@ -5,7 +5,7 @@ import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/a
  * POST /api/admin/plugin-releases/upload-beta
  *
  * Proxies a beta plugin upload from the admin UI to the main app.
- * Accepts multipart form data with a .zip file and optional version.
+ * Forwards the raw multipart body directly to avoid re-encoding issues.
  */
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -29,48 +29,32 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    // Read the multipart form data from the admin request
-    const formData = await readMultipartFormData(event)
+    // Read the raw body and forward it as-is to preserve multipart encoding
+    const rawBody = await readRawBody(event, false)
 
-    if (!formData || formData.length === 0) {
+    if (!rawBody) {
       throw createError({
         statusCode: 400,
         message: 'No file provided',
       })
     }
 
-    const filePart = formData.find(part => part.name === 'file')
-    const versionPart = formData.find(part => part.name === 'version')
-
-    if (!filePart || !filePart.data) {
+    // Get the original Content-Type (includes the boundary)
+    const contentType = getHeader(event, 'content-type')
+    if (!contentType?.includes('multipart/form-data')) {
       throw createError({
         statusCode: 400,
-        message: 'No file provided. Upload a .zip file.',
+        message: 'Expected multipart/form-data',
       })
     }
 
-    // Build the multipart body to forward to the main app
-    const boundary = '----BetaUploadBoundary' + Date.now()
-    const version = versionPart?.data?.toString() || ''
+    // Get optional version from the form data (sent as a separate field)
+    // We'll also peek at it from the X-Beta-Version header the frontend could set
+    const version = getHeader(event, 'X-Beta-Version') || ''
 
-    // Construct multipart form data manually for the proxy request
-    const parts: Buffer[] = []
-
-    // File part
-    parts.push(Buffer.from(`--${boundary}\r\n`))
-    parts.push(Buffer.from(`Content-Disposition: form-data; name="file"; filename="${filePart.filename || 'plugin.zip'}"\r\n`))
-    parts.push(Buffer.from(`Content-Type: ${filePart.type || 'application/zip'}\r\n\r\n`))
-    parts.push(filePart.data)
-    parts.push(Buffer.from('\r\n'))
-
-    // End boundary
-    parts.push(Buffer.from(`--${boundary}--\r\n`))
-
-    const body = Buffer.concat(parts)
-
-    // Forward to main app
+    // Forward headers
     const headers: Record<string, string> = {
-      'Content-Type': `multipart/form-data; boundary=${boundary}`,
+      'Content-Type': contentType,
       'X-Beta-Upload-Key': config.mainAppApiKey || '',
     }
 
@@ -81,7 +65,7 @@ export default defineEventHandler(async (event) => {
     const response = await fetch(`${mainAppUrl}/api/v2/internal/upload-beta-plugin`, {
       method: 'POST',
       headers,
-      body,
+      body: rawBody,
     })
 
     if (!response.ok) {
@@ -93,7 +77,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    const result = await response.json()
+    const result = await response.json() as { success: boolean; version?: string; size?: number }
 
     // Audit log the upload
     try {
@@ -104,9 +88,8 @@ export default defineEventHandler(async (event) => {
         entity_type: 'plugin_release',
         environment: getAuditEnvironment(event),
         changes: JSON.stringify({
-          version: version || 'unknown',
-          filename: filePart.filename,
-          size: filePart.data.length,
+          version: result.version || version || 'unknown',
+          size: result.size,
         }),
         ip_address: getRequestIP(event) || null,
         user_agent: getHeader(event, 'user-agent') || null,

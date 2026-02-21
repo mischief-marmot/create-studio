@@ -90,6 +90,7 @@ export default defineNuxtConfig({
     },
     public: {
       productName: "Create Studio Admin",
+      mainAppUrl: "https://create.studio",
     },
   },
 });

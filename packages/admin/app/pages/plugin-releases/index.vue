@@ -63,6 +63,11 @@
             <span class="text-xs text-base-content/50 uppercase tracking-wider">Download URL</span>
             <div class="flex items-center gap-2 mt-1">
               <code class="text-sm bg-base-200 px-3 py-1.5 rounded-lg font-mono flex-1 truncate">{{ downloadUrl }}</code>
+              <a :href="downloadUrl" download class="btn btn-ghost btn-sm" title="Download">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                </svg>
+              </a>
               <button class="btn btn-ghost btn-sm" @click="copyDownloadUrl" :title="copied ? 'Copied!' : 'Copy URL'">
                 <svg v-if="!copied" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -235,13 +240,9 @@ const uploadSuccess = ref<string | null>(null)
 const copied = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 
-// Computed
-const mainAppUrl = computed(() => {
-  // In production this would come from config, show placeholder for the curl example
-  return window.location.hostname === 'localhost'
-    ? 'http://localhost:3001'
-    : 'https://create.studio'
-})
+// Config
+const runtimeConfig = useRuntimeConfig()
+const mainAppUrl = computed(() => runtimeConfig.public.mainAppUrl)
 
 const downloadUrl = computed(() => {
   if (!betaInfo.value?.exists) return ''
@@ -318,13 +319,16 @@ const uploadBeta = async () => {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
+
+    const headers: Record<string, string> = {}
     if (version.value) {
-      formData.append('version', version.value)
+      headers['X-Beta-Version'] = version.value
     }
 
     const result = await $fetch<{ success: boolean; message: string; version?: string; size?: number }>('/api/admin/plugin-releases/upload-beta', {
       method: 'POST',
       body: formData,
+      headers,
     })
 
     if (result.success) {
