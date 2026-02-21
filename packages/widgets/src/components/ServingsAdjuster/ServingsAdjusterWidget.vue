@@ -1,7 +1,7 @@
 <template>
   <div class="cs-servings-adjuster">
+    <span v-if="showLabel" class="cs-servings-adjuster-label">{{ labelText }}</span>
     <div class="cs-servings-adjuster-inner">
-      <span class="cs-servings-adjuster-label">{{ labelText }}</span>
       <div class="cs-servings-adjuster-buttons" role="group" :aria-label="labelText">
         <span
           v-for="multiplier in availableMultipliers"
@@ -35,6 +35,7 @@ interface Props {
     siteUrl?: string
     theme?: Record<string, string>
     label?: string
+    showLabel?: boolean
   }
   storage?: any
 }
@@ -65,6 +66,8 @@ const creationKey = computed(() => {
 const labelText = computed(() => {
   return props.config.label || 'Adjust Servings'
 })
+
+const showLabel = computed(() => props.config.showLabel !== false)
 
 /**
  * Read unit conversion config from the card element.

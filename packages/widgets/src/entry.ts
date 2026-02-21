@@ -393,6 +393,141 @@ const CreateStudio = {
     return apps
   },
 
+  async mountWidgetToolbar(selector: string = 'section[id^="mv-creation-"]') {
+    if (!sdkInstance) {
+      throw new Error('Create Studio not initialized. Call CreateStudio.init() first.')
+    }
+
+    const siteConfig = await sdkInstance.getSiteConfig()
+    const sections = document.querySelectorAll(selector)
+    const apps: any[] = []
+
+    for (const section of sections) {
+      const idMatch = section.id.match(/^mv-creation-(\d+)$/)
+      const creationId = idMatch ? idMatch[1] : section.id
+      if (!creationId) continue
+
+      // Parse consolidated config
+      let csConfig: any = null
+      const csConfigAttr = section.getAttribute('data-cs-config')
+      if (csConfigAttr) {
+        try { csConfig = JSON.parse(csConfigAttr) } catch { /* ignore */ }
+      }
+
+      // Determine what's enabled
+      let servingsEnabled = false
+      let servingsLabel: string | undefined
+      let defaultMultiplier = 1
+
+      if (csConfig?.servingsAdjustment?.enabled) {
+        servingsEnabled = siteConfig?.features?.servingsAdjustment !== false
+        servingsLabel = csConfig.servingsAdjustment.label
+        defaultMultiplier = csConfig.servingsAdjustment.defaultMultiplier || 1
+      } else {
+        // Legacy fallback
+        const legacyServings = section.getAttribute('data-servings-adjustment')
+        if (legacyServings) {
+          servingsEnabled = siteConfig?.features?.servingsAdjustment !== false
+          defaultMultiplier = parseInt(legacyServings) || 1
+          servingsLabel = section.getAttribute('data-servings-label') || undefined
+        }
+      }
+
+      let unitConversionConfig: any = null
+      let unitConversionEnabled = false
+
+      if (csConfig?.unitConversion?.enabled) {
+        unitConversionEnabled = siteConfig?.features?.unitConversion !== false
+        unitConversionConfig = csConfig.unitConversion
+      } else {
+        // Legacy fallback
+        const legacyUC = section.getAttribute('data-unit-conversions')
+        if (legacyUC) {
+          try {
+            const parsed = JSON.parse(legacyUC)
+            if (parsed?.enabled) {
+              unitConversionEnabled = siteConfig?.features?.unitConversion !== false
+              unitConversionConfig = parsed
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
+      // Skip if nothing is enabled
+      if (!servingsEnabled && !unitConversionEnabled) continue
+
+      // Check for duplicates
+      if (section.querySelector('.cs-widget-toolbar') || section.querySelector('.cs-servings-adjuster') || section.querySelector('.cs-unit-conversion')) continue
+
+      const widgetLayout = csConfig?.widgetLayout || 'toolbar'
+      const showLabels = csConfig?.showLabels !== false
+      const ingredientsSection = section.querySelector('.mv-create-ingredients')
+      if (!ingredientsSection) continue
+
+      const baseTheme = section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {}
+      const siteUrl = sdkInstance.getSiteUrl()
+
+      if (widgetLayout === 'inline') {
+        // Mount inside the ingredients header
+        let headerWrapper = ingredientsSection.querySelector('.mv-create-ingredients-header')
+        const ingredientsTitle = ingredientsSection.querySelector('.mv-create-ingredients-title')
+
+        if (!headerWrapper && ingredientsTitle) {
+          headerWrapper = document.createElement('div')
+          headerWrapper.className = 'mv-create-ingredients-header'
+          ingredientsTitle.parentNode?.insertBefore(headerWrapper, ingredientsTitle)
+          headerWrapper.appendChild(ingredientsTitle)
+        }
+        if (!headerWrapper) continue
+
+        const toolbar = document.createElement('div')
+        toolbar.className = 'cs-widget-toolbar cs-widget-toolbar--inline'
+        headerWrapper.appendChild(toolbar)
+
+        if (servingsEnabled) {
+          const mount = document.createElement('div')
+          mount.className = 'create-studio-widget cs-servings-adjuster-container'
+          toolbar.appendChild(mount)
+          const app = await sdkInstance.mount({ type: 'servings-adjuster', selector: mount, config: { creationId, defaultMultiplier, siteUrl, theme: baseTheme, label: servingsLabel, showLabel: showLabels } })
+          if (app) apps.push(app)
+        }
+
+        if (unitConversionEnabled) {
+          const mount = document.createElement('div')
+          mount.className = 'cs-unit-conversion-wrapper'
+          toolbar.appendChild(mount)
+          const ucConfig = { ...unitConversionConfig, showLabel: showLabels }
+          const app = await sdkInstance.mount({ type: 'unit-conversion', selector: mount, config: { creationId, siteUrl, theme: baseTheme, unitConversion: ucConfig } })
+          if (app) apps.push(app)
+        }
+      } else {
+        // toolbar or centered — mount before ingredients
+        const toolbar = document.createElement('div')
+        toolbar.className = `cs-widget-toolbar cs-widget-toolbar--${widgetLayout}`
+        ingredientsSection.parentElement?.insertBefore(toolbar, ingredientsSection)
+
+        if (servingsEnabled) {
+          const mount = document.createElement('div')
+          mount.className = 'create-studio-widget cs-servings-adjuster-container'
+          toolbar.appendChild(mount)
+          const app = await sdkInstance.mount({ type: 'servings-adjuster', selector: mount, config: { creationId, defaultMultiplier, siteUrl, theme: baseTheme, label: servingsLabel, showLabel: showLabels } })
+          if (app) apps.push(app)
+        }
+
+        if (unitConversionEnabled) {
+          const mount = document.createElement('div')
+          mount.className = 'cs-unit-conversion-wrapper'
+          toolbar.appendChild(mount)
+          const ucConfig = { ...unitConversionConfig, showLabel: showLabels }
+          const app = await sdkInstance.mount({ type: 'unit-conversion', selector: mount, config: { creationId, siteUrl, theme: baseTheme, unitConversion: ucConfig } })
+          if (app) apps.push(app)
+        }
+      }
+    }
+
+    return apps
+  },
+
   getPreferences() {
     return sdkInstance?.getPreferences() || {}
   },
@@ -521,10 +656,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(() => {
           // Auto-mount interactive mode widgets on mv-creation elements
           window.CreateStudio.mountInteractiveMode()
-          // Auto-mount servings adjuster widgets
-          window.CreateStudio.mountServingsAdjuster()
-          // Auto-mount unit conversion widgets
-          window.CreateStudio.mountUnitConversion()
+          // Auto-mount widget toolbar (combines servings adjuster + unit conversion)
+          window.CreateStudio.mountWidgetToolbar()
         })
     }
   }

@@ -1,23 +1,26 @@
 <template>
   <div class="cs-unit-conversion" role="group" :aria-label="labelText">
-    <button
-      type="button"
-      class="cs-unit-conversion-btn"
-      :class="{ active: activeSystem === US_CUSTOMARY }"
-      :aria-pressed="activeSystem === US_CUSTOMARY"
-      @click="setSystem(US_CUSTOMARY)"
-    >
-      US
-    </button>
-    <button
-      type="button"
-      class="cs-unit-conversion-btn"
-      :class="{ active: activeSystem === METRIC }"
-      :aria-pressed="activeSystem === METRIC"
-      @click="setSystem(METRIC)"
-    >
-      Metric
-    </button>
+    <span v-if="showLabel" class="cs-unit-conversion-label">{{ labelText }}</span>
+    <div class="cs-unit-conversion-buttons">
+      <button
+        type="button"
+        class="cs-unit-conversion-btn"
+        :class="{ active: activeSystem === US_CUSTOMARY }"
+        :aria-pressed="activeSystem === US_CUSTOMARY"
+        @click="setSystem(US_CUSTOMARY)"
+      >
+        US
+      </button>
+      <button
+        type="button"
+        class="cs-unit-conversion-btn"
+        :class="{ active: activeSystem === METRIC }"
+        :aria-pressed="activeSystem === METRIC"
+        @click="setSystem(METRIC)"
+      >
+        Metric
+      </button>
+    </div>
   </div>
 </template>
 
@@ -69,6 +72,8 @@ const creationKey = computed(() => {
 const labelText = computed(() => {
   return props.config.unitConversion?.label || 'Unit Conversion'
 })
+
+const showLabel = computed(() => props.config.unitConversion?.showLabel !== false)
 
 onMounted(() => {
   initializeWidget()
