@@ -13,7 +13,7 @@
             </div>
         </div>
         <!-- ad slot -->
-        <div :class="['flex-shrink-0 bg-base-300 text-base-content h-[54px] w-full p-2 md:hidden', hasAdhesionWrapper ? 'hidden' : '']">
+        <div v-if="loadAds" :class="['flex-shrink-0 bg-base-300 text-base-content h-[54px] w-full p-2 md:hidden', hasAdhesionWrapper ? 'hidden' : '']">
             <div class="mv_slot_target" data-slot="recipe" data-hint-slot-sizes="320x50"></div>
         </div>
     </div>
@@ -23,20 +23,24 @@
 import { parseCreationKey } from '@create-studio/shared';
 import { onMounted, ref } from 'vue';
 
+const { loadAds } = useRuntimeConfig().public;
+
 // Track if adhesion mobile wrapper exists
 const hasAdhesionWrapper = ref(false);
 
-useScript({
-    src: 'https://scripts.mediavine.com/tags/create-studio-1.js',
-    async: true,
-    fetchpriority: 'high',
-    crossorigin: 'anonymous',
-    'data-noptimize': '1',
-    'data-cfasync': 'false'
-},
-{
-    trigger: 'onNuxtReady'
-});
+if (loadAds) {
+    useScript({
+        src: 'https://scripts.mediavine.com/tags/create-studio-1.js',
+        async: true,
+        fetchpriority: 'high',
+        crossorigin: 'anonymous',
+        'data-noptimize': '1',
+        'data-cfasync': 'false'
+    },
+    {
+        trigger: 'onNuxtReady'
+    });
+}
 
 // Load widget CSS
 useHead({
@@ -98,17 +102,19 @@ onMounted(async () => {
         }, '*');
     }
 
-    // Check if adhesion mobile wrapper exists
-    const checkAdhesionWrapper = () => {
-        hasAdhesionWrapper.value = !!document.getElementById('adhesion_mobile_wrapper');
-    };
+    // Check if adhesion mobile wrapper exists (only relevant when ads are enabled)
+    if (loadAds) {
+        const checkAdhesionWrapper = () => {
+            hasAdhesionWrapper.value = !!document.getElementById('adhesion_mobile_wrapper');
+        };
 
-    // Check immediately
-    checkAdhesionWrapper();
+        // Check immediately
+        checkAdhesionWrapper();
 
-    // Also check after a delay in case ads load asynchronously
-    setTimeout(checkAdhesionWrapper, 1000);
-    setTimeout(checkAdhesionWrapper, 3000);
+        // Also check after a delay in case ads load asynchronously
+        setTimeout(checkAdhesionWrapper, 1000);
+        setTimeout(checkAdhesionWrapper, 3000);
+    }
 
     // Wait for CreateStudio SDK to be available
     const waitForSDK = () => {
