@@ -272,7 +272,7 @@
                 </button>
                 <button
                   v-else-if="getSiteTier(site.id) !== 'pro'"
-                  @click.stop="selectSite(site.id); openModal()"
+                  @click.stop="selectSite(site.id); navigateTo('/admin/upgrade')"
                   class="btn btn-primary"
                 >
                   <SparklesIcon class="w-4 h-4" />
@@ -327,7 +327,6 @@ import {
 } from '@heroicons/vue/24/outline'
 import { useSiteContext } from '~/composables/useSiteContext'
 import { useAuthFetch } from '~/composables/useAuthFetch'
-import { useUpgradeModal } from '~/composables/useUpgradeModal'
 import { useAuth } from '~/composables/useAuth'
 import { useAddSiteModal } from '~/composables/useAddSiteModal'
 import { useVerifySiteModal } from '~/composables/useVerifySiteModal'
@@ -339,7 +338,6 @@ definePageMeta({
 })
 
 const { selectedSiteId, selectedSite, sites, loadSites, selectSite } = useSiteContext()
-const { openModal } = useUpgradeModal()
 const { user } = useAuth()
 const { showAddSiteModal, initialSiteUrl, initialVerificationCode, closeAddSiteModal, openAddSiteModal } = useAddSiteModal()
 const {

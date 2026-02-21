@@ -172,9 +172,9 @@
         <Banner
           v-if="tier === 'free' && !router.currentRoute.value.path.includes('settings') && !bannerDismissed"
           smallText="Upgrade to Pro"
-          fullText="Unlock full control over your ad network in Interactive Mode"
+          fullText="Unlock Interactive Mode, premium themes, and more"
           buttonText="Learn more"
-          :buttonAction="openModal"
+          :buttonAction="() => router.push('/admin/upgrade')"
           :dismissAction="dismissBanner"
           kind="primary"
         />
@@ -328,8 +328,6 @@
       </Transition>
     </Teleport>
 
-    <!-- Subscription Upgrade Modal -->
-    <SubscriptionUpgradeModal v-model="showUpgradeModal" />
   </div>
 </template>
 
@@ -349,7 +347,6 @@ import { Bars3Icon } from '@heroicons/vue/20/solid'
 import { useAuth } from '~/composables/useAuth.js'
 import { useSiteContext } from '~/composables/useSiteContext.js'
 import { useAvatar } from '~/composables/useAvatar.js'
-import { useUpgradeModal } from '~/composables/useUpgradeModal.js'
 import { useAddSiteModal } from '~/composables/useAddSiteModal.js'
 import { useVerifySiteModal } from '~/composables/useVerifySiteModal.js'
 import { useSiteAlreadyVerifiedModal } from '~/composables/useSiteAlreadyVerifiedModal.js'
@@ -358,7 +355,6 @@ const router = useRouter()
 const route = useRoute()
 const { logout, user } = useAuth()
 const { selectedSiteId, sites: sitesList, loadSites, selectSite } = useSiteContext()
-const { showUpgradeModal, openModal } = useUpgradeModal()
 const { openAddSiteModal } = useAddSiteModal()
 const { openVerifySiteModal } = useVerifySiteModal()
 const { openSiteAlreadyVerifiedModal } = useSiteAlreadyVerifiedModal()
@@ -467,9 +463,9 @@ onMounted(async () => {
     }
   }
 
-  // Check for upgrade query parameter to auto-open upgrade modal
+  // Check for upgrade query parameter to redirect to upgrade page
   if (upgradeParam === 'true' || upgradeParam === '1') {
-    openModal()
+    router.push('/admin/upgrade')
   }
 
   if (typeof window !== 'undefined') {

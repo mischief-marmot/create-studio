@@ -801,9 +801,9 @@ const { loggedIn } = useAuth()
 const { sites, loadSites } = useSiteContext()
 
 const handleUpgrade = async () => {
-  // Not logged in → register first
+  // Not logged in → register first, then redirect to upgrade page
   if (!loggedIn.value) {
-    return navigateTo('/auth/register')
+    return navigateTo('/auth/register?redirect=/admin/upgrade')
   }
 
   // Logged in — check if they have a site
@@ -812,12 +812,12 @@ const handleUpgrade = async () => {
   }
 
   if (sites.value.length === 0) {
-    // No site linked → go to dashboard to add one
-    return navigateTo('/admin')
+    // No site linked → go to dashboard to add one, then guide to upgrade
+    return navigateTo('/admin?redirect=/admin/upgrade')
   }
 
-  // Has a site → go to settings, upgrade query param auto-opens the modal
-  return navigateTo('/admin/settings?upgrade=true#subscription')
+  // Has a site → go directly to the upgrade page
+  return navigateTo('/admin/upgrade')
 }
 
 // Rotating words for hero title
