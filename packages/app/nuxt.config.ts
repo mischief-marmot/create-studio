@@ -210,6 +210,7 @@ export default defineNuxtConfig({
     stripeWebhookSecret: "",
     webhookPrivateKey: "",
     adminApiKey: "",
+    betaUploadApiKey: "",
     // Comma-separated list of domain patterns allowed for testing (e.g., ".local,.test")
     // These bypass the production block on internal/reserved domains
     allowedTestDomains: "fastfoodforfamilies.local,localhost,localhost:8074,localhost:8174,localhost:8274",
