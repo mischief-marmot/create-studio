@@ -90,9 +90,9 @@
                           <p class="text-base-content/60 mb-4 text-sm">
                             Pro subscribers can disable Interactive Mode or customize the button text.
                           </p>
-                          <button type="button" @click="showUpgradeModal = true" class="btn btn-primary btn-sm">
+                          <NuxtLink to="/admin/upgrade" class="btn btn-primary btn-sm">
                             Upgrade to Pro
-                          </button>
+                          </NuxtLink>
                         </div>
                       </div>
                     </div>
@@ -350,9 +350,9 @@
                     </button>
                   </template>
                   <template v-else>
-                    <button @click="showUpgradeModal = true" class="btn btn-primary btn-sm">
+                    <NuxtLink to="/admin/upgrade" class="btn btn-primary btn-sm">
                       Upgrade to Pro
-                    </button>
+                    </NuxtLink>
                   </template>
                 </div>
               </div>
@@ -451,8 +451,6 @@
       </form>
     </dialog>
 
-    <!-- Upgrade Modal -->
-    <SubscriptionUpgradeModal v-model="showUpgradeModal" />
   </div>
 </template>
 
@@ -527,7 +525,7 @@ const subscriptionLoading = ref(true)
 const savingGeneral = ref(false)
 const managingBilling = ref(false)
 const showDeleteConfirm = ref(false)
-const showUpgradeModal = ref(false)
+
 
 const generalError = ref('')
 const generalSuccess = ref(false)
