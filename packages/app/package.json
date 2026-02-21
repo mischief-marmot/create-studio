@@ -39,6 +39,7 @@
     "@unhead/vue": "^2.0.14",
     "@vue-email/components": "^0.0.21",
     "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.6.2",
     "cheerio": "^1.1.2",
     "crypto-js": "^4.2.0",
     "drizzle-kit": "^0.31.8",
