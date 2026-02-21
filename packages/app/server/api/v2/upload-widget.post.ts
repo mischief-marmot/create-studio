@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
     const contentType = body.filename.endsWith('.js') ? 'application/javascript' : 'text/css';
 
     // Upload file to blob storage with the exact filename
-    const uploadResult = await hubBlob().put(
+    const uploadResult = await blob.put(
       body.filename,
       body.content,
       {

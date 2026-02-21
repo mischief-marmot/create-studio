@@ -1,0 +1,110 @@
+/* Interactive Mode Component Styles - Base */
+.cs-interactive-mode-modal button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Default styles (when NOT inside .mv-create-card) */
+.cs-interactive-mode-btn {
+  @apply cs:inline-flex cs:items-center cs:justify-center cs:px-4 cs:py-2 cs:text-sm cs:font-medium cs:rounded-md cs:border-none cs:cursor-pointer cs:transition-all cs:duration-200;
+  background-color: var(--button-background-color , var(--mv-create-base, var(--color-primary)));
+  color: var(--button-color, var(--mv-create-text, var(--color-primary-content)));
+  transition: transform .2s ease-in-out;
+}
+.cs-interactive-mode-btn:hover {
+  transform: scale(1.01);
+  @apply cs:shadow-sm;
+}
+
+.cs-interactive-nav-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 var(--cs-spacing-2) !important;
+  cursor: pointer !important;
+  color: var(--color-base-content) !important;
+  background-color: transparent !important;
+}
+
+.cs-interactive-nav-btn span {
+  font-size: var(--cs-text-sm) !important;
+}
+
+.cs-interactive-secondary-btn {
+  @apply cs:flex cs:items-center cs:space-x-2 cs:px-4 cs:py-2 cs:bg-primary cs:text-primary-content cs:hover:bg-primary/80 cs:rounded-lg cs:transition-colors cs:cursor-pointer;
+}
+.cs-interactive-secondary-btn span {
+  @apply cs:text-sm cs:font-medium;
+}
+
+.cs-interactive-submit-btn {
+  @apply cs:btn cs:btn-primary cs:btn-lg cs:text-base;
+}
+
+.cs-interactive-step-number {
+    height: calc(var(--cs-spacing) * 14) !important;
+    width: calc(var(--cs-spacing) * 14) !important;
+    border-radius: var(--cs-radius-md) !important;
+    background-color: var(--color-primary);
+    font-family: var(--cs-font-mono) !important;
+    font-size: var(--cs-text-3xl) !important;
+    line-height: var(--tw-leading, var(--cs-text-3xl--line-height)) !important;
+    color: var(--color-primary-content);
+    flex-grow: 0 !important;
+    flex-shrink: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+    display: flex !important;
+}
+
+/* When inside .mv-create-card (in-DOM mode), match mv-create-ingredients styling */
+.mv-create-card .cs-interactive-supplies-list-style {
+  /* Inherit list styling from parent card (matches mv-create-ingredients ul) */
+  list-style: inherit !important;
+}
+
+.mv-create-card .cs-interactive-supplies-list-style li {
+  /* Match the mv-create-ingredients li styling */
+  list-style: inherit !important;
+
+  /* Remove flex layout to allow publisher's li::before to work naturally */
+  display: inherit !important;
+}
+
+/*
+ * Custom bullet for supplies list (iframe mode)
+ * Shows a small colored circle as a bullet point
+ */
+.cs-interactive-custom-bullet {
+  @apply cs:size-1.5 cs:inline-block cs:rounded-full cs:flex-shrink-0;
+  /* margin-top: 0.375rem; */
+  background-color: var(--mv-create-secondary, var(--color-base-content));
+}
+
+/*
+ * Hide our custom bullet span when inside .mv-create-card (in-DOM mode)
+ * This allows publisher's li::before or mv-create-ingredients styling to show instead
+ * Our custom bullet is only needed in iframe mode where there's no parent styling
+ */
+.mv-create-card .cs-interactive-custom-bullet {
+  display: none !important;
+}
+
+/* Override when inside .mv-create-card - WordPress plugin styles will take precedence */
+/* .mv-create-card .cs-interactive-mode-btn,
+.mv-create-card .cs-interactive-nav-btn,
+.mv-create-card .cs-interactive-secondary-btn,
+.mv-create-card .cs-interactive-submit-btn,
+.mv-create-card .cs-interactive-step-number {
+  all: unset;
+} */
+
+/* Print styles */
+@media print {
+  .cs-interactive-mode-btn,
+  .cs-interactive-nav-btn,
+  .cs-interactive-secondary-btn {
+    display: none !important;
+  }
+}

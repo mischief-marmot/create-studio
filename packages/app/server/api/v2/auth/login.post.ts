@@ -48,7 +48,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get user's sites
-    const sites = await hubDatabase()
+    // @ts-expect-error - db is auto-imported by NuxtHub
+    const sites = await (db.$client as D1Database)
       .prepare('SELECT id, url, user_id, create_version, wp_version, php_version FROM Sites WHERE user_id = ?')
       .bind(user.id)
       .all()
@@ -61,7 +62,8 @@ export default defineEventHandler(async (event) => {
         validEmail: Boolean(user.validEmail),
         firstname: user.firstname,
         lastname: user.lastname,
-        avatar: user.avatar
+        avatar: user.avatar,
+        createdAt: user.createdAt
       }
     })
 

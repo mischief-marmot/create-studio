@@ -1,5 +1,5 @@
 <template>
-    <div class="cs:h-full cs:w-full cs:flex cs:md:flex-col cs:items-center cs:justify-center cs:bg-base-300 cs:text-base-content">
+    <div class="cs-interactive-mode cs:h-full cs:w-full cs:flex cs:md:flex-col cs:items-center cs:justify-center cs:bg-base-300 cs:text-base-content">
         <!-- Timer Warning Modal -->
         <TimerWarningModal ref="timerWarningModalRef" @accept="handleTimerWarningAccept" @decline="handleTimerWarningDecline" />
 
@@ -11,21 +11,26 @@
 
         <!-- Show spinning logo while loading -->
         <div v-if="!isHydrated || isLoadingCreation || !dataReady" class="cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:items-center cs:justify-center cs:absolute cs:inset-0">
-            <LogoSolo class="cs:w-24 cs:h-24 animate-spin-slow" />
+            <!-- Show Create logo when in iframe, site favicon when in-DOM -->
+            <LogoSolo v-if="isInIframe" class="cs:size-24 animate-spin-slow" />
+            <img v-else :src="siteFaviconUrl" class="cs:size-24 cs:animate-pulse" />
         </div>
 
         <!-- Unified Responsive Container -->
         <div v-if="dataReady" ref="containerRef"
-            :class="[ 
-                'cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:flex-col cs:overflow-hidden cs:relative', 
-                'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-[720px] cs:md:mx-auto cs:md:my-auto cs:md:gap-8 cs:md:pb-[71px]' 
+            :class="[
+                'cs:w-full cs:h-full cs:flex cs:flex-col cs:overflow-hidden cs:relative',
+                'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-[720px] cs:md:mx-auto cs:md:my-auto cs:md:pb-[57px]'
                 ]"
+                style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
             @mousedown="startDrag"
             @touchstart="startDrag">
 
             <!-- Skeleton overlay during initial positioning -->
-            <div v-if="isLoadingPersistence" class="cs:absolute cs:inset-0 cs:z-50 cs:md:rounded-xl cs:overflow-hidden">
-                <LogoSolo class="cs:w-24 cs:h-24 animate-spin-slow" />
+            <div v-if="isLoadingPersistence" class="cs:absolute cs:inset-0 cs:z-50 cs:md:rounded-xl cs:overflow-hidden cs:flex cs:items-center cs:justify-center">
+                <!-- Show Create logo when in iframe, site favicon when in-DOM -->
+                <LogoSolo v-if="isInIframe" class="cs:size-24 animate-spin-slow" />
+                <img v-else :src="siteFaviconUrl" class="cs:size-24 cs:animate-pulse" />
             </div>
 
             <!-- Figure Section - Collapsible on mobile, fixed on desktop -->
@@ -54,35 +59,56 @@
             </figure>
 
             <!-- Content Section - Scrollable with rounded top corners on mobile, side panel on desktop -->
-            <div :class="[ 'cs:flex-1 cs:overflow-hidden cs:flex cs:flex-col cs:relative cs:z-10 cs:bg-base-100 cs:rounded-t-3xl cs:h-full cs:w-full', 'cs:md:rounded-none cs:md:w-3/5 cs:md:max-h-4/5 cs:md:mb-auto cs:md:z-0' ]">
+            <div :class="[ 'cs:flex-1 cs:overflow-hidden cs:flex cs:flex-col cs:relative cs:z-10 cs:rounded-t-3xl cs:h-full cs:w-full', 'cs:md:rounded-none cs:md:w-3/5 cs:md:mb-auto cs:md:z-0' ]"
+                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
+            >
                 <!-- Draggable Handle - Mobile only -->
                 <DraggableHandle v-if="isMobile" @start-drag="startDrag" />
                 <div class="cs:carousel cs:carousel-center cs:w-full cs:flex-1 cs:overflow-x-auto cs:snap-x cs:snap-mandatory cs:flex cs:flex-row"
                     ref="carouselRef">
                     <!-- Intro Slide - Title, Description, Stats -->
-                    <div id="slide0" class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0">
-                        <div class="cs:p-6 cs:space-y-4">
+                    <div id="slide0" class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0"
+                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
+                    >
+                        <div class="cs:p-6 cs:md:pl-8 cs:space-y-6">
                             <div>
                                 <h1 class="cs:text-2xl cs:font-bold cs:mb-3">{{ creation?.name || 'Recipe' }}</h1>
                                 <p v-if="creation?.description" v-html="creation?.description"
-                                    class="cs:text-base-content cs:text-sm cs:leading-relaxed"></p>
-                                <div v-if="adjustedYield" class="cs:mt-2 cs:text-sm cs:text-base-content/80">
+                                    class="cs:text-sm cs:leading-relaxed"></p>
+                                <div v-if="adjustedYield" class="cs:mt-2 cs:text-sm cs:opacity-80">
                                     <span class="cs:font-semibold">Yield:</span> {{ adjustedYield }}
                                 </div>
                             </div>
                             <div>
                                 <h2 class="cs:text-xl cs:font-bold cs:mb-4">
                                     {{ suppliesLabel }}
-                                    <span v-if="servingsMultiplier !== 1" class="cs:text-sm cs:font-normal cs:text-base-content/70">
+                                    <span v-if="servingsMultiplier !== 1" class="cs:text-sm cs:font-normal cs:opacity-70">
                                         ({{ servingsMultiplier }}x)
                                     </span>
                                 </h2>
 
-                                <ul class="cs:space-y-1">
-                                    <li v-for="supply in adjustedIngredients" :key="supply"
-                                        class="cs:flex cs:items-start cs:space-x-2">
-                                        <span class="cs:w-1.5 cs:h-1.5 cs:bg-gray-400 cs:rounded-full cs:mt-1.5 cs:flex-shrink-0"></span>
-                                        <span class="cs:text-sm cs:text-base-content">{{ supply }}</span>
+                                <!-- Render grouped ingredients if available -->
+                                <template v-if="adjustedIngredientsGroups">
+                                    <div v-for="(ingredients, groupName) in adjustedIngredientsGroups" :key="groupName" class="cs:mb-4">
+                                        <h4 v-if="groupName && groupName !== 'mv-has-no-group'" class="cs:text-base cs:font-semibold cs:mb-2">{{ groupName }}</h4>
+                                        <ul class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
+                                            <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`"
+                                                class="cs:flex cs:items-center cs:space-x-2">
+                                                <span class="cs-interactive-custom-bullet"
+                                                ></span>
+                                                <IngredientText :ingredient="supply" class="cs:text-sm" />
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </template>
+
+                                <!-- Fallback to flat list if no groups -->
+                                <ul v-else class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
+                                    <li v-for="(supply, idx) in adjustedIngredients" :key="`supply-${idx}`"
+                                        class="cs:flex cs:items-center cs:space-x-2">
+                                        <span class="cs-interactive-custom-bullet"
+                                        ></span>
+                                        <IngredientText :ingredient="supply" class="cs:text-sm" />
                                     </li>
                                 </ul>
                             </div>
@@ -91,22 +117,23 @@
 
                     <!-- Recipe Steps -->
                     <div v-for="(step, index) in steps" :key="`step-${index}`" :id="`slide${index + 1}`"
-                        class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0">
-                        <div class="cs:px-4 cs:py-8 cs:flex cs:flex-col cs:space-y-8 cs:overflow-y-auto">
+                        class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0"
+                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
+                        >
+                        <div class="cs:px-4 cs:md:px-8 cs:py-8 cs:flex cs:flex-col cs:space-y-8 cs:overflow-y-auto">
                             <div class="cs:flex cs:space-x-3 cs:justify-start cs:w-full cs:items-center">
-                                <div
-                                    class="cs:flex cs:justify-center cs:items-center cs:grow-0 cs:shrink-0 cs:h-14 cs:w-14 cs:bg-primary cs:text-primary-content cs:rounded-md">
-                                    <span class="cs:text-3xl cs:font-mono">{{ index + 1 }}</span>
+                                <div class="cs-interactive-step-number">
+                                    {{ index + 1 }}
                                 </div>
 
-                                <div class="cs:text-lg cs:text-base-content cs:leading-tight" v-html="step.text"></div>
+                                <StepText :text="step.text || ''" :links="step.links" class="cs:text-lg cs:leading-tight" />
                             </div>
 
                             <!-- Step-specific supplies -->
                             <div v-if="step.supply && step.supply.length > 0" class="cs:box-gray">
                                 <div class="cs:flex cs:justify-between cs:cursor-pointer"
                                     @click="storageManager.toggleStepSuppliesVisibility()">
-                                    <span class="cs:font-medium cs:text-base-content">Step Supplies</span>
+                                    <span class="cs:font-medium">Step Supplies</span>
                                     <PlusIcon v-if="!currentCreationState?.showStepSupplies"
                                         class="cs:w-5 cs:h-5" />
                                     <MinusIcon v-if="currentCreationState?.showStepSupplies"
@@ -115,7 +142,7 @@
                                 <ul v-show="currentCreationState?.showStepSupplies" class="cs:space-y-1 cs:mt-2">
                                     <li v-for="(supply, supplyIdx) in step.supply"
                                         :key="`step-${index}-supply-${supplyIdx}`">
-                                        <label class="cs:flex cs:items-start cs:space-x-3 cs:text-base-content">
+                                        <label class="cs:flex cs:items-start cs:space-x-3">
                                             <input type="checkbox" class="cs:checkbox cs:checkbox-lg"
                                                 :checked="storageManager.isStepSupplyChecked(index, `${supply.name}`)"
                                                 @change="storageManager.toggleStepSupply(index, `${supply.name}`)" />
@@ -132,12 +159,14 @@
 
                     <!-- Review Prompt Slide -->
                     <div :id="`slide${totalSlides - 1}`" class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0">
-                        <div class="cs:w-full cs:px-4 cs:py-6 cs:flex cs:flex-col cs:h-full cs:overflow-y-auto cs:space-y-2">
+                        <div class="cs:w-full cs:px-4 cs:md:px-6 cs:py-6 cs:flex cs:flex-col cs:h-full cs:overflow-y-auto cs:space-y-2 cs:justify-center cs:items-center"
+                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
+                        >
 
                             <!-- Title and question -->
                             <div class="cs:text-center">
-                                <h2 class="cs:text-2xl cs:font-bold cs:text-base-content">All done!</h2>
-                                <p class="cs:text-lg cs:text-base-content/80">{{ reviewQuestionText }}</p>
+                                <h2 class="cs:text-2xl cs:font-bold cs:text-center">All done!</h2>
+                                <p class="cs:text-lg cs:opacity-80 cs:text-center">{{ reviewQuestionText }}</p>
                             </div>
 
                             <!-- Star rating -->
@@ -146,8 +175,8 @@
                             </div>
 
                             <!-- Rating submitted message for high ratings -->
-                            <div v-if="showRatingSubmittedMessage" role="alert" class="cs:alert cs:alert-success">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="cs:h-6 cs:w-6 cs:shrink-0 cs:stroke-current"
+                            <div v-if="showRatingSubmittedMessage" role="alert" class="cs:alert cs:max-w-md cs:w-full cs:alert-success cs:text-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="cs:size-8 cs:shrink-0 cs:stroke-current"
                                     fill="none" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -157,8 +186,8 @@
                             </div>
 
                             <!-- Rating not submitted message for low ratings -->
-                            <div v-if="showLowRatingPrompt" role="alert" class="cs:alert cs:alert-error">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="cs:h-6 cs:w-6 cs:shrink-0 cs:stroke-current"
+                            <div v-if="showLowRatingPrompt" role="alert" class="cs:alert cs:max-w-md cs:w-full cs:alert-error cs:text-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="cs:size-8 cs:shrink-0 cs:stroke-current"
                                     fill="none" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -173,38 +202,38 @@
                                 <!-- Review Title -->
                                 <div>
                                     <label for="reviewTitle"
-                                        class="cs:block cs:text-sm cs:font-medium cs:text-base-content/90 cs:mb-1">
+                                        class="cs:block cs:text-sm cs:font-medium cs:opacity-90 cs:mb-1">
                                         Review Title
                                     </label>
-                                    <input id="reviewTitle" v-model="form.title" type="text" class="cs:w-full cs:input"
+                                    <input id="reviewTitle" v-model="form.title" type="text" style="width: 100% !important; background-color: var(--cs-color-gray-100);" class=" cs:w-full cs:input"
                                         :placeholder="titlePlaceholder" />
                                 </div>
 
                                 <!-- Review -->
                                 <div>
-                                    <label for="review" class="cs:block cs:text-sm cs:font-medium cs:text-base-content/90 cs:mb-1">
+                                    <label for="review" class="cs:block cs:text-sm cs:font-medium cs:opacity-90 cs:mb-1">
                                         Review<span class="cs:text-red-600">*</span>
                                     </label>
                                     <textarea id="review" v-model="form.review" rows="3"
-                                        class="cs:w-full cs:textarea cs:resize-none" :placeholder="reviewPlaceholder"
+                                        style="width: 100% !important; background-color: var(--cs-color-gray-100);" class=" cs:w-full cs:textarea cs:resize-none" :placeholder="reviewPlaceholder"
                                         required />
                                 </div>
 
                                 <!-- Name -->
                                 <div>
-                                    <label for="name" class="cs:block cs:text-sm cs:font-medium cs:text-base-content/90 cs:mb-1">
+                                    <label for="name" class="cs:block cs:text-sm cs:font-medium cs:opacity-90 cs:mb-1">
                                         Name<span class="cs:text-red-600">*</span>
                                     </label>
-                                    <input id="name" v-model="form.name" type="text" class="cs:w-full cs:input"
+                                    <input id="name" v-model="form.name" type="text" style="width: 100% !important; background-color: var(--cs-color-gray-100);" class="cs:w-full cs:input"
                                         placeholder="Your name" required />
                                 </div>
 
                                 <!-- Email -->
                                 <div>
-                                    <label for="email" class="cs:block cs:text-sm cs:font-medium cs:text-base-content/90 cs:mb-1">
+                                    <label for="email" class="cs:block cs:text-sm cs:font-medium cs:opacity-90 cs:mb-1">
                                         Email<span class="cs:text-red-600">*</span>
                                     </label>
-                                    <input id="email" v-model="form.email" type="email" class="cs:w-full cs:input"
+                                    <input id="email" v-model="form.email" type="email" style="width: 100% !important; background-color: var(--cs-color-gray-100);" class="cs:w-full cs:input"
                                         placeholder="your@email.com" required />
                                 </div>
 
@@ -212,7 +241,7 @@
                                 <div class="cs:justify-self-end">
                                     <button type="submit"
                                         :disabled="reviewSubmission.isSubmitting.value || (!isFormValid)"
-                                        class="cs:btn cs:btn-primary cs:btn-lg">
+                                        class="cs-interactive-submit-btn">
                                         <span v-if="reviewSubmission.isSubmitting.value">Submitting...</span>
                                         <span v-else-if="existingReview && form.review.length ">Update Review</span>
                                         <span v-else>Submit Review</span>
@@ -247,9 +276,21 @@
                                 <XMarkIcon class="cs:w-5 cs:h-5" />
                             </button>
                         </div>
-                        <ul class="cs:space-y-1">
+                        <!-- Render grouped ingredients if available -->
+                        <template v-if="adjustedIngredientsGroups">
+                            <div v-for="(ingredients, groupName) in adjustedIngredientsGroups" :key="groupName" class="cs:mb-3 last:cs:mb-0">
+                                <h4 v-if="groupName && groupName !== 'mv-has-no-group'" class="cs:text-sm cs:font-semibold cs:mb-1">{{ groupName }}</h4>
+                                <ul class="cs:space-y-1">
+                                    <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`">
+                                        <IngredientText :ingredient="supply" />
+                                    </li>
+                                </ul>
+                            </div>
+                        </template>
+                        <!-- Fallback to flat list if no groups -->
+                        <ul v-else class="cs:space-y-1">
                             <li v-for="(supply, idx) in adjustedIngredients" :key="`sup-${idx}`">
-                                {{ supply }}
+                                <IngredientText :ingredient="supply" />
                             </li>
                         </ul>
                     </div>
@@ -267,8 +308,7 @@
                         </div>
 
                         <!-- Begin Button -->
-                        <button @click="nextSlide"
-                            class="cs:px-6 cs:py-2 cs:bg-primary cs:text-primary-content cs:rounded-full cs:text-sm cs:font-medium cs:hover:bg-gray-800 cs:flex cs:items-center cs:space-x-2 cs:cursor-pointer">
+                        <button @click="nextSlide" class="cs-interactive-nav-btn">
                             <span>Begin</span>
                             <ChevronDoubleRightIcon class="cs:w-5 cs:h-5" />
                         </button>
@@ -276,24 +316,20 @@
                     <div v-else class="cs:flex cs:items-center cs:justify-between cs:sm:justify-evenly">
                         <!-- After slide 0 - with supplies button -->
                         <!-- Previous Button -->
-                        <button @click="previousSlide"
-                            class="cs:flex cs:items-center cs:space-x-2 cs:text-base-content cs:cursor-pointer">
+                        <button @click="previousSlide" class="cs-interactive-nav-btn">
                             <ChevronDoubleLeftIcon class="cs:w-5 cs:h-5" />
-                            <span class="cs:text-sm">Back</span>
+                            <span>Back</span>
                         </button>
 
                         <!-- Supplies Button -->
-                        <button @click="showSupplies = !showSupplies"
-                            class="cs:flex cs:items-center cs:space-x-2 cs:px-4 cs:py-2 cs:bg-primary cs:text-primary-content cs:hover:bg-primary/80 cs:rounded-lg cs:transition-colors cs:cursor-pointer">
-                            <!-- Supplies Icon SVG -->
+                        <button @click="showSupplies = !showSupplies" class="cs-interactive-secondary-btn">
                             <QueueListIcon class="cs:w-5 cs:h-5" />
-                            <span class="cs:text-sm cs:font-medium">{{ showSupplies ? 'Hide' : 'Show' }} {{ suppliesLabel }}</span>
+                            <span>{{ showSupplies ? 'Hide' : 'Show' }} {{ suppliesLabel }}</span>
                         </button>
 
                         <!-- Next Button -->
-                        <button v-if="currentSlide < totalSlides - 1" @click="nextSlide"
-                            class="cs:flex cs:items-center cs:space-x-2 cs:text-base-content cs:cursor-pointer">
-                            <span class="cs:text-sm">Next</span>
+                        <button v-if="currentSlide < totalSlides - 1" @click="nextSlide" class="cs-interactive-nav-btn">
+                            <span>Next</span>
                             <ChevronDoubleRightIcon class="cs:w-5 cs:h-5" />
                         </button>
                         <div v-else class="cs:w-16"></div>
@@ -314,8 +350,12 @@ import { useSharedTimerManager } from '../composables/useSharedTimerManager';
 import { getInitialState as getInitialReviewState } from '../composables/useReviewStorage';
 import { useReviewSubmission } from '../composables/useReviewSubmission';
 import TimerWarningModal from './TimerWarningModal.vue';
+import IngredientText from './IngredientText.vue';
+import StepText from './StepText.vue';
 import { HowTo, HowToStep } from '@create-studio/shared';
 import { useAnalytics } from '../composables/useAnalytics';
+import { transformIngredientValue } from '@create-studio/shared/utils/ingredient-pipeline';
+import { getInitialSystem, preferenceToSystem, type UnitConversionConfig, type MeasurementSystem } from '@create-studio/shared/utils/unit-conversion';
 
 interface Props {
   creationId?: string
@@ -324,6 +364,13 @@ interface Props {
   hideAttribution?: boolean
   cacheBust?: boolean
   disableRatingSubmission?: boolean
+  unitConversionConfig?: {
+    enabled: boolean
+    default_system: 'auto' | 'us_customary' | 'metric'
+    source_system: 'us_customary' | 'metric'
+    label: string
+    conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+  }
   // Support SDK mounting with config wrapper
   config?: {
     creationId: string
@@ -332,6 +379,13 @@ interface Props {
     hideAttribution?: boolean
     cacheBust?: boolean
     disableRatingSubmission?: boolean
+    unitConversion?: {
+      enabled: boolean
+      default_system: 'auto' | 'us_customary' | 'metric'
+      source_system: 'us_customary' | 'metric'
+      label: string
+      conversions: Record<string, { amount: string; unit: string; max_amount?: string | null }>
+    }
   }
 }
 
@@ -347,8 +401,66 @@ const finalCreationId = computed(() => props.config?.creationId || props.creatio
 const finalDomain = computed(() => props.config?.domain || props.domain || '')
 const finalBaseUrl = computed(() => props.config?.baseUrl || props.baseUrl || '')
 const finalHideAttribution = computed(() => props.config?.hideAttribution ?? props.hideAttribution ?? false)
+const finalSiteUrl = computed(() => {
+    if (finalDomain.value === 'localhost') return 'http://localhost:8074'
+    const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:'
+    return `${protocol}//${finalDomain.value}`
+})
 const finalCacheBust = computed(() => props.config?.cacheBust ?? props.cacheBust ?? false)
 const finalDisableRatingSubmission = computed(() => props.config?.disableRatingSubmission ?? props.disableRatingSubmission ?? false)
+
+// Resolve unit conversion config: prop > config wrapper > creation data > null
+const resolvedUnitConversionConfig = computed((): UnitConversionConfig | null => {
+    const fromProp = props.unitConversionConfig
+    if (fromProp?.enabled) return fromProp as UnitConversionConfig
+
+    const fromConfig = props.config?.unitConversion
+    if (fromConfig?.enabled) return fromConfig as UnitConversionConfig
+
+    const fromCreation = creation.value?.unitConversions
+    if (fromCreation?.enabled) return fromCreation as UnitConversionConfig
+
+    return null
+})
+
+// Active unit system - read from SharedStorageManager (set by card-level UnitConversionWidget)
+const activeUnitSystem = ref<MeasurementSystem | null>(null)
+
+// Detect if rendering in iframe or in-DOM
+const isInIframe = computed(() => {
+    if (typeof window === 'undefined') return false
+    // Check if we're in an iframe by comparing window to parent window
+    return window.self !== window.top
+})
+
+// Site favicon URL - use parent site's favicon when available
+const siteFaviconUrl = ref('')
+
+// Find the site's favicon
+const findSiteFavicon = () => {
+    if (typeof window === 'undefined' || isInIframe.value) return ''
+
+    // 1. Look for <link rel="icon"> tag
+    const appleIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement
+    if (appleIcon?.href) {
+        return appleIcon.href
+    }
+
+    // 1. Look for <link rel="icon"> tag
+    const iconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement
+    if (iconLink?.href) {
+        return iconLink.href
+    }
+
+    // 2. Look for <link rel="shortcut icon"> tag
+    const shortcutLink = document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement
+    if (shortcutLink?.href) {
+        return shortcutLink.href
+    }
+
+    // 3. Default to /favicon.ico at the root
+    return '/favicon.ico'
+}
 
 // Initialize analytics
 const analytics = useAnalytics({
@@ -441,15 +553,47 @@ const servingsMultiplier = computed(() => {
     return currentCreationState.value?.servingsMultiplier || 1;
 });
 
-// Adjust ingredients based on servings multiplier
+// Adjust ingredients based on servings multiplier + unit conversion via shared pipeline
 const adjustedIngredients = computed(() => {
-    if (!creation.value?.recipeIngredient || servingsMultiplier.value === 1) {
-        return creation.value?.recipeIngredient || [];
+    if (!creation.value?.recipeIngredient) return [];
+
+    const unitConfig = resolvedUnitConversionConfig.value
+    const targetSystem = activeUnitSystem.value
+    const multiplier = servingsMultiplier.value
+
+    // If no transformations active, return raw
+    if (multiplier === 1 && (!unitConfig || !targetSystem || targetSystem === unitConfig.source_system)) {
+        return creation.value.recipeIngredient;
     }
 
-    return creation.value.recipeIngredient.map(ingredient => {
-        return adjustIngredientAmount(ingredient, servingsMultiplier.value);
+    return creation.value.recipeIngredient.map((ingredient, idx) => {
+        const ingredientId = String(idx)
+        return transformIngredientValue(ingredient, ingredientId, unitConfig, targetSystem, multiplier);
     });
+});
+
+// Adjust grouped ingredients based on servings multiplier + unit conversion
+const adjustedIngredientsGroups = computed(() => {
+    if (!creation.value?.recipeIngredientGroups) return null;
+
+    const unitConfig = resolvedUnitConversionConfig.value
+    const targetSystem = activeUnitSystem.value
+    const multiplier = servingsMultiplier.value
+
+    // If no transformations active, return raw
+    if (multiplier === 1 && (!unitConfig || !targetSystem || targetSystem === unitConfig.source_system)) {
+        return creation.value.recipeIngredientGroups;
+    }
+
+    const adjusted: Record<string, (string | { original_text: string; link?: string; nofollow?: boolean })[]> = {};
+    let idx = 0
+    for (const [groupName, ingredients] of Object.entries(creation.value.recipeIngredientGroups)) {
+        adjusted[groupName] = ingredients.map((ingredient) => {
+            const ingredientId = String(idx++)
+            return transformIngredientValue(ingredient, ingredientId, unitConfig, targetSystem, multiplier);
+        });
+    }
+    return adjusted;
 });
 
 // Adjust yield based on servings multiplier
@@ -492,139 +636,9 @@ const adjustedYield = computed(() => {
     return originalYield;
 });
 
-// Helper function to adjust ingredient amounts
-function adjustIngredientAmount(ingredient: string, multiplier: number): string {
-    // Extract amount from ingredient text
-    const amountMatch = ingredient.match(/^([\d\s\/\.\-]+)(.*)$/);
-    if (!amountMatch) return ingredient;
-
-    const numericPart = amountMatch[1].trim();
-    const restOfIngredient = amountMatch[2].trim();
-
-    const adjustedAmount = calculateAdjustedAmount(numericPart, multiplier);
-    if (adjustedAmount) {
-        return `${adjustedAmount} ${restOfIngredient}`;
-    }
-
-    return ingredient;
-}
-
-// Calculate adjusted amount (reusing logic from ServingsAdjuster)
-function calculateAdjustedAmount(amount: string, multiplier: number): string | null {
-    // Check for mixed fractions first (e.g., "2 1/4")
-    if (/^\d+\s+\d+\/\d+$/.test(amount)) {
-        return adjustFraction(amount, multiplier);
-    }
-
-    // Handle simple fractions (e.g., "1/2")
-    if (amount.includes('/')) {
-        return adjustFraction(amount, multiplier);
-    }
-
-    // Handle ranges
-    if (amount.includes('-')) {
-        const parts = amount.split('-').map(p => p.trim());
-        const adjustedParts = parts.map(part => {
-            if (part.includes('/')) {
-                return adjustFraction(part, multiplier) || part;
-            }
-            const num = parseFloat(part);
-            if (!isNaN(num)) {
-                return formatNumber(num * multiplier);
-            }
-            return part;
-        });
-        return adjustedParts.join('-');
-    }
-
-    // Handle regular numbers
-    const num = parseFloat(amount);
-    if (!isNaN(num)) {
-        return formatNumber(num * multiplier);
-    }
-
-    return null;
-}
-
-function adjustFraction(fraction: string, multiplier: number): string | null {
-    // Handle mixed fractions like "2 1/4"
-    const mixedMatch = fraction.match(/^(\d+)\s+(\d+)\/(\d+)$/);
-    if (mixedMatch) {
-        const whole = parseInt(mixedMatch[1]);
-        const numerator = parseInt(mixedMatch[2]);
-        const denominator = parseInt(mixedMatch[3]);
-        const decimal = whole + (numerator / denominator);
-        const adjusted = decimal * multiplier;
-        return decimalToFraction(adjusted);
-    }
-
-    // Handle simple fractions like "1/2"
-    const simpleMatch = fraction.match(/^(\d+)\/(\d+)$/);
-    if (simpleMatch) {
-        const numerator = parseInt(simpleMatch[1]);
-        const denominator = parseInt(simpleMatch[2]);
-        const decimal = numerator / denominator;
-        const adjusted = decimal * multiplier;
-        return decimalToFraction(adjusted);
-    }
-
-    return null;
-}
-
-function decimalToFraction(decimal: number): string {
-    const whole = Math.floor(decimal);
-    const remainder = decimal - whole;
-
-    if (remainder === 0) {
-        return whole.toString();
-    }
-
-    // Common fractions
-    const fractions = [
-        { value: 0.125, str: '1/8' },
-        { value: 0.25, str: '1/4' },
-        { value: 0.333, str: '1/3' },
-        { value: 0.375, str: '3/8' },
-        { value: 0.5, str: '1/2' },
-        { value: 0.625, str: '5/8' },
-        { value: 0.666, str: '2/3' },
-        { value: 0.75, str: '3/4' },
-        { value: 0.875, str: '7/8' }
-    ];
-
-    // Find closest fraction
-    let closest = fractions[0];
-    let minDiff = Math.abs(remainder - fractions[0].value);
-
-    for (const frac of fractions) {
-        const diff = Math.abs(remainder - frac.value);
-        if (diff < minDiff) {
-            minDiff = diff;
-            closest = frac;
-        }
-    }
-
-    // If difference is too large, use decimal
-    if (minDiff > 0.05) {
-        return formatNumber(decimal);
-    }
-
-    if (whole > 0) {
-        return `${whole} ${closest.str}`;
-    }
-
-    return closest.str;
-}
-
-function formatNumber(num: number): string {
-    // Remove unnecessary decimals
-    if (num % 1 === 0) {
-        return num.toString();
-    }
-
-    // Round to 2 decimal places
-    return (Math.round(num * 100) / 100).toString();
-}
+// Note: Ingredient transformation logic (fractions, amounts, unit conversion)
+// has been extracted to @create-studio/shared/utils/ingredient-pipeline.ts
+// and is used via transformIngredientValue() in the computed properties above.
 
 // Get steps as HowToStep array for template usage
 const steps = computed(() => {
@@ -693,7 +707,7 @@ const COLLAPSED_THRESHOLD = 10; // Threshold for collapsed state
 // Load creation data (server-side caching via HubKV is handled by /api/v2/fetch-creation)
 async function loadCreationData() {
     isLoadingCreation.value = true;
-    const site_url = finalDomain.value === 'localhost'? 'http://localhost:8074' : `https://${finalDomain.value}`;
+    const site_url = finalSiteUrl.value;
 
     try {
         // Use injected fetch if available (for Nuxt context), otherwise use global fetch
@@ -757,6 +771,9 @@ onMounted(async () => {
         }
     });
 
+    // Find site favicon
+    siteFaviconUrl.value = findSiteFavicon()
+
     // Detect if device is mobile/tablet
     isMobile.value = window.matchMedia('(max-width: 768px)').matches;
 
@@ -804,6 +821,20 @@ onMounted(async () => {
       }
     } catch (error) {
       // Silent fail for parent communication
+    }
+
+    // Resolve unit preference: from SharedStorageManager or parent iframe
+    try {
+      const parentUnitPref = await storageManager.requestUnitPreferenceFromParent();
+      const localUnitPref = parentUnitPref || storageManager.getUnitPreference()
+      const unitConfig = resolvedUnitConversionConfig.value
+      if (unitConfig && localUnitPref) {
+        activeUnitSystem.value = preferenceToSystem(localUnitPref)
+      } else if (unitConfig) {
+        activeUnitSystem.value = getInitialSystem(unitConfig.default_system)
+      }
+    } catch {
+      // Silent fail
     }
 
     if (creationState) {
@@ -1193,7 +1224,7 @@ const reviewQuestionText = computed(() => {
     if (currentRating.value === 0) {
         return 'How was it?'
     }
-    return currentRating.value >= ratingThreshold ? 'How was it?' : 'What went wrong?'
+    return currentRating.value >= ratingThreshold ? '' : 'What went wrong?'
 })
 
 const showRatingSubmittedMessage = computed(() => {
@@ -1205,10 +1236,7 @@ const showLowRatingPrompt = computed(() => {
 })
 
 const showReviewForm = computed(() => {
-    return currentRating.value > 0 && (
-        (currentRating.value >= ratingThreshold && hasSubmittedRating.value) ||
-        (currentRating.value < ratingThreshold)
-    )
+    return currentRating.value > 0
 })
 
 const isFormRequired = computed(() => {
@@ -1253,7 +1281,7 @@ const handleRatingSelect = async (rating: number) => {
             creation: finalCreationId.value,
             rating,
             type: 'review'
-        }, `https://${finalDomain.value}`)
+        }, finalSiteUrl.value)
 
         if (result.ok) {
             hasSubmittedRating.value = true
@@ -1287,7 +1315,7 @@ const handleFormSubmit = async () => {
         author_email: form.email.trim()
     }
 
-    const result = await reviewSubmission.submit(reviewData, `https://${finalDomain.value}`)
+    const result = await reviewSubmission.submit(reviewData, finalSiteUrl.value)
 
     if (result.ok) {
         hasSubmittedReview.value = true

@@ -1,6 +1,6 @@
 <template>
   <NuxtLayout name="main" :navLinks="navLinks">
-    <div class="dark:bg-primary/20 px-3 py-8 bg-white">
+    <div class="bg-base-100 px-3 py-8">
       <div role="alert" style="background-image: none;"
         class="alert bg-secondary text-secondary-content alert-vertical sm:alert-horizontal z-1000 max-w-3xl mx-auto">
         <div></div>

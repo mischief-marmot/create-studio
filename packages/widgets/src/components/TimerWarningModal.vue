@@ -1,6 +1,15 @@
 <template>
-  <dialog ref="dialogRef" class="cs:modal">
-    <div class="cs:modal-box">
+  <!-- Backdrop -->
+  <div
+    v-if="isOpen"
+    class="cs:fixed cs:inset-0 cs:bg-black/50 cs:z-[1000000001] cs:flex cs:items-center cs:justify-center"
+    @click="handleBackdropClick"
+  >
+    <!-- Modal Box -->
+    <div
+      class="cs:bg-base-100 cs:rounded-2xl cs:p-6 cs:max-w-md cs:w-11/12 cs:shadow-2xl"
+      @click.stop
+    >
       <!-- Icon -->
       <div class="cs:flex cs:justify-center cs:mb-4">
         <div class="cs:w-12 cs:h-12 cs:rounded-full cs:bg-amber-100 cs:flex cs:items-center cs:justify-center">
@@ -9,7 +18,7 @@
       </div>
 
       <!-- Title -->
-      <h3 class="cs:font-bold cs:text-lg cs:text-center">Timer Active - Stay on Page</h3>
+      <h3 class="cs:font-bold cs:text-lg cs:text-center cs:text-base-content">Timer Active - Stay on Page</h3>
 
       <!-- Description -->
       <p class="cs:py-4 cs:text-center cs:text-base-content/80">
@@ -17,7 +26,7 @@
       </p>
 
       <!-- Buttons -->
-      <div class="cs:modal-action cs:justify-center">
+      <div class="cs:flex cs:gap-3 cs:justify-center cs:mt-6">
         <button @click="handleDecline" class="cs:btn cs:btn-ghost">
           Cancel
         </button>
@@ -26,10 +35,7 @@
         </button>
       </div>
     </div>
-    <form method="dialog" class="cs:modal-backdrop">
-      <button @click="handleDecline">close</button>
-    </form>
-  </dialog>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -41,18 +47,18 @@ const emit = defineEmits<{
   decline: []
 }>()
 
-const dialogRef = ref<HTMLDialogElement | null>(null)
+const isOpen = ref(false)
 
 const show = () => {
-  if (dialogRef.value) {
-    dialogRef.value.showModal()
-  }
+  isOpen.value = true
+}
+
+const close = () => {
+  isOpen.value = false
 }
 
 const handleAccept = () => {
-  if (dialogRef.value) {
-    dialogRef.value.close()
-  }
+  close()
 
   // Store that user has seen this warning (session storage - resets on browser close)
   if (typeof sessionStorage !== 'undefined') {
@@ -63,10 +69,12 @@ const handleAccept = () => {
 }
 
 const handleDecline = () => {
-  if (dialogRef.value) {
-    dialogRef.value.close()
-  }
+  close()
   emit('decline')
+}
+
+const handleBackdropClick = () => {
+  handleDecline()
 }
 
 defineExpose({

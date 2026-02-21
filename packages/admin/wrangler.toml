@@ -1,0 +1,15 @@
+# Wrangler configuration for Create Studio Admin
+# This file is merged with NuxtHub's auto-generated config during deployment
+
+name = "create-studio-admin"
+compatibility_date = "2026-01-13"
+
+# Additional D1 database binding for admin operations
+# This database is separate from the main app's database and stores:
+# - Admin user sessions and authentication
+# - Audit logs for admin actions
+# - Admin-specific settings and configuration
+[[d1_databases]]
+binding = "DB_ADMIN"
+database_name = "create-studio-admin"
+database_id = "d289dece-7c58-4593-a8ef-e72ed9cdf80e"

@@ -1,8 +1,8 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { ServerClient } from "postmark";
 import { render } from "@vue-email/render";
-import ConfirmEmail from "~/components/emails/ConfirmEmail.vue";
-import ResetPassword from "~/components/emails/ResetPassword.vue";
+import ConfirmEmail from "../components/emails/ConfirmEmail.vue";
+import ResetPassword from "../components/emails/ResetPassword.vue";
 
 /**
  * Email service for sending validation emails and other notifications
@@ -24,6 +24,12 @@ export interface EmailEnvelope {
 export async function sendMail(envelope: EmailEnvelope): Promise<void> {
   const config = useRuntimeConfig();
   const logger = useLogger("Mailer", config.debug);
+
+  // Mock email sending in test/development mode to avoid using Postmark credits
+  if (process.env.NODE_ENV === 'test') {
+    logger.info("🚀 [MOCK EMAIL] Would send email to", { to: envelope.to, subject: envelope.subject });
+    return;
+  }
 
   if (!config.postmarkKey) {
     logger.error("Postmark API key not configured");

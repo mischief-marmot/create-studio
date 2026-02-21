@@ -68,15 +68,15 @@ Documentation site built with Nuxt Content.
 ## Technology Stack
 
 ### Core Framework
-- **Nuxt 3** (v3.17.3) - Vue.js meta-framework
+- **Nuxt 4** - Vue.js meta-framework
 - **Vue 3** - Progressive JavaScript framework
 - **TypeScript** - Type safety throughout
 
 ### Styling
 - **Tailwind CSS v4** - Utility-first CSS with `@tailwindcss/vite`
 - **DaisyUI** - Component library with custom themes
-  - "claudette" (light theme)
-  - "claudia" (dark theme)
+  - "light" (light theme)
+  - "dark" (dark theme)
 
 ### State & Data
 - **Pinia** - State management

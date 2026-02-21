@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Banner -->
-    <div v-if="shouldShowBanner" class="fixed bottom-0 left-0 right-0 z-50">
+    <div v-if="shouldShowBanner" class="fixed bottom-0 left-0 right-0 z-[2147483647]">
       <div class="bg-base-300 border-base-300 border-t shadow-2xl">
         <div class="max-w-7xl sm:px-6 lg:px-8 sm:py-6 p-8 mx-auto">
           <div class="sm:flex-row sm:items-center flex flex-col items-start justify-between gap-4">
@@ -123,7 +123,7 @@
           <button
             type="button"
             @click="saveCustomize"
-            class="btn btn-accent"
+            class="btn btn-primary"
           >
             Save Preferences
           </button>
@@ -202,6 +202,8 @@ const acceptAll = async () => {
   isSyncing.value = true
   try {
     consentStore.acceptAll()
+    triggerConsent('analytics')
+    triggerConsent('marketing')
     // Sync consent to user account if authenticated
     await consentStore.syncToDatabase()
   } catch (error) {
@@ -243,9 +245,15 @@ const saveCustomize = async () => {
       marketing: customMarketing.value,
     })
 
-    // Delete analytics cookies if user disabled analytics
-    if (!customAnalytics.value) {
+    // Trigger consent for enabled categories
+    if (customAnalytics.value) {
+      triggerConsent('analytics')
+    } else {
       consentStore.deleteAnalyticsCookies()
+    }
+
+    if (customMarketing.value) {
+      triggerConsent('marketing')
     }
 
     // Sync consent to user account if authenticated
@@ -257,6 +265,17 @@ const saveCustomize = async () => {
     syncError.value = 'Failed to save consent preferences. Your preferences are saved locally, but were not synced to your account.'
   } finally {
     isSyncing.value = false
+  }
+}
+
+const triggerConsent = (category: 'analytics' | 'marketing') => {
+  try {
+    const { useScriptTriggerConsent } = useNuxtApp()
+    if (useScriptTriggerConsent) {
+      useScriptTriggerConsent(category)
+    }
+  } catch (error) {
+    console.error(`Failed to trigger ${category} consent:`, error)
   }
 }
 </script>

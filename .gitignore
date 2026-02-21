@@ -1,3 +1,6 @@
+# Claude Code settings
+.claude_settings.json
+
 # Nuxt dev/build outputs
 .output
 .data
@@ -38,3 +41,16 @@ logs
 
 .wrangler
 tmp
+
+# Auto Claude data directory
+.auto-claude/
+
+packages/app/.data
+
+.worktrees
+
+# Webhook signing keys (generated per-installation)
+webhook-*.pem
+*.pem
+packages/admin/.data
+packages/app/.data/hub

@@ -1,0 +1,133 @@
+/* Import base theme from main app */
+@import "../../../app/app/assets/main.css";
+
+/* Admin-specific styles */
+@layer components {
+  /* Admin data table styling */
+  .admin-table {
+    @apply w-full text-sm;
+  }
+
+  .admin-table th {
+    @apply text-left font-semibold text-base-content/70 px-4 py-3 border-b border-base-300 bg-base-200/50;
+  }
+
+  .admin-table td {
+    @apply px-4 py-3 border-b border-base-200;
+  }
+
+  .admin-table tr:hover td {
+    @apply bg-base-200/30;
+  }
+
+  /* Stat card */
+  .admin-stat-card {
+    @apply bg-base-100 border border-base-300 rounded-xl p-6 transition-all duration-200;
+  }
+
+  .admin-stat-card:hover {
+    @apply border-primary/30 shadow-sm;
+  }
+
+  /* Admin badge variations */
+  .admin-badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full;
+  }
+
+  .admin-badge-success {
+    @apply bg-success/15 text-success;
+  }
+
+  .admin-badge-warning {
+    @apply bg-warning/15 text-warning;
+  }
+
+  .admin-badge-error {
+    @apply bg-error/15 text-error;
+  }
+
+  .admin-badge-info {
+    @apply bg-info/15 text-info;
+  }
+
+  .admin-badge-neutral {
+    @apply bg-base-300 text-base-content/70;
+  }
+
+  /* Admin page header */
+  .admin-page-header {
+    @apply flex flex-col gap-1 mb-8;
+  }
+
+  .admin-page-title {
+    @apply text-2xl font-bold text-base-content tracking-tight;
+  }
+
+  .admin-page-subtitle {
+    @apply text-base-content/60 text-sm;
+  }
+
+  /* Admin section */
+  .admin-section {
+    @apply bg-base-100 border border-base-300 rounded-xl overflow-hidden;
+  }
+
+  .admin-section-header {
+    @apply px-6 py-4 border-b border-base-300 bg-base-200/30;
+  }
+
+  .admin-section-title {
+    @apply font-semibold text-base-content;
+  }
+
+  .admin-section-body {
+    @apply p-6;
+  }
+
+  /* Admin form styles */
+  .admin-form-group {
+    @apply space-y-2;
+  }
+
+  .admin-form-label {
+    @apply block text-sm font-medium text-base-content/80;
+  }
+
+  .admin-form-input {
+    @apply w-full px-4 py-2.5 bg-base-100 border border-base-300 rounded-lg text-base-content placeholder:text-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+  }
+
+  .admin-form-help {
+    @apply text-xs text-base-content/50;
+  }
+
+  /* Search input with icon */
+  .admin-search-wrapper {
+    @apply relative;
+  }
+
+  .admin-search-icon {
+    @apply absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-base-content/40;
+  }
+
+  .admin-search-input {
+    @apply w-full pl-10 pr-4 py-2.5 bg-base-100 border border-base-300 rounded-lg text-base-content placeholder:text-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+  }
+}
+
+/* Admin sidebar active state animation */
+.admin-nav-item-active {
+  position: relative;
+}
+
+.admin-nav-item-active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 60%;
+  background: var(--color-primary);
+  border-radius: 0 2px 2px 0;
+}

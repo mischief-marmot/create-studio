@@ -6,11 +6,11 @@
       @click="selectRating(star)"
       @mouseenter="hoverRating = star"
       @mouseleave="hoverRating = 0"
-      class="cs:focus:outline-none cs:hover:cursor-pointer cs:focus:ring-2 cs:focus:ring-yellow-400 cs:focus:ring-opacity-50 cs:rounded-full cs:p-1"
+      class="cs:focus:outline-none cs:hover:cursor-pointer cs:rounded-full cs:bg-transparent cs:m-0 cs:p-1"
       :aria-label="`Rate ${star} star${star !== 1 ? 's' : ''}`"
     >
       <svg
-        class="cs:w-8 cs:h-8 cs:transition-colors cs:duration-150"
+        class="cs:size-8 cs:transition-colors cs:duration-150"
         :class="getStarClass(star)"
         fill="currentColor"
         viewBox="0 0 20 20"

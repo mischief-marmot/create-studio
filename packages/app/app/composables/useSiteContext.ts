@@ -69,11 +69,27 @@ export function useSiteContext() {
   })
 
   // Load user's sites
-  const loadSites = async () => {
+  // Returns { matched: boolean } when preferredSiteUrl is provided
+  const loadSites = async (preferredSiteUrl?: string): Promise<{ matched: boolean }> => {
     try {
       const response = await $fetch('/api/v2/sites')
       if (response.success && response.sites) {
         sites.value = response.sites
+
+        // If a preferred site URL is provided, try to select that site
+        if (preferredSiteUrl) {
+          const normalizedPreferred = preferredSiteUrl.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+          const matchingSite = sites.value.find(s => {
+            const normalizedSiteUrl = s.url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
+            return normalizedSiteUrl === normalizedPreferred
+          })
+          if (matchingSite) {
+            setSelectedSiteId(matchingSite.id)
+            return { matched: true }
+          }
+          // No match found - return false so caller can handle (e.g., open add site modal)
+          return { matched: false }
+        }
 
         // If no site selected but we have sites, select the first one
         if (!selectedSiteId.value && sites.value.length > 0) {
@@ -87,8 +103,10 @@ export function useSiteContext() {
           }
         }
       }
+      return { matched: true }
     } catch (error) {
       console.error('Failed to load sites:', error)
+      return { matched: false }
     }
   }
 

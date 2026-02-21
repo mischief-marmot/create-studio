@@ -15,7 +15,8 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 export interface Ingredient {
   original_text: string
   item?: string  // Pre-populated ingredient name (e.g., "flour")
-  amount?: string  // Pre-populated quantity with unit (e.g., "1 cup")
+  amount?: string  // Pre-populated quantity number (e.g., "2")
+  unit?: string  // Pre-populated unit (e.g., "tablespoons")
 }
 
 export interface NutritionItem {
@@ -286,10 +287,14 @@ export async function calculateRecipeNutritionWithItems(
     // Prioritize pre-populated item/amount if available, otherwise parse original_text
     const processedIngredients = data.ingredients.map(ingredient => {
       // If item and amount are already provided, use them directly
+      // Combine amount + unit for the quantity (e.g., "2" + "tablespoons" → "2 tablespoons")
       if (ingredient.item && ingredient.amount) {
+        const quantity = ingredient.unit
+          ? `${ingredient.amount} ${ingredient.unit}`
+          : ingredient.amount
         return {
           original_text: ingredient.original_text,
-          quantity: ingredient.amount,
+          quantity,
           item: ingredient.item,
           parsed_successfully: true
         }

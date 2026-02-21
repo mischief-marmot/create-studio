@@ -9,7 +9,7 @@ const toCache = process.env.NODE_ENV === 'production' && {
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: "2025-09-18",
+  compatibilityDate: "2026-01-12",
   future: {
     compatibilityVersion: 4,
   },
@@ -19,10 +19,19 @@ export default defineNuxtConfig({
   debug: false,
   devtools: { enabled: false, timeline: { enabled: true } },
   nitro: {
+    preset: "cloudflare_durable",
     rollupConfig: {
-      plugins: [vue()]
+      plugins: [vue()],
+      external: ['cloudflare:workers', 'cloudflare:sockets']
+    },
+    cors: {
+      origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:8074", "http://localhost:8174", "http://localhost:8274", "http://localhost:8374", "http://localhost:8081", "http://localhost:8083"],
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      credentials: true,
     },
     cloudflare: {
+      deployConfig: false,
+      nodeCompat: true,
       pages: {
         routes: {
           exclude: ['/assets/*']
@@ -73,10 +82,10 @@ export default defineNuxtConfig({
   vite: {
     plugins: [
       tailwindcss(),
-      // hides sourcemap warning for tailwind
+      // Suppress sourcemap warning from Tailwind
       {
         apply: "build",
-        name: "vite-plugin-ignore-sourcemap-warnings",
+        name: "vite-plugin-suppress-sourcemap-warnings",
         configResolved(config) {
           const originalOnWarn = config.build.rollupOptions.onwarn;
           config.build.rollupOptions.onwarn = (warning, warn) => {
@@ -97,7 +106,17 @@ export default defineNuxtConfig({
       },
     ],
     server: {
-      allowedHosts: ["host.docker.internal", "localhost:3000", "localhost:8074", "localhost:8081", "localhost:8084", "7823d21b31b9.ngrok-free.app"],
+      allowedHosts: true,
+      middlewareMode: true,
+      hmr: {
+        host: "localhost",
+        port: 3001,
+      },
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
     },
   },
   css: ["./app/assets/main.css"],
@@ -107,27 +126,28 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxt/test-utils/module",
     "@pinia/nuxt",
+    "@nuxt/content",  // Must be before @nuxthub/core for database auto-config
     "@nuxthub/core",
     "@nuxt/scripts",
     "nuxt-auth-utils",
-    "@nuxt/content",
   ],
   content: {
-    database: {
-      type: 'd1',
-      bindingName: 'DB'
-    }
+    // Database auto-configured by NuxtHub when registered after @nuxt/content
+    build: {
+      markdown: {
+        // Disable syntax highlighting (Shiki is ~1MB+)
+        highlight: false,
+      },
+    },
   },
   hub: {
     blob: true,
     kv: true,
-    database: true,
+    db: {
+      applyMigrationsDuringBuild: false,
+      dialect: 'sqlite',
+    },  
     cache: true,
-    bindings: {
-      observability: {
-        logs: true,
-      },
-    },
   },
   app: {
     head: {
@@ -141,11 +161,37 @@ export default defineNuxtConfig({
             "Create structured data cards for recipes, how-to guides, and FAQs with automatic JSON-LD generation",
         },
       ],
+       link: [
+        { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+        { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+        {
+          rel: 'stylesheet',
+          href: 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Fraunces:wght@200;300;400;500;600;700;800;900&family=Satoshi:ital,wght@0,400..900;1,400..900&display=swap',
+        },
+        {
+          rel: 'stylesheet',
+          href: 'https://cdn.fontshare.com/css?f[]=satoshi@300,400,500,700&display=swap',
+        },
+      ],
     },
   },
 
-  // Note: Google Analytics mock mode for development is handled in
-  // plugins/consent.client.ts using import.meta.dev check
+  scripts: {
+    registry: {
+      googleAnalytics:  {
+        id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
+        consent: 'analytics', // Require analytics consent before loading
+        anonymizeIp: true, // GDPR-friendly
+      },
+    },
+  },
+  $development: {
+    scripts: {
+      registry: {
+        googleAnalytics: "mock",
+      },
+    },
+  },
 
   runtimeConfig: {
     debug: false,
@@ -153,10 +199,20 @@ export default defineNuxtConfig({
     servicesApiJwtSecret: "",
     postmarkKey: "",
     sendingAddress: "hello@create.studio",
-    nixId: "",
-    nixKey: "",
+    session: {
+      password: "",
+      cookie: {
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
     stripeSecretKey: "",
     stripeWebhookSecret: "",
+    webhookPrivateKey: "",
+    adminApiKey: "",
+    // Comma-separated list of domain patterns allowed for testing (e.g., ".local,.test")
+    // These bypass the production block on internal/reserved domains
+    allowedTestDomains: "fastfoodforfamilies.local,localhost,localhost:8074,localhost:8174,localhost:8274",
     public: {
       debug: false,
       companyName: "Mischief Marmot LLC",
@@ -166,9 +222,10 @@ export default defineNuxtConfig({
       loadAds: false,
       scripts: {
         googleAnalytics: {
-          id: '', // NUXT_PUBLIC_SCRIPTS_REGISTRY_GOOGLE_ANALYTICS_ID
+          id: '', // NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID
         }
       },
+      webhookPublicKey: "",
       stripePublishableKey: "",
       stripePrice: {
         monthly: "",
