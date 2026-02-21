@@ -178,42 +178,69 @@
       <section ref="pricingSection" id="pricing" class="max-w-2xl mx-auto">
         <div class="bg-base-100 border-base-300 rounded-3xl overflow-hidden border-2">
           <div class="lg:p-12 p-6">
-            <!-- Segmented billing toggle -->
-            <div class="bg-base-200 rounded-xl p-1 flex gap-1 mb-8">
-              <label
-                v-for="plan in pricingPlans"
-                :key="plan.id"
-                class="flex-1 relative cursor-pointer"
-              >
-                <input
-                  type="radio"
-                  name="pricing-plan"
-                  v-model="selectedPriceId"
-                  :value="plan.priceId"
-                  class="sr-only"
-                />
-                <div
-                  class="rounded-lg py-2.5 px-2 text-center transition-all duration-200"
-                  :class="selectedPriceId === plan.priceId
-                    ? 'bg-base-100 shadow-sm'
-                    : 'hover:bg-base-100/50'"
-                >
-                  <span class="text-xs font-medium block" :class="selectedPriceId === plan.priceId ? 'text-base-content' : 'text-base-content/60'">{{ plan.name }}</span>
-                </div>
-                <span v-if="plan.tag" class="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-semibold text-primary">{{ plan.tag }}</span>
-              </label>
+
+            <!-- Price display -->
+            <div v-if="selectedPlan" class="text-center mb-10">
+              <div class="flex items-baseline justify-center gap-1.5">
+                <span class="text-base-content/40 text-2xl font-serif font-light">$</span>
+                <span class="text-base-content text-6xl font-light font-serif tabular-nums pricing-value">{{ selectedPlan.price }}</span>
+                <span class="text-base-content/40 text-base font-light">/ {{ selectedPlan.period }}</span>
+              </div>
+              <div class="mt-3 h-6 flex items-center justify-center">
+                <transition name="fade-slide" mode="out-in">
+                  <span
+                    v-if="selectedPlan.savings"
+                    :key="selectedPlan.id + '-savings'"
+                    class="inline-flex items-center gap-1.5 text-success bg-success/10 rounded-full px-3 py-1 text-xs font-medium"
+                  >
+                    Save {{ selectedPlan.savings }} vs. monthly
+                  </span>
+                  <span
+                    v-else
+                    :key="selectedPlan.id + '-cancel'"
+                    class="text-base-content/40 text-sm"
+                  >
+                    Cancel anytime
+                  </span>
+                </transition>
+              </div>
             </div>
 
-            <!-- Selected plan display -->
-            <div v-if="selectedPlan" class="text-center mb-8">
-              <div class="flex items-baseline justify-center gap-1">
-                <span class="text-base-content text-5xl font-light font-serif">${{ selectedPlan.price }}</span>
-                <span class="text-base-content/50 text-sm">/ {{ selectedPlan.period }}</span>
+            <!-- Slider -->
+            <div class="mb-10 px-1">
+              <input
+                type="range"
+                min="0"
+                :max="pricingPlans.length - 1"
+                :value="selectedSliderIndex"
+                @input="onSliderInput"
+                class="range range-primary w-full"
+                :step="1"
+              />
+              <!-- Tick labels -->
+              <div class="flex justify-between mt-3 px-0.5">
+                <button
+                  v-for="(plan, index) in pricingPlans"
+                  :key="plan.id"
+                  @click="setSliderIndex(index)"
+                  class="flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 min-w-0"
+                  :class="selectedSliderIndex === index ? 'scale-105' : 'opacity-50 hover:opacity-75'"
+                >
+                  <span
+                    class="text-xs font-medium transition-colors duration-200"
+                    :class="selectedSliderIndex === index ? 'text-base-content' : 'text-base-content/60'"
+                  >{{ plan.name }}</span>
+                  <span
+                    v-if="plan.tag"
+                    class="text-[10px] font-semibold text-primary leading-none"
+                  >{{ plan.tag }}</span>
+                </button>
               </div>
-              <p class="text-base-content/50 text-sm mt-2">
-                <span v-if="selectedPlan.savings">Save <strong class="text-success">{{ selectedPlan.savings }}</strong> vs. monthly</span>
-                <span v-else>Cancel anytime</span>
-              </p>
+            </div>
+
+            <!-- Plan description -->
+            <div v-if="selectedPlan" class="text-center mb-8">
+              <p class="text-base-content/50 text-sm">{{ selectedPlan.description }}</p>
             </div>
 
             <!-- Error Message -->
@@ -336,6 +363,23 @@ const selectedPlan = computed(() => {
   return pricingPlans.value.find((plan) => plan.priceId === selectedPriceId.value) || null
 })
 
+const selectedSliderIndex = computed(() => {
+  const idx = pricingPlans.value.findIndex((plan) => plan.priceId === selectedPriceId.value)
+  return idx >= 0 ? idx : 2 // default to annual (index 2)
+})
+
+const setSliderIndex = (index: number) => {
+  const plan = pricingPlans.value[index]
+  if (plan) {
+    selectedPriceId.value = plan.priceId
+  }
+}
+
+const onSliderInput = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  setSliderIndex(Number(target.value))
+}
+
 // Pricing plans
 const pricingPlans = computed(() => {
   const prices = {
@@ -452,6 +496,25 @@ useHead({
 
 .float-leave-active {
   transition: all 0.2s ease-in;
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.pricing-value {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .float-enter-from {
