@@ -10,7 +10,7 @@
     "db:flatten-migrations": "cp -n server/db/migrations/sqlite/*.sql server/db/migrations/ 2>/dev/null || true",
     "deploy:production": "npx wrangler d1 migrations apply DB --remote --config wrangler.jsonc && npx wrangler deploy --config wrangler.jsonc",
     "deploy:preview": "npx wrangler d1 migrations apply DB --remote --env preview --config wrangler.jsonc && npx wrangler deploy --config wrangler.jsonc --env preview",
-    "dev": "nuxt dev --host --port 3001",
+    "dev": "nuxt dev --host 0.0.0.0 --port 3001",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
