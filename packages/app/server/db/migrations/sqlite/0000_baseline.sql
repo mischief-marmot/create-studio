@@ -1,3 +1,0 @@
--- Baseline migration: Schema already exists from manual migrations 0001-0010
--- This file is empty because tables were created by previous migration system
--- Drizzle will track future schema changes from this point forward
