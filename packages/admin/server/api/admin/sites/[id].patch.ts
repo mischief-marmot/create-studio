@@ -1,10 +1,12 @@
 import { eq } from 'drizzle-orm'
-import { useAdminDb, sites } from "~~/server/utils/admin-db"
+import { useAdminDb, sites, siteMeta } from "~~/server/utils/admin-db"
+import type { SiteSettings } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 
 /**
  * PATCH /api/admin/sites/[id]
- * Update site fields (name, url, interactive_mode_enabled, interactive_mode_button_text)
+ * Update site fields (name, url) and settings (interactive_mode_enabled, interactive_mode_button_text)
+ * General fields are stored on Sites table; settings are stored on SiteMeta table
  */
 export default defineEventHandler(async (event) => {
   // Check admin session
@@ -44,54 +46,86 @@ export default defineEventHandler(async (event) => {
     const site = siteResult[0]
     const body = await readBody(event)
 
-    // Build update data
-    const updateData: Record<string, any> = {
-      updatedAt: new Date().toISOString(),
-    }
-
     const changes: Record<string, any> = {
       before: {},
       after: {},
     }
 
     let hasUpdates = false
+    const hasSiteFields = 'name' in body || 'url' in body
+    const hasInteractiveFields = 'interactive_mode_enabled' in body || 'interactive_mode_button_text' in body
 
-    if ('name' in body) {
-      const newName = body.name?.trim() || null
-      updateData.name = newName
-      changes.before.name = site.name
-      changes.after.name = newName
-      hasUpdates = true
+    // Update Sites table fields (name, url)
+    if (hasSiteFields) {
+      const updateData: Record<string, any> = {
+        updatedAt: new Date().toISOString(),
+      }
+
+      if ('name' in body) {
+        const newName = body.name?.trim() || null
+        updateData.name = newName
+        changes.before.name = site.name
+        changes.after.name = newName
+        hasUpdates = true
+      }
+
+      if ('url' in body) {
+        const newUrl = body.url?.trim()
+        if (!newUrl) {
+          throw createError({
+            statusCode: 400,
+            message: 'URL cannot be empty',
+          })
+        }
+        updateData.url = newUrl
+        changes.before.url = site.url
+        changes.after.url = newUrl
+        hasUpdates = true
+      }
+
+      await db
+        .update(sites)
+        .set(updateData)
+        .where(eq(sites.id, siteId))
     }
 
-    if ('url' in body) {
-      const newUrl = body.url?.trim()
-      if (!newUrl) {
-        throw createError({
-          statusCode: 400,
-          message: 'URL cannot be empty',
+    // Update SiteMeta settings (interactive mode)
+    if (hasInteractiveFields) {
+      const metaSettings: Partial<SiteSettings> = {}
+
+      // Get current settings for audit log
+      const existingMeta = await db.select().from(siteMeta).where(eq(siteMeta.site_id, siteId)).limit(1)
+      const currentSettings = (existingMeta[0]?.settings as SiteSettings) || {}
+
+      if ('interactive_mode_enabled' in body) {
+        const enabled = Boolean(body.interactive_mode_enabled)
+        metaSettings.interactive_mode_enabled = enabled
+        changes.before.interactive_mode_enabled = currentSettings.interactive_mode_enabled
+        changes.after.interactive_mode_enabled = enabled
+        hasUpdates = true
+      }
+
+      if ('interactive_mode_button_text' in body) {
+        const text = body.interactive_mode_button_text?.trim() || null
+        metaSettings.interactive_mode_button_text = text
+        changes.before.interactive_mode_button_text = currentSettings.interactive_mode_button_text
+        changes.after.interactive_mode_button_text = text
+        hasUpdates = true
+      }
+
+      const now = new Date().toISOString()
+      if (existingMeta.length > 0) {
+        const merged = { ...currentSettings, ...metaSettings }
+        await db.update(siteMeta).set({ settings: merged, updatedAt: now }).where(eq(siteMeta.site_id, siteId))
+      } else {
+        await db.insert(siteMeta).values({
+          site_id: siteId,
+          settings: metaSettings as SiteSettings,
+          version_logs: [],
+          createdAt: now,
+          updatedAt: now,
         })
       }
-      updateData.url = newUrl
-      changes.before.url = site.url
-      changes.after.url = newUrl
-      hasUpdates = true
-    }
-
-    if ('interactive_mode_enabled' in body) {
-      const enabled = Boolean(body.interactive_mode_enabled)
-      updateData.interactive_mode_enabled = enabled
-      changes.before.interactive_mode_enabled = site.interactive_mode_enabled
-      changes.after.interactive_mode_enabled = enabled
-      hasUpdates = true
-    }
-
-    if ('interactive_mode_button_text' in body) {
-      const text = body.interactive_mode_button_text?.trim() || null
-      updateData.interactive_mode_button_text = text
-      changes.before.interactive_mode_button_text = site.interactive_mode_button_text
-      changes.after.interactive_mode_button_text = text
-      hasUpdates = true
     }
 
     if (!hasUpdates) {
@@ -100,12 +134,6 @@ export default defineEventHandler(async (event) => {
         message: 'No fields to update',
       })
     }
-
-    // Update site
-    await db
-      .update(sites)
-      .set(updateData)
-      .where(eq(sites.id, siteId))
 
     // Audit log
     try {
@@ -125,24 +153,29 @@ export default defineEventHandler(async (event) => {
       console.warn('Failed to create audit log:', auditError)
     }
 
-    // Return updated site fields
-    const updatedResult = await db
+    // Return updated site fields + settings from SiteMeta
+    const updatedSite = await db
       .select({
         id: sites.id,
         name: sites.name,
         url: sites.url,
-        interactive_mode_enabled: sites.interactive_mode_enabled,
-        interactive_mode_button_text: sites.interactive_mode_button_text,
         updatedAt: sites.updatedAt,
       })
       .from(sites)
       .where(eq(sites.id, siteId))
       .limit(1)
 
+    const updatedMeta = await db.select({ settings: siteMeta.settings }).from(siteMeta).where(eq(siteMeta.site_id, siteId)).limit(1)
+    const settings = updatedMeta[0]?.settings as SiteSettings | undefined
+
     return {
       success: true,
       message: 'Site updated successfully',
-      site: updatedResult[0],
+      site: {
+        ...updatedSite[0],
+        interactive_mode_enabled: settings?.interactive_mode_enabled ?? true,
+        interactive_mode_button_text: settings?.interactive_mode_button_text ?? null,
+      },
     }
   } catch (error) {
     if (error && typeof error === 'object' && 'statusCode' in error) {

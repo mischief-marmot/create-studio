@@ -7,7 +7,7 @@
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SiteRepository } from '~~/server/utils/database'
+import { SiteRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
@@ -63,11 +63,19 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Enrich with SiteMeta settings
+    const siteMetaRepo = new SiteMetaRepository()
+    const settings = await siteMetaRepo.getSettings(siteId)
+
     // Return response
     setResponseStatus(event, 200)
     return {
       success: true,
-      site: existingSite
+      site: {
+        ...existingSite,
+        interactive_mode_enabled: settings.interactive_mode_enabled ?? true,
+        interactive_mode_button_text: settings.interactive_mode_button_text ?? null,
+      }
     }
 
   } catch (error) {

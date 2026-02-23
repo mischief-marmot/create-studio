@@ -13,8 +13,8 @@ import type { H3Event } from 'h3'
 // Re-export app schema tables for convenience in API routes
 // Note: admins/auditLogs/Admin/NewAdmin/AuditLog/NewAuditLog are intentionally
 // excluded here to avoid collisions with admin-ops-db.ts exports
-export { users, sites, siteUsers, subscriptions, broadcasts, feedbackReports } from '../../../app/server/db/schema'
-export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, Broadcast, NewBroadcast, FeedbackReport, NewFeedbackReport } from '../../../app/server/db/schema'
+export { users, sites, siteUsers, subscriptions, broadcasts, feedbackReports, siteMeta } from '../../../app/server/db/schema'
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, Broadcast, NewBroadcast, FeedbackReport, NewFeedbackReport, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry } from '../../../app/server/db/schema'
 
 // Type for NuxtHub's auto-imported db
 type DrizzleDb = ReturnType<typeof drizzle>

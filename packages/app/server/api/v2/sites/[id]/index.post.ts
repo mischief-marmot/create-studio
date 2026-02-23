@@ -6,11 +6,11 @@
  * It handles both canonical and non-canonical sites by updating the canonical site.
  *
  * Requires JWT authentication (from WordPress plugin token)
- * Body: { php_version?, wp_version?, create_version? }
+ * Body: { php_version?, wp_version?, create_version?, interactive_mode_enabled?, interactive_mode_button_text? }
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SiteRepository } from '~~/server/utils/database'
+import { SiteRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { verifyJWT } from '~~/server/utils/auth'
 
@@ -58,8 +58,10 @@ export default defineEventHandler(async (event) => {
     const { php_version, wp_version, create_version, interactive_mode_enabled, interactive_mode_button_text } = body
 
     // Validate input - at least one field must be provided
-    const hasFields = php_version || wp_version || create_version || interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
-    if (!hasFields) {
+    const hasVersionFields = php_version || wp_version || create_version
+    const hasSettingsFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
+
+    if (!hasVersionFields && !hasSettingsFields) {
       setResponseStatus(event, 400)
       logger.debug('No fields to update')
       return {
@@ -84,22 +86,34 @@ export default defineEventHandler(async (event) => {
     // Determine which site to update - use canonical site if this is non-canonical
     const siteIdToUpdate = existingSite.canonical_site_id || existingSite.id!
 
-    // Build update object
-    const updateData: Record<string, unknown> = {}
-    if (php_version) updateData.php_version = php_version
-    if (wp_version) updateData.wp_version = wp_version
-    if (create_version) updateData.create_version = create_version
-    if (interactive_mode_enabled !== undefined) updateData.interactive_mode_enabled = interactive_mode_enabled ? 1 : 0
-    if (interactive_mode_button_text !== undefined) updateData.interactive_mode_button_text = interactive_mode_button_text || null
+    // Update Sites table version fields (only if there's something to update)
+    let updatedSite = existingSite
+    if (hasVersionFields) {
+      const updateData: Record<string, unknown> = {}
+      if (php_version) updateData.php_version = php_version
+      if (wp_version) updateData.wp_version = wp_version
+      if (create_version) updateData.create_version = create_version
 
-    logger.debug('Updating site versions', { siteIdParam, siteIdToUpdate, updateData })
+      logger.debug('Updating site versions', { siteIdParam, siteIdToUpdate, updateData })
+      updatedSite = (await siteRepo.update(siteIdToUpdate, updateData))!
+    }
 
-    // Update the canonical site
-    const updatedSite = await siteRepo.update(siteIdToUpdate, updateData)
+    // Write interactive mode settings to SiteMeta
+    if (hasSettingsFields) {
+      const siteMetaRepo = new SiteMetaRepository()
+      const metaSettings: Record<string, unknown> = {}
+      if (interactive_mode_enabled !== undefined) {
+        metaSettings.interactive_mode_enabled = !!interactive_mode_enabled
+      }
+      if (interactive_mode_button_text !== undefined) {
+        metaSettings.interactive_mode_button_text = interactive_mode_button_text || null
+      }
+      await siteMetaRepo.updateSettings(siteIdToUpdate, metaSettings)
+    }
 
     // Return response
     setResponseStatus(event, 200)
-    logger.debug('Site versions updated successfully', { siteId: siteIdToUpdate })
+    logger.debug('Site updated successfully', { siteId: siteIdToUpdate })
     return {
       success: true,
       site: updatedSite

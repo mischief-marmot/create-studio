@@ -1,6 +1,6 @@
 /// <reference path="../../hub.d.ts" />
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SubscriptionRepository } from '~~/server/utils/database'
+import { SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
@@ -38,6 +38,10 @@ export default defineEventHandler(async (event) => {
       const subscriptionRepo = new SubscriptionRepository()
       subscriptionTier = await subscriptionRepo.getActiveTier(siteResult.id as number)
 
+      // Read settings from SiteMeta (falls back to Sites columns)
+      const siteMetaRepo = new SiteMetaRepository()
+      const settings = await siteMetaRepo.getSettings(siteResult.id as number)
+
       // Free tier gets no interactive mode at all
       if (subscriptionTier === 'free') {
         showInteractiveMode = false
@@ -45,15 +49,15 @@ export default defineEventHandler(async (event) => {
 
       // Free+ and Pro tiers get Interactive Mode
       // Check if Interactive Mode is disabled by the publisher
-      if (!siteResult.interactive_mode_enabled) {
+      if (settings.interactive_mode_enabled === false) {
         showInteractiveMode = false
       }
 
       // Pro sites can customize Interactive Mode settings
       if (subscriptionTier === 'pro') {
         // Use custom button text if set
-        if (siteResult.interactive_mode_button_text) {
-          buttonText = siteResult.interactive_mode_button_text as string
+        if (settings.interactive_mode_button_text) {
+          buttonText = settings.interactive_mode_button_text
         }
       }
 

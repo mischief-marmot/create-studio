@@ -7,10 +7,10 @@
  */
 
 import { eq, and, or, isNull, isNotNull, sql } from 'drizzle-orm'
-import type { SiteUser } from '../db/schema'
+import type { SiteUser, SiteSettings, VersionLogEntry } from '../db/schema'
 
 // Re-export types from schema for convenience
-export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession } from '../db/schema'
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry } from '../db/schema'
 
 // Legacy interface types for backwards compatibility
 export interface CreateUserData {
@@ -224,8 +224,6 @@ export class SiteRepository {
     wp_version: string | null
     php_version: string | null
     create_version: string | null
-    interactive_mode_enabled: boolean
-    interactive_mode_button_text: string | null
   }>) {
     const now = new Date().toISOString()
 
@@ -344,8 +342,6 @@ export class SiteRepository {
       create_version: schema.sites.create_version,
       wp_version: schema.sites.wp_version,
       php_version: schema.sites.php_version,
-      interactive_mode_enabled: schema.sites.interactive_mode_enabled,
-      interactive_mode_button_text: schema.sites.interactive_mode_button_text,
       createdAt: schema.sites.createdAt,
       updatedAt: schema.sites.updatedAt,
     })
@@ -770,6 +766,92 @@ export class SiteUserRepository {
         eq(schema.siteUsers.user_id, userId),
         eq(schema.siteUsers.site_id, siteId)
       ))
+  }
+}
+
+/**
+ * SiteMeta database operations
+ * Manages flexible site settings and version update logs
+ */
+export class SiteMetaRepository {
+  /**
+   * Find SiteMeta row by site ID, or return null
+   */
+  async findBySiteId(siteId: number) {
+    return await db.select().from(schema.siteMeta)
+      .where(eq(schema.siteMeta.site_id, siteId))
+      .get()
+  }
+
+  /**
+   * Get settings for a site from SiteMeta.
+   * Returns defaults if no SiteMeta row exists yet.
+   */
+  async getSettings(siteId: number): Promise<SiteSettings> {
+    const meta = await this.findBySiteId(siteId)
+    if (meta?.settings && Object.keys(meta.settings).length > 0) {
+      return meta.settings as SiteSettings
+    }
+    return {}
+  }
+
+  /**
+   * Upsert settings JSON — merges partial settings into existing
+   */
+  async updateSettings(siteId: number, settings: Partial<SiteSettings>) {
+    const now = new Date().toISOString()
+    const existing = await this.findBySiteId(siteId)
+
+    if (existing) {
+      const merged = { ...(existing.settings as SiteSettings || {}), ...settings }
+      await db.update(schema.siteMeta)
+        .set({ settings: merged, updatedAt: now })
+        .where(eq(schema.siteMeta.site_id, siteId))
+    } else {
+      await db.insert(schema.siteMeta).values({
+        site_id: siteId,
+        settings: settings as SiteSettings,
+        version_logs: [],
+        createdAt: now,
+        updatedAt: now,
+      })
+    }
+
+    return this.findBySiteId(siteId)
+  }
+
+  /**
+   * Append a version log entry
+   */
+  async addVersionLog(siteId: number, from: string, to: string) {
+    const now = new Date().toISOString()
+    const entry: VersionLogEntry = { from, to, at: now }
+    const existing = await this.findBySiteId(siteId)
+
+    if (existing) {
+      const logs = [...(existing.version_logs as VersionLogEntry[] || []), entry]
+      await db.update(schema.siteMeta)
+        .set({ version_logs: logs, updatedAt: now })
+        .where(eq(schema.siteMeta.site_id, siteId))
+    } else {
+      await db.insert(schema.siteMeta).values({
+        site_id: siteId,
+        settings: {},
+        version_logs: [entry],
+        createdAt: now,
+        updatedAt: now,
+      })
+    }
+
+    return this.findBySiteId(siteId)
+  }
+
+  /**
+   * Get version logs for a site
+   */
+  async getVersionLogs(siteId: number): Promise<VersionLogEntry[]> {
+    const meta = await this.findBySiteId(siteId)
+    return (meta?.version_logs as VersionLogEntry[]) || []
   }
 }
 

@@ -40,8 +40,6 @@ export const sites = sqliteTable('Sites', {
   create_version: text('create_version'),
   wp_version: text('wp_version'),
   php_version: text('php_version'),
-  interactive_mode_enabled: integer('interactive_mode_enabled', { mode: 'boolean' }).default(true),
-  interactive_mode_button_text: text('interactive_mode_button_text'),
   pending_verification_code: text('pending_verification_code'),
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
@@ -154,6 +152,31 @@ export const feedbackReports = sqliteTable('FeedbackReports', {
   index('idx_feedback_created_at').on(table.createdAt),
 ])
 
+// SiteSettings JSON type (extensible site settings)
+export interface SiteSettings {
+  interactive_mode_enabled?: boolean
+  interactive_mode_button_text?: string | null
+}
+
+// VersionLogEntry JSON type (plugin version update history)
+export interface VersionLogEntry {
+  from: string
+  to: string
+  at: string // ISO 8601 timestamp
+}
+
+// SiteMeta table (flexible per-site settings and metadata)
+export const siteMeta = sqliteTable('SiteMeta', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  site_id: integer('site_id').notNull().unique().references(() => sites.id, { onDelete: 'cascade' }),
+  settings: text('settings', { mode: 'json' }).$type<SiteSettings>().default({}),
+  version_logs: text('version_logs', { mode: 'json' }).$type<VersionLogEntry[]>().default([]),
+  createdAt: text('createdAt'),
+  updatedAt: text('updatedAt'),
+}, (table) => [
+  index('idx_site_meta_site_id').on(table.site_id),
+])
+
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
 
 // Type exports for use in application code
@@ -171,3 +194,5 @@ export type Broadcast = typeof broadcasts.$inferSelect
 export type NewBroadcast = typeof broadcasts.$inferInsert
 export type FeedbackReport = typeof feedbackReports.$inferSelect
 export type NewFeedbackReport = typeof feedbackReports.$inferInsert
+export type SiteMeta = typeof siteMeta.$inferSelect
+export type NewSiteMeta = typeof siteMeta.$inferInsert

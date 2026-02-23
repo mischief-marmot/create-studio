@@ -7,7 +7,7 @@
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { SiteRepository, SubscriptionRepository } from '~~/server/utils/database'
+import { SiteRepository, SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
@@ -80,14 +80,15 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Build update object
-    const updateData: Record<string, unknown> = {}
+    // Update general site fields
+    if (hasGeneralFields) {
+      const updateData: Record<string, unknown> = {}
+      if (name !== undefined) updateData.name = name
+      if (url !== undefined) updateData.url = url
+      await siteRepo.update(siteId, updateData)
+    }
 
-    // General fields (always allowed)
-    if (name !== undefined) updateData.name = name
-    if (url !== undefined) updateData.url = url
-
-    // Pro fields - require Pro subscription
+    // Pro fields - require Pro subscription, write to SiteMeta
     if (hasProFields) {
       const subscriptionRepo = new SubscriptionRepository()
       const tier = await subscriptionRepo.getActiveTier(siteId)
@@ -101,9 +102,6 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      if (interactive_mode_enabled !== undefined) {
-        updateData.interactive_mode_enabled = interactive_mode_enabled ? 1 : 0
-      }
       if (interactive_mode_button_text !== undefined) {
         // Validate button text length (max 50 chars)
         if (interactive_mode_button_text && interactive_mode_button_text.length > 50) {
@@ -113,12 +111,18 @@ export default defineEventHandler(async (event) => {
             error: 'Button text must be 50 characters or less'
           }
         }
-        updateData.interactive_mode_button_text = interactive_mode_button_text || null
       }
-    }
 
-    // Update site
-    const updatedSite = await siteRepo.update(siteId, updateData)
+      const siteMetaRepo = new SiteMetaRepository()
+      const metaSettings: Record<string, unknown> = {}
+      if (interactive_mode_enabled !== undefined) {
+        metaSettings.interactive_mode_enabled = !!interactive_mode_enabled
+      }
+      if (interactive_mode_button_text !== undefined) {
+        metaSettings.interactive_mode_button_text = interactive_mode_button_text || null
+      }
+      await siteMetaRepo.updateSettings(siteId, metaSettings)
+    }
 
     // Send settings_update webhook to WordPress plugin for pro field changes
     if (hasProFields && existingSite.url) {
@@ -142,7 +146,9 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Return response
+    // Return updated site
+    const updatedSite = await siteRepo.findById(siteId)
+
     setResponseStatus(event, 200)
     logger.debug('Site updated successfully', updatedSite)
     return {

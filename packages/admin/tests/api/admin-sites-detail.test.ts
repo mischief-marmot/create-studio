@@ -18,8 +18,6 @@ vi.mock('~~/server/utils/db', () => ({
     create_version: 'create_version',
     wp_version: 'wp_version',
     php_version: 'php_version',
-    interactive_mode_enabled: 'interactive_mode_enabled',
-    interactive_mode_button_text: 'interactive_mode_button_text',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
   },

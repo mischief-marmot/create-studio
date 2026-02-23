@@ -1,5 +1,5 @@
 import { eq, desc } from 'drizzle-orm'
-import { useAdminDb, users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
+import { useAdminDb, users, sites, subscriptions, siteUsers, siteMeta } from "~~/server/utils/admin-db"
 
 /**
  * GET /api/admin/sites/[id]
@@ -44,8 +44,6 @@ export default defineEventHandler(async (event) => {
         create_version: sites.create_version,
         wp_version: sites.wp_version,
         php_version: sites.php_version,
-        interactive_mode_enabled: sites.interactive_mode_enabled,
-        interactive_mode_button_text: sites.interactive_mode_button_text,
         createdAt: sites.createdAt,
         updatedAt: sites.updatedAt,
         ownerEmail: users.email,
@@ -123,6 +121,18 @@ export default defineEventHandler(async (event) => {
 
     const subscription = subscriptionResult[0] || null
 
+    // Get SiteMeta data (settings + version_logs)
+    const siteMetaResult = await db
+      .select({
+        settings: siteMeta.settings,
+        version_logs: siteMeta.version_logs,
+      })
+      .from(siteMeta)
+      .where(eq(siteMeta.site_id, siteUsersLookupId))
+      .limit(1)
+
+    const meta = siteMetaResult[0] || null
+
     // Helper: check if a string is a valid ISO-ish date (starts with a 4-digit year)
     const isValidDate = (s: string | null) => s != null && /^\d{4}-/.test(s)
 
@@ -141,10 +151,13 @@ export default defineEventHandler(async (event) => {
         wordpress: site.wp_version,
         php: site.php_version,
       },
-      settings: {
-        interactive_mode_enabled: site.interactive_mode_enabled,
-        interactive_mode_button_text: site.interactive_mode_button_text,
+      settings: meta?.settings ? meta.settings as Record<string, unknown> : {
+        interactive_mode_enabled: true,
+        interactive_mode_button_text: null,
       },
+      meta: meta ? {
+        version_logs: meta.version_logs,
+      } : null,
       canonical_site: canonicalSite,
       associated_users: associatedUsers.map(user => ({
         id: user.userId,
