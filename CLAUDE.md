@@ -62,12 +62,20 @@ npm test tests/unit/nutrition-api.test.ts
 
 - **Database Dialect**: The database dialect is set in the `nuxt.config.ts` file, within the `hub.db` option or `hub.db.dialect` property.
 - **Drizzle Config**: Don't generate the `drizzle.config.ts` file manually, it is generated automatically by NuxtHub.
-- **Generate Migrations**: Use `npx nuxt db generate` to automatically generate database migrations from schema changes
-- **Never Write Manual Migrations**: Do not manually create SQL migration files in the `server/db/migrations/` directory
+- **Manual Migrations Only**: Do NOT use `npx nuxt db generate` or `npx nuxt db migrate`. NuxtHub's Drizzle-based migration tooling uses a different format that we are not using. All migrations must be written manually.
+- **Migration Format**: Migrations are plain SQL files in `packages/app/server/db/migrations/` with the naming convention `NNNN_description.sql` (e.g., `0018_add-site-meta.sql`). The number is zero-padded to 4 digits and increments sequentially.
 - **Workflow**:
   1. Create or modify the database schema in `server/db/schema.ts` or any other schema file in the `server/db/schema/` directory
-  2. Run `npx nuxt db generate` to generate the migration
-  3. Run `npx nuxt db migrate` to apply the migration to the database, or run `npx nuxt dev` to apply the migration during development
+  2. Manually create a new SQL migration file in `packages/app/server/db/migrations/` with the next sequential number
+  3. Write the SQL statements (CREATE TABLE, ALTER TABLE, CREATE INDEX, etc.) in the migration file
+  4. Migrations are applied automatically when running `npx nuxt dev`
+- **Migration file template**:
+  ```sql
+  -- Migration number: NNNN
+  -- Description of what this migration does
+
+  ALTER TABLE MyTable ADD COLUMN new_column TEXT;
+  ```
 - **Access the database**: Use the `db` instance from `hub:db` to query the database, it is a Drizzle ORM instance.
 
 ## Development Methodology
