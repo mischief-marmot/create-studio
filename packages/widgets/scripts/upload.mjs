@@ -10,6 +10,11 @@ if (!process.env.CI && existsSync(envPath)) {
   loadEnv({ path: envPath, override: false })
 }
 
+// Trust local dev certificates (e.g., cs.test via Caddy) in non-CI environments
+if (!process.env.CI && !process.env.NODE_TLS_REJECT_UNAUTHORIZED) {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const root = resolve(__dirname, '..')
 
