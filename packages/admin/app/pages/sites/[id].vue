@@ -509,6 +509,53 @@
             </div>
           </div>
 
+          <!-- Plugin Upgrade History -->
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+                Plugin Upgrade History
+              </h3>
+              <div v-if="versionLogs.length" class="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                {{ versionLogs.length }}
+              </div>
+            </div>
+
+            <!-- No Logs -->
+            <div v-if="versionLogs.length === 0" class="py-12 text-center">
+              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
+                <ArrowPathIcon class="w-8 h-8" />
+              </div>
+              <p class="text-sm text-base-content/50">No upgrade history recorded</p>
+            </div>
+
+            <!-- Upgrade Timeline -->
+            <div v-else class="space-y-0">
+              <div
+                v-for="(log, index) in versionLogs"
+                :key="index"
+                class="relative flex items-start gap-4 py-3"
+                :class="{ 'border-b border-base-300/30': index < versionLogs.length - 1 }"
+              >
+                <!-- Timeline dot -->
+                <div class="shrink-0 mt-1.5">
+                  <div class="w-2 h-2 rounded-full bg-primary"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-mono text-sm text-base-content/50">{{ log.from }}</span>
+                    <svg class="w-3.5 h-3.5 text-base-content/30 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                    <span class="font-mono text-sm text-base-content font-medium">{{ log.to }}</span>
+                  </div>
+                  <span class="text-xs text-base-content/40 mt-0.5 block">{{ formatDateTime(log.at) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Site User Activity -->
           <AdminAuditTimeline
             entity-type="site_user"
@@ -722,6 +769,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   ArrowLeftIcon,
+  ArrowPathIcon,
   UserPlusIcon,
   PencilSquareIcon,
   PencilIcon,
@@ -786,6 +834,13 @@ interface Site {
     interactive_mode_enabled: boolean
     interactive_mode_button_text: string | null
   }
+  meta: {
+    version_logs: Array<{
+      from: string
+      to: string
+      at: string
+    }>
+  } | null
   canonical_site: CanonicalSite | null
   associated_users: AssociatedUser[]
   subscription: Subscription | null
@@ -821,6 +876,12 @@ const editForm = ref({
 // Computed: canonical vs legacy site
 const isLegacy = computed(() => !!site.value?.canonical_site)
 const isCanonical = computed(() => site.value !== null && !site.value.canonical_site)
+
+// Computed: version logs sorted newest first
+const versionLogs = computed(() => {
+  const logs = site.value?.meta?.version_logs || []
+  return [...logs].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+})
 
 // Computed: all owners from associated users + the primary owner
 const siteOwners = computed(() => {
@@ -1207,6 +1268,19 @@ const formatDate = (dateString: string | null): string => {
     year: 'numeric',
     month: 'short',
     day: 'numeric'
+  })
+}
+
+const formatDateTime = (dateString: string | null): string => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return 'N/A'
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
   })
 }
 
