@@ -1,6 +1,7 @@
 import '../widget.css'
 import { WidgetSDK } from './lib/widget-sdk'
 import { useLogger } from '@create-studio/shared/utils/logger'
+import { buildInteractiveModeConfig } from './lib/entry-helpers'
 
 // Function to dynamically load CSS
 function loadWidgetCSS() {
@@ -188,12 +189,15 @@ const CreateStudio = {
       }
 
       const config = {
-        creationId,
-        buttonText: section.getAttribute('data-button-text') || siteConfig.buttonText || 'Try Interactive Mode!',
-        siteUrl: sdkInstance.getSiteUrl(),
-        embedUrl: sdkInstance.getEmbedUrl(),
+        ...buildInteractiveModeConfig({
+          creationId,
+          siteConfig,
+          siteUrl: sdkInstance.getSiteUrl(),
+          embedUrl: sdkInstance.getEmbedUrl(),
+          buttonText: section.getAttribute('data-button-text') || undefined,
+          unitConversionConfig,
+        }),
         theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {},
-        unitConversion: unitConversionConfig
       }
       logger.info('⚙️ Widget config:', config)
 

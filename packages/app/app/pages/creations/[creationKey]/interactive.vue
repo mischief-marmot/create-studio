@@ -144,12 +144,19 @@ onMounted(async () => {
     // Mount the interactive experience widget directly
     const targetElement = document.getElementById(`interactive-widget-${creationInfo.creationId}`);
     if (targetElement) {
+        // Theme preview params (used by the WP settings theme selector preview)
+        const previewThemeDesktop = route.query.themeDesktop as string | undefined
+        const previewThemeMobile = route.query.themeMobile as string | undefined
+        const validThemes = new Set(['carousel', 'split', 'cinematic'])
+
         await window.CreateStudio.mount('interactive-experience', targetElement, {
             creationId: creationInfo.creationId,
             domain: creationInfo.domain,
             baseUrl: window.location.origin,
             hideAttribution: true,
-            disableRatingSubmission
+            disableRatingSubmission,
+            ...(previewThemeDesktop && validThemes.has(previewThemeDesktop) && { themeDesktop: previewThemeDesktop }),
+            ...(previewThemeMobile && validThemes.has(previewThemeMobile) && { themeMobile: previewThemeMobile }),
         });
         targetElement.style.height = '100%'
     }

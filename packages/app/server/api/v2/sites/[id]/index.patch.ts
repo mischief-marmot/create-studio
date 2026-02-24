@@ -31,11 +31,12 @@ export default defineEventHandler(async (event) => {
 
     // Read body
     const body = await readBody(event)
-    const { name, url, interactive_mode_enabled, interactive_mode_button_text } = body
+    const { name, url, interactive_mode_enabled, interactive_mode_button_text, interactive_mode_theme_desktop, interactive_mode_theme_mobile } = body
 
     // Validate input - at least one field must be provided
     const hasGeneralFields = name !== undefined || url !== undefined
     const hasProFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
+      || interactive_mode_theme_desktop !== undefined || interactive_mode_theme_mobile !== undefined
 
     if (!hasGeneralFields && !hasProFields) {
       setResponseStatus(event, 400)
@@ -113,6 +114,8 @@ export default defineEventHandler(async (event) => {
         }
       }
 
+      const VALID_THEMES = new Set(['carousel', 'split', 'cinematic'])
+
       const siteMetaRepo = new SiteMetaRepository()
       const metaSettings: Record<string, unknown> = {}
       if (interactive_mode_enabled !== undefined) {
@@ -120,6 +123,18 @@ export default defineEventHandler(async (event) => {
       }
       if (interactive_mode_button_text !== undefined) {
         metaSettings.interactive_mode_button_text = interactive_mode_button_text || null
+      }
+      if (interactive_mode_theme_desktop !== undefined) {
+        metaSettings.interactive_mode_theme_desktop =
+          interactive_mode_theme_desktop && VALID_THEMES.has(interactive_mode_theme_desktop)
+            ? interactive_mode_theme_desktop
+            : null
+      }
+      if (interactive_mode_theme_mobile !== undefined) {
+        metaSettings.interactive_mode_theme_mobile =
+          interactive_mode_theme_mobile && VALID_THEMES.has(interactive_mode_theme_mobile)
+            ? interactive_mode_theme_mobile
+            : null
       }
       await siteMetaRepo.updateSettings(siteId, metaSettings)
     }

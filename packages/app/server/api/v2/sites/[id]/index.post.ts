@@ -6,7 +6,7 @@
  * It handles both canonical and non-canonical sites by updating the canonical site.
  *
  * Requires JWT authentication (from WordPress plugin token)
- * Body: { php_version?, wp_version?, create_version?, interactive_mode_enabled?, interactive_mode_button_text? }
+ * Body: { php_version?, wp_version?, create_version?, interactive_mode_enabled?, interactive_mode_button_text?, interactive_mode_theme_desktop?, interactive_mode_theme_mobile? }
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
@@ -55,11 +55,12 @@ export default defineEventHandler(async (event) => {
 
     // Read body
     const body = await readBody(event)
-    const { php_version, wp_version, create_version, interactive_mode_enabled, interactive_mode_button_text } = body
+    const { php_version, wp_version, create_version, interactive_mode_enabled, interactive_mode_button_text, interactive_mode_theme_desktop, interactive_mode_theme_mobile } = body
 
     // Validate input - at least one field must be provided
     const hasVersionFields = php_version || wp_version || create_version
     const hasSettingsFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
+      || interactive_mode_theme_desktop !== undefined || interactive_mode_theme_mobile !== undefined
 
     if (!hasVersionFields && !hasSettingsFields) {
       setResponseStatus(event, 400)
@@ -100,6 +101,7 @@ export default defineEventHandler(async (event) => {
 
     // Write interactive mode settings to SiteMeta
     if (hasSettingsFields) {
+      const VALID_THEMES = new Set(['carousel', 'split', 'cinematic'])
       const siteMetaRepo = new SiteMetaRepository()
       const metaSettings: Record<string, unknown> = {}
       if (interactive_mode_enabled !== undefined) {
@@ -107,6 +109,18 @@ export default defineEventHandler(async (event) => {
       }
       if (interactive_mode_button_text !== undefined) {
         metaSettings.interactive_mode_button_text = interactive_mode_button_text || null
+      }
+      if (interactive_mode_theme_desktop !== undefined) {
+        metaSettings.interactive_mode_theme_desktop =
+          interactive_mode_theme_desktop && VALID_THEMES.has(interactive_mode_theme_desktop)
+            ? interactive_mode_theme_desktop
+            : null
+      }
+      if (interactive_mode_theme_mobile !== undefined) {
+        metaSettings.interactive_mode_theme_mobile =
+          interactive_mode_theme_mobile && VALID_THEMES.has(interactive_mode_theme_mobile)
+            ? interactive_mode_theme_mobile
+            : null
       }
       await siteMetaRepo.updateSettings(siteIdToUpdate, metaSettings)
     }

@@ -25,10 +25,15 @@ export default defineEventHandler(async (event) => {
   }
 
   // Look up site and subscription tier
+  const VALID_THEMES = new Set(['carousel', 'split', 'cinematic'])
+  const DEFAULT_THEME = 'carousel'
+
   let subscriptionTier = 'free'
   let renderMode: 'iframe' | 'in-dom' = 'iframe'
   let showInteractiveMode = true
   let buttonText = 'Try Interactive Mode!'
+  let themeDesktop = DEFAULT_THEME
+  let themeMobile = DEFAULT_THEME
 
   try {
     // Find site by URL - need to look up across all users
@@ -59,6 +64,13 @@ export default defineEventHandler(async (event) => {
         if (settings.interactive_mode_button_text) {
           buttonText = settings.interactive_mode_button_text
         }
+        // Use custom theme if set and valid
+        if (settings.interactive_mode_theme_desktop && VALID_THEMES.has(settings.interactive_mode_theme_desktop)) {
+          themeDesktop = settings.interactive_mode_theme_desktop
+        }
+        if (settings.interactive_mode_theme_mobile && VALID_THEMES.has(settings.interactive_mode_theme_mobile)) {
+          themeMobile = settings.interactive_mode_theme_mobile
+        }
       }
 
       logger.debug(`Site ${siteUrl} has tier: ${subscriptionTier}, interactive mode: ${showInteractiveMode}`)
@@ -79,6 +91,8 @@ export default defineEventHandler(async (event) => {
     baseUrl: runtimeConfig.public.rootUrl,
     subscriptionTier,
     renderMode,
+    themeDesktop,
+    themeMobile,
     features: {
       inDomRendering: renderMode === 'in-dom',
       customStyling: subscriptionTier === 'pro',
