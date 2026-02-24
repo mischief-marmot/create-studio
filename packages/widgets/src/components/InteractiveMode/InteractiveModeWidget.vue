@@ -51,6 +51,8 @@
               :base-url="baseUrl"
               :disable-rating-submission="config.disableRatingSubmission"
               :unit-conversion-config="config.unitConversion"
+              :theme-desktop="globalConfig?.themeDesktop"
+              :theme-mobile="globalConfig?.themeMobile"
               hide-attribution
               class="cs:w-full cs:h-full"
             />

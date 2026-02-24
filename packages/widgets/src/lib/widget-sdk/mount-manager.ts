@@ -12,6 +12,9 @@ import ActiveTimers from '../../components/ActiveTimers.vue'
 import RecipeSkeletonLoader from '../../components/RecipeSkeletonLoader.vue'
 import DraggableHandle from '../../components/DraggableHandle.vue'
 import InteractiveExperience from '../../components/InteractiveExperience.vue'
+import InteractiveCarousel from '../../components/InteractiveCarousel.vue'
+import InteractiveSplit from '../../components/InteractiveSplit.vue'
+import InteractiveCinematic from '../../components/InteractiveCinematic.vue'
 
 export interface MountContext {
   type: string
@@ -65,6 +68,9 @@ export class MountManager {
       app.component('RecipeSkeletonLoader', RecipeSkeletonLoader)
       app.component('DraggableHandle', DraggableHandle)
       app.component('InteractiveExperience', InteractiveExperience)
+      app.component('InteractiveCarousel', InteractiveCarousel)
+      app.component('InteractiveSplit', InteractiveSplit)
+      app.component('InteractiveCinematic', InteractiveCinematic)
 
       app.provide('widgetStorage', storageManager)
       app.provide('widgetConfig', widgetConfig)
