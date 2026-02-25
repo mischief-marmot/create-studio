@@ -3,7 +3,7 @@
     class="cs:absolute cs:bottom-[120%] cs:left-0 cs:right-0 cs:mx-auto cs:bg-base-300 cs:rounded-xl cs:border-[0.5px] cs:border-base-300/60 cs:shadow-xl cs:overflow-y-auto cs:max-w-[90%] cs:sm:max-w-lg cs:max-h-[50vh] cs:text-base-content cs:z-40">
     <div>
       <div class="cs:flex cs:items-center cs:justify-end">
-        <button v-if="showCloseButton" @click="$emit('close')" class="cs:p-1 cs:cursor-pointer">
+        <button v-if="showCloseButton" @click="$emit('close')" class="cs:p-1 cs:cursor-pointer cs:w-auto!">
           <svg class="cs:w-5 cs:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>

@@ -19,10 +19,9 @@
         <!-- Unified Responsive Container -->
         <div v-if="dataReady" ref="containerRef"
             :class="[
-                'cs:w-full cs:h-full cs:flex cs:flex-col cs:overflow-hidden cs:relative',
-                'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-[720px] cs:md:mx-auto cs:md:my-auto cs:md:pb-[57px]'
+                'cs:w-full cs:h-full cs:flex cs:flex-col cs:overflow-hidden cs:relative cs:bg-base-100 cs:text-base-content',
+                'cs:md:flex-row cs:md:max-w-7xl cs:md:max-h-180 cs:md:mx-auto cs:md:my-auto cs:md:pb-14.25'
                 ]"
-                style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
             @mousedown="startDrag"
             @touchstart="startDrag">
 
@@ -272,7 +271,7 @@
                                     ({{ servingsMultiplier }}x)
                                 </span>
                             </h3>
-                            <button @click="showSupplies = false" class="cs:p-1 cs:cursor-pointer">
+                            <button @click="showSupplies = false" class="cs:p-1 cs:cursor-pointer cs:w-auto!">
                                 <XMarkIcon class="cs:w-5 cs:h-5" />
                             </button>
                         </div>
