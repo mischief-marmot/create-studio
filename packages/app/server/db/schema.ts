@@ -156,6 +156,9 @@ export const feedbackReports = sqliteTable('FeedbackReports', {
 export interface SiteSettings {
   interactive_mode_enabled?: boolean
   interactive_mode_button_text?: string | null
+  interactive_mode_cta_variant?: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip'
+  interactive_mode_cta_title?: string | null
+  interactive_mode_cta_subtitle?: string | null
 }
 
 // VersionLogEntry JSON type (plugin version update history)

@@ -2,7 +2,9 @@
   <div class="cs-interactive-mode"
     :class="[inDomRendering ? 'cs-interactive-mode-pro' : 'cs-interactive-mode-free']"
   >
+    <!-- Button variant (default) -->
     <button
+      v-if="ctaVariant === 'button'"
       ref="interactiveButton"
       class="cs-interactive-mode-btn"
       :style="shouldBounce ? {animation: 'bounce 1s 3'} : {}"
@@ -10,6 +12,31 @@
     >
       {{ buttonText }}
     </button>
+
+    <!-- Inline Banner variant -->
+    <InteractiveModeBanner
+      v-else-if="ctaVariant === 'inline-banner'"
+      :title="ctaTitle"
+      :subtitle="ctaSubtitle"
+      @activate="openModal"
+    />
+
+    <!-- Sticky Bar variant -->
+    <InteractiveModeSticky
+      v-else-if="ctaVariant === 'sticky-bar'"
+      :title="ctaTitle"
+      :subtitle="ctaSubtitle"
+      :button-text="buttonText"
+      @activate="openModal"
+    />
+
+    <!-- Tooltip variant -->
+    <InteractiveModeTooltip
+      v-else-if="ctaVariant === 'tooltip'"
+      :title="ctaTitle"
+      :button-text="props.config.buttonText"
+      @activate="openModal"
+    />
 
     <Teleport :to="teleportTarget">
       <!-- Side-by-side Modal Container -->
@@ -24,8 +51,7 @@
         <!-- Modal Content Area -->
         <div class="cs:w-screen cs:h-full cs:bg-gray-100 cs:relative cs:flex cs:items-center cs:justify-center">
           <button
-            class="cs-interactive-mode-close-modal cs:absolute cs:top-4 cs:right-4 cs:p-2 cs:rounded-full cs:transition-all cs:duration-200 cs:cursor-pointer cs:border-none cs:flex cs:items-center cs:justify-center cs:z-10 cs:hover:bg-gray-300 cs:w-auto"
-            style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
+            class="cs-interactive-mode-close-modal cs:absolute cs:top-4 cs:right-4 cs:p-2 cs:rounded-full cs:transition-all cs:duration-200 cs:cursor-pointer cs:flex cs:items-center cs:justify-center cs:z-10 cs:hover:bg-gray-300 cs:bg-base-100! cs:text-base-content! cs:border cs:border-base-content cs:w-auto!"
             @click="closeModal"
             aria-label="Close"
           >
@@ -75,12 +101,18 @@ import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/s
 import { createCreationKey, normalizeDomain } from '@create-studio/shared/utils/domain'
 import { useLogger } from '@create-studio/shared/utils/logger'
 import InteractiveExperience from '../InteractiveExperience.vue'
+import InteractiveModeBanner from './InteractiveModeBanner.vue'
+import InteractiveModeSticky from './InteractiveModeSticky.vue'
+import InteractiveModeTooltip from './InteractiveModeTooltip.vue'
 
 interface Props {
   config: {
     creationId: string
     creationName?: string
     buttonText?: string
+    ctaVariant?: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip'
+    ctaTitle?: string
+    ctaSubtitle?: string
     siteUrl?: string
     embedUrl?: string
     theme?: Record<string, string>
@@ -104,6 +136,20 @@ const logger = useLogger('InteractiveModeWidget', globalConfig?.debug || true)
 // Check if in-DOM rendering is enabled (Pro tier feature)
 const inDomRendering = computed(() => {
   return globalConfig?.features?.inDomRendering || false
+})
+
+// CTA variant from config (Pro tier feature, defaults to 'button')
+const ctaVariant = computed(() => {
+  return props.config.ctaVariant || globalConfig?.ctaVariant || 'button'
+})
+
+// CTA title and subtitle (Pro tier customization)
+const ctaTitle = computed(() => {
+  return props.config.ctaTitle || globalConfig?.ctaTitle || ''
+})
+
+const ctaSubtitle = computed(() => {
+  return props.config.ctaSubtitle || globalConfig?.ctaSubtitle || ''
 })
 
 const showModal = ref(false)

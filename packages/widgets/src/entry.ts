@@ -159,10 +159,13 @@ const CreateStudio = {
         continue
       }
 
-      // Check if button already exists
-      const existingButton = targetElement.querySelector('.create-studio-interactive-btn')
-      if (existingButton) {
-        logger.debug('✅ Button already exists, skipping injection')
+      // Check if widget already exists (any variant)
+      const existingWidget = targetElement.querySelector('.create-studio-interactive-btn')
+        || section.querySelector('.cs-interactive-mode-banner-container')
+        || section.querySelector('.cs-interactive-mode-sticky-container')
+        || section.querySelector('.cs-interactive-mode-tooltip-container')
+      if (existingWidget) {
+        logger.debug('✅ Widget already exists, skipping injection')
         continue
       }
 
@@ -187,9 +190,15 @@ const CreateStudio = {
         }
       }
 
+      // Determine CTA variant from site config (Pro tier only, defaults to 'button')
+      const ctaVariant = siteConfig.ctaVariant || 'button'
+
       const config = {
         creationId,
         buttonText: section.getAttribute('data-button-text') || siteConfig.buttonText || 'Try Interactive Mode!',
+        ctaVariant,
+        ctaTitle: siteConfig.ctaTitle || '',
+        ctaSubtitle: siteConfig.ctaSubtitle || '',
         siteUrl: sdkInstance.getSiteUrl(),
         embedUrl: sdkInstance.getEmbedUrl(),
         theme: section.getAttribute('data-theme') ? JSON.parse(section.getAttribute('data-theme')!) : {},
@@ -197,15 +206,72 @@ const CreateStudio = {
       }
       logger.info('⚙️ Widget config:', config)
 
-      // For default selector (h3), create a container inside the h3 to mount the widget
-      let mountTarget = targetElement
-      if (isDefaultSelector) {
-        const buttonContainer = document.createElement('span')
-        buttonContainer.style.marginLeft = '0.5rem'
-        buttonContainer.style.display = 'inline-block'
-        targetElement.appendChild(buttonContainer)
-        mountTarget = buttonContainer
-        logger.debug('📦 Created button container in h3')
+      // Mount target depends on the CTA variant
+      let mountTarget: Element = targetElement
+
+      if (ctaVariant === 'inline-banner') {
+        // Insert between ingredients and instructions sections
+        const ingredientsSection = section.querySelector('.mv-create-ingredients')
+        const instructionsSection = section.querySelector('.mv-create-instructions')
+        if (ingredientsSection && instructionsSection) {
+          const bannerContainer = document.createElement('div')
+          bannerContainer.className = 'create-studio-widget cs-interactive-mode-banner-container'
+          instructionsSection.parentElement?.insertBefore(bannerContainer, instructionsSection)
+          mountTarget = bannerContainer
+          logger.debug('📦 Created banner container between ingredients and instructions')
+        }
+      } else if (ctaVariant === 'sticky-bar') {
+        // Append inside the .mv-create-wrapper (at the end, uses CSS position: sticky)
+        const wrapper = section.querySelector('.mv-create-wrapper') || section
+        const stickyContainer = document.createElement('div')
+        stickyContainer.className = 'create-studio-widget cs-interactive-mode-sticky-container'
+        wrapper.appendChild(stickyContainer)
+        mountTarget = stickyContainer
+        logger.debug('📦 Created sticky bar container at end of wrapper')
+      } else if (ctaVariant === 'tooltip') {
+        // Mount inline inside the instructions heading, to the right of the text
+        const instructionsTitle = section.querySelector('.mv-create-instructions-title')
+        if (instructionsTitle) {
+          // Add a class so we can target it with CSS
+          instructionsTitle.classList.add('cs-interactive-mode-tooltip-heading')
+
+          // Inject a style element for the heading layout + responsive rules
+          if (!document.querySelector('#cs-interactive-mode-tooltip-styles')) {
+            const style = document.createElement('style')
+            style.id = 'cs-interactive-mode-tooltip-styles'
+            style.textContent = `
+              .cs-interactive-mode-tooltip-heading {
+                display: flex !important;
+                align-items: center !important;
+                gap: 12px !important;
+                flex-wrap: wrap !important;
+              }
+              @media (max-width: 639px) {
+                .cs-interactive-mode-tooltip-heading {
+                  gap: 0 !important;
+                }
+              }
+            `
+            document.head.appendChild(style)
+          }
+
+          const tooltipContainer = document.createElement('span')
+          tooltipContainer.className = 'create-studio-widget cs-interactive-mode-tooltip-container'
+          tooltipContainer.style.flexShrink = '0'
+          instructionsTitle.appendChild(tooltipContainer)
+          mountTarget = tooltipContainer
+          logger.debug('📦 Created tooltip container beside instructions title')
+        }
+      } else {
+        // Default 'button' variant - current behavior
+        if (isDefaultSelector) {
+          const buttonContainer = document.createElement('span')
+          buttonContainer.style.marginLeft = '0.5rem'
+          buttonContainer.style.display = 'inline-block'
+          targetElement.appendChild(buttonContainer)
+          mountTarget = buttonContainer
+          logger.debug('📦 Created button container in h3')
+        }
       }
 
       logger.info('🚀 Mounting widget...')

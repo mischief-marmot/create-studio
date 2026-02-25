@@ -29,6 +29,9 @@ export default defineEventHandler(async (event) => {
   let renderMode: 'iframe' | 'in-dom' = 'iframe'
   let showInteractiveMode = true
   let buttonText = 'Try Interactive Mode!'
+  let ctaVariant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip' = 'button'
+  let ctaTitle = ''
+  let ctaSubtitle = ''
 
   try {
     // Find site by URL - need to look up across all users
@@ -59,6 +62,15 @@ export default defineEventHandler(async (event) => {
         if (settings.interactive_mode_button_text) {
           buttonText = settings.interactive_mode_button_text
         }
+        // Use custom CTA variant if set
+        ctaVariant = settings.interactive_mode_cta_variant || 'button'
+        // Use custom CTA title/subtitle if set
+        if (settings.interactive_mode_cta_title) {
+          ctaTitle = settings.interactive_mode_cta_title
+        }
+        if (settings.interactive_mode_cta_subtitle) {
+          ctaSubtitle = settings.interactive_mode_cta_subtitle
+        }
       }
 
       logger.debug(`Site ${siteUrl} has tier: ${subscriptionTier}, interactive mode: ${showInteractiveMode}`)
@@ -76,6 +88,9 @@ export default defineEventHandler(async (event) => {
   const config = {
     showInteractiveMode,
     buttonText,
+    ctaVariant,
+    ctaTitle,
+    ctaSubtitle,
     baseUrl: runtimeConfig.public.rootUrl,
     subscriptionTier,
     renderMode,
