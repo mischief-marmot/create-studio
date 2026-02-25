@@ -1,9 +1,12 @@
 name: Deploy Widgets
 on:
-  workflow_run:
-    workflows: ["Deploy Create Studio"]
-    types: [completed]
-    branches: [main]
+  push:
+    branches:
+      - main
+      - '**'
+    paths:
+      - 'packages/widgets/**'
+      - 'packages/shared/**'
 
 jobs:
   deploy:
@@ -31,7 +34,7 @@ jobs:
 
       - name: Build shared package
         run: npm run build:shared
-  
+
       - name: Build & deploy widgets
         env:
           CI: true
