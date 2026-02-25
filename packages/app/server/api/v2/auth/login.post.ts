@@ -11,6 +11,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { UserRepository } from '~~/server/utils/database'
 import { sendErrorResponse, validateEmail } from '~~/server/utils/errors'
+import { eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
@@ -48,11 +49,14 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get user's sites
-    // @ts-expect-error - db is auto-imported by NuxtHub
-    const sites = await (db.$client as D1Database)
-      .prepare('SELECT id, url, user_id, create_version, wp_version, php_version FROM Sites WHERE user_id = ?')
-      .bind(user.id)
-      .all()
+    const siteRows = await db.select({
+      id: schema.sites.id,
+      url: schema.sites.url,
+      user_id: schema.sites.user_id,
+      create_version: schema.sites.create_version,
+      wp_version: schema.sites.wp_version,
+      php_version: schema.sites.php_version,
+    }).from(schema.sites).where(eq(schema.sites.user_id, user.id!))
 
     // Set user session using nuxt-auth-utils
     await setUserSession(event, {
@@ -77,7 +81,7 @@ export default defineEventHandler(async (event) => {
         email: user.email,
         validEmail: Boolean(user.validEmail)
       },
-      sites: sites.results || []
+      sites: siteRows
     }
 
   } catch (error: any) {
