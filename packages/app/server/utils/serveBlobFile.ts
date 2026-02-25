@@ -140,8 +140,9 @@ export async function serveBlobFile(
     // Add CORS headers if enabled
     if (cors) {
       headers['Access-Control-Allow-Origin'] = '*'
-      headers['Access-Control-Allow-Methods'] = 'GET'
+      headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
       headers['Access-Control-Allow-Headers'] = 'Content-Type'
+      headers['Access-Control-Allow-Private-Network'] = 'true'
     }
 
     // Set all response headers

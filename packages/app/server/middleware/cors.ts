@@ -14,6 +14,7 @@ export default defineEventHandler((event) => {
     /^\/api\/v2\/nutrition\/.*/,
     /^\/api\/analytics\/.*/,
     /^\/api\/analytics\/events/,
+    /^\/embed\/.*/,
   ]
   const path = event.node.req.url || '';
 
@@ -28,7 +29,8 @@ export default defineEventHandler((event) => {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Cache-Control',
     'Access-Control-Max-Age': '86400', // 24 hours
-    'Access-Control-Allow-Credentials': 'true'
+    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Allow-Private-Network': 'true'
   }
 
   // Apply headers
