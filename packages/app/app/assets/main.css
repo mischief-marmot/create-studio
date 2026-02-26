@@ -105,7 +105,7 @@
   /* Base colors for backgrounds */
   --color-base-100: oklch(0.9741 0.0074 80.72);
   --color-base-200: oklch(0.9473 0.0103 81.79);
-  --color-base-300: oklch(0.9409 0.0111 63.36);
+  --color-base-300: oklch(0.9309 0.0111 63.36);
   --color-base-content: oklch(0.21 0.006 285.885); /* Dark text for base backgrounds */
 
   /* Primary - Honey Gold */

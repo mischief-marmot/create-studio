@@ -36,7 +36,7 @@
     }
   ],
   "vars": {
-    "NUXT_DEBUG": "true",
+    "NUXT_DEBUG": "false",
     "NUXT_HUB_PROJECT_URL": "https://create.studio",
     "NUXT_POSTMARK_SENDING_ADDRESS": "hello@create.studio",
     "NUXT_PUBLIC_COMPANY_NAME": "Mischief Marmot",

@@ -219,19 +219,15 @@ function openModal() {
   })
 
   showModal.value = true
-  logger.debug('✅ showModal set to true')
 
   // Capture current viewport and scroll to modal
   viewportWidth.value = window.innerWidth
-  logger.debug('📐 Viewport width:', viewportWidth.value)
 
   // Save original body overflow style
   document.body.style.overflow = 'hidden'
-  logger.debug('🔒 Body overflow hidden')
 
   // Set scroll position to 0 to show modal in viewport
   scrollPosition.value = 0
-  logger.debug('📍 Scroll position set to:', scrollPosition.value)
 
   // Initialize creation in shared storage when modal opens
   const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
@@ -241,6 +237,7 @@ function openModal() {
   // Focus the modal container after it's rendered
   setTimeout(() => {
     modalContainer.value?.focus()
+    disableGrowWidget()
   }, 0)
 
   if (globalConfig?._meta?.debug) {
@@ -249,6 +246,20 @@ function openModal() {
     logger.debug('iframe src:', iframeSrc.value)
     logger.debug('Mobile mode:', isMobile.value)
     logger.debug('Viewport width:', viewportWidth)
+  }
+}
+
+function disableGrowWidget() {
+  const growRoot = document.querySelector('div#grow-me-root')
+  if (growRoot ) {
+    growRoot.setAttribute('style', 'display:none')
+  }
+}
+
+function enableGrowWidget() {
+  const growRoot = document.querySelector('div#grow-me-root')
+  if (growRoot ) {
+    growRoot.setAttribute('style', '')
   }
 }
 
@@ -272,10 +283,7 @@ function closeModal() {
   }
 
   // Show Grow widget directly (when using in-DOM rendering)
-  const growRoot = document.getElementById('grow-me-root')
-  if (growRoot) {
-    growRoot.style.display = ''
-  }
+  enableGrowWidget()
 }
 
 function handleOverlayClick(event: MouseEvent) {

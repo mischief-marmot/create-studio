@@ -37,7 +37,7 @@ const renderedText = computed(() => {
     const targetAttr = link.target ? ` target="${link.target}"` : ''
     const relAttr = link.rel ? ` rel="${link.rel}"` : (link.target === '_blank' ? ' rel="noopener noreferrer"' : '')
 
-    const replacement = `<a href="${escapeHtml(link.href)}" class="cs:text-secondary cs:underline hover:cs:text-secondary/80" style="color: var(--mv-create-base var(--color-primary));"${targetAttr}${relAttr}>${escapeHtml(link.text)}</a>`
+    const replacement = `<a href="${escapeHtml(link.href)}" class="cs:text-secondary cs:underline hover:cs:text-secondary/80" ${targetAttr}${relAttr}>${escapeHtml(link.text)}</a>`
 
     result = result.replace(regex, replacement)
   }

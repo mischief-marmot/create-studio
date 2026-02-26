@@ -6,7 +6,6 @@
         :rel="parsedIngredient.nofollow ? 'nofollow' : undefined"
         :target="isExternalLink ? '_blank' : undefined"
         class="cs:text-secondary cs:underline"
-        style="color: var(--mv-create-base, var(--color-primary));"
       >{{ parsedIngredient.parts.linkText }}</a>{{ parsedIngredient.parts.after }}
     </template>
     <a
@@ -15,7 +14,6 @@
       :rel="parsedIngredient.nofollow ? 'nofollow' : undefined"
       :target="isExternalLink ? '_blank' : undefined"
       class="cs:text-secondary cs:underline"
-      style="color: var(--mv-create-base, var(--color-primary));"
     >{{ parsedIngredient.text }}</a>
   </span>
   <span v-else>{{ parsedIngredient.text }}</span>
