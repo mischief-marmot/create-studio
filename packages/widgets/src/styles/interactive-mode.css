@@ -2,6 +2,11 @@
 .cs-interactive-mode {
   display: flex;
 }
+
+/* Banner container needs full width so the banner stretches edge-to-edge */
+.cs-interactive-mode-banner-container .cs-interactive-mode {
+  width: 100%;
+}
 .cs-interactive-mode-modal button {
   display: inline-flex !important;
   align-items: center !important;
@@ -110,13 +115,15 @@
 ───────────────────────────────── */
 .cs-interactive-mode-banner {
   padding: 16px 20px;
-  border-top: 1px solid color-mix(in srgb, var(--color-base-content, #888) 20%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--color-base-content, #888) 20%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--mv-create-text, var(--color-base-content, #888)) 20%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--mv-create-text, var(--color-base-content, #888)) 20%, transparent);
   display: flex;
   align-items: center;
   gap: 14px;
   cursor: pointer;
   transition: opacity 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cs-interactive-mode-banner:hover {
@@ -132,13 +139,14 @@
   justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  @apply cs:bg-transparent cs:border cs:border-base-content;
+  background-color: transparent;
+  border: 1px solid var(--mv-create-text, var(--color-base-content, #333));
 }
 
 .cs-interactive-mode-banner-icon svg {
   width: 18px;
   height: 18px;
-  @apply cs:text-base-content;
+  color: var(--mv-create-text, var(--color-base-content, #333));
 }
 
 .cs-interactive-mode-banner-text {
@@ -162,7 +170,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid var(--color-base-content);
+  border: 1px solid var(--mv-create-text, var(--color-base-content, #333));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -171,18 +179,18 @@
 }
 
 .cs-interactive-mode-banner:hover .cs-interactive-mode-banner-arrow {
-  background-color: var(--color-base-content);
+  background-color: var(--mv-create-text, var(--color-base-content, #333));
 }
 
 .cs-interactive-mode-banner-arrow svg {
   width: 14px;
   height: 14px;
-  color: var(--color-base-content);
+  color: var(--mv-create-text, var(--color-base-content, #333));
   transition: color 0.2s;
 }
 
 .cs-interactive-mode-banner:hover .cs-interactive-mode-banner-arrow svg {
-  color: var(--color-base-100);
+  color: var(--mv-create-bg, var(--color-base-100, #fff));
 }
 
 /* Desktop: wider padding, larger icon */
