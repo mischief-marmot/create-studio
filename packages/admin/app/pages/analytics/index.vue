@@ -272,6 +272,46 @@
               </div>
             </div>
           </div>
+
+          <!-- CTA Variant Performance -->
+          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+            <h2 class="text-lg text-base-content mb-2" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
+              CTA Variant Performance
+            </h2>
+            <p class="text-xs text-base-content/40 mb-6">Which call-to-action variant users clicked to enter interactive mode</p>
+
+            <div class="grid grid-cols-2 gap-6 mb-8">
+              <div class="space-y-1">
+                <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                  {{ formatNumber(data.cta.total) }}
+                </div>
+                <div class="text-xs text-base-content/50">Total Activations</div>
+                <div class="text-xs text-base-content/40">Across all variants</div>
+              </div>
+            </div>
+
+            <div v-if="data.cta.total > 0" class="space-y-3">
+              <div
+                v-for="(count, variant) in data.cta.variants"
+                :key="variant"
+                class="flex items-center gap-4"
+              >
+                <div class="font-mono text-xs text-base-content/60 w-28 shrink-0">{{ variant }}</div>
+                <div class="flex-1 bg-base-200 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    class="bg-primary h-full rounded-full transition-all duration-500"
+                    :style="{ width: `${data.cta.total > 0 ? Math.round((count / data.cta.total) * 100) : 0}%` }"
+                  ></div>
+                </div>
+                <div class="text-sm text-base-content/70 w-16 text-right shrink-0">
+                  {{ formatNumber(count) }} <span class="text-base-content/40 text-xs">({{ data.cta.total > 0 ? Math.round((count / data.cta.total) * 100) : 0 }}%)</span>
+                </div>
+              </div>
+            </div>
+            <div v-else class="text-sm text-base-content/40 text-center py-4">
+              No CTA activation data for this period
+            </div>
+          </div>
         </div>
       </template>
     </div>
@@ -306,6 +346,10 @@ interface AnalyticsDashboard {
   ratings: {
     screensShown: number
     submitted: number
+  }
+  cta: {
+    total: number
+    variants: Record<string, number>
   }
 }
 
