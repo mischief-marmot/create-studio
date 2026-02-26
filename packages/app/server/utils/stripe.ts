@@ -228,8 +228,9 @@ function determineTierFromPriceId(priceId?: string): string {
 
 /**
  * Verify Stripe webhook signature
+ * Uses constructEventAsync for compatibility with Cloudflare Workers (async Web Crypto API)
  */
-export function verifyWebhookSignature(payload: string, signature: string): Stripe.Event {
+export async function verifyWebhookSignature(payload: string, signature: string): Promise<Stripe.Event> {
   const stripe = getStripeClient()
   const config = useRuntimeConfig()
   const webhookSecret = config.stripeWebhookSecret || process.env.NUXT_STRIPE_WEBHOOK_SECRET
@@ -238,5 +239,5 @@ export function verifyWebhookSignature(payload: string, signature: string): Stri
     throw new Error('Stripe webhook secret is not configured')
   }
 
-  return stripe.webhooks.constructEvent(payload, signature, webhookSecret)
+  return stripe.webhooks.constructEventAsync(payload, signature, webhookSecret)
 }

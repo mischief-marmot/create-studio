@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     // Verify webhook signature
     let stripeEvent
     try {
-      stripeEvent = verifyWebhookSignature(body, signature)
+      stripeEvent = await verifyWebhookSignature(body, signature)
     } catch (err: any) {
       logger.error('Webhook signature verification failed:', err.message)
       setResponseStatus(event, 400)
