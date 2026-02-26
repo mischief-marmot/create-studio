@@ -178,23 +178,17 @@ export function useAnalytics(config: AnalyticsConfig) {
     }
 
     try {
-      // Use sendBeacon if available (better for page unload)
-      if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-        const file = new Blob([JSON.stringify(sessionData)], {
-          type: 'application/json'
-        })
-        navigator.sendBeacon(analyticsEndpoint, file)
-      } else {
-        // Fallback to fetch
-        await fetch(analyticsEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(sessionData),
-          keepalive: true
-        })
-      }
+      // Use fetch with keepalive (works on page unload, avoids sendBeacon's
+      // forced credentials:include which breaks cross-origin CORS)
+      await fetch(analyticsEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(sessionData),
+        credentials: 'omit',
+        keepalive: true
+      })
 
       // Clear events after successful send
       events.value = []
