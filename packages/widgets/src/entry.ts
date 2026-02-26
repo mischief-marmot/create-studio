@@ -51,7 +51,12 @@ function syncIngredientChecklists(section: Element, creationKey: string) {
     ingredientItems.forEach((li) => {
       const checkbox = li.querySelector('input[type="checkbox"]') as HTMLInputElement | null
       if (!checkbox) return
-      checkbox.checked = storageManager.isSupplyChecked(getKey(li))
+      const isChecked = storageManager.isSupplyChecked(getKey(li))
+      checkbox.checked = isChecked
+      // Keep the WordPress plugin's mv-checklist-checked CSS class in sync.
+      // Setting checkbox.checked programmatically doesn't fire a change event,
+      // so the plugin's own updateIngredientStyle() won't run — we do it here.
+      li.classList.toggle('mv-checklist-checked', isChecked)
     })
   }
 
