@@ -43,6 +43,12 @@ export default defineEventHandler(async (event) => {
     for (const evt of body.events) {
       const eventKey = getAnalyticsKey(['events', siteId, evt.type, date])
       await incrementCounter(eventKey)
+
+      // For CTA activated events, also store a per-variant counter
+      if (evt.type === 'cta_activated' && evt.metadata?.variant) {
+        const variantKey = getAnalyticsKey(['events', siteId, `cta_activated_${evt.metadata.variant}`, date])
+        await incrementCounter(variantKey)
+      }
     }
 
     return {

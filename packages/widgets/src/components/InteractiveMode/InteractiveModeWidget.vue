@@ -100,6 +100,7 @@ import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/shared-storage-manager'
 import { createCreationKey, normalizeDomain } from '@create-studio/shared/utils/domain'
 import { useLogger } from '@create-studio/shared/utils/logger'
+import { useAnalytics } from '../../composables/useAnalytics'
 import InteractiveExperience from '../InteractiveExperience.vue'
 import InteractiveModeBanner from './InteractiveModeBanner.vue'
 import InteractiveModeSticky from './InteractiveModeSticky.vue'
@@ -205,6 +206,13 @@ const iframeSrc = computed(() => {
   return `${baseUrl.value}/creations/${creationKey.value}/interactive`
 })
 
+// Analytics for tracking CTA activations
+const analytics = useAnalytics({
+  domain: domain.value,
+  creationId: props.config.creationId,
+  baseUrl: baseUrl.value
+})
+
 // Teleport target - will be set after component mounts
 const teleportTarget = ref<string | HTMLElement>('body')
 
@@ -217,6 +225,9 @@ function openModal() {
     baseUrl: baseUrl.value,
     globalConfig: globalConfig
   })
+
+  analytics.trackCtaActivated(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
+  analytics.sendBatch()
 
   showModal.value = true
 

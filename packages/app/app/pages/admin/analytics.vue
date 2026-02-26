@@ -236,6 +236,50 @@
                 </div>
               </div>
             </div>
+
+            <!-- CTA Variant Analytics -->
+            <div class="card bg-base-200 shadow-xl">
+              <div class="card-body">
+                <h2 class="card-title mb-4 text-2xl">CTA Variant Performance</h2>
+                <p class="text-base-content/60 mb-4 text-sm">Which call-to-action variant users clicked to enter interactive mode</p>
+
+                <div class="stats stats-vertical lg:stats-horizontal shadow mb-6">
+                  <div class="stat">
+                    <div class="stat-title">Total Activations</div>
+                    <div class="stat-value">{{ data.cta.total }}</div>
+                    <div class="stat-desc">Across all variants</div>
+                  </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                  <table class="table-zebra table">
+                    <thead>
+                      <tr>
+                        <th>Variant</th>
+                        <th>Activations</th>
+                        <th>Share</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(count, variant) in data.cta.variants" :key="variant">
+                        <td class="font-mono text-sm">{{ variant }}</td>
+                        <td>{{ count }}</td>
+                        <td>
+                          <div class="flex items-center gap-2">
+                            <progress
+                              class="progress progress-primary w-24"
+                              :value="data.cta.total > 0 ? count : 0"
+                              :max="data.cta.total || 1"
+                            ></progress>
+                            <span class="text-sm">{{ data.cta.total > 0 ? Math.round((count / data.cta.total) * 100) : 0 }}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>

@@ -33,11 +33,15 @@ export default defineEventHandler(async (event) => {
     // 4. Get rating analytics
     const ratings = await getRatingData(startDate, endDate)
 
+    // 5. Get CTA variant analytics
+    const cta = await getCTAData(startDate, endDate)
+
     return {
       apiUsage,
       interactive,
       timers,
-      ratings
+      ratings,
+      cta
     }
   } catch (error) {
     console.error('Error fetching analytics dashboard data:', error)
@@ -261,6 +265,43 @@ async function getRatingData(startDate: string, endDate: string) {
     screensShown,
     submitted
   }
+}
+
+/**
+ * Get CTA variant analytics
+ */
+async function getCTAData(startDate: string, endDate: string) {
+  const dates = getDateRange(startDate, endDate)
+
+  const variants = ['button', 'inline-banner', 'sticky-bar', 'tooltip'] as const
+  const counts: Record<string, number> = {
+    button: 0,
+    'inline-banner': 0,
+    'sticky-bar': 0,
+    tooltip: 0
+  }
+  let total = 0
+
+  const allKeys = await kv.keys('analytics')
+  const allEventKeys = allKeys.filter(k => k.startsWith('analytics:events:'))
+
+  for (const date of dates) {
+    for (const variant of variants) {
+      const variantKeys = allEventKeys.filter(key => {
+        const parts = key.split(':')
+        return parts[4] === `cta_activated_${variant}` && parts[5] === date
+      })
+
+      for (const key of variantKeys) {
+        const counterData = await kv.get<ApiCounter>(key)
+        const count = counterData?.count || 0
+        counts[variant] += count
+        total += count
+      }
+    }
+  }
+
+  return { total, variants: counts }
 }
 
 /**
