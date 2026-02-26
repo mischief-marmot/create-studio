@@ -51,6 +51,12 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Touch last_active_at once per day (avoid a DB write on every heartbeat call)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    if (!site.last_active_at || site.last_active_at < oneDayAgo) {
+      await siteRepo.touch(siteId)
+    }
+
     // Look up subscription tier
     const subscriptionRepo = new SubscriptionRepository()
     const subscriptionTier = await subscriptionRepo.getActiveTier(siteId)

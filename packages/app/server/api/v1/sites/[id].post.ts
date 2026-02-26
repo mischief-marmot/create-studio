@@ -50,6 +50,12 @@ export default defineEventHandler(async (event) => {
     logger.debug('Updating site', updates)
     const updatedSite = await siteRepo.update(siteId, updates)
 
+    // Touch last_active_at once per day
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    if (!existingSite.last_active_at || existingSite.last_active_at < oneDayAgo) {
+      await siteRepo.touch(siteId)
+    }
+
     // Return response in original format
     setResponseStatus(event, 200)
     return {

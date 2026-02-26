@@ -41,12 +41,14 @@ export const sites = sqliteTable('Sites', {
   wp_version: text('wp_version'),
   php_version: text('php_version'),
   pending_verification_code: text('pending_verification_code'),
+  last_active_at: text('last_active_at'),
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 }, (table) => [
   index('idx_sites_user_id').on(table.user_id),
   index('idx_sites_url').on(table.url),
   index('idx_sites_canonical').on(table.canonical_site_id),
+  index('idx_sites_last_active').on(table.last_active_at),
 ])
 
 // SiteUsers pivot table (many-to-many between Users and canonical Sites)

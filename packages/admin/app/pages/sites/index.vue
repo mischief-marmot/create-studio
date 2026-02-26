@@ -27,7 +27,7 @@
           </div>
 
           <!-- Filters -->
-          <div class="flex gap-2">
+          <div class="flex gap-2 flex-wrap">
             <AdminFilterDropdown
               v-model="verifiedFilter"
               :options="verifiedOptions"
@@ -38,6 +38,16 @@
               v-model="subscriptionFilter"
               :options="subscriptionOptions"
               label="Subscription"
+              @change="handleFilterChange"
+            />
+            <AdminVersionFilter
+              v-model="versionFilter"
+              @change="handleFilterChange"
+            />
+            <AdminFilterDropdown
+              v-model="activityFilter"
+              :options="activityOptions"
+              label="Activity"
               @change="handleFilterChange"
             />
           </div>
@@ -83,6 +93,7 @@
                   <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Users</th>
                   <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Plan</th>
                   <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Status</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Last Active</th>
                   <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Created</th>
                 </tr>
               </thead>
@@ -103,7 +114,7 @@
                       </div>
                       <div class="min-w-0">
                         <div class="font-medium text-base-content hover:text-primary transition-colors truncate max-w-[200px]">
-                          {{ site.name || 'Unnamed Site' }}
+                          {{ site.name }}
                         </div>
                         <div class="text-xs text-base-content/50 truncate max-w-[200px]" :title="site.url">
                           {{ site.url }}
@@ -146,6 +157,12 @@
                         <span class="text-sm text-base-content/50">Pending</span>
                       </template>
                     </div>
+                  </td>
+
+                  <!-- Last Active -->
+                  <td class="py-4 px-6">
+                    <span v-if="site.lastActiveAt" class="text-sm text-base-content/70">{{ formatDate(site.lastActiveAt) }}</span>
+                    <span v-else class="text-sm text-base-content/30">Never</span>
                   </td>
 
                   <!-- Created Date -->
@@ -225,6 +242,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import type { VersionFilterValue } from '~/components/AdminVersionFilter.vue'
 
 definePageMeta({
   layout: 'admin'
@@ -242,10 +260,18 @@ interface SiteSubscription {
   status: string
 }
 
+interface SiteVersions {
+  create: string | null
+  wordpress: string | null
+  php: string | null
+}
+
 interface Site {
   id: number
   name: string
   url: string
+  versions: SiteVersions
+  lastActiveAt: string | null
   owner: Owner
   usersCount: number
   subscription: SiteSubscription | null
@@ -277,6 +303,8 @@ const error = ref<string | null>(null)
 const searchQuery = ref('')
 const verifiedFilter = ref<string | number | null>(null)
 const subscriptionFilter = ref<string | number | null>(null)
+const versionFilter = ref<VersionFilterValue | null>(null)
+const activityFilter = ref<string | number | null>(null)
 
 // Filter options
 const verifiedOptions = [
@@ -287,6 +315,12 @@ const verifiedOptions = [
 const subscriptionOptions = [
   { value: 'has_subscription', label: 'Has Subscription' },
   { value: 'free', label: 'Free Tier' },
+]
+
+const activityOptions = [
+  { value: 'active_7d', label: 'Active (7 days)' },
+  { value: 'active_30d', label: 'Active (30 days)' },
+  { value: 'never_active', label: 'Never Active' },
 ]
 
 // Computed pagination values
@@ -333,6 +367,19 @@ const fetchSites = async () => {
       params.append('filter', 'has_subscription')
     }
 
+    if (versionFilter.value) {
+      params.append('vf_field', versionFilter.value.field)
+      params.append('vf_op', versionFilter.value.op)
+      params.append('vf_value', versionFilter.value.value)
+      if (versionFilter.value.value2) {
+        params.append('vf_value2', versionFilter.value.value2)
+      }
+    }
+
+    if (activityFilter.value) {
+      params.append('activity', activityFilter.value.toString())
+    }
+
     const response = await $fetch<{
       data: Site[]
       pagination: Pagination
@@ -354,7 +401,7 @@ onMounted(() => {
 })
 
 // Watch for filter changes and refetch
-watch([searchQuery, verifiedFilter, subscriptionFilter], () => {
+watch([searchQuery, verifiedFilter, subscriptionFilter, versionFilter, activityFilter], () => {
   pagination.value.page = 1
   fetchSites()
 })

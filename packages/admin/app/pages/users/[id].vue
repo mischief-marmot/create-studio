@@ -325,7 +325,7 @@
                   <div class="flex items-start justify-between gap-4 mb-2">
                     <!-- Name + URL -->
                     <div class="min-w-0 flex-1">
-                      <h4 class="text-base font-medium text-base-content truncate">{{ site.name || 'Unnamed Site' }}</h4>
+                      <h4 class="text-base font-medium text-base-content truncate">{{ site.name || cleanUrl(site.url) }}</h4>
                       <div class="text-xs text-base-content/40 mt-0.5">{{ cleanUrl(site.url) }}</div>
                     </div>
                     <!-- Role badge -->

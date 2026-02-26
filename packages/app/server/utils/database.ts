@@ -224,6 +224,7 @@ export class SiteRepository {
     wp_version: string | null
     php_version: string | null
     create_version: string | null
+    last_active_at: string | null
   }>) {
     const now = new Date().toISOString()
 
@@ -232,6 +233,17 @@ export class SiteRepository {
       .where(eq(schema.sites.id, id))
 
     return this.findById(id)
+  }
+
+  /**
+   * Update last_active_at timestamp only — does not modify updatedAt.
+   * Caller is responsible for the once-per-day debounce check.
+   */
+  async touch(id: number) {
+    const now = new Date().toISOString()
+    await db.update(schema.sites)
+      .set({ last_active_at: now })
+      .where(eq(schema.sites.id, id))
   }
 
   /**

@@ -93,7 +93,7 @@ export default defineEventHandler(async (event) => {
       site_id: subscription.site_id,
       site: {
         id: subscription.siteId,
-        name: subscription.siteName || 'Unnamed Site',
+        name: subscription.siteName || (subscription.siteUrl ? (() => { try { return new URL(subscription.siteUrl).hostname } catch { return subscription.siteUrl } })() : ''),
         url: subscription.siteUrl || '',
       },
       user: user ? {

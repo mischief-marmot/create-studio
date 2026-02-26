@@ -112,7 +112,7 @@
               <!-- View Mode -->
               <div v-if="!editNameMode" class="flex items-center justify-center gap-3">
                 <h2 class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
-                  {{ site.name || 'Unnamed Site' }}
+                  {{ site.name || siteDisplayName }}
                 </h2>
                 <button
                   class="p-1.5 rounded-lg text-base-content/40 hover:text-base-content hover:bg-base-200 transition-all"
@@ -876,6 +876,16 @@ const editForm = ref({
 // Computed: canonical vs legacy site
 const isLegacy = computed(() => !!site.value?.canonical_site)
 const isCanonical = computed(() => site.value !== null && !site.value.canonical_site)
+
+// Display name fallback: use URL hostname when no name is set
+const siteDisplayName = computed(() => {
+  if (!site.value?.url) return ''
+  try {
+    return new URL(site.value.url).hostname
+  } catch {
+    return site.value.url
+  }
+})
 
 // Computed: version logs sorted newest first
 const versionLogs = computed(() => {

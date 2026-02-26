@@ -120,7 +120,7 @@ export default defineEventHandler(async (event) => {
         return {
           id: sub.id,
           site_id: sub.site_id,
-          siteName: sub.siteName || 'Unnamed Site',
+          siteName: sub.siteName || (sub.siteUrl ? (() => { try { return new URL(sub.siteUrl).hostname } catch { return sub.siteUrl } })() : ''),
           siteUrl: sub.siteUrl || '',
           userEmail,
           tier: sub.tier,
