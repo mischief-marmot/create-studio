@@ -6,7 +6,7 @@
  * It handles both canonical and non-canonical sites by updating the canonical site.
  *
  * Requires JWT authentication (from WordPress plugin token)
- * Body: { php_version?, wp_version?, create_version?, interactive_mode_enabled?, interactive_mode_button_text? }
+ * Body: { php_version?, wp_version?, create_version?, interactive_mode_enabled?, interactive_mode_button_text?, interactive_mode_cta_variant?, interactive_mode_cta_title?, interactive_mode_cta_subtitle? }
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
@@ -55,11 +55,11 @@ export default defineEventHandler(async (event) => {
 
     // Read body
     const body = await readBody(event)
-    const { php_version, wp_version, create_version, interactive_mode_enabled, interactive_mode_button_text } = body
+    const { php_version, wp_version, create_version, interactive_mode_enabled, interactive_mode_button_text, interactive_mode_cta_variant, interactive_mode_cta_title, interactive_mode_cta_subtitle } = body
 
     // Validate input - at least one field must be provided
     const hasVersionFields = php_version || wp_version || create_version
-    const hasSettingsFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
+    const hasSettingsFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined || interactive_mode_cta_variant !== undefined || interactive_mode_cta_title !== undefined || interactive_mode_cta_subtitle !== undefined
 
     if (!hasVersionFields && !hasSettingsFields) {
       setResponseStatus(event, 400)
@@ -107,6 +107,15 @@ export default defineEventHandler(async (event) => {
       }
       if (interactive_mode_button_text !== undefined) {
         metaSettings.interactive_mode_button_text = interactive_mode_button_text || null
+      }
+      if (interactive_mode_cta_variant !== undefined) {
+        metaSettings.interactive_mode_cta_variant = interactive_mode_cta_variant
+      }
+      if (interactive_mode_cta_title !== undefined) {
+        metaSettings.interactive_mode_cta_title = interactive_mode_cta_title || null
+      }
+      if (interactive_mode_cta_subtitle !== undefined) {
+        metaSettings.interactive_mode_cta_subtitle = interactive_mode_cta_subtitle || null
       }
       await siteMetaRepo.updateSettings(siteIdToUpdate, metaSettings)
     }
