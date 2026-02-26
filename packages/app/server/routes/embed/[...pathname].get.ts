@@ -47,7 +47,7 @@ export default defineEventHandler(async (event) => {
     return await serveBlobFile(event, pathname, {
       allowlist: EMBED_ALLOWLIST,
       fileTypes: FILE_TYPES,
-      cacheControl: config.debug ? 'public, max-age=0' : 'public, max-age=86400', // Cache for 1 day in prod
+      cacheControl: config.debug ? 'no-store' : 'public, max-age=86400', // Cache for 1 day in prod
       cors: true, // Public CORS for widget embedding
       contentDisposition: 'inline' // Display inline (don't download)
     })
