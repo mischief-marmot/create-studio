@@ -177,6 +177,22 @@
                 </div>
               </button>
 
+              <!-- Link Stripe button for non-Stripe subscriptions -->
+              <button
+                v-if="!hasStripeIntegration"
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-[#635bff]/30 hover:bg-[#635bff]/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="openLinkStripeModal"
+                :disabled="actionLoading"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
+                  <LinkIcon class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Link Stripe Subscription</div>
+                  <div class="text-xs text-base-content/50">Connect an existing Stripe subscription</div>
+                </div>
+              </button>
+
               <!-- Delete button for non-Stripe subscriptions -->
               <button
                 v-if="!hasStripeIntegration"
@@ -273,14 +289,18 @@
               Stripe Dashboard
             </h3>
 
-            <div v-if="!subscription.stripeCustomerLink && !subscription.stripeSubscriptionLink" class="py-12 text-center">
+            <div v-if="!subscription.stripeCustomerLink && !subscription.stripeSubscriptionLink" class="py-10 text-center">
               <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <p class="text-sm text-base-content/50">No Stripe data available</p>
-              <p class="text-xs text-base-content/40 mt-1">This subscription may not be connected to Stripe</p>
+              <p class="text-xs text-base-content/40 mt-1 mb-4">This subscription is not connected to Stripe</p>
+              <button class="btn btn-sm btn-outline gap-2" @click="openLinkStripeModal">
+                <LinkIcon class="w-4 h-4" />
+                Link Stripe Subscription
+              </button>
             </div>
 
             <div v-else class="space-y-4">
@@ -570,6 +590,53 @@
         </p>
       </AdminModal>
 
+      <!-- Link Stripe Modal -->
+      <AdminModal
+        :open="showLinkStripeModal"
+        title="Link Stripe Subscription"
+        description="Connect an existing Stripe subscription to this record and sync its current state."
+        variant="form"
+        confirm-text="Link & Sync"
+        loading-text="Linking..."
+        :loading="actionLoading"
+        :disabled="!linkStripeId.trim() || !linkStripeId.startsWith('sub_')"
+        @confirm="handleLinkStripe"
+        @cancel="closeModals"
+        @close="closeModals"
+      >
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1.5" for="stripe-sub-id">
+              Stripe Subscription ID <span class="text-error">*</span>
+            </label>
+            <input
+              id="stripe-sub-id"
+              v-model="linkStripeId"
+              type="text"
+              class="input input-bordered w-full font-mono text-sm"
+              placeholder="sub_1AbcDEFghi..."
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <p class="text-xs text-base-content/50 mt-1">Find this in Stripe Dashboard → Subscriptions</p>
+          </div>
+
+          <div class="bg-[#635bff]/10 border border-[#635bff]/20 rounded-lg p-4">
+            <p class="text-sm font-medium text-[#635bff] mb-2">What this does:</p>
+            <ul class="text-sm text-base-content/70 space-y-1 list-disc list-inside">
+              <li>Looks up the subscription in Stripe to validate it</li>
+              <li>Syncs status, billing period, and customer ID from Stripe</li>
+              <li>Sets tier to <strong>Pro</strong> (all paid CS subscriptions)</li>
+              <li>Future Stripe webhook events will update this record</li>
+            </ul>
+          </div>
+
+          <div v-if="linkStripeId && !linkStripeId.startsWith('sub_')" class="bg-warning/10 border border-warning/20 rounded-lg p-3">
+            <p class="text-xs text-warning">Subscription IDs must start with <code class="font-mono">sub_</code></p>
+          </div>
+        </div>
+      </AdminModal>
+
       <!-- Success/Error Alert -->
       <div v-if="alertMessage" class="toast toast-top toast-end">
         <div
@@ -593,7 +660,8 @@ import {
   XMarkIcon,
   GlobeAltIcon,
   UserIcon,
-  TrashIcon
+  TrashIcon,
+  LinkIcon
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({
@@ -667,7 +735,9 @@ const revenueError = ref<string | null>(null)
 const showModifyTierModal = ref(false)
 const showCancelModal = ref(false)
 const showDeleteModal = ref(false)
+const showLinkStripeModal = ref(false)
 const selectedTier = ref<'free' | 'free-plus' | 'pro'>('free')
+const linkStripeId = ref('')
 
 // Computed
 const hasStripeIntegration = computed(() => {
@@ -740,10 +810,16 @@ const openDeleteModal = () => {
   showDeleteModal.value = true
 }
 
+const openLinkStripeModal = () => {
+  linkStripeId.value = ''
+  showLinkStripeModal.value = true
+}
+
 const closeModals = () => {
   showModifyTierModal.value = false
   showCancelModal.value = false
   showDeleteModal.value = false
+  showLinkStripeModal.value = false
 }
 
 // Action handlers
@@ -804,6 +880,26 @@ const handleDeleteSubscription = async () => {
   } catch (err: any) {
     console.error('Failed to delete subscription:', err)
     showAlert(err?.data?.message || 'Failed to delete subscription', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const handleLinkStripe = async () => {
+  if (!subscription.value) return
+
+  actionLoading.value = true
+  try {
+    const response = await $fetch<{ message: string }>(`/api/admin/subscriptions/${subscription.value.id}/link-stripe`, {
+      method: 'POST',
+      body: { stripeSubscriptionId: linkStripeId.value.trim() },
+    })
+    showAlert(response.message || 'Stripe subscription linked successfully', 'success')
+    closeModals()
+    await fetchSubscriptionDetails() // Refresh to show Stripe links and updated status
+  } catch (err: any) {
+    console.error('Failed to link Stripe subscription:', err)
+    showAlert(err?.data?.message || 'Failed to link Stripe subscription', 'error')
   } finally {
     actionLoading.value = false
   }
