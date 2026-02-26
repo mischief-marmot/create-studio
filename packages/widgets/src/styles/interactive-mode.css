@@ -221,7 +221,7 @@
 
 .cs-interactive-mode-sticky-text {
   flex: 1;
-  color: var(--color-base-100, #fff);
+  color: var(--color-base-100, #fff) !important;
   font-size: 13px;
   line-height: 1.4;
 }

@@ -90,7 +90,7 @@
                                         <ul class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
                                             <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`"
                                                 class="cs:flex cs:items-center cs:space-x-2">
-                                                <input type="checkbox" class="cs:checkbox cs:checkbox-xs cs:flex-shrink-0"
+                                                <input type="checkbox" class="cs:checkbox cs:checkbox-xs cs:shrink-0"
                                                     :checked="currentCreationState?.checkedSupplies?.includes(`g${groupIdx}-${idx}`)"
                                                     @change="storageManager.toggleSupply(`g${groupIdx}-${idx}`); refreshCreationState()" />
                                                 <IngredientText :ingredient="supply" class="cs:text-sm" />
@@ -103,7 +103,7 @@
                                 <ul v-else class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
                                     <li v-for="(supply, idx) in adjustedIngredients" :key="`supply-${idx}`"
                                         class="cs:flex cs:items-center cs:space-x-2">
-                                        <input type="checkbox" class="cs:checkbox cs:checkbox-xs cs:flex-shrink-0"
+                                        <input type="checkbox" class="cs:checkbox cs:checkbox-xs cs:shrink-0"
                                             :checked="currentCreationState?.checkedSupplies?.includes(`g0-${idx}`)"
                                             @change="storageManager.toggleSupply(`g0-${idx}`); refreshCreationState()" />
                                         <IngredientText :ingredient="supply" class="cs:text-sm" />
@@ -115,7 +115,7 @@
 
                     <!-- Recipe Steps -->
                     <div v-for="(step, index) in steps" :key="`step-${index}`" :id="`slide${index + 1}`"
-                        class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0"
+                        class="cs:carousel-item cs:w-full cs:snap-center cs:shrink-0"
                         >
                         <div class="cs:px-4 cs:md:px-8 cs:py-8 cs:flex cs:flex-col cs:space-y-8 cs:overflow-y-auto">
                             <div class="cs:flex cs:space-x-3 cs:justify-start cs:w-full cs:items-center">
@@ -807,6 +807,9 @@ onMounted(async () => {
 
     // Initialize creation in shared storage
     const initKey = storageManager.initializeCreation(finalDomain.value, finalCreationId.value);
+
+    // Force re-read from localStorage to pick up checkbox state changes made while modal was closed
+    storageManager.syncFromStorage();
 
     // Update reactive creation state
     refreshCreationState();

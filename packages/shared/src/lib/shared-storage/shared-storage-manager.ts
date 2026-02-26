@@ -640,6 +640,16 @@ export class SharedStorageManager {
 
 
   /**
+   * Public method to force a re-read from localStorage.
+   * Call this before reading state to pick up changes made by other
+   * SharedStorageManager instances in the same tab (e.g. the card's
+   * syncIngredientChecklists instance writing while the modal was closed).
+   */
+  syncFromStorage(): void {
+    this.refreshFromStorage()
+  }
+
+  /**
    * Re-read from localStorage to pick up changes made by other
    * SharedStorageManager instances in the same tab.
    */
