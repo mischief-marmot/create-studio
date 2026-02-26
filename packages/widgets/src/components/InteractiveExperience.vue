@@ -85,13 +85,14 @@
 
                                 <!-- Render grouped ingredients if available -->
                                 <template v-if="adjustedIngredientsGroups">
-                                    <div v-for="(ingredients, groupName) in adjustedIngredientsGroups" :key="groupName" class="cs:mb-4">
+                                    <div v-for="(ingredients, groupName, groupIdx) in adjustedIngredientsGroups" :key="groupName" class="cs:mb-4">
                                         <h4 v-if="groupName && groupName !== 'mv-has-no-group'" class="cs:text-base cs:font-semibold cs:mb-2">{{ groupName }}</h4>
                                         <ul class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
                                             <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`"
                                                 class="cs:flex cs:items-center cs:space-x-2">
-                                                <span class="cs-interactive-custom-bullet"
-                                                ></span>
+                                                <input type="checkbox" class="cs:checkbox cs:checkbox-xs cs:flex-shrink-0"
+                                                    :checked="currentCreationState?.checkedSupplies?.includes(`g${groupIdx}-${idx}`)"
+                                                    @change="storageManager.toggleSupply(`g${groupIdx}-${idx}`); refreshCreationState()" />
                                                 <IngredientText :ingredient="supply" class="cs:text-sm" />
                                             </li>
                                         </ul>
@@ -102,8 +103,9 @@
                                 <ul v-else class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
                                     <li v-for="(supply, idx) in adjustedIngredients" :key="`supply-${idx}`"
                                         class="cs:flex cs:items-center cs:space-x-2">
-                                        <span class="cs-interactive-custom-bullet"
-                                        ></span>
+                                        <input type="checkbox" class="cs:checkbox cs:checkbox-xs cs:flex-shrink-0"
+                                            :checked="currentCreationState?.checkedSupplies?.includes(`g0-${idx}`)"
+                                            @change="storageManager.toggleSupply(`g0-${idx}`); refreshCreationState()" />
                                         <IngredientText :ingredient="supply" class="cs:text-sm" />
                                     </li>
                                 </ul>
@@ -874,6 +876,20 @@ onMounted(async () => {
 
     // Hide skeleton overlay after all initialization is complete
     isLoadingPersistence.value = false;
+
+    // Refresh state immediately when another window/iframe updates storage
+    const handleStorageSync = (event: MessageEvent) => {
+        if (event.data?.type === 'CREATE_STUDIO_STORAGE_SYNC') {
+            setTimeout(refreshCreationState, 10)
+        }
+    }
+    window.addEventListener('message', handleStorageSync)
+    // Also refresh when the card's checkboxes update storage in the same tab
+    window.addEventListener('cs:storage-updated', refreshCreationState)
+    onUnmounted(() => {
+        window.removeEventListener('message', handleStorageSync)
+        window.removeEventListener('cs:storage-updated', refreshCreationState)
+    })
 
     // Set up periodic refresh of creation state to detect external changes
     stateRefreshInterval = setInterval(async () => {

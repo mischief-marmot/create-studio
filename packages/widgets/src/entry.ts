@@ -1,6 +1,8 @@
 import '../widget.css'
 import { WidgetSDK } from './lib/widget-sdk'
 import { useLogger } from '@create-studio/shared/utils/logger'
+import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/shared-storage-manager'
+import { normalizeDomain, createCreationKey } from '@create-studio/shared/utils/domain'
 
 // Function to dynamically load CSS
 function loadWidgetCSS() {
@@ -23,6 +25,57 @@ function loadWidgetCSS() {
   const cacheBust = new Date().getTime()
   link.href = `${baseUrl}/embed/entry.css${debug ? '?v=' + cacheBust : ''}`
   document.head.appendChild(link)
+}
+
+/**
+ * Sync WordPress card ingredient checkboxes with SharedStorageManager.
+ * Works for both in-DOM and iframe modes — storage changes broadcast
+ * via postMessage are already handled by SharedStorageManager itself.
+ */
+function syncIngredientChecklists(section: Element, creationKey: string) {
+  const ingredientItems = section.querySelectorAll('.mv-create-ingredients li')
+  if (!ingredientItems.length) return
+
+  const storageManager = new SharedStorageManager()
+  storageManager.setCurrentCreation(creationKey)
+
+  function getKey(li: Element): string {
+    const groupEl = li.closest('[data-ingredient-group]')
+    const groupIndex = groupEl ? parseInt(groupEl.getAttribute('data-ingredient-group') || '0') : 0
+    const ingredientIndex = parseInt(li.getAttribute('data-ingredient-index') || '0')
+    return `g${groupIndex}-${ingredientIndex}`
+  }
+
+  function applyStateToDOM() {
+    storageManager.setCurrentCreation(creationKey)
+    ingredientItems.forEach((li) => {
+      const checkbox = li.querySelector('input[type="checkbox"]') as HTMLInputElement | null
+      if (!checkbox) return
+      checkbox.checked = storageManager.isSupplyChecked(getKey(li))
+    })
+  }
+
+  // Apply initial state
+  applyStateToDOM()
+
+  // Sync card → storage when user checks an ingredient
+  ingredientItems.forEach((li) => {
+    const checkbox = li.querySelector('input[type="checkbox"]') as HTMLInputElement | null
+    if (!checkbox) return
+    checkbox.addEventListener('change', () => {
+      storageManager.setCurrentCreation(creationKey)
+      storageManager.toggleSupply(getKey(li))
+      // Notify same-tab interactive mode (in-DOM only) to refresh immediately
+      window.dispatchEvent(new CustomEvent('cs:storage-updated'))
+    })
+  })
+
+  // Sync storage → card when interactive mode (iframe) updates state
+  window.addEventListener('message', (event) => {
+    if (event.data?.type === 'CREATE_STUDIO_STORAGE_SYNC') {
+      setTimeout(applyStateToDOM, 50)
+    }
+  })
 }
 
 declare global {
@@ -190,6 +243,21 @@ const CreateStudio = {
         }
       }
 
+      // Remap unit conversion keys from WordPress DB IDs → flat indices so they
+      // match how InteractiveExperience iterates ingredients with String(idx).
+      // The DOM order of li[data-ingredient-id] matches the API iteration order.
+      if (unitConversionConfig?.conversions) {
+        const ingredientEls = section.querySelectorAll('.mv-create-ingredients li[data-ingredient-id]')
+        const remapped: Record<string, any> = {}
+        ingredientEls.forEach((li, flatIdx) => {
+          const dbId = li.getAttribute('data-ingredient-id')
+          if (dbId && unitConversionConfig.conversions[dbId]) {
+            remapped[String(flatIdx)] = unitConversionConfig.conversions[dbId]
+          }
+        })
+        unitConversionConfig = { ...unitConversionConfig, conversions: remapped }
+      }
+
       // Determine CTA variant from site config (Pro tier only, defaults to 'button')
       const ctaVariant = siteConfig.ctaVariant || 'button'
 
@@ -279,6 +347,11 @@ const CreateStudio = {
       if (app) {
         logger.info('✅ Widget mounted successfully')
         apps.push(app)
+        // Sync ingredient checklists between card and interactive mode
+        const siteUrl = sdkInstance.getSiteUrl()
+        const domain = normalizeDomain(siteUrl)
+        const creationKey = createCreationKey(domain, creationId)
+        syncIngredientChecklists(section, creationKey)
       } else {
         logger.error('❌ Widget mount failed')
       }
