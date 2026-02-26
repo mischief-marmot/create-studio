@@ -97,10 +97,27 @@
 /* ─────────────────────────────────
    CTA Variant: Inline Banner
 ───────────────────────────────── */
+
+/*
+ * --cs-text-safe: a dark-clamped version of --mv-create-text.
+ * Publishers sometimes set --mv-create-text to white (dark-themed cards),
+ * but the banner always sits on a light background and needs dark ink.
+ * Fallback: #1a1a1a for older browsers.
+ * @supports: clamp OKLCH lightness to ≤0.4 while preserving hue.
+ */
+.cs-interactive-mode-banner {
+  --cs-text-safe: #1a1a1a;
+}
+@supports (color: oklch(from red l c h)) {
+  .cs-interactive-mode-banner {
+    --cs-text-safe: oklch(from var(--mv-create-text, #333) min(L, 0.4) C H);
+  }
+}
+
 .cs-interactive-mode-banner {
   padding: 16px 20px;
-  border-top: 1px solid color-mix(in srgb, var(--mv-create-text, var(--color-base-content, #888)) 20%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--mv-create-text, var(--color-base-content, #888)) 20%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--cs-text-safe) 20%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--cs-text-safe) 20%, transparent);
   display: flex;
   align-items: center;
   gap: 14px;
@@ -124,13 +141,13 @@
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   background-color: transparent;
-  border: 1px solid var(--mv-create-text, var(--color-base-content, #333));
+  border: 1px solid var(--cs-text-safe);
 }
 
 .cs-interactive-mode-banner-icon svg {
   width: 18px;
   height: 18px;
-  color: var(--mv-create-text, var(--color-base-content, #333));
+  color: var(--cs-text-safe);
 }
 
 .cs-interactive-mode-banner-text {
@@ -140,13 +157,13 @@
 .cs-interactive-mode-banner-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--mv-create-text, var(--color-base-content));
+  color: var(--cs-text-safe);
   margin-bottom: 2px;
 }
 
 .cs-interactive-mode-banner-sub {
   font-size: 11px;
-  color: var(--mv-create-text, var(--color-base-content));
+  color: var(--cs-text-safe);
   opacity: 0.6;
 }
 
@@ -154,7 +171,7 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid var(--mv-create-text, var(--color-base-content, #333));
+  border: 1px solid var(--cs-text-safe);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,13 +180,13 @@
 }
 
 .cs-interactive-mode-banner:hover .cs-interactive-mode-banner-arrow {
-  background-color: var(--mv-create-text, var(--color-base-content, #333));
+  background-color: var(--cs-text-safe);
 }
 
 .cs-interactive-mode-banner-arrow svg {
   width: 14px;
   height: 14px;
-  color: var(--mv-create-text, var(--color-base-content, #333));
+  color: var(--cs-text-safe);
   transition: color 0.2s;
 }
 
