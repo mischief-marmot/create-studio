@@ -135,6 +135,155 @@
                           Customize the text shown on the Interactive Mode button (max 50 characters)
                         </p>
                       </div>
+
+                      <!-- CTA Style -->
+                      <div class="space-y-4" :class="{ 'opacity-50': !siteForm.interactive_mode_enabled && tier === 'pro' }">
+                        <div>
+                          <span class="text-base-content block mb-2 text-sm font-bold">CTA Style</span>
+                          <p class="text-base-content/60 mb-4 text-sm">
+                            Choose how the Interactive Mode call-to-action appears on your recipe cards
+                          </p>
+                        </div>
+
+                        <div class="flex gap-6 max-w-3xl" :class="{ 'pointer-events-none': tier !== 'pro' || !siteForm.interactive_mode_enabled }">
+                          <!-- Options -->
+                          <div class="flex flex-col gap-2 min-w-[200px] shrink-0">
+                            <button
+                              v-for="variant in ctaVariants"
+                              :key="variant.value"
+                              type="button"
+                              @click="siteForm.interactive_mode_cta_variant = variant.value"
+                              @mouseenter="hoveredVariant = variant.value"
+                              @mouseleave="hoveredVariant = null"
+                              class="flex items-center gap-2.5 border rounded-lg px-3 py-2 text-left cursor-pointer transition-colors"
+                              :class="siteForm.interactive_mode_cta_variant === variant.value
+                                ? 'border-primary bg-primary/5'
+                                : 'border-base-300 hover:border-base-content/30 bg-base-100'"
+                            >
+                              <span class="flex-1 flex flex-col gap-0.5">
+                                <span class="text-sm font-semibold" :class="siteForm.interactive_mode_cta_variant === variant.value ? 'text-primary' : 'text-base-content'">{{ variant.label }}</span>
+                                <span class="text-xs text-base-content/50">{{ variant.description }}</span>
+                              </span>
+                              <svg v-if="siteForm.interactive_mode_cta_variant === variant.value" class="shrink-0 text-primary" width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <path d="M6 10l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            </button>
+                          </div>
+
+                          <!-- Diagram -->
+                          <div class="flex-1 min-w-[280px] max-w-[420px]">
+                            <div class="bg-base-200 border border-base-300 rounded-lg p-5 font-sans text-sm relative overflow-hidden">
+                              <!-- Inline Banner (between sections) -->
+                              <div
+                                class="flex items-center gap-3 py-3 mb-3 transition-all border-y border-base-300"
+                                :class="previewVariant === 'inline-banner' ? '' : 'h-0 overflow-hidden opacity-0 mb-0 py-0 border-transparent'"
+                              >
+                                <div class="w-8 h-8 rounded-lg border border-base-content/30 flex items-center justify-center shrink-0">
+                                  <svg class="w-3.5 h-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                  <div class="text-[11px] font-semibold text-base-content/80 truncate">{{ diagramCtaTitle || 'Cook step-by-step' }}</div>
+                                  <div class="text-[9px] text-base-content/50 truncate">{{ diagramCtaSubtitle || 'Full screen with timers & ingredient lists' }}</div>
+                                </div>
+                                <div class="w-6 h-6 rounded-full border border-base-content/30 flex items-center justify-center shrink-0">
+                                  <svg class="w-3 h-3 text-base-content/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                </div>
+                              </div>
+
+                              <!-- Heading row -->
+                              <div class="flex items-center gap-2 mb-3 flex-wrap">
+                                <span class="font-bold text-base-content/70 text-xs">Instructions</span>
+                                <!-- Button variant -->
+                                <span
+                                  v-if="previewVariant === 'button'"
+                                  class="bg-primary text-primary-content text-[9px] font-medium px-2.5 py-1 rounded"
+                                >
+                                  {{ diagramButtonText || 'Try Interactive Mode!' }}
+                                </span>
+                                <!-- Tooltip variant (dark pill, no arrow) -->
+                                <span
+                                  v-if="previewVariant === 'tooltip'"
+                                  class="inline-flex items-center gap-1.5 bg-neutral text-neutral-content text-[9px] px-2.5 py-1 rounded-full shadow-sm"
+                                >
+                                  <span class="truncate max-w-[120px]">{{ diagramCtaTitle || 'Try hands-free cooking mode' }}</span>
+                                  <span class="bg-white/90 text-neutral text-[8px] font-semibold px-1.5 py-0.5 rounded-full shrink-0">{{ diagramButtonText || 'Try it' }}</span>
+                                  <span class="text-[7px] opacity-60 shrink-0">&times;</span>
+                                </span>
+                              </div>
+
+                              <!-- Placeholder lines -->
+                              <div class="space-y-2 mb-3">
+                                <div class="h-1.5 bg-base-300 rounded-full w-[80%]"></div>
+                                <div class="h-1.5 bg-base-300 rounded-full w-[64%]"></div>
+                                <div class="h-1.5 bg-base-300 rounded-full w-[72%]"></div>
+                              </div>
+
+                              <!-- Sticky Bar (dark bar at bottom) -->
+                              <div
+                                class="flex items-center gap-2 rounded px-3 py-2 transition-all"
+                                :class="previewVariant === 'sticky-bar'
+                                  ? 'bg-neutral text-neutral-content'
+                                  : 'h-0 overflow-hidden opacity-0 py-0 px-0'"
+                              >
+                                <div class="flex-1 min-w-0">
+                                  <span class="text-[10px] font-semibold">{{ diagramCtaTitle || 'Ready to cook?' }}</span>
+                                  <span class="text-[9px] opacity-60 ml-1">{{ diagramCtaSubtitle || 'Step-by-step with timers' }}</span>
+                                </div>
+                                <span class="bg-white/90 text-neutral text-[9px] font-semibold px-2.5 py-1 rounded-lg shrink-0 flex items-center gap-1">
+                                  <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                  {{ diagramButtonText || "Let's Go" }}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- CTA Title (for banner, sticky-bar, tooltip) -->
+                      <div
+                        v-if="['inline-banner', 'sticky-bar', 'tooltip'].includes(siteForm.interactive_mode_cta_variant)"
+                        class="space-y-2"
+                        :class="{ 'opacity-50': !siteForm.interactive_mode_enabled && tier === 'pro' }"
+                      >
+                        <label class="block" for="cta-title">
+                          <span class="text-base-content block mb-2 text-sm font-bold">CTA Title</span>
+                        </label>
+                        <input
+                          id="cta-title"
+                          v-model="siteForm.interactive_mode_cta_title"
+                          type="text"
+                          class="input bg-base-200 max-w-md"
+                          :placeholder="siteForm.interactive_mode_cta_variant === 'sticky-bar' ? 'Ready to cook?' : siteForm.interactive_mode_cta_variant === 'tooltip' ? 'Try hands-free cooking mode' : 'Cook step-by-step'"
+                          maxlength="50"
+                          :disabled="tier !== 'pro' || !siteForm.interactive_mode_enabled"
+                        />
+                        <p class="text-base-content/60 text-sm">
+                          Title text for the CTA element (max 50 characters)
+                        </p>
+                      </div>
+
+                      <!-- CTA Subtitle (for banner, sticky-bar) -->
+                      <div
+                        v-if="['inline-banner', 'sticky-bar'].includes(siteForm.interactive_mode_cta_variant)"
+                        class="space-y-2"
+                        :class="{ 'opacity-50': !siteForm.interactive_mode_enabled && tier === 'pro' }"
+                      >
+                        <label class="block" for="cta-subtitle">
+                          <span class="text-base-content block mb-2 text-sm font-bold">CTA Subtitle</span>
+                        </label>
+                        <input
+                          id="cta-subtitle"
+                          v-model="siteForm.interactive_mode_cta_subtitle"
+                          type="text"
+                          class="input bg-base-200 max-w-md"
+                          :placeholder="siteForm.interactive_mode_cta_variant === 'sticky-bar' ? 'Step-by-step with timers' : 'Full screen with timers & ingredient lists'"
+                          maxlength="80"
+                          :disabled="tier !== 'pro' || !siteForm.interactive_mode_enabled"
+                        />
+                        <p class="text-base-content/60 text-sm">
+                          Subtitle text for the CTA element (max 80 characters)
+                        </p>
+                      </div>
                     </div>
                   </div>
 
@@ -535,8 +684,24 @@ const siteForm = ref({
   name: '',
   url: '',
   interactive_mode_enabled: true,
-  interactive_mode_button_text: ''
+  interactive_mode_button_text: '',
+  interactive_mode_cta_variant: 'button',
+  interactive_mode_cta_title: '',
+  interactive_mode_cta_subtitle: ''
 })
+
+const ctaVariants = [
+  { value: 'button', label: 'Button', description: 'Inline button next to heading' },
+  { value: 'inline-banner', label: 'Inline Banner', description: 'Full-width banner between sections' },
+  { value: 'sticky-bar', label: 'Sticky Bar', description: 'Fixed bar at bottom of viewport' },
+  { value: 'tooltip', label: 'Tooltip', description: 'Dark pill next to heading' },
+]
+
+const hoveredVariant = ref<string | null>(null)
+const previewVariant = computed(() => hoveredVariant.value ?? siteForm.value.interactive_mode_cta_variant)
+const diagramButtonText = computed(() => siteForm.value.interactive_mode_button_text)
+const diagramCtaTitle = computed(() => siteForm.value.interactive_mode_cta_title)
+const diagramCtaSubtitle = computed(() => siteForm.value.interactive_mode_cta_subtitle)
 
 const tierDisplayName = computed(() => {
   if (tier.value === 'pro') return 'Pro'
@@ -576,9 +741,11 @@ const loadSiteData = async () => {
       siteForm.value = {
         name: site.value.name || '',
         url: site.value.url || '',
-        // Pro settings: default to enabled if not set (null/undefined treated as enabled)
         interactive_mode_enabled: !!site.value.interactive_mode_enabled,
-        interactive_mode_button_text: site.value.interactive_mode_button_text || ''
+        interactive_mode_button_text: site.value.interactive_mode_button_text || '',
+        interactive_mode_cta_variant: site.value.interactive_mode_cta_variant || 'button',
+        interactive_mode_cta_title: site.value.interactive_mode_cta_title || '',
+        interactive_mode_cta_subtitle: site.value.interactive_mode_cta_subtitle || ''
       }
     }
 
@@ -629,6 +796,9 @@ const handleSaveGeneral = async () => {
     if (tier.value === 'pro') {
       body.interactive_mode_enabled = siteForm.value.interactive_mode_enabled
       body.interactive_mode_button_text = siteForm.value.interactive_mode_button_text || null
+      body.interactive_mode_cta_variant = siteForm.value.interactive_mode_cta_variant
+      body.interactive_mode_cta_title = siteForm.value.interactive_mode_cta_title || null
+      body.interactive_mode_cta_subtitle = siteForm.value.interactive_mode_cta_subtitle || null
     }
 
     const response = await useAuthFetch(`/api/v2/sites/${selectedSiteId.value}`, {

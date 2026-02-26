@@ -31,11 +31,11 @@ export default defineEventHandler(async (event) => {
 
     // Read body
     const body = await readBody(event)
-    const { name, url, interactive_mode_enabled, interactive_mode_button_text } = body
+    const { name, url, interactive_mode_enabled, interactive_mode_button_text, interactive_mode_cta_variant, interactive_mode_cta_title, interactive_mode_cta_subtitle } = body
 
     // Validate input - at least one field must be provided
     const hasGeneralFields = name !== undefined || url !== undefined
-    const hasProFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined
+    const hasProFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined || interactive_mode_cta_variant !== undefined || interactive_mode_cta_title !== undefined || interactive_mode_cta_subtitle !== undefined
 
     if (!hasGeneralFields && !hasProFields) {
       setResponseStatus(event, 400)
@@ -113,6 +113,37 @@ export default defineEventHandler(async (event) => {
         }
       }
 
+      if (interactive_mode_cta_variant !== undefined) {
+        const allowedVariants = ['button', 'inline-banner', 'sticky-bar', 'tooltip']
+        if (!allowedVariants.includes(interactive_mode_cta_variant)) {
+          setResponseStatus(event, 400)
+          return {
+            success: false,
+            error: 'Invalid CTA variant. Must be one of: button, inline-banner, sticky-bar, tooltip'
+          }
+        }
+      }
+
+      if (interactive_mode_cta_title !== undefined) {
+        if (interactive_mode_cta_title && interactive_mode_cta_title.length > 50) {
+          setResponseStatus(event, 400)
+          return {
+            success: false,
+            error: 'CTA title must be 50 characters or less'
+          }
+        }
+      }
+
+      if (interactive_mode_cta_subtitle !== undefined) {
+        if (interactive_mode_cta_subtitle && interactive_mode_cta_subtitle.length > 80) {
+          setResponseStatus(event, 400)
+          return {
+            success: false,
+            error: 'CTA subtitle must be 80 characters or less'
+          }
+        }
+      }
+
       const siteMetaRepo = new SiteMetaRepository()
       const metaSettings: Record<string, unknown> = {}
       if (interactive_mode_enabled !== undefined) {
@@ -120,6 +151,15 @@ export default defineEventHandler(async (event) => {
       }
       if (interactive_mode_button_text !== undefined) {
         metaSettings.interactive_mode_button_text = interactive_mode_button_text || null
+      }
+      if (interactive_mode_cta_variant !== undefined) {
+        metaSettings.interactive_mode_cta_variant = interactive_mode_cta_variant
+      }
+      if (interactive_mode_cta_title !== undefined) {
+        metaSettings.interactive_mode_cta_title = interactive_mode_cta_title || null
+      }
+      if (interactive_mode_cta_subtitle !== undefined) {
+        metaSettings.interactive_mode_cta_subtitle = interactive_mode_cta_subtitle || null
       }
       await siteMetaRepo.updateSettings(siteId, metaSettings)
     }
@@ -132,6 +172,15 @@ export default defineEventHandler(async (event) => {
       }
       if (interactive_mode_button_text !== undefined) {
         webhookSettings.interactive_mode_button_text = interactive_mode_button_text || ''
+      }
+      if (interactive_mode_cta_variant !== undefined) {
+        webhookSettings.interactive_mode_cta_variant = interactive_mode_cta_variant
+      }
+      if (interactive_mode_cta_title !== undefined) {
+        webhookSettings.interactive_mode_cta_title = interactive_mode_cta_title || ''
+      }
+      if (interactive_mode_cta_subtitle !== undefined) {
+        webhookSettings.interactive_mode_cta_subtitle = interactive_mode_cta_subtitle || ''
       }
 
       try {

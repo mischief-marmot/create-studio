@@ -75,6 +75,9 @@ export default defineEventHandler(async (event) => {
         ...existingSite,
         interactive_mode_enabled: settings.interactive_mode_enabled ?? true,
         interactive_mode_button_text: settings.interactive_mode_button_text ?? null,
+        interactive_mode_cta_variant: settings.interactive_mode_cta_variant ?? 'button',
+        interactive_mode_cta_title: settings.interactive_mode_cta_title ?? null,
+        interactive_mode_cta_subtitle: settings.interactive_mode_cta_subtitle ?? null,
       }
     }
 
