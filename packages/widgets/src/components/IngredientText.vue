@@ -5,7 +5,7 @@
         :href="parsedIngredient.link"
         :rel="parsedIngredient.nofollow ? 'nofollow' : undefined"
         :target="isExternalLink ? '_blank' : undefined"
-        class="cs:text-secondary cs:underline"
+        class="cs:text-blue-500 cs:underline"
       >{{ parsedIngredient.parts.linkText }}</a>{{ parsedIngredient.parts.after }}
     </template>
     <a
@@ -13,7 +13,7 @@
       :href="parsedIngredient.link"
       :rel="parsedIngredient.nofollow ? 'nofollow' : undefined"
       :target="isExternalLink ? '_blank' : undefined"
-      class="cs:text-secondary cs:underline"
+      class="cs:text-blue-500 cs:underline"
     >{{ parsedIngredient.text }}</a>
   </span>
   <span v-else>{{ parsedIngredient.text }}</span>
