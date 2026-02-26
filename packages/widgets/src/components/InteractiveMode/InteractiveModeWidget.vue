@@ -240,6 +240,11 @@ function openModal() {
   // Set scroll position to 0 to show modal in viewport
   scrollPosition.value = 0
 
+  // Sync from localStorage before initializing to avoid overwriting checked state.
+  // The storageManager was created at component mount, before syncIngredientChecklists
+  // wrote the creation key — so its in-memory state may not have the key, causing
+  // initializeCreation to create a fresh empty state and wipe checked boxes.
+  storageManager.syncFromStorage()
   // Initialize creation in shared storage when modal opens
   const siteUrl = props.config.siteUrl || globalConfig?.siteUrl || window.location.origin
   const domain = normalizeDomain(siteUrl)

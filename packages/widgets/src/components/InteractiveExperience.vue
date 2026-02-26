@@ -887,11 +887,17 @@ onMounted(async () => {
         }
     }
     window.addEventListener('message', handleStorageSync)
-    // Also refresh when the card's checkboxes update storage in the same tab
-    window.addEventListener('cs:storage-updated', refreshCreationState)
+    // Also refresh when the card's checkboxes update storage in the same tab.
+    // Must sync from localStorage first since the card's storageManager is a
+    // separate instance — its saves don't update our in-memory state directly.
+    const handleCardStorageUpdate = () => {
+        storageManager.syncFromStorage()
+        refreshCreationState()
+    }
+    window.addEventListener('cs:storage-updated', handleCardStorageUpdate)
     onUnmounted(() => {
         window.removeEventListener('message', handleStorageSync)
-        window.removeEventListener('cs:storage-updated', refreshCreationState)
+        window.removeEventListener('cs:storage-updated', handleCardStorageUpdate)
     })
 
     // Set up periodic refresh of creation state to detect external changes
