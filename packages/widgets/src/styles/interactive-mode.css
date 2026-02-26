@@ -174,7 +174,7 @@
 }
 
 .cs-interactive-mode-banner:hover .cs-interactive-mode-banner-arrow svg {
-  color: inherit;
+  color: #fff;
 }
 
 /* Desktop: wider padding, larger icon */

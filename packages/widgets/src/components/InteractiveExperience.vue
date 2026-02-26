@@ -160,8 +160,8 @@
                         >
                             <!-- Title and question -->
                             <div class="cs:text-center">
-                                <h2 class="cs:text-2xl cs:font-bold cs:text-center">All done!</h2>
-                                <p class="cs:text-lg cs:opacity-80 cs:text-center">{{ reviewQuestionText }}</p>
+                                <h2 class="cs:text-2xl cs:text-base-content cs:font-bold cs:text-center">All done!</h2>
+                                <p class="cs:text-lg cs:text-base-content cs:text-center">{{ reviewQuestionText }}</p>
                             </div>
 
                             <!-- Star rating -->
