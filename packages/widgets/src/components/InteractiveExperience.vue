@@ -58,18 +58,15 @@
             </figure>
 
             <!-- Content Section - Scrollable with rounded top corners on mobile, side panel on desktop -->
-            <div :class="[ 'cs:flex-1 cs:overflow-hidden cs:flex cs:flex-col cs:relative cs:z-10 cs:rounded-t-3xl cs:h-full cs:w-full', 'cs:md:rounded-none cs:md:w-3/5 cs:md:mb-auto cs:md:z-0' ]"
-                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
-            >
+            <div :class="[ 'cs:flex-1 cs:overflow-hidden cs:flex cs:flex-col cs:relative cs:z-10 cs:rounded-t-3xl cs:h-full cs:w-full', 'cs:md:rounded-none cs:md:w-3/5 cs:md:mb-auto cs:md:z-0' ]">
                 <!-- Draggable Handle - Mobile only -->
                 <DraggableHandle v-if="isMobile" @start-drag="startDrag" />
                 <div class="cs:carousel cs:carousel-center cs:w-full cs:flex-1 cs:overflow-x-auto cs:snap-x cs:snap-mandatory cs:flex cs:flex-row"
                     ref="carouselRef">
                     <!-- Intro Slide - Title, Description, Stats -->
-                    <div id="slide0" class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0"
-                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
+                    <div id="slide0" class="cs:carousel-item cs:w-full cs:snap-center cs:shrink-0 cs:h-full"
                     >
-                        <div class="cs:p-6 cs:md:pl-8 cs:space-y-6">
+                        <div class="cs:p-6 cs:md:pl-8 cs:space-y-6 cs:overflow-y-auto cs:h-full">
                             <div>
                                 <h1 class="cs:text-2xl cs:font-bold cs:mb-3">{{ creation?.name || 'Recipe' }}</h1>
                                 <p v-if="creation?.description" v-html="creation?.description"
@@ -117,7 +114,6 @@
                     <!-- Recipe Steps -->
                     <div v-for="(step, index) in steps" :key="`step-${index}`" :id="`slide${index + 1}`"
                         class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0"
-                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
                         >
                         <div class="cs:px-4 cs:md:px-8 cs:py-8 cs:flex cs:flex-col cs:space-y-8 cs:overflow-y-auto">
                             <div class="cs:flex cs:space-x-3 cs:justify-start cs:w-full cs:items-center">
@@ -159,9 +155,7 @@
                     <!-- Review Prompt Slide -->
                     <div :id="`slide${totalSlides - 1}`" class="cs:carousel-item cs:w-full cs:snap-center cs:flex-shrink-0">
                         <div class="cs:w-full cs:px-4 cs:md:px-6 cs:py-6 cs:flex cs:flex-col cs:h-full cs:overflow-y-auto cs:space-y-2 cs:justify-center cs:items-center"
-                    style="background-color: var(--mv-create-base, var(--color-base-100)); color: var(--mv-create-text, var(--color-base-content));"
                         >
-
                             <!-- Title and question -->
                             <div class="cs:text-center">
                                 <h2 class="cs:text-2xl cs:font-bold cs:text-center">All done!</h2>
