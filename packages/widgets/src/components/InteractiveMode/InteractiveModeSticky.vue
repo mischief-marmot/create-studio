@@ -54,33 +54,29 @@ const barStyle = computed(() => {
 
 /**
  * Detect fixed/sticky elements at the bottom of the viewport (ad banners).
- * Walks all direct children of body + iframes, since ad scripts inject there.
+ * Scans all page elements since ad containers can be deeply nested (e.g.
+ * #adhesion_desktop > #adhesion_desktop_container with position: sticky).
+ * Only runs on mount + body mutations, not on scroll, so perf is acceptable.
  */
 function detectBottomAdHeight(): number {
   const viewportHeight = window.innerHeight
   const threshold = 200
   let maxHeight = 0
 
-  // Walk body children + all iframes (covers most ad injection patterns)
-  const candidates = [
-    ...Array.from(document.body.children),
-    ...Array.from(document.querySelectorAll('iframe')),
-  ]
-
-  for (const el of candidates) {
-    if (stickyEl.value && (el === stickyEl.value || el.contains(stickyEl.value))) continue
-    const htmlEl = el as HTMLElement
-    if (!htmlEl.offsetHeight) continue
-
-    const style = window.getComputedStyle(el)
-    if (style.position !== 'fixed' && style.position !== 'sticky') continue
+  const allElements = document.querySelectorAll('*')
+  for (const el of allElements) {
+    // Skip our own bar and hidden elements
+    if (stickyEl.value && (el === stickyEl.value || stickyEl.value.contains(el))) continue
+    if (!(el as HTMLElement).offsetHeight) continue
 
     const rect = el.getBoundingClientRect()
-    // Is it anchored at the bottom of the viewport?
-    if (rect.bottom >= viewportHeight - 5 && rect.top > viewportHeight - threshold) {
-      if (rect.height > maxHeight && rect.height < threshold) {
-        maxHeight = rect.height
-      }
+    // Quick bounds check before expensive getComputedStyle
+    if (rect.bottom < viewportHeight - 10 || rect.top <= viewportHeight - threshold) continue
+    if (rect.height <= maxHeight || rect.height >= threshold) continue
+
+    const style = window.getComputedStyle(el)
+    if (style.position === 'fixed' || style.position === 'sticky') {
+      maxHeight = rect.height
     }
   }
 
@@ -114,13 +110,15 @@ onMounted(() => {
   window.addEventListener('scroll', () => updateCardRect(card), { passive: true })
   window.addEventListener('resize', () => updateCardRect(card), { passive: true })
 
-  // Detect bottom ads on mount + whenever body children change (ads load async)
+  // Detect bottom ads on mount + whenever DOM changes (ads load async and can be deeply nested)
   updateBottomOffset()
+  // Re-check after delays since ads load asynchronously at various times
+  setTimeout(updateBottomOffset, 2000)
+  setTimeout(updateBottomOffset, 5000)
   adObserver = new MutationObserver(() => {
-    // Small delay so the new element has time to get styles applied
-    setTimeout(updateBottomOffset, 200)
+    setTimeout(updateBottomOffset, 300)
   })
-  adObserver.observe(document.body, { childList: true, subtree: false })
+  adObserver.observe(document.body, { childList: true, subtree: true })
 
   // Show when instructions section is in the viewport
   observer = new IntersectionObserver(
