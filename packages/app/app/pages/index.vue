@@ -3,8 +3,8 @@
     <!-- Announcement Banner -->
     <div class="bg-primary text-primary-content px-6 py-3 text-center">
       <div class="max-w-7xl flex flex-wrap items-center justify-center gap-3 mx-auto">
-        <span class="text-sm font-semibold">Exciting Announcement! Read the latest news about Create</span>
-        <a href="/hello" class="btn btn-sm btn-primary-content">
+        <span class="text-sm font-semibold">Create 2.0 is here! Read the latest news about Create</span>
+        <a href="/create-2" class="btn btn-sm btn-primary-content">
           Read now
           <ArrowRightIcon class="size-4" />
         </a>
