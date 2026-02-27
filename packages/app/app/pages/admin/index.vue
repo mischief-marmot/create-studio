@@ -214,7 +214,7 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex flex-col gap-2">
                     <div v-if="site.pending" class="badge badge-sm badge-warning uppercase rounded-sm">
-                      Pending
+                      Not Connected
                     </div>
                     <div v-else class="flex items-center gap-1">
                       <div class="badge badge-sm bg-amber-700 text-amber-50 border-amber-700 uppercase rounded-sm">
@@ -247,10 +247,10 @@
 
               </div>
 
-              <!-- Pending Verification Notice -->
+              <!-- Not Connected Notice -->
               <div v-if="site.pending" class="bg-warning/10 border-warning/20 rounded-xl p-4 mb-4 text-sm border">
-                <p class="text-warning mb-2 font-medium">Verification Required</p>
-                <p class="text-base-content/70 text-xs">Click to complete site verification</p>
+                <p class="text-warning mb-2 font-medium">Connection Required</p>
+                <p class="text-base-content/70 text-xs">Click to connect your site</p>
               </div>
 
               <!-- Site Meta (only for verified sites) -->
@@ -268,7 +268,7 @@
                   @click.stop="openVerifyModal(site)"
                   class="btn btn-warning btn-sm"
                 >
-                  Verify Now
+                  Connect Now
                 </button>
                 <button
                   v-else-if="getSiteTier(site.id) !== 'pro'"

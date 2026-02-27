@@ -72,7 +72,7 @@
           </div>
           <h3 class="mb-2 font-serif text-2xl">Site Connected!</h3>
           <p class="text-base-content/70 mb-6 text-sm">
-            Your WordPress site is now connected.
+            Your site is now connected to Create Studio.
           </p>
 
           <button @click="handleComplete" class="btn btn-primary w-full">
@@ -139,6 +139,10 @@ watch(() => props.isOpen, (isOpen) => {
 })
 
 const closeModal = () => {
+  // If already confirmed connected, emit verified so the dashboard refreshes
+  if (verified.value && props.site) {
+    emit('verified', props.site)
+  }
   resetState()
   emit('close')
 }
@@ -169,7 +173,7 @@ const checkConnection = async () => {
         verified.value = true
       }
       else {
-        error.value = 'Not connected yet. Open the Create Studio tab in your plugin settings to connect.'
+        error.value = 'Not connected yet. Open the Register tab in your plugin settings to connect.'
       }
     }
   }

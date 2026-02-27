@@ -280,7 +280,7 @@ const checkConnection = async () => {
         currentStep.value = 3
       }
       else {
-        connectionError.value = 'Not connected yet. Open the Create Studio tab in your plugin settings to connect.'
+        connectionError.value = 'Not connected yet. Open the Register tab in your plugin settings to connect.'
       }
     }
   }
