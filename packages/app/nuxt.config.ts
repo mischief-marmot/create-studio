@@ -158,7 +158,7 @@ export default defineNuxtConfig({
         {
           name: "description",
           content:
-            "Create structured data cards for recipes, how-to guides, and FAQs with automatic JSON-LD generation",
+            "Create structured data cards for recipes, how-to guides, and lists with automatic JSON-LD generation",
         },
       ],
        link: [

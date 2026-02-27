@@ -1,23 +1,23 @@
 <template>
   <div
-    class="rounded-xl border-info/20 relative my-8 overflow-hidden border"
+    class="rounded-xl border-primary relative my-8 overflow-hidden border"
   >
     <!-- Accent bar -->
     <div
-      class="bg-info absolute left-0"
-      style="width: 10px; height: 40%; top: 30%; background-color: var(--color-accent); border-radius: 0 100px 100px 0;"
+      class="bg-primary absolute left-0"
+      style="width: 10px; height: 40%; top: 30%; background-color: var(--color-primary); border-radius: 0 100px 100px 0;"
     ></div>
 
     <!-- Content container -->
     <div class="px-8 py-5 pl-8 pr-6">
       <span
         v-if="title"
-        class="text-accent opacity-90 text-md mb-2 font-medium tracking-wide uppercase"
+        class="text-base-content dark:text-primary opacity-90 text-md mb-2 font-medium tracking-wide uppercase"
       >
         {{ title }}
       </span>
       <div
-        class="callout-content max-w-none prose-strong:text-info prose-strong:font-semibold text-base-content"
+        class="callout-content max-w-none prose-strong:text-primary prose-strong:font-semibold text-base-content"
       >
         <slot />
       </div>
