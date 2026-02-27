@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   let renderMode: 'iframe' | 'in-dom' = 'iframe'
   let showInteractiveMode = true
   let buttonText = 'Try Interactive Mode!'
-  let ctaVariant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip' = 'button'
+  let ctaVariant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip' = 'inline-banner'
   let ctaTitle = ''
   let ctaSubtitle = ''
 
