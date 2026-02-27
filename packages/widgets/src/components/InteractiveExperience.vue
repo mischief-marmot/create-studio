@@ -68,7 +68,7 @@
                     >
                         <div class="cs:p-6 cs:md:pl-8 cs:space-y-6 cs:overflow-y-auto cs:h-full">
                             <div>
-                                <h1 class="cs:text-2xl cs:font-bold cs:mb-3">{{ creation?.name || 'Recipe' }}</h1>
+                                <h1 class="cs:text-2xl cs:font-bold cs:mb-3 cs:text-base-content">{{ creation?.name || 'Recipe' }}</h1>
                                 <p v-if="creation?.description" v-html="creation?.description"
                                     class="cs:text-sm cs:leading-relaxed"></p>
                                 <div v-if="adjustedYield" class="cs:mt-2 cs:text-sm cs:opacity-80">
@@ -76,7 +76,7 @@
                                 </div>
                             </div>
                             <div>
-                                <h2 class="cs:text-xl cs:font-bold cs:mb-4">
+                                <h2 class="cs:text-xl cs:font-bold cs:mb-4 cs:text-base-content">
                                     {{ suppliesLabel }}
                                     <span v-if="servingsMultiplier !== 1" class="cs:text-sm cs:font-normal cs:opacity-70">
                                         ({{ servingsMultiplier }}x)
@@ -267,7 +267,7 @@
                                     ({{ servingsMultiplier }}x)
                                 </span>
                             </h3>
-                            <button @click="showSupplies = false" class="cs:p-1 cs:cursor-pointer cs:w-auto!">
+                            <button @click="showSupplies = false" class="cs:p-1 cs:cursor-pointer cs:w-auto! cs:rounded-full!">
                                 <XMarkIcon class="cs:w-5 cs:h-5" />
                             </button>
                         </div>
