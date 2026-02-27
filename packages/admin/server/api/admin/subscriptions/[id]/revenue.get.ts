@@ -69,7 +69,7 @@ export default defineEventHandler(async (event) => {
       const product = typeof price.product === 'string' ? null : price.product as Stripe.Product
 
       plan = {
-        name: product?.name || 'Create Unlocked',
+        name: product?.name || 'Create Pro',
         amount: price.unit_amount ? price.unit_amount / 100 : 0,
         currency: price.currency,
         interval: price.recurring?.interval || 'month',

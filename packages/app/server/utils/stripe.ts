@@ -47,7 +47,7 @@ export async function createCheckoutSession(params: {
       user_id: params.userId.toString(),
     },
     subscription_data: {
-      description: params.siteName ? `Create Unlocked - ${params.siteName}` : 'Create Unlocked',
+      description: params.siteName ? `Create Pro - ${params.siteName}` : 'Create Pro',
       metadata: {
         site_id: params.siteId.toString(),
         user_id: params.userId.toString(),
@@ -216,12 +216,12 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
 
 /**
  * Determine tier from Stripe price ID
- * All Create Unlocked prices map to 'pro' tier
+ * All Create Pro prices map to 'pro' tier
  */
 function determineTierFromPriceId(priceId?: string): string {
   if (!priceId) return 'free'
 
-  // All Create Unlocked subscription prices are 'pro' tier
+  // All Create Pro subscription prices are 'pro' tier
   // The billing interval (monthly, quarterly, annual, biannual) is handled by Stripe
   return 'pro'
 }

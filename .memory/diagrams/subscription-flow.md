@@ -83,7 +83,7 @@ sequenceDiagram
 
 ## Summary
 
-This diagram traces the complete lifecycle from a publisher adding their WordPress site to Create Studio through upgrading to the Pro ("Create Unlocked") subscription tier. The flow spans five phases: site creation with canonical site modeling, WordPress plugin verification as a billing prerequisite, Stripe Checkout session initiation with metadata linking, asynchronous webhook processing that updates both the local database and the WordPress site, and the post-upgrade settings experience.
+This diagram traces the complete lifecycle from a publisher adding their WordPress site to Create Studio through upgrading to the Pro ("Create Pro") subscription tier. The flow spans five phases: site creation with canonical site modeling, WordPress plugin verification as a billing prerequisite, Stripe Checkout session initiation with metadata linking, asynchronous webhook processing that updates both the local database and the WordPress site, and the post-upgrade settings experience.
 
 ## Key Details
 
