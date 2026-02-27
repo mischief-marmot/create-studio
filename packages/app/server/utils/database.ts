@@ -841,7 +841,13 @@ export class SiteMetaRepository {
     const existing = await this.findBySiteId(siteId)
 
     if (existing) {
-      const logs = [...(existing.version_logs as VersionLogEntry[] || []), entry]
+      const existingLogs = (existing.version_logs as VersionLogEntry[]) || []
+      // Deduplicate: if the most recent entry is the same transition, skip (race condition guard)
+      const last = existingLogs[existingLogs.length - 1]
+      if (last && last.from === from && last.to === to) {
+        return existing
+      }
+      const logs = [...existingLogs, entry]
       await db.update(schema.siteMeta)
         .set({ version_logs: logs, updatedAt: now })
         .where(eq(schema.siteMeta.site_id, siteId))

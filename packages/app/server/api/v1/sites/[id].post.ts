@@ -50,10 +50,12 @@ export default defineEventHandler(async (event) => {
     logger.debug('Updating site', updates)
     const updatedSite = await siteRepo.update(siteId, updates)
 
-    // Touch last_active_at once per day
+    // Touch last_active_at once per day on the canonical site
+    const canonicalSiteId = existingSite.canonical_site_id || existingSite.id!
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    if (!existingSite.last_active_at || existingSite.last_active_at < oneDayAgo) {
-      await siteRepo.touch(siteId)
+    const siteToCheck = canonicalSiteId !== existingSite.id ? await siteRepo.findById(canonicalSiteId) : existingSite
+    if (!siteToCheck?.last_active_at || siteToCheck.last_active_at < oneDayAgo) {
+      await siteRepo.touch(canonicalSiteId)
     }
 
     // Return response in original format

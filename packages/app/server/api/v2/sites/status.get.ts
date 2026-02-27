@@ -51,10 +51,12 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Touch last_active_at once per day (avoid a DB write on every heartbeat call)
+    // Touch last_active_at once per day on the canonical site (avoid a DB write on every heartbeat call)
+    const canonicalSiteId = site.canonical_site_id || site.id!
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    if (!site.last_active_at || site.last_active_at < oneDayAgo) {
-      await siteRepo.touch(siteId)
+    const siteToCheck = canonicalSiteId !== site.id ? await siteRepo.findById(canonicalSiteId) : site
+    if (!siteToCheck?.last_active_at || siteToCheck.last_active_at < oneDayAgo) {
+      await siteRepo.touch(canonicalSiteId)
     }
 
     // Look up subscription tier
