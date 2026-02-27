@@ -80,6 +80,8 @@ export default defineNuxtConfig({
     mainAppPreviewUrl: "http://localhost:3000",
     // Shared secret for service-to-service auth with main app
     mainAppApiKey: "",
+    // Stripe secret key for admin Stripe API calls
+    stripeSecretKey: "",
     // Session configuration for nuxt-auth-utils
     session: {
       password: process.env.NUXT_ADMIN_SESSION_PASSWORD || "",
