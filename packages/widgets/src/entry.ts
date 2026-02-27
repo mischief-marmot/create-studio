@@ -6,8 +6,8 @@ import { normalizeDomain, createCreationKey } from '@create-studio/shared/utils/
 
 // Function to dynamically load CSS
 function loadWidgetCSS() {
-  // Check if CSS is already loaded
-  if (document.querySelector('link[href*="entry.css"]')) {
+  // Check if CSS is already loaded as a stylesheet (not just preloaded)
+  if (document.querySelector('link[rel="stylesheet"][href*="entry.css"]')) {
     return
   }
 
@@ -294,13 +294,13 @@ const CreateStudio = {
           logger.debug('📦 Created banner container between ingredients and instructions')
         }
       } else if (ctaVariant === 'sticky-bar') {
-        // Append inside the .mv-create-wrapper (at the end, uses CSS position: sticky)
+        // Place inside the section (fixed positioning + intersection observer handles visibility)
         const wrapper = section.querySelector('.mv-create-wrapper') || section
         const stickyContainer = document.createElement('div')
         stickyContainer.className = 'create-studio-widget cs-interactive-mode-sticky-container'
         wrapper.appendChild(stickyContainer)
         mountTarget = stickyContainer
-        logger.debug('📦 Created sticky bar container at end of wrapper')
+        logger.debug('📦 Created sticky bar container in wrapper')
       } else if (ctaVariant === 'tooltip') {
         // Mount inline inside the instructions heading, to the right of the text
         const instructionsTitle = section.querySelector('.mv-create-instructions-title')

@@ -221,14 +221,15 @@
 .cs-interactive-mode-sticky {
   position: fixed;
   bottom: 0;
-  z-index: 999999;
+  z-index: 2147483647;
   padding: 14px 20px;
-  background-color: var(--color-base-content);
+  background-color: var(--color-base-content, #1f2937);
   display: flex;
   align-items: center;
   gap: 12px;
   animation: cs-interactive-mode-sticky-slide-up 0.4s both ease-out;
   box-sizing: border-box;
+  transition: bottom 0.3s ease;
 }
 
 @keyframes cs-interactive-mode-sticky-slide-up {
