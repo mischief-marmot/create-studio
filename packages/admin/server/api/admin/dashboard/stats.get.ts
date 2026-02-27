@@ -1,5 +1,6 @@
 import { eq, and, gte, isNotNull, count } from 'drizzle-orm'
 import { useAdminDb, users, sites, subscriptions, siteUsers } from "~~/server/utils/admin-db"
+import { getAdminStripeClient } from "~~/server/utils/stripe"
 
 /**
  * GET /api/admin/dashboard/stats
@@ -104,10 +105,58 @@ export default defineEventHandler(async (event) => {
       )
     const freeSubscriptions = freeSubscriptionsResult[0]?.count || 0
 
-    // MRR: only count Stripe-billed pro subscriptions
-    // Uses $10/month estimate — accurate MRR requires Stripe price data
-    const PRO_MONTHLY_ESTIMATE = 10
-    const mrr = paidProSubscriptions * PRO_MONTHLY_ESTIMATE
+    // MRR: calculate from actual Stripe subscription data, accounting for discounts
+    let mrr = 0
+    try {
+      const stripe = getAdminStripeClient()
+      let hasMore = true
+      let startingAfter: string | undefined
+
+      while (hasMore) {
+        const page = await stripe.subscriptions.list({
+          status: 'active',
+          expand: ['data.items.data.price'],
+          limit: 100,
+          ...(startingAfter ? { starting_after: startingAfter } : {}),
+        })
+
+        for (const sub of page.data) {
+          for (const item of sub.items.data) {
+            const price = item.price
+            const baseAmount = (price.unit_amount ?? 0) / 100
+
+            // Normalize to monthly
+            let monthlyAmount = price.recurring?.interval === 'year'
+              ? baseAmount / 12
+              : baseAmount
+
+            // Apply subscription-level discount if present
+            const coupon = sub.discount?.coupon
+            if (coupon) {
+              if (coupon.percent_off) {
+                monthlyAmount *= (1 - coupon.percent_off / 100)
+              } else if (coupon.amount_off) {
+                const discountMonthly = price.recurring?.interval === 'year'
+                  ? (coupon.amount_off / 100) / 12
+                  : coupon.amount_off / 100
+                monthlyAmount = Math.max(0, monthlyAmount - discountMonthly)
+              }
+            }
+
+            mrr += monthlyAmount
+          }
+        }
+
+        hasMore = page.has_more
+        if (hasMore && page.data.length > 0) {
+          startingAfter = page.data[page.data.length - 1].id
+        }
+      }
+    } catch (stripeError) {
+      console.error('Error fetching MRR from Stripe, falling back to estimate:', stripeError)
+      // Fallback: use $10/month estimate if Stripe is unavailable
+      mrr = paidProSubscriptions * 10
+    }
 
     return {
       users: {
