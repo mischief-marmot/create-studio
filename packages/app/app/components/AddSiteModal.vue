@@ -54,13 +54,13 @@
         </p>
       </div>
 
-      <!-- Step 2: Instructions -->
+      <!-- Step 2: Connect via plugin -->
       <div v-if="currentStep === 2">
         <div class="mb-6 text-center">
           <div class="rounded-2xl bg-gradient-to-br from-warning/10 to-warning/5 size-16 flex items-center justify-center mx-auto mb-4">
-            <KeyIcon class="text-warning size-8" />
+            <LinkIcon class="text-warning size-8" />
           </div>
-          <h3 class="mb-2 font-serif text-2xl">Get Verification Code</h3>
+          <h3 class="mb-2 font-serif text-2xl">Connect Your Site</h3>
         </div>
 
         <!-- Site Info -->
@@ -70,7 +70,7 @@
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium truncate">{{ pendingSite?.url }}</p>
-            <p class="text-warning text-xs">Pending verification</p>
+            <p class="text-warning text-xs">Pending connection</p>
           </div>
         </div>
 
@@ -82,11 +82,11 @@
           </li>
           <li class="flex gap-3">
             <span class="bg-primary text-primary-content size-5 shrink-0 flex items-center justify-center text-xs font-bold rounded-full">2</span>
-            <span>Click <strong>"Generate Code"</strong></span>
+            <span>Open the <strong>Register</strong> tab</span>
           </li>
           <li class="flex gap-3">
             <span class="bg-primary text-primary-content size-5 shrink-0 flex items-center justify-center text-xs font-bold rounded-full">3</span>
-            <span>Copy the 32-character code</span>
+            <span>Follow the prompts to connect your site</span>
           </li>
         </ol>
 
@@ -100,66 +100,20 @@
             Open WP Settings
             <ArrowTopRightOnSquareIcon class="size-4" />
           </a>
-          <button @click="currentStep = 3" class="btn btn-primary flex-1">
-            I have my code
-            <ArrowRightIcon class="size-4" />
+          <button @click="checkConnection" class="btn btn-primary flex-1" :disabled="checkingConnection">
+            <span v-if="checkingConnection" class="loading loading-spinner loading-sm"></span>
+            {{ checkingConnection ? 'Checking...' : 'Check Connection' }}
           </button>
+        </div>
+
+        <div v-if="connectionError" class="alert alert-error py-2 text-sm mt-4">
+          <ExclamationCircleIcon class="size-4" />
+          <span>{{ connectionError }}</span>
         </div>
       </div>
 
-      <!-- Step 3: Verify -->
+      <!-- Step 3: Success -->
       <div v-if="currentStep === 3">
-        <div class="mb-6 text-center">
-          <div class="rounded-2xl bg-gradient-to-br from-success/10 to-success/5 size-16 flex items-center justify-center mx-auto mb-4">
-            <ShieldCheckIcon class="text-success size-8" />
-          </div>
-          <h3 class="mb-2 font-serif text-2xl">Enter Code</h3>
-          <p class="text-base-content/70 text-sm">
-            Paste the 32-character code from your plugin.
-          </p>
-        </div>
-
-        <form @submit.prevent="handleVerify" class="space-y-4">
-          <fieldset class="fieldset">
-            <label class="input input-bordered w-full font-mono">
-              <input
-                v-model="verificationCode"
-                type="text"
-                placeholder="Paste verification code"
-                class="grow text-sm tracking-wider text-center"
-                maxlength="32"
-                required
-              />
-            </label>
-            <p class="text-base-content/50 mt-1 text-xs text-center">
-              {{ verificationCode.length }}/32 characters
-            </p>
-          </fieldset>
-
-          <div v-if="verifyError" class="alert alert-error py-2 text-sm">
-            <ExclamationCircleIcon class="size-4" />
-            <span>{{ verifyError }}</span>
-          </div>
-
-          <button
-            type="submit"
-            class="btn btn-success w-full"
-            :disabled="verifying || verificationCode.length !== 32"
-          >
-            <span v-if="verifying" class="loading loading-spinner loading-sm"></span>
-            {{ verifying ? 'Verifying...' : 'Verify & Connect' }}
-            <CheckIcon v-if="!verifying" class="size-4" />
-          </button>
-        </form>
-
-        <button @click="currentStep = 2" class="btn btn-ghost btn-sm w-full mt-2">
-          <ArrowLeftIcon class="size-3" />
-          Back
-        </button>
-      </div>
-
-      <!-- Step 4: Success -->
-      <div v-if="currentStep === 4">
         <div class="py-4 text-center">
           <div class="rounded-2xl bg-gradient-to-br from-success/20 to-success/5 size-20 flex items-center justify-center mx-auto mb-4">
             <CheckCircleIcon class="text-success size-12" />
@@ -196,14 +150,11 @@
 import { ref, watch, computed } from 'vue'
 import {
   XMarkIcon,
-  ArrowLeftIcon,
   ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
   GlobeAltIcon,
   LockClosedIcon,
-  KeyIcon,
-  ShieldCheckIcon,
-  CheckIcon,
+  LinkIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from '@heroicons/vue/24/outline'
@@ -211,7 +162,6 @@ import {
 const props = defineProps<{
   isOpen: boolean
   initialUrl?: string
-  initialVerificationCode?: string
 }>()
 
 const emit = defineEmits<{
@@ -222,46 +172,32 @@ const emit = defineEmits<{
 const dialogRef = ref<HTMLDialogElement | null>(null)
 const currentStep = ref(1)
 const siteUrl = ref('')
-const verificationCode = ref('')
 const loading = ref(false)
-const verifying = ref(false)
 const error = ref('')
-const verifyError = ref('')
+const checkingConnection = ref(false)
+const connectionError = ref('')
 const pendingSite = ref<{ id: number; url: string; name?: string } | null>(null)
 const verifiedSite = ref<{ id: number; url: string; name?: string } | null>(null)
 
-// Build the WP settings URL with proper protocol and hash
+// Build the WP settings URL pointing to the Create Studio tab
 const wpSettingsUrl = computed(() => {
   if (!pendingSite.value?.url) return '#'
-  // Ensure URL has protocol
   let baseUrl = pendingSite.value.url
   if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
     baseUrl = `https://${baseUrl}`
   }
-  return `${baseUrl}/wp-admin/edit.php?page=settings&post_type=mv_create#tab=mv_create_api`
+  return `${baseUrl}/wp-admin/edit.php?post_type=mv_create&page=settings#create-studio`
 })
 
 watch(() => props.isOpen, async (isOpen) => {
   if (isOpen) {
-    // Pre-fill with initialUrl if provided
     if (props.initialUrl) {
-      // Strip protocol for display
       siteUrl.value = props.initialUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
-    }
-    // Pre-fill verification code if provided
-    if (props.initialVerificationCode) {
-      verificationCode.value = props.initialVerificationCode
     }
     dialogRef.value?.showModal()
 
-    // Auto-submit if both URL and verification code are provided
-    if (props.initialUrl && props.initialVerificationCode) {
+    if (props.initialUrl) {
       await handleAddSite()
-      // handleAddSite advances to step 4 if already verified, step 2 if pending
-      // Only skip to step 3 (enter code) if still pending
-      if (pendingSite.value && currentStep.value === 2) {
-        currentStep.value = 3
-      }
     }
   }
   else {
@@ -277,9 +213,8 @@ const closeModal = () => {
 const resetState = () => {
   currentStep.value = 1
   siteUrl.value = ''
-  verificationCode.value = ''
   error.value = ''
-  verifyError.value = ''
+  connectionError.value = ''
   pendingSite.value = null
   verifiedSite.value = null
 }
@@ -308,19 +243,8 @@ const handleAddSite = async () => {
 
     if (response.success && response.site) {
       if (response.already_verified) {
-        // Site is already verified — re-sync token with WordPress plugin if we have a code
-        if (props.initialVerificationCode && response.site.id) {
-          try {
-            await $fetch(`/api/v2/sites/${response.site.id}/verify`, {
-              method: 'POST',
-              body: { verification_code: props.initialVerificationCode },
-            })
-          } catch {
-            // Token re-sync failed — not critical, site is still verified
-          }
-        }
         verifiedSite.value = response.site
-        currentStep.value = 4
+        currentStep.value = 3
       }
       else {
         pendingSite.value = response.site
@@ -339,39 +263,32 @@ const handleAddSite = async () => {
   }
 }
 
-const handleVerify = async () => {
-  verifyError.value = ''
-  verifying.value = true
+const checkConnection = async () => {
+  connectionError.value = ''
+  checkingConnection.value = true
 
   try {
-    if (!pendingSite.value?.id) {
-      verifyError.value = 'No site selected'
-      return
-    }
-
     const response = await $fetch<{
       success: boolean
-      error?: string
-      site?: { id: number; url: string; name?: string }
-      verified_at?: string
-    }>(`/api/v2/sites/${pendingSite.value.id}/verify`, {
-      method: 'POST',
-      body: { verification_code: verificationCode.value },
-    })
+      sites: Array<{ id: number; pending: boolean; name?: string; url: string }>
+    }>('/api/v2/sites')
 
-    if (response.success && response.site) {
-      verifiedSite.value = response.site
-      currentStep.value = 4
-    }
-    else {
-      verifyError.value = response.error || 'Verification failed'
+    if (response.success) {
+      const site = response.sites.find(s => s.id === pendingSite.value?.id)
+      if (site && !site.pending) {
+        verifiedSite.value = { id: site.id, url: site.url, name: site.name }
+        currentStep.value = 3
+      }
+      else {
+        connectionError.value = 'Not connected yet. Open the Create Studio tab in your plugin settings to connect.'
+      }
     }
   }
   catch (err: any) {
-    verifyError.value = err.data?.error || err.message || 'Verification failed'
+    connectionError.value = err.data?.error || err.message || 'Could not check connection status'
   }
   finally {
-    verifying.value = false
+    checkingConnection.value = false
   }
 }
 

@@ -428,36 +428,24 @@ watch(selectedSiteId, (newId) => {
 onMounted(async () => {
   // Check for site_url query parameter to auto-select a site
   const siteUrlParam = route.query.site_url as string | undefined
-  const verificationCodeParam = route.query.verification_code as string | undefined
   const upgradeParam = route.query.upgrade as string | undefined
   const result = await loadSites(siteUrlParam)
 
   if (siteUrlParam) {
     if (!result.matched) {
       // Site doesn't exist - open Add Site modal
-      // Pass verification_code if provided (for auto-verification flow from plugin)
-      openAddSiteModal(siteUrlParam, verificationCodeParam)
-    } else if (verificationCodeParam) {
-      // Site exists - check if it's pending verification
+      openAddSiteModal(siteUrlParam)
+    } else {
+      // Site exists - check if it's pending connection
       const matchedSite = sitesList.value.find(s => {
         const normalizedUrl = s.url.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
         const normalizedParam = siteUrlParam.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase()
         return normalizedUrl === normalizedParam
       })
       if (matchedSite?.pending) {
-        // Site is pending - open Verify Site modal with pre-filled code
-        openVerifySiteModal(matchedSite, verificationCodeParam)
+        // Site is pending - open Verify Site modal
+        openVerifySiteModal(matchedSite)
       } else if (matchedSite) {
-        // Site is already verified — re-sync token with WordPress plugin
-        // so the plugin stores the JWT and recognizes the connection
-        try {
-          await $fetch(`/api/v2/sites/${matchedSite.id}/verify`, {
-            method: 'POST',
-            body: { verification_code: verificationCodeParam },
-          })
-        } catch {
-          // Token re-sync failed (e.g. code mismatch) — not critical
-        }
         openSiteAlreadyVerifiedModal(matchedSite)
       }
     }

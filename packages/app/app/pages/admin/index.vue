@@ -289,7 +289,6 @@
     <AddSiteModal
       :is-open="showAddSiteModal"
       :initial-url="initialSiteUrl || undefined"
-      :initial-verification-code="initialVerificationCode || undefined"
       @close="closeAddSiteModal"
       @site-added="handleSiteAdded"
     />
@@ -298,7 +297,6 @@
     <VerifySiteModal
       :is-open="showVerifySiteModal"
       :site="pendingVerifySite"
-      :initial-verification-code="verifyInitialCode || undefined"
       @close="closeVerifySiteModal"
       @verified="handleSiteVerified"
     />
@@ -339,11 +337,10 @@ definePageMeta({
 
 const { selectedSiteId, selectedSite, sites, loadSites, selectSite } = useSiteContext()
 const { user } = useAuth()
-const { showAddSiteModal, initialSiteUrl, initialVerificationCode, closeAddSiteModal, openAddSiteModal } = useAddSiteModal()
+const { showAddSiteModal, initialSiteUrl, closeAddSiteModal, openAddSiteModal } = useAddSiteModal()
 const {
   showVerifySiteModal,
   pendingSite: pendingVerifySite,
-  initialVerificationCode: verifyInitialCode,
   openVerifySiteModal,
   closeVerifySiteModal
 } = useVerifySiteModal()
