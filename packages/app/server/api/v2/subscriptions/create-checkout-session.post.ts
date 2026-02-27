@@ -53,24 +53,24 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Verify user has access via SiteUsers (typically must be owner)
+    // Verify user has owner or admin role on this site
     const userRole = await siteRepo.getUserRole(user.id, siteId)
-    if (!userRole || userRole !== 'owner') {
+    if (!userRole || !['owner', 'admin'].includes(userRole)) {
       setResponseStatus(event, 403)
       return {
         success: false,
-        error: 'Only site owners can manage subscriptions'
+        error: 'Only site owners and admins can manage subscriptions'
       }
     }
 
-    // Verify site connection is verified (not pending)
+    // Verify site is connected (not pending)
     const siteUserRepo = new SiteUserRepository()
     const isVerified = await siteUserRepo.isUserVerified(user.id, siteId)
     if (!isVerified) {
       setResponseStatus(event, 403)
       return {
         success: false,
-        error: 'Site must be verified before upgrading. Please complete site verification first.'
+        error: 'Site must be connected before upgrading. Please connect your site first.'
       }
     }
 
