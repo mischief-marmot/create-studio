@@ -43,7 +43,7 @@
 }
 
 .cs-interactive-secondary-btn {
-  @apply cs:w-auto! cs:flex cs:items-center cs:space-x-2 cs:px-4! cs:py-2! cs:bg-base-content cs:text-base-100 cs:hover:bg-base-100/80 cs:rounded-lg! cs:transition-colors cs:cursor-pointer;
+  @apply cs:w-auto! cs:flex cs:items-center cs:space-x-2 cs:px-4! cs:py-2! cs:bg-base-content cs:text-base-100 cs:hover:bg-base-content/80 cs:rounded-lg! cs:transition-colors cs:cursor-pointer;
 }
 .cs-interactive-secondary-btn span {
   @apply cs:text-sm! cs:font-medium! cs:font-sans!;
