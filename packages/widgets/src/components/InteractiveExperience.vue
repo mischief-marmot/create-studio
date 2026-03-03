@@ -170,13 +170,13 @@
                             </div>
 
                             <!-- Rating submitted message for high ratings -->
-                            <div v-if="showRatingSubmittedMessage" role="alert" class="cs:alert cs:max-w-md cs:w-full cs:alert-success cs:text-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="cs:size-8 cs:shrink-0 cs:stroke-current"
+                            <div v-if="showRatingSubmittedMessage" role="alert" class="cs:alert cs:max-w-md cs:w-full cs:alert-success cs:text-success-content! cs:text-md">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="cs:size-8 cs:shrink-0 cs:stroke-success-content"
                                     fill="none" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span>Rating submitted! You're a star! 😉<br /> Care to share more?
+                                <span class="cs:text-success-content">Rating submitted! You're a star! 😉<br /> Care to share more?
                                     (Optional)</span>
                             </div>
 

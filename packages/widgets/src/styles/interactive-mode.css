@@ -50,7 +50,7 @@
 }
 
 .cs-interactive-submit-btn {
-  @apply cs:btn cs:btn-primary cs:btn-lg cs:text-base;
+  @apply cs:btn cs:btn-success cs:btn-lg cs:text-success-content!;
 }
 
 .cs-interactive-step-number {
