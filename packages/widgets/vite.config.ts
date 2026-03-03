@@ -3,7 +3,8 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 import tailwindcss from '@tailwindcss/vite'
 import autoprefixer from 'autoprefixer'
-import { minify as minifyPlugin } from 'rollup-plugin-esbuild'
+import terserPlugin from '@rollup/plugin-terser'
+import { visualizer } from 'rollup-plugin-visualizer'
 import { config as loadEnv } from 'dotenv'
 import { readFileSync } from 'fs'
 
@@ -16,7 +17,13 @@ const packageJson = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 
 export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
-    tailwindcss()
+    tailwindcss(),
+    ...(process.env.ANALYZE ? [visualizer({
+      open: true,
+      filename: 'dist/bundle-analysis.html',
+      gzipSize: true,
+      template: 'treemap',
+    })] : []),
   ],
   build: {
     lib: {
@@ -29,12 +36,17 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     rollupOptions: {
       external: [],
-      plugins: mode === 'production' ? [minifyPlugin()] : [],
       output: {
         format: 'es',
         assetFileNames: '[name].[ext]',
         chunkFileNames: '[name].js',
         entryFileNames: 'main.js',
+        plugins: mode === 'production' ? [terserPlugin({
+          compress: true,
+          mangle: true,
+          format: { comments: false },
+          module: true,
+        })] : [],
         inlineDynamicImports: false,
         manualChunks(id) {
           if (id.includes('InteractiveModeWidget') ||
@@ -58,11 +70,8 @@ export default defineConfig(({ mode }) => ({
         }
       }
     },
-    minify: 'esbuild',
+    minify: false,
     sourcemap: mode === 'development',
-    esbuild: {
-      legalComments: 'none',
-    },
     cssCodeSplit: true,
     cssMinify: true
   },
