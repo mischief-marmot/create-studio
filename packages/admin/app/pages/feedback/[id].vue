@@ -121,6 +121,22 @@
               </dl>
             </div>
 
+            <!-- Copy All -->
+            <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
+              <button
+                class="btn btn-outline btn-sm w-full gap-2"
+                @click="copyAll"
+              >
+                <svg v-if="!copySuccess" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <svg v-else class="size-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                {{ copySuccess ? 'Copied!' : 'Copy All Details' }}
+              </button>
+            </div>
+
             <!-- Status Controls -->
             <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
               <h2 class="text-lg font-semibold text-base-content mb-4" style="font-family: 'Instrument Serif', serif;">Manage</h2>
@@ -203,6 +219,7 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const saving = ref(false)
 const saveSuccess = ref(false)
+const copySuccess = ref(false)
 
 const editStatus = ref('new')
 const editNotes = ref('')
@@ -248,6 +265,51 @@ const saveChanges = async () => {
   } finally {
     saving.value = false
   }
+}
+
+const copyAll = async () => {
+  if (!report.value) return
+  const r = report.value
+
+  const lines = [
+    `Feedback Report #${r.id}`,
+    `${'='.repeat(40)}`,
+    ``,
+    `Site:             ${r.site_name || 'Unknown'}`,
+    `Site URL:         ${r.site_url || 'N/A'}`,
+    `Status:           ${r.status}`,
+    `Reported:         ${formatDate(r.createdAt)}`,
+    ``,
+    `--- Environment ---`,
+    `Create Version:   ${r.create_version || 'N/A'}`,
+    `WordPress:        ${r.wp_version || 'N/A'}`,
+    `PHP:              ${r.php_version || 'N/A'}`,
+    `Page URL:         ${r.current_url || 'N/A'}`,
+    `Browser:          ${parseBrowserInfo(r.browser_info)}`,
+    ``,
+    `--- Error ---`,
+    r.error_message,
+  ]
+
+  if (r.stack_trace) {
+    lines.push(``, `--- Stack Trace ---`, r.stack_trace)
+  }
+
+  if (r.component_stack) {
+    lines.push(``, `--- Component Stack ---`, r.component_stack)
+  }
+
+  if (r.user_message) {
+    lines.push(``, `--- User Message ---`, r.user_message)
+  }
+
+  if (r.admin_notes) {
+    lines.push(``, `--- Admin Notes ---`, r.admin_notes)
+  }
+
+  await navigator.clipboard.writeText(lines.join('\n'))
+  copySuccess.value = true
+  setTimeout(() => { copySuccess.value = false }, 2000)
 }
 
 onMounted(() => {
