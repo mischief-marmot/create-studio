@@ -1,5 +1,5 @@
 import { type App } from 'vue'
-import { type ConsolaInstance } from 'consola'
+import { type LoggerInstance } from '@create-studio/shared/utils/logger'
 import { ConfigManager } from './config-manager'
 import { WidgetRegistry } from './widget-registry'
 import { MountManager } from './mount-manager'
@@ -30,7 +30,7 @@ class WidgetSDK {
   private initialized = false
   private themeStyleElement: HTMLStyleElement | null = null
   private version: string
-  private logger: ConsolaInstance
+  private logger: LoggerInstance
 
   constructor(options: WidgetSDKOptions) {
     this.configManager = new ConfigManager(options)

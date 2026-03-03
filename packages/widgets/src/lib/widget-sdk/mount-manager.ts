@@ -1,5 +1,7 @@
 import { createApp, type App } from 'vue'
-import { consola } from 'consola'
+import { useLogger } from '@create-studio/shared/utils/logger'
+
+const logger = useLogger('MountManager')
 import type { ConfigManager } from './config-manager'
 import type { WidgetRegistry } from './widget-registry'
 import type { StorageManager } from './storage-manager'
@@ -33,17 +35,17 @@ export class MountManager {
       : selector
 
     if (!container) {
-      consola.warn(`Container not found for selector:`, selector)
+      logger.warn(`Container not found for selector:`, selector)
       return null
     }
 
     if (this.mountedApps.has(container)) {
-      consola.warn('Widget already mounted on this element:', container)
+      logger.warn('Widget already mounted on this element:', container)
       return this.mountedApps.get(container) || null
     }
 
     if (!configManager.isWidgetTypeAllowed(type)) {
-      consola.warn(`Widget type "${type}" not allowed for this account`)
+      logger.warn(`Widget type "${type}" not allowed for this account`)
       return null
     }
 
@@ -75,12 +77,12 @@ export class MountManager {
       this.mountedApps.set(container, app)
 
       if (configManager.isDebug()) {
-        consola.debug(`🎯 Mounted ${type} widget on:`, container)
+        logger.debug(`🎯 Mounted ${type} widget on:`, container)
       }
 
       return app
     } catch (error) {
-      consola.error(`Failed to mount ${type} widget:`, error)
+      logger.error(`Failed to mount ${type} widget:`, error)
       return null
     }
   }

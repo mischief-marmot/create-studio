@@ -1,5 +1,4 @@
-import { type ConsolaInstance } from 'consola'
-import { useLogger } from '@create-studio/shared/utils/logger'
+import { useLogger, type LoggerInstance } from '@create-studio/shared/utils/logger'
 
 export interface ThemeConfig {
   primary?: string
@@ -40,7 +39,7 @@ export class ConfigManager {
   private apiKey: string
   private baseUrl: string
   private debug: boolean
-  private logger: ConsolaInstance
+  private logger: LoggerInstance
 
   constructor(options: { apiKey?: string; siteUrl?: string; baseUrl?: string; debug?: boolean }) {
     this.apiKey = options.apiKey || ''
