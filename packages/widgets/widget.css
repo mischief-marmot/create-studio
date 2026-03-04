@@ -17,8 +17,8 @@
 
 @import "tailwindcss/utilities.css" layer(utilities) prefix(cs) important;
 
-/* Interactive Mode Styles */
-@import "./src/styles/interactive-mode.css" layer(components) important;
+/* Interactive Mode Styles — unlayered so they beat WP theme resets */
+@import "./src/styles/interactive-mode.css";
 
 #create-studio-interactive-mode input,
 .cs-interactive-mode input

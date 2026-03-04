@@ -1,5 +1,3 @@
-import { useLogger } from "@create-studio/shared/utils/logger";
-
 interface UploadPayload {
   filename: string;
   content: string;
@@ -10,12 +8,7 @@ interface UploadPayload {
 }
 
 export default defineEventHandler(async (event) => {
-  const logger = useLogger('UploadWidget', true)
-
   try {
-    logger.info("Starting widget upload to blob storage...");
-
-    // Get the file contents from the request body
     const body = await readBody<UploadPayload>(event)
 
     if (!body || !body.filename || !body.content) {
@@ -24,8 +17,6 @@ export default defineEventHandler(async (event) => {
         statusMessage: 'Missing filename or content in request body'
       })
     }
-
-    logger.debug(`Uploading: ${body.filename} (${body.content.length} chars)`);
 
     // Determine content type
     const contentType = body.filename.endsWith('.js') ? 'application/javascript' : 'text/css';
@@ -41,14 +32,11 @@ export default defineEventHandler(async (event) => {
           buildTime: body.metadata?.buildTime || new Date().toISOString(),
           chunkType: 'widget-chunk'
         },
-        // Set cache control for browsers
         httpMetadata: {
-          cacheControl: 'public, max-age=3600' // Cache for 1 hour in browsers
+          cacheControl: 'public, max-age=3600'
         }
       }
     );
-
-    logger.success(`Uploaded: ${body.filename} (${Math.floor(uploadResult.size / 1024)}KB)`);
 
     return {
       success: true,
@@ -59,22 +47,15 @@ export default defineEventHandler(async (event) => {
       metadata: body.metadata
     };
   } catch (error) {
-    // Check if this is already an HTTP error from createError()
     if (error && typeof error === 'object' && 'statusCode' in error) {
-      // Re-throw existing HTTP errors as-is
       throw error;
     }
 
-    console.error('Widget upload failed:', (error as Error).message, (error as Error).stack)
+    console.error('Widget upload failed:', (error as Error).message)
     throw createError({
       statusCode: 500,
-      statusMessage: `Failed to upload widget files: ${
-        (error as Error).message
-      }`,
-      data: {
-        error: (error as Error).message,
-        stack: (error as Error).stack,
-      },
+      statusMessage: `Failed to upload widget files: ${(error as Error).message}`,
+      data: { error: (error as Error).message },
     });
   }
 });
