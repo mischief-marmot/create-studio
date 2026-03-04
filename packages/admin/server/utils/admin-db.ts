@@ -13,6 +13,7 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as schema from '../../../app/server/db/schema'
 import { useAdminEnv } from './admin-env'
+import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import type { H3Event } from 'h3'
 
 // Re-export app schema tables for convenience in API routes
@@ -21,8 +22,9 @@ import type { H3Event } from 'h3'
 export { users, sites, siteUsers, subscriptions, broadcasts, feedbackReports, siteMeta } from '../../../app/server/db/schema'
 export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, Broadcast, NewBroadcast, FeedbackReport, NewFeedbackReport, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry } from '../../../app/server/db/schema'
 
-// Type for Drizzle DB instance (union of D1 and SQLite drivers)
-type DrizzleDb = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleSqlite>
+// Use D1 database type as the common interface — both D1 (production) and
+// better-sqlite3 (local dev) share the same query API surface
+type DrizzleDb = DrizzleD1Database
 
 // Cached local SQLite connection (singleton for the process lifetime)
 let localAppDbInstance: ReturnType<typeof drizzleSqlite> | null = null
@@ -65,10 +67,10 @@ function getLocalAppDb(): ReturnType<typeof drizzleSqlite> {
 export function useAdminDb(event: H3Event): DrizzleDb {
   // In local dev, connect directly to the main app's SQLite DB
   if (import.meta.dev) {
-    return getLocalAppDb()
+    return getLocalAppDb() as unknown as DrizzleDb
   }
 
   // In production, use the D1 binding (points to main app's D1)
   const { db: d1Binding } = useAdminEnv(event)
-  return drizzleD1(d1Binding, { schema })
+  return drizzleD1(d1Binding, { schema }) as unknown as DrizzleDb
 }

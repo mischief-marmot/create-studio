@@ -15,15 +15,15 @@
       <div v-if="loading" class="flex items-center justify-center py-16">
         <div class="flex flex-col items-center gap-4">
           <span class="loading loading-spinner loading-lg text-primary"></span>
-          <p class="text-sm text-base-content/50">Loading report...</p>
+          <p class="text-base-content/50 text-sm">Loading report...</p>
         </div>
       </div>
 
       <!-- Error -->
       <div v-else-if="error" class="flex items-center justify-center py-16">
-        <div class="max-w-md text-center space-y-4">
-          <h3 class="text-xl text-base-content" style="font-family: 'Instrument Serif', serif;">Failed to Load Report</h3>
-          <p class="text-sm text-base-content/60">{{ error }}</p>
+        <div class="max-w-md space-y-4 text-center">
+          <h3 class="text-base-content text-xl" style="font-family: 'Instrument Serif', serif;">Failed to Load Report</h3>
+          <p class="text-base-content/60 text-sm">{{ error }}</p>
           <button class="btn btn-outline btn-sm" @click="fetchReport">Try Again</button>
         </div>
       </div>
@@ -32,14 +32,14 @@
       <div v-else-if="report">
         <!-- Header -->
         <div class="mb-8">
-          <div class="flex items-center gap-2 text-xs font-medium tracking-widest uppercase mb-2">
+          <div class="flex items-center gap-2 mb-2 text-xs font-medium tracking-widest uppercase">
             <span class="text-base-content/50">Feedback</span>
             <span class="text-base-content/30">/</span>
             <span class="text-base-content/50">#{{ report.id }}</span>
           </div>
-          <div class="flex items-center justify-between flex-wrap gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+              <h1 class="text-base-content text-3xl" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
                 {{ report.site_name || 'Unknown Site' }}
               </h1>
               <p class="text-base-content/60 mt-1">
@@ -53,41 +53,41 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:grid-cols-3 grid grid-cols-1 gap-6">
           <!-- Main content (2 cols) -->
           <div class="lg:col-span-2 space-y-6">
             <!-- Error Details -->
-            <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
-              <h2 class="text-lg font-semibold text-base-content mb-4" style="font-family: 'Instrument Serif', serif;">Error Details</h2>
+            <div class="bg-base-100 rounded-xl border-base-300/50 p-6 border shadow-sm">
+              <h2 class="text-base-content mb-4 text-lg font-semibold" style="font-family: 'Instrument Serif', serif;">Error Details</h2>
               <div class="space-y-4">
                 <div>
-                  <label class="text-xs font-medium text-base-content/50 uppercase tracking-wider">Error Message</label>
+                  <label class="text-base-content/50 text-xs font-medium tracking-wider uppercase">Error Message</label>
                   <pre class="mt-1 p-4 bg-base-200 rounded-lg text-sm overflow-auto max-h-[200px] whitespace-pre-wrap break-words font-mono">{{ report.error_message }}</pre>
                 </div>
                 <div v-if="report.stack_trace">
-                  <label class="text-xs font-medium text-base-content/50 uppercase tracking-wider">Stack Trace</label>
+                  <label class="text-base-content/50 text-xs font-medium tracking-wider uppercase">Stack Trace</label>
                   <pre class="mt-1 p-4 bg-base-200 rounded-lg text-xs overflow-auto max-h-[300px] whitespace-pre-wrap break-words font-mono">{{ report.stack_trace }}</pre>
                 </div>
                 <div v-if="report.component_stack">
-                  <label class="text-xs font-medium text-base-content/50 uppercase tracking-wider">Component Stack</label>
+                  <label class="text-base-content/50 text-xs font-medium tracking-wider uppercase">Component Stack</label>
                   <pre class="mt-1 p-4 bg-base-200 rounded-lg text-xs overflow-auto max-h-[200px] whitespace-pre-wrap break-words font-mono">{{ report.component_stack }}</pre>
                 </div>
               </div>
             </div>
 
             <!-- User Message -->
-            <div v-if="report.user_message" class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
-              <h2 class="text-lg font-semibold text-base-content mb-4" style="font-family: 'Instrument Serif', serif;">User Message</h2>
+            <div v-if="report.user_message" class="bg-base-100 rounded-xl border-base-300/50 p-6 border shadow-sm">
+              <h2 class="text-base-content mb-4 text-lg font-semibold" style="font-family: 'Instrument Serif', serif;">User Message</h2>
               <p class="text-base-content/80 whitespace-pre-wrap">{{ report.user_message }}</p>
             </div>
 
             <!-- Screenshot -->
-            <div v-if="report.screenshot_base64" class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
-              <h2 class="text-lg font-semibold text-base-content mb-4" style="font-family: 'Instrument Serif', serif;">Screenshot</h2>
+            <div v-if="report.screenshot_base64" class="bg-base-100 rounded-xl border-base-300/50 p-6 border shadow-sm">
+              <h2 class="text-base-content mb-4 text-lg font-semibold" style="font-family: 'Instrument Serif', serif;">Screenshot</h2>
               <img
                 :src="report.screenshot_base64"
                 alt="Error screenshot"
-                class="max-w-full rounded-lg border border-base-300/50"
+                class="border-base-300/50 max-w-full border rounded-lg"
               />
             </div>
           </div>
@@ -95,34 +95,34 @@
           <!-- Sidebar (1 col) -->
           <div class="space-y-6">
             <!-- Environment Info -->
-            <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
-              <h2 class="text-lg font-semibold text-base-content mb-4" style="font-family: 'Instrument Serif', serif;">Environment</h2>
+            <div class="bg-base-100 rounded-xl border-base-300/50 p-6 border shadow-sm">
+              <h2 class="text-base-content mb-4 text-lg font-semibold" style="font-family: 'Instrument Serif', serif;">Environment</h2>
               <dl class="space-y-3">
                 <div v-if="report.create_version">
-                  <dt class="text-xs font-medium text-base-content/50 uppercase tracking-wider">Create Version</dt>
+                  <dt class="text-base-content/50 text-xs font-medium tracking-wider uppercase">Create Version</dt>
                   <dd class="text-sm text-base-content mt-0.5">{{ report.create_version }}</dd>
                 </div>
                 <div v-if="report.wp_version">
-                  <dt class="text-xs font-medium text-base-content/50 uppercase tracking-wider">WordPress</dt>
+                  <dt class="text-base-content/50 text-xs font-medium tracking-wider uppercase">WordPress</dt>
                   <dd class="text-sm text-base-content mt-0.5">{{ report.wp_version }}</dd>
                 </div>
                 <div v-if="report.php_version">
-                  <dt class="text-xs font-medium text-base-content/50 uppercase tracking-wider">PHP</dt>
+                  <dt class="text-base-content/50 text-xs font-medium tracking-wider uppercase">PHP</dt>
                   <dd class="text-sm text-base-content mt-0.5">{{ report.php_version }}</dd>
                 </div>
                 <div v-if="report.current_url">
-                  <dt class="text-xs font-medium text-base-content/50 uppercase tracking-wider">URL</dt>
+                  <dt class="text-base-content/50 text-xs font-medium tracking-wider uppercase">URL</dt>
                   <dd class="text-sm text-base-content mt-0.5 break-all">{{ report.current_url }}</dd>
                 </div>
                 <div v-if="report.browser_info">
-                  <dt class="text-xs font-medium text-base-content/50 uppercase tracking-wider">Browser</dt>
+                  <dt class="text-base-content/50 text-xs font-medium tracking-wider uppercase">Browser</dt>
                   <dd class="text-xs text-base-content/70 mt-0.5 break-all">{{ parseBrowserInfo(report.browser_info) }}</dd>
                 </div>
               </dl>
             </div>
 
-            <!-- Copy All -->
-            <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
+            <!-- Actions -->
+            <div class="bg-base-100 rounded-xl border-base-300/50 p-6 space-y-3 border shadow-sm">
               <button
                 class="btn btn-outline btn-sm w-full gap-2"
                 @click="copyAll"
@@ -135,15 +135,28 @@
                 </svg>
                 {{ copySuccess ? 'Copied!' : 'Copy All Details' }}
               </button>
+
+              <a
+                v-if="report.user_email"
+                :href="mailtoLink"
+                class="btn btn-outline btn-sm w-full gap-2"
+              >
+                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Email User
+              </a>
+              <p v-if="report.user_email" class="text-base-content/40 text-xs text-center">{{ report.user_email }}</p>
+              <p v-else class="text-base-content/40 text-xs text-center">No email provided</p>
             </div>
 
             <!-- Status Controls -->
-            <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm p-6">
-              <h2 class="text-lg font-semibold text-base-content mb-4" style="font-family: 'Instrument Serif', serif;">Manage</h2>
+            <div class="bg-base-100 rounded-xl border-base-300/50 p-6 border shadow-sm">
+              <h2 class="text-base-content mb-4 text-lg font-semibold" style="font-family: 'Instrument Serif', serif;">Manage</h2>
               <div class="space-y-4">
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text text-xs font-medium uppercase tracking-wider">Status</span>
+                    <span class="label-text text-xs font-medium tracking-wider uppercase">Status</span>
                   </label>
                   <select v-model="editStatus" class="select select-bordered select-sm w-full">
                     <option value="new">New</option>
@@ -153,7 +166,7 @@
                 </div>
                 <div class="form-control">
                   <label class="label">
-                    <span class="label-text text-xs font-medium uppercase tracking-wider">Admin Notes</span>
+                    <span class="label-text text-xs font-medium tracking-wider uppercase">Admin Notes</span>
                   </label>
                   <textarea
                     v-model="editNotes"
@@ -169,7 +182,7 @@
                   <span v-if="saving" class="loading loading-spinner loading-xs"></span>
                   Save Changes
                 </button>
-                <p v-if="saveSuccess" class="text-xs text-success text-center">Saved successfully</p>
+                <p v-if="saveSuccess" class="text-success text-xs text-center">Saved successfully</p>
               </div>
             </div>
           </div>
@@ -204,6 +217,7 @@ interface FeedbackReportDetail {
   browser_info: BrowserInfo | string | null
   current_url: string | null
   user_message: string | null
+  user_email: string | null
   screenshot_base64: string | null
   status: string
   admin_notes: string | null
@@ -211,6 +225,7 @@ interface FeedbackReportDetail {
   updatedAt: string
   site_name: string | null
   site_url: string | null
+  user_firstname: string | null
 }
 
 const route = useRoute()
@@ -267,6 +282,29 @@ const saveChanges = async () => {
   }
 }
 
+const mailtoLink = computed(() => {
+  if (!report.value?.user_email) return ''
+  const r = report.value
+
+  const subject = `Re: Feedback Report #${r.id} — ${r.site_name || r.site_url || 'Your Site'}`
+
+  const body = [
+    `Hi ${r.user_firstname || 'there'},`,
+    ``,
+    `Thanks for reporting the issue on ${r.site_name || 'your site'}. We're looking into it and will get back to you ASAP. Please let us know if you have any additional information or further issues.`,
+    ``,
+    `– The Create Team`,
+    ``,
+    `---`,
+    `Reference: Feedback ID: ${r.id}`,
+    `Error: ${r.error_message.slice(0, 200)}`,
+    `Page: ${r.current_url || 'N/A'}`,
+    `Create Version: ${r.create_version || 'N/A'}`,
+  ].join('\n')
+
+  return `mailto:${r.user_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}&cc=${encodeURIComponent('support@create.studio')}`
+})
+
 const copyAll = async () => {
   if (!report.value) return
   const r = report.value
@@ -279,6 +317,7 @@ const copyAll = async () => {
     `Site URL:         ${r.site_url || 'N/A'}`,
     `Status:           ${r.status}`,
     `Reported:         ${formatDate(r.createdAt)}`,
+    `User Email:       ${r.user_email || 'N/A'}`,
     ``,
     `--- Environment ---`,
     `Create Version:   ${r.create_version || 'N/A'}`,

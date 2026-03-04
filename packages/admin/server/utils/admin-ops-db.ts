@@ -17,6 +17,7 @@ import Database from 'better-sqlite3'
 import { existsSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import type { H3Event } from 'h3'
 import { useAdminEnv, type AdminEnvironment } from './admin-env'
 import * as adminSchema from '../db/admin-schema'
@@ -24,8 +25,9 @@ import * as adminSchema from '../db/admin-schema'
 // Re-export admin schema tables for convenience in API routes
 export * from '../db/admin-schema'
 
-// Type for Drizzle DB instance (union of D1 and SQLite drivers)
-type DrizzleDb = ReturnType<typeof drizzleD1> | ReturnType<typeof drizzleSqlite>
+// Use D1 database type as the common interface — both D1 (production) and
+// better-sqlite3 (local dev) share the same query API surface
+type DrizzleDb = DrizzleD1Database
 
 // Cached local SQLite connection (singleton for the process lifetime)
 let localDbInstance: ReturnType<typeof drizzleSqlite> | null = null
@@ -135,7 +137,7 @@ export function useAdminOpsDb(event: H3Event): DrizzleDb {
   // In local development, use a dedicated SQLite file for admin ops
   // (DB_ADMIN D1 binding is only available in production Cloudflare Workers)
   if (import.meta.dev) {
-    return getLocalAdminOpsDb()
+    return getLocalAdminOpsDb() as unknown as DrizzleDb
   }
 
   // In production, use the DB_ADMIN binding
@@ -147,5 +149,5 @@ export function useAdminOpsDb(event: H3Event): DrizzleDb {
   }
 
   // Create a Drizzle instance from the D1 binding with admin schema
-  return drizzleD1(adminDb, { schema: adminSchema })
+  return drizzleD1(adminDb, { schema: adminSchema }) as unknown as DrizzleDb
 }

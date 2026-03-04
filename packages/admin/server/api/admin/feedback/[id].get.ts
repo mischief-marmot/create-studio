@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { useAdminDb, feedbackReports, sites } from '~~/server/utils/admin-db'
+import { useAdminDb, feedbackReports, sites, users } from '~~/server/utils/admin-db'
 
 /**
  * GET /api/admin/feedback/:id
@@ -38,6 +38,7 @@ export default defineEventHandler(async (event) => {
         browser_info: feedbackReports.browser_info,
         current_url: feedbackReports.current_url,
         user_message: feedbackReports.user_message,
+        user_email: feedbackReports.user_email,
         screenshot_base64: feedbackReports.screenshot_base64,
         status: feedbackReports.status,
         admin_notes: feedbackReports.admin_notes,
@@ -45,9 +46,11 @@ export default defineEventHandler(async (event) => {
         updatedAt: feedbackReports.updatedAt,
         site_name: sites.name,
         site_url: sites.url,
+        user_firstname: users.firstname,
       })
       .from(feedbackReports)
       .leftJoin(sites, eq(feedbackReports.site_id, sites.id))
+      .leftJoin(users, eq(feedbackReports.user_email, users.email))
       .where(eq(feedbackReports.id, id))
       .limit(1)
 
