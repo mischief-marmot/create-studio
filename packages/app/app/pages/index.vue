@@ -758,6 +758,7 @@
               </ul>
             </div>
             <button @click="handleUpgrade" class="btn btn-primary btn-block rounded-xl">Upgrade Now</button>
+            <p class="text-base-content/50 text-xs text-center mt-3">Run multiple sites? Additional sites are 50% off.</p>
           </div>
         </div>
       </div>

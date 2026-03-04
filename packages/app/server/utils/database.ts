@@ -499,6 +499,19 @@ export class SubscriptionRepository {
     return this.getBySiteId(siteId)
   }
 
+  async getActivePaidCountByUser(userId: number): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.subscriptions)
+      .innerJoin(schema.siteUsers, eq(schema.subscriptions.site_id, schema.siteUsers.site_id))
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        sql`${schema.subscriptions.status} IN ('active', 'trialing')`,
+        sql`${schema.subscriptions.tier} != 'free'`
+      ))
+      .get()
+    return result?.count ?? 0
+  }
+
   async getActiveTier(siteId: number): Promise<string> {
     const subscription = await this.getBySiteId(siteId)
 

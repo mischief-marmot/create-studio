@@ -29,8 +29,13 @@ export async function createCheckoutSession(params: {
   priceId: string
   successUrl: string
   cancelUrl: string
+  couponId?: string
 }): Promise<string> {
   const stripe = getStripeClient()
+
+  const discountConfig = params.couponId
+    ? { discounts: [{ coupon: params.couponId }] }
+    : { allow_promotion_codes: true as const }
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
@@ -41,7 +46,7 @@ export async function createCheckoutSession(params: {
     }],
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
-    allow_promotion_codes: true,
+    ...discountConfig,
     metadata: {
       site_id: params.siteId.toString(),
       user_id: params.userId.toString(),
@@ -57,6 +62,17 @@ export async function createCheckoutSession(params: {
   })
 
   return session.url!
+}
+
+/**
+ * Determine if multi-site coupon should be applied.
+ * Returns coupon ID if user has 1+ active paid subscriptions and coupon is configured.
+ */
+export function getMultiSiteCouponId(activePaidCount: number, configuredCouponId: string): string | undefined {
+  if (activePaidCount >= 1 && configuredCouponId) {
+    return configuredCouponId
+  }
+  return undefined
 }
 
 /**

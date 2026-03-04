@@ -8,8 +8,8 @@
  */
 
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { createCheckoutSession } from '~~/server/utils/stripe'
-import { SiteRepository, SiteUserRepository } from '~~/server/utils/database'
+import { createCheckoutSession, getMultiSiteCouponId } from '~~/server/utils/stripe'
+import { SiteRepository, SiteUserRepository, SubscriptionRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
@@ -77,6 +77,11 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig()
     const baseUrl = config.public.rootUrl || 'http://localhost:3001'
 
+    // Check if user qualifies for multi-site discount
+    const subscriptionRepo = new SubscriptionRepository()
+    const activePaidCount = await subscriptionRepo.getActivePaidCountByUser(user.id)
+    const couponId = getMultiSiteCouponId(activePaidCount, config.stripeMultiSiteCouponId)
+
     // Create Stripe Checkout session with selected price
     const checkoutUrl = await createCheckoutSession({
       siteId,
@@ -86,6 +91,7 @@ export default defineEventHandler(async (event) => {
       priceId,
       successUrl: `${baseUrl}/admin/settings?success=true`,
       cancelUrl: `${baseUrl}/admin/settings?canceled=true`,
+      couponId,
     })
 
     logger.debug('Checkout session created for site', siteId)

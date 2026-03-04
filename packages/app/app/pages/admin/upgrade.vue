@@ -179,11 +179,22 @@
         <div class="bg-base-100 border-base-300 rounded-3xl overflow-hidden border-2">
           <div class="lg:p-12 p-6">
 
+            <!-- Multi-site discount badge -->
+            <div v-if="hasMultiSiteDiscount" class="flex justify-center mb-6">
+              <span class="inline-flex items-center gap-1.5 bg-success/10 text-success rounded-full px-4 py-1.5 text-sm font-medium">
+                <TagIcon class="size-4" />
+                Multi-site discount: 50% off
+              </span>
+            </div>
+
             <!-- Price display -->
             <div v-if="selectedPlan" class="text-center mb-10">
+              <div v-if="hasMultiSiteDiscount" class="text-base-content/40 text-lg line-through mb-1">
+                ${{ selectedPlan.price }}
+              </div>
               <div class="flex items-baseline justify-center gap-1.5">
                 <span class="text-base-content/40 text-2xl font-serif font-light">$</span>
-                <span class="text-base-content text-6xl font-light font-serif tabular-nums pricing-value">{{ selectedPlan.price }}</span>
+                <span class="text-base-content text-6xl font-light font-serif tabular-nums pricing-value">{{ displayPrice }}</span>
                 <span class="text-base-content/40 text-base font-light">/ {{ selectedPlan.period }}</span>
               </div>
               <div class="mt-3 h-6 flex items-center justify-center">
@@ -304,6 +315,7 @@ import {
   StarIcon,
   ChatBubbleLeftEllipsisIcon,
   RectangleStackIcon,
+  TagIcon,
 } from '@heroicons/vue/24/outline'
 import { useSiteContext } from '~/composables/useSiteContext'
 import { useAuthFetch } from '~/composables/useAuthFetch'
@@ -320,6 +332,7 @@ const config = useRuntimeConfig()
 const selectedPriceId = ref<string | null>(null)
 const upgrading = ref(false)
 const error = ref('')
+const activePaidCount = ref(0)
 
 // Floating CTA visibility — hide once pricing section is in view
 const pricingSection = ref<HTMLElement | null>(null)
@@ -331,6 +344,18 @@ onMounted(async () => {
   const siteUrl = route.query.site_url as string | undefined
   if (siteUrl) {
     await loadSites(siteUrl)
+  }
+
+  // Fetch subscription status to determine multi-site discount eligibility
+  if (selectedSiteId.value) {
+    try {
+      const status = await useAuthFetch(`/api/v2/subscriptions/status/${selectedSiteId.value}`)
+      if (status.success && typeof status.activePaidCount === 'number') {
+        activePaidCount.value = status.activePaidCount
+      }
+    } catch {
+      // Non-critical — proceed without discount info
+    }
   }
 
   // Default to annual plan
@@ -358,6 +383,16 @@ onBeforeUnmount(() => {
 const scrollToPricing = () => {
   pricingSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
+
+const hasMultiSiteDiscount = computed(() => activePaidCount.value >= 1)
+
+const displayPrice = computed(() => {
+  if (!selectedPlan.value) return 0
+  if (hasMultiSiteDiscount.value) {
+    return Math.round(selectedPlan.value.price * 0.5 * 100) / 100
+  }
+  return selectedPlan.value.price
+})
 
 const selectedPlan = computed(() => {
   return pricingPlans.value.find((plan) => plan.priceId === selectedPriceId.value) || null

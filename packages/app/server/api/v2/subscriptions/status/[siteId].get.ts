@@ -63,13 +63,15 @@ export default defineEventHandler(async (event) => {
     const subscriptionRepo = new SubscriptionRepository()
     const subscription = await subscriptionRepo.getBySiteId(siteId)
     const tier = await subscriptionRepo.getActiveTier(siteId)
+    const activePaidCount = await subscriptionRepo.getActivePaidCountByUser(userId)
 
     logger.debug('Subscription status checked for site', siteId)
 
     return {
       success: true,
       subscription,
-      tier
+      tier,
+      activePaidCount,
     }
 
   } catch (error: any) {

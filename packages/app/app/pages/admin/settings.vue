@@ -365,6 +365,12 @@
                   </span>
                 </div>
 
+                <!-- Multi-site discount info -->
+                <div v-if="tier === 'pro' && activePaidCount > 1" class="bg-success/10 text-success rounded-xl px-4 py-2.5 mb-6 flex items-center gap-2 text-sm">
+                  <TagIcon class="size-4 flex-shrink-0" />
+                  Multi-site discount applied (50% off)
+                </div>
+
                 <!-- Billing Date -->
                 <div v-if="(stripeDetails?.currentPeriodEnd || subscription?.current_period_end) && tier === 'pro'" class="border-base-300 pb-6 mb-6 border-b">
                   <div class="flex flex-wrap items-baseline gap-2">
@@ -612,6 +618,7 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   SparklesIcon,
+  TagIcon,
 } from '@heroicons/vue/24/outline'
 import { useSiteContext } from '~/composables/useSiteContext.js'
 import { useAuthFetch } from '~/composables/useAuthFetch.js'
@@ -668,6 +675,7 @@ const site = ref<any>(null)
 const subscription = ref<any>(null)
 const stripeDetails = ref<any>(null)
 const tier = ref('free')
+const activePaidCount = ref(0)
 
 const loading = ref(true)
 const subscriptionLoading = ref(true)
@@ -753,6 +761,7 @@ const loadSiteData = async () => {
     if (subResponse.success) {
       subscription.value = subResponse.subscription
       tier.value = subResponse.tier || 'free'
+      activePaidCount.value = subResponse.activePaidCount ?? 0
 
       // Fetch detailed Stripe info for Pro subscribers
       if (tier.value === 'pro' && subscription.value?.stripe_subscription_id) {
