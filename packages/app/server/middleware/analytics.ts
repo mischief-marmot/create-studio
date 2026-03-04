@@ -18,6 +18,11 @@ export default defineEventHandler(async (event) => {
     return
   }
 
+  // 1% sampling to avoid KV 429s (≈6 KV ops per tracked request)
+  if (Math.random() > 0.01) {
+    return
+  }
+
   const [_, version, endpoint] = match
 
   const now = new Date()

@@ -814,20 +814,20 @@ export class SiteMetaRepository {
     const now = new Date().toISOString()
     const existing = await this.findBySiteId(siteId)
 
-    if (existing) {
-      const merged = { ...(existing.settings as SiteSettings || {}), ...settings }
-      await db.update(schema.siteMeta)
-        .set({ settings: merged, updatedAt: now })
-        .where(eq(schema.siteMeta.site_id, siteId))
-    } else {
-      await db.insert(schema.siteMeta).values({
-        site_id: siteId,
-        settings: settings as SiteSettings,
-        version_logs: [],
-        createdAt: now,
-        updatedAt: now,
-      })
-    }
+    const merged = existing
+      ? { ...(existing.settings as SiteSettings || {}), ...settings }
+      : settings as SiteSettings
+
+    await db.insert(schema.siteMeta).values({
+      site_id: siteId,
+      settings: merged,
+      version_logs: [],
+      createdAt: now,
+      updatedAt: now,
+    }).onConflictDoUpdate({
+      target: schema.siteMeta.site_id,
+      set: { settings: merged, updatedAt: now },
+    })
 
     return this.findBySiteId(siteId)
   }
@@ -852,13 +852,33 @@ export class SiteMetaRepository {
         .set({ version_logs: logs, updatedAt: now })
         .where(eq(schema.siteMeta.site_id, siteId))
     } else {
-      await db.insert(schema.siteMeta).values({
-        site_id: siteId,
-        settings: {},
-        version_logs: [entry],
-        createdAt: now,
-        updatedAt: now,
-      })
+      try {
+        await db.insert(schema.siteMeta).values({
+          site_id: siteId,
+          settings: {},
+          version_logs: [entry],
+          createdAt: now,
+          updatedAt: now,
+        })
+      } catch (e: unknown) {
+        // UNIQUE constraint race: another request inserted first — fall through to update path
+        if (e instanceof Error && e.message.includes('UNIQUE')) {
+          const fresh = await this.findBySiteId(siteId)
+          if (fresh) {
+            const freshLogs = (fresh.version_logs as VersionLogEntry[]) || []
+            const lastFresh = freshLogs[freshLogs.length - 1]
+            if (lastFresh && lastFresh.from === from && lastFresh.to === to) {
+              return fresh
+            }
+            const logs = [...freshLogs, entry]
+            await db.update(schema.siteMeta)
+              .set({ version_logs: logs, updatedAt: now })
+              .where(eq(schema.siteMeta.site_id, siteId))
+          }
+        } else {
+          throw e
+        }
+      }
     }
 
     return this.findBySiteId(siteId)

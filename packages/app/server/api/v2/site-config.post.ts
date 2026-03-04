@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   })
 
   const body = await readBody(event)
-  const { siteUrl } = body
+  const { siteUrl } = body || {}
 
   if (!siteUrl) {
     throw createError({
