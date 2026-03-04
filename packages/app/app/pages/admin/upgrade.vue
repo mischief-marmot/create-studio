@@ -41,6 +41,27 @@
     <!-- Main Content -->
     <div class="lg:px-12 max-w-[1400px] px-6 py-10 mx-auto space-y-12">
 
+      <!-- Multi-site Discount Banner -->
+      <section v-if="activePaidCount >= 1" class="bg-success/10 border border-success/30 rounded-2xl px-6 py-5 flex items-center gap-3">
+        <TagIcon class="text-success size-5 flex-shrink-0" />
+        <p class="text-base-content text-sm">
+          <strong class="text-success">Multi-site discount applied!</strong>
+          You're getting 50% off because you already have Pro on another site.
+        </p>
+      </section>
+      <section v-else-if="activePaidCount === 0 && sites.length >= 2" class="bg-info/10 border border-info/30 rounded-2xl px-6 py-5 flex items-center gap-3">
+        <TagIcon class="text-info size-5 flex-shrink-0" />
+        <p class="text-base-content text-sm">
+          <strong>Multi-site discount:</strong> Upgrade this site and get 50% off Pro for your other sites.
+        </p>
+      </section>
+      <section v-else-if="activePaidCount === 0 && sites.length <= 1" class="bg-base-200/50 border border-base-300 rounded-2xl px-6 py-5 flex items-center gap-3">
+        <TagIcon class="text-base-content/50 size-5 flex-shrink-0" />
+        <p class="text-base-content/70 text-sm">
+          Run multiple WordPress sites? Additional sites get 50% off Pro.
+        </p>
+      </section>
+
       <!-- Feature Cards — 2x2 grid -->
       <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Interactive Mode -->
@@ -326,7 +347,7 @@ definePageMeta({
 })
 
 const route = useRoute()
-const { selectedSiteId, selectedSite, loadSites } = useSiteContext()
+const { selectedSiteId, selectedSite, sites, loadSites } = useSiteContext()
 const config = useRuntimeConfig()
 
 const selectedPriceId = ref<string | null>(null)

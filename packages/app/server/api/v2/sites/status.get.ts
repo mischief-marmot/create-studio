@@ -63,12 +63,26 @@ export default defineEventHandler(async (event) => {
     const subscriptionRepo = new SubscriptionRepository()
     const subscriptionTier = await subscriptionRepo.getActiveTier(siteId)
 
+    // Look up active paid subscription count for the site owner (for multi-site discount messaging)
+    let activePaidCount = 0
+    try {
+      const siteUsers = await siteRepo.getSiteUsers(canonicalSiteId)
+      if (siteUsers.length > 0) {
+        // Use the first user (owner) to count their active paid subscriptions
+        const ownerId = siteUsers[0].userId
+        activePaidCount = await subscriptionRepo.getActivePaidCountByUser(ownerId)
+      }
+    } catch (err) {
+      logger.debug('Failed to get active paid count', { error: err })
+    }
+
     return {
       connected: true,
       site_id: siteId,
       subscription_tier: subscriptionTier,
       site_url: site.url,
-      site_name: site.name
+      site_name: site.name,
+      active_paid_count: activePaidCount,
     }
   }
   catch (error: any) {
