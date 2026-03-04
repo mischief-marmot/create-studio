@@ -208,6 +208,7 @@ export default defineNuxtConfig({
     },
     stripeSecretKey: "",
     stripeWebhookSecret: "",
+    stripeMultiSiteCouponId: "",
     webhookPrivateKey: "",
     adminApiKey: "",
     betaUploadApiKey: "",

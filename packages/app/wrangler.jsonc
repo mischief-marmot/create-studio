@@ -41,6 +41,7 @@
     "NUXT_POSTMARK_SENDING_ADDRESS": "hello@create.studio",
     "NUXT_PUBLIC_COMPANY_NAME": "Mischief Marmot",
     "NUXT_PUBLIC_CREATE_STUDIO_BASE_URL": "https://create.studio",
+    "NUXT_PUBLIC_LOAD_ADS": "true",
     "NUXT_PUBLIC_PRODUCT_NAME": "Create Studio",
     "NUXT_PUBLIC_ROOT_URL": "https://create.studio",
     "NUXT_PUBLIC_SCRIPTS_GOOGLE_ANALYTICS_ID": "G-Q7YTD7XTY0",
@@ -50,7 +51,8 @@
     "NUXT_PUBLIC_STRIPE_PRICE_MONTHLY": "price_1SxrXcASy46wWIm6EnXVOIRr",
     "NUXT_PUBLIC_STRIPE_PRICE_QUARTERLY": "price_1SxrawASy46wWIm6mXqQt6yv",
     "NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_live_51KFM5TASy46wWIm6xF74trOMNh8jWEEaHhG27bTnA62KsMxPHBOANkPrRzx6d8Xsymc6AZzZMOB2lZNMYHcgZpxo00uXJZVub5",
-    "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio"
+    "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio",
+    "NUXT_STRIPE_MULTI_SITE_COUPON_ID": "multi_site_50"
   },
   "env": {
     "preview": {
@@ -96,7 +98,8 @@
         "NUXT_PUBLIC_STRIPE_PRICE_MONTHLY": "price_1SFcybPSeSjfZ8mlxzYNGLhJ",
         "NUXT_PUBLIC_STRIPE_PRICE_QUARTERLY": "price_1SFcybPSeSjfZ8mlSBaKplrB",
         "NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51SFcrnPSeSjfZ8mlt0Zz4Hk7Yp2cBddFGOhp3QXXFlpYj8XImS3FA09lfWh7OZG13XZyuuJzSaCH3rZIyMlc10VA00cvRHdN2f",
-        "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio"
+        "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio",
+        "NUXT_STRIPE_MULTI_SITE_COUPON_ID": "multi_site_50"
       }
     }
   }

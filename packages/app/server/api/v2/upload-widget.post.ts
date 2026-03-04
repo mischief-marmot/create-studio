@@ -65,21 +65,16 @@ export default defineEventHandler(async (event) => {
       throw error;
     }
 
-    logger.box({
-      title: "Blob Upload Failed",
-      message: () => {
-        return `${(error as Error).message}\n${(error as Error).stack}`;
-      },
-      style: {
-        borderColor: "red",
-        padding: 1,
-      },
-    })
+    console.error('Widget upload failed:', (error as Error).message, (error as Error).stack)
     throw createError({
       statusCode: 500,
       statusMessage: `Failed to upload widget files: ${
         (error as Error).message
       }`,
+      data: {
+        error: (error as Error).message,
+        stack: (error as Error).stack,
+      },
     });
   }
 });
