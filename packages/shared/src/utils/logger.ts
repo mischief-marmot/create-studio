@@ -1,6 +1,8 @@
 export interface LoggerInstance {
   debug(...args: any[]): void
   info(...args: any[]): void
+  success(...args: any[]): void
+  start(...args: any[]): void
   warn(...args: any[]): void
   error(...args: any[]): void
   withTag(tag: string): LoggerInstance
@@ -20,6 +22,14 @@ class MinimalLogger implements LoggerInstance {
   }
 
   info(...args: any[]): void {
+    if (this.level >= 3) console.log(`[${this.tag}]`, ...args)
+  }
+
+  success(...args: any[]): void {
+    if (this.level >= 3) console.log(`[${this.tag}]`, ...args)
+  }
+
+  start(...args: any[]): void {
     if (this.level >= 3) console.log(`[${this.tag}]`, ...args)
   }
 
