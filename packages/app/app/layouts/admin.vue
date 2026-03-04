@@ -446,7 +446,9 @@ onMounted(async () => {
         // Site is pending - open Verify Site modal
         openVerifySiteModal(matchedSite)
       } else if (matchedSite) {
-        openSiteAlreadyVerifiedModal(matchedSite)
+        // Site already connected - just select it and clean up the URL
+        selectSite(matchedSite.id)
+        router.replace({ path: route.path, query: { ...route.query, site_url: undefined } })
       }
     }
   }

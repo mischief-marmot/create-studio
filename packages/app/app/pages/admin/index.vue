@@ -95,6 +95,34 @@
         </div>
       </section>
 
+      <!-- Multi-site Discount Callout -->
+      <section v-if="!loading && sites.length >= 2" class="w-full">
+        <!-- Scenario A: Has Pro, multiple sites -->
+        <div v-if="premiumSitesCount >= 1 && nonProSitesCount > 0" class="bg-success/5 border border-success/20 rounded-2xl px-6 py-5 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <TagIcon class="text-success size-5 flex-shrink-0" />
+            <p class="text-base-content text-sm">
+              You have {{ sites.length }} sites — your additional sites qualify for <strong class="text-success">50% off Pro</strong>.
+            </p>
+          </div>
+          <NuxtLink to="/admin/upgrade" class="btn btn-success btn-sm btn-outline flex-shrink-0">
+            Upgrade
+          </NuxtLink>
+        </div>
+        <!-- Scenario B: No Pro, multiple sites -->
+        <div v-else-if="premiumSitesCount === 0" class="bg-info/5 border border-info/20 rounded-2xl px-6 py-5 flex items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <TagIcon class="text-info size-5 flex-shrink-0" />
+            <p class="text-base-content text-sm">
+              <strong>Multi-site discount available:</strong> upgrade one site to Pro and get 50% off every additional site.
+            </p>
+          </div>
+          <NuxtLink to="/admin/upgrade" class="btn btn-info btn-sm btn-outline flex-shrink-0">
+            Learn more
+          </NuxtLink>
+        </div>
+      </section>
+
       <!-- Active Site Card (if selected) -->
       <section v-if="selectedSite" class="w-full">
         <h3 class="mb-6 font-serif text-2xl">Selected Site</h3>
@@ -322,6 +350,7 @@ import {
   CodeBracketIcon,
   PlusIcon,
   ArrowPathIcon,
+  TagIcon,
 } from '@heroicons/vue/24/outline'
 import { useSiteContext } from '~/composables/useSiteContext'
 import { useAuthFetch } from '~/composables/useAuthFetch'
@@ -388,6 +417,10 @@ const greeting = computed(() => {
 
 const premiumSitesCount = computed(() => {
   return Object.values(siteTiers.value).filter(tier => tier === 'pro' || tier === 'free-plus').length
+})
+
+const nonProSitesCount = computed(() => {
+  return Object.values(siteTiers.value).filter(tier => tier !== 'pro' && tier !== 'free-plus').length
 })
 
 const totalTeamMembers = computed(() => {
