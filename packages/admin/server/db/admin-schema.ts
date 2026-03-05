@@ -46,8 +46,31 @@ export const auditLogs = sqliteTable('AuditLogs', {
   index('idx_audit_logs_environment').on(table.environment),
 ])
 
+// Release emails — saved compositions that can be drafted and sent
+export const releaseEmails = sqliteTable('ReleaseEmails', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  product: text('product').notNull(), // create-plugin, create-studio
+  version: text('version').notNull(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  heroImageUrl: text('hero_image_url'),
+  releaseUrl: text('release_url'),
+  highlights: text('highlights'), // JSON array
+  status: text('status').notNull().default('draft'), // draft, sent
+  sentAt: text('sent_at'),
+  sentBy: integer('sent_by').references(() => admins.id),
+  createdAt: text('createdAt'),
+  updatedAt: text('updatedAt'),
+}, (table) => [
+  index('idx_release_emails_status').on(table.status),
+  index('idx_release_emails_product').on(table.product),
+  index('idx_release_emails_created_at').on(table.createdAt),
+])
+
 // Type exports for use in application code
 export type Admin = typeof admins.$inferSelect
 export type NewAdmin = typeof admins.$inferInsert
 export type AuditLog = typeof auditLogs.$inferSelect
 export type NewAuditLog = typeof auditLogs.$inferInsert
+export type ReleaseEmail = typeof releaseEmails.$inferSelect
+export type NewReleaseEmail = typeof releaseEmails.$inferInsert

@@ -5,6 +5,7 @@ interface Highlight {
   title: string
   description: string
   type: 'feature' | 'enhancement' | 'fix' | 'breaking'
+  imageUrl?: string
 }
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
   version?: string
   product?: string
   description?: string
+  heroImageUrl?: string
   highlights?: Highlight[]
   releaseUrl?: string
   unsubscribeUrl?: string
@@ -27,6 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
   version: '1.0.0',
   product: 'Create Plugin',
   description: 'Check out what\'s new in this release.',
+  heroImageUrl: '',
   highlights: () => [],
   releaseUrl: 'https://create.studio/releases',
   unsubscribeUrl: '#',
@@ -60,26 +63,6 @@ const darkColors = {
 
 const logoUrl = `${props.productUrl}/img/logo/logo-solo.svg`
 
-const highlightTypeColor = (type: string) => {
-  switch (type) {
-    case 'feature': return colors.success
-    case 'enhancement': return colors.info
-    case 'fix': return colors.warning
-    case 'breaking': return colors.error
-    default: return colors.baseContent
-  }
-}
-
-const highlightTypeLabel = (type: string) => {
-  switch (type) {
-    case 'feature': return 'New'
-    case 'enhancement': return 'Improved'
-    case 'fix': return 'Fixed'
-    case 'breaking': return 'Breaking'
-    default: return ''
-  }
-}
-
 const responsiveStyles = `
   @media only screen and (max-width: 620px) {
     .email-container { width: 100% !important; padding: 16px !important; }
@@ -88,7 +71,7 @@ const responsiveStyles = `
     .email-header { padding: 24px 24px 16px !important; }
     .email-title { font-size: 26px !important; }
     .email-btn { padding: 14px 32px !important; font-size: 15px !important; }
-    .brand-stripe { border-radius: 12px 12px 0 0 !important; }
+    .email-card { border-radius: 12px !important; }
   }
   @media (prefers-color-scheme: dark) {
     .email-body { background-color: ${darkColors.base100} !important; }
@@ -101,7 +84,6 @@ const responsiveStyles = `
     .email-subtext { color: #b8b8b8 !important; }
     .product-name { color: ${darkColors.baseContent} !important; }
     .email-btn { box-shadow: none !important; }
-    .highlight-card { background-color: ${darkColors.base300} !important; }
   }
 `
 </script>
@@ -135,26 +117,22 @@ const responsiveStyles = `
         padding: '40px 20px',
         backgroundColor: colors.cream,
       }">
-        <!-- Decorative top bar -->
-        <Section class="brand-stripe" :style="{
-          width: '100%',
-          maxWidth: '560px',
-          margin: '0 auto',
-          height: '6px',
-          background: 'linear-gradient(115deg, #fff1be 28%, #ee87cb 70%, #b060ff 100%)',
-          borderRadius: '16px 16px 0 0',
-        }" />
-
         <!-- Main email card -->
         <Container class="email-card" :style="{
           width: '100%',
           maxWidth: '560px',
           margin: '0 auto',
           backgroundColor: colors.warmWhite,
-          borderRadius: '0 0 16px 16px',
+          borderRadius: '16px',
           boxShadow: '0 4px 24px rgba(36, 60, 74, 0.08)',
           overflow: 'hidden',
         }">
+          <!-- Decorative top bar (inside card to avoid double border-radius) -->
+          <Section class="brand-stripe" :style="{
+            width: '100%',
+            height: '6px',
+            background: 'linear-gradient(115deg, #fff1be 28%, #ee87cb 70%, #b060ff 100%)',
+          }" />
           <!-- Header with logo -->
           <Section class="email-header" :style="{
             padding: '32px 40px 20px',
@@ -219,47 +197,47 @@ const responsiveStyles = `
               {{ description }}
             </Text>
 
+            <!-- Hero image -->
+            <Img v-if="heroImageUrl" :src="heroImageUrl" :alt="title" :style="{
+              display: 'block',
+              width: '100%',
+              maxWidth: '480px',
+              height: 'auto',
+              margin: '0 auto 24px',
+              borderRadius: '8px',
+            }" />
+
             <!-- Highlights -->
-            <table v-if="highlights.length" role="presentation" :style="{ width: '100%', borderCollapse: 'collapse', marginBottom: '24px' }">
-              <tbody>
-                <tr v-for="(h, i) in highlights" :key="i">
-                  <td class="highlight-card" :style="{
-                    padding: '12px 16px',
-                    backgroundColor: colors.cream,
-                    borderRadius: '8px',
-                    marginBottom: '8px',
-                  }">
-                    <table role="presentation" :style="{ width: '100%' }">
-                      <tbody>
-                        <tr>
-                          <td :style="{ verticalAlign: 'top', width: '60px' }">
-                            <span :style="{
-                              display: 'inline-block',
-                              padding: '2px 8px',
-                              fontSize: '10px',
-                              fontWeight: 700,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.5px',
-                              borderRadius: '4px',
-                              color: '#fff',
-                              backgroundColor: highlightTypeColor(h.type),
-                            }">{{ highlightTypeLabel(h.type) }}</span>
-                          </td>
-                          <td :style="{ verticalAlign: 'top', paddingLeft: '8px' }">
-                            <Text :style="{ margin: 0, fontSize: '14px', fontWeight: 600, color: colors.baseContent }">
-                              {{ h.title }}
-                            </Text>
-                            <Text :style="{ margin: '4px 0 0', fontSize: '13px', color: colors.baseContent, lineHeight: 1.5 }">
-                              {{ h.description }}
-                            </Text>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div v-for="(h, i) in highlights" :key="i" :style="{ marginBottom: '28px' }">
+              <Heading as="h3" :style="{
+                margin: '0 0 12px',
+                fontFamily: '\'DM Sans\', sans-serif',
+                fontSize: '16px',
+                fontWeight: 700,
+                color: colors.baseContent,
+                lineHeight: 1.3,
+              }">
+                {{ h.title }}
+              </Heading>
+
+              <Img v-if="h.imageUrl" :src="h.imageUrl" :alt="h.title" :style="{
+                display: 'block',
+                width: '100%',
+                height: 'auto',
+                marginBottom: '12px',
+                borderRadius: '8px',
+                border: `1px solid ${colors.cream}`,
+              }" />
+
+              <Text v-if="h.description" :style="{
+                margin: 0,
+                fontSize: '15px',
+                lineHeight: 1.7,
+                color: colors.baseContent,
+              }">
+                {{ h.description }}
+              </Text>
+            </div>
 
             <!-- CTA Button -->
             <Section :style="{ textAlign: 'center', margin: '28px 0' }">

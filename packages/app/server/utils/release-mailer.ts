@@ -15,10 +15,12 @@ interface ReleaseEmailData {
   version: string
   product: string
   description: string
+  heroImageUrl?: string
   highlights: Array<{
     title: string
     description: string
     type: 'feature' | 'enhancement' | 'fix' | 'breaking'
+    imageUrl?: string
   }>
   releaseUrl: string
 }
@@ -126,6 +128,7 @@ export async function sendReleaseNotesEmail(data: ReleaseEmailData): Promise<Sen
           version: data.version,
           product: data.product,
           description: data.description,
+          heroImageUrl: data.heroImageUrl,
           highlights: data.highlights,
           releaseUrl: data.releaseUrl,
           unsubscribeUrl,

@@ -1,9 +1,14 @@
 /**
  * POST /api/admin/releases/send-email
  * Trigger batch send of release notes email to subscribers.
+ * Proxies to the main app's internal API which has Vue SFC compilation for email templates.
  *
- * Request body: { version, product, title, description, highlights, releaseUrl }
+ * Request body: { version, product, title, description, highlights, releaseUrl, draftId? }
+ * If draftId is provided, the draft is marked as sent after successful delivery.
  */
+
+import { eq } from 'drizzle-orm'
+import { useAdminOpsDb, releaseEmails } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -14,52 +19,48 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const config = useRuntimeConfig()
+  const body = await readBody(event)
+  const { draftId, ...emailPayload } = body
+
+  const mainAppUrl = config.mainAppUrl || 'http://localhost:3000'
+
   try {
-    const body = await readBody(event)
-    const { version, product, title, description, highlights, releaseUrl } = body
-
-    // Validate required fields
-    if (!version || !product || !title || !description) {
-      throw createError({
-        statusCode: 400,
-        message: 'version, product, title, and description are required',
-      })
-    }
-
-    if (!['create-plugin', 'create-studio'].includes(product)) {
-      throw createError({
-        statusCode: 400,
-        message: 'product must be "create-plugin" or "create-studio"',
-      })
-    }
-
-    // Import from the main app's utils — admin shares the same database
-    const { sendReleaseNotesEmail } = await import('../../../../app/server/utils/release-mailer')
-
-    const result = await sendReleaseNotesEmail({
-      title,
-      version,
-      product,
-      description,
-      highlights: highlights || [],
-      releaseUrl: releaseUrl || `https://create.studio/releases/${product}-${version.replace(/\./g, '-')}`,
+    const result = await $fetch('/api/v2/internal/send-release-email', {
+      baseURL: mainAppUrl,
+      method: 'POST',
+      headers: {
+        'X-Admin-Api-Key': config.mainAppApiKey || '',
+      },
+      body: emailPayload,
     })
 
-    return {
-      success: true,
-      message: `Release email sent to ${result.sent} subscribers`,
-      ...result,
+    // Mark draft as sent if draftId was provided
+    if (draftId) {
+      try {
+        const db = useAdminOpsDb(event)
+        await db
+          .update(releaseEmails)
+          .set({
+            status: 'sent',
+            sentAt: new Date().toISOString(),
+            sentBy: session.user.id,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(releaseEmails.id, Number(draftId)))
+      }
+      catch (dbErr) {
+        console.warn('Failed to mark draft as sent:', dbErr)
+      }
     }
+
+    return result
   }
-  catch (error) {
-    if (error && typeof error === 'object' && 'statusCode' in error) {
-      throw error
-    }
+  catch (error: any) {
+    const statusCode = error?.response?.status || error?.statusCode || 500
+    const message = error?.data?.message || error?.message || 'Failed to send release email'
 
-    console.error('Error sending release email:', error)
-    throw createError({
-      statusCode: 500,
-      message: 'Failed to send release email',
-    })
+    console.error('Error sending release email:', message)
+    throw createError({ statusCode, message })
   }
 })

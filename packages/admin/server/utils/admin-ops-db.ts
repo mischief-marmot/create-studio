@@ -105,6 +105,25 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
     CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type ON AuditLogs (entity_type);
     CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON AuditLogs (createdAt);
     CREATE INDEX IF NOT EXISTS idx_audit_logs_environment ON AuditLogs (environment);
+
+    CREATE TABLE IF NOT EXISTS ReleaseEmails (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      product TEXT NOT NULL,
+      version TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      hero_image_url TEXT,
+      release_url TEXT,
+      highlights TEXT,
+      status TEXT NOT NULL DEFAULT 'draft',
+      sent_at TEXT,
+      sent_by INTEGER REFERENCES Admins(id),
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_release_emails_status ON ReleaseEmails (status);
+    CREATE INDEX IF NOT EXISTS idx_release_emails_product ON ReleaseEmails (product);
+    CREATE INDEX IF NOT EXISTS idx_release_emails_created_at ON ReleaseEmails (createdAt);
   `)
 }
 
