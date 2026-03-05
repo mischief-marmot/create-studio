@@ -58,7 +58,7 @@
             </figure>
 
             <!-- Content Section - Scrollable with rounded top corners on mobile, side panel on desktop -->
-            <div :class="[ 'cs:flex-1 cs:overflow-hidden cs:flex cs:flex-col cs:relative cs:z-10 cs:rounded-t-3xl cs:h-full cs:w-full', 'cs:md:rounded-none cs:md:w-3/5 cs:md:mb-auto cs:md:z-0' ]">
+            <div :class="[ 'cs:flex-1 cs:overflow-hidden cs:bg-base-100 cs:flex cs:flex-col cs:relative cs:z-10 cs:rounded-t-3xl cs:h-full cs:w-full', 'cs:md:rounded-none cs:md:w-3/5 cs:md:mb-auto cs:md:z-0' ]">
                 <!-- Draggable Handle - Mobile only -->
                 <DraggableHandle v-if="isMobile" @start-drag="startDrag" />
                 <div class="cs:carousel cs:carousel-center cs:w-full cs:flex-1 cs:overflow-x-auto cs:snap-x cs:snap-mandatory cs:flex cs:flex-row"
