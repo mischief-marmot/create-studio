@@ -62,13 +62,9 @@
 
         <!-- Demo Area -->
         <div class="lg:mt-0 mt-12">
-          <div
-            class="rounded-3xl shadow-base-300 relative overflow-hidden"
-            :class="showIframe ? 'h-[915px] w-[415px] mx-auto' : 'p-1 sm:p-3'"
-          >
-            <AbsoluteGradient v-if="!showIframe" />
-            <!-- Placeholder -->
-            <div v-if="!showIframe" class="bg-gradient-to-br rounded-2xl from-base-200 to-base-300 sm:p-8 min-h-80 relative p-3">
+          <div class="rounded-3xl shadow-base-300 relative overflow-clip p-1 sm:p-3">
+            <AbsoluteGradient />
+            <div class="bg-gradient-to-br rounded-2xl from-base-200 to-base-300 sm:p-8 min-h-80 relative p-3">
               <!-- Phone Mockup -->
               <div class="sm:block hidden max-w-[415px] mx-auto">
                 <div class="bg-base-100 rounded-[2.5rem] p-2 shadow-xl ring-1 ring-base-300">
@@ -77,65 +73,89 @@
                     <div class="bg-base-content min-w-24 h-6 rounded-full" />
                   </div>
                   <!-- Screen -->
-                  <div class="bg-base-200 rounded-[2rem] p-6 min-h-[730px] flex flex-col">
-                    <div class="flex flex-col items-center justify-center flex-1 space-y-6 text-center">
-                      <div class="space-y-2">
-                        <div class="text-accent text-xs font-medium tracking-wider uppercase">Step 1</div>
-                        <div class="text-base-content font-serif text-lg">Prepare the glaze</div>
+                  <div class="bg-base-200 rounded-[2rem] min-h-[730px] flex flex-col relative overflow-hidden">
+                    <!-- Placeholder content -->
+                    <div v-if="!showIframe" class="flex flex-col flex-1 p-6">
+                      <div class="flex flex-col items-center justify-center flex-1 space-y-6 text-center">
+                        <div class="space-y-2">
+                          <div class="text-accent text-xs font-medium tracking-wider uppercase">Step 1</div>
+                          <div class="text-base-content font-serif text-lg">Prepare the glaze</div>
+                        </div>
+                        <div class="bg-base-300 flex items-center gap-2 px-4 py-2 text-sm rounded-full">
+                          <ClockIcon class="size-4 text-accent" />
+                          <span class="font-mono">5:00</span>
+                        </div>
                       </div>
-                      <div class="bg-base-300 flex items-center gap-2 px-4 py-2 text-sm rounded-full">
-                        <ClockIcon class="size-4 text-accent" />
-                        <span class="font-mono">5:00</span>
+                      <!-- Progress Dots -->
+                      <div class="flex justify-center gap-2 pt-4">
+                        <div class="size-2 bg-primary rounded-full" />
+                        <div class="size-2 bg-base-300 rounded-full" />
+                        <div class="size-2 bg-base-300 rounded-full" />
+                        <div class="size-2 bg-base-300 rounded-full" />
                       </div>
                     </div>
-                    <!-- Progress Dots -->
-                    <div class="flex justify-center gap-2 pt-4">
-                      <div class="size-2 bg-primary rounded-full" />
-                      <div class="size-2 bg-base-300 rounded-full" />
-                      <div class="size-2 bg-base-300 rounded-full" />
-                      <div class="size-2 bg-base-300 rounded-full" />
+                    <!-- Iframe inside phone screen -->
+                    <div v-else class="absolute inset-0">
+                      <button
+                        @click="showIframe = false"
+                        class="top-2 right-2 btn btn-circle btn-sm bg-base-100/80 backdrop-blur z-10 absolute"
+                      >
+                        <XMarkIcon class="size-5" />
+                      </button>
+                      <iframe
+                        :src="demoRecipeUrlWithParams"
+                        class="w-full h-full rounded-[2rem]"
+                        frameborder="0"
+                        allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        title="Interactive Mode Demo"
+                        loading="lazy"
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <!-- CTA Button -->
-              <div class="h-80 sm:h-auto sm:mt-8 flex flex-col items-center justify-center gap-4 text-center">
-                <div class="sm:hidden font-serif text-xl tracking-wide">
-                  Click the button below to try Interactive Mode for yourself!
+              <!-- Mobile: no phone mockup, just iframe or CTA -->
+              <div class="sm:hidden">
+                <div v-if="!showIframe" class="h-80 flex flex-col items-center justify-center gap-4 text-center">
+                  <div class="font-serif text-xl tracking-wide">
+                    Click the button below to try Interactive Mode for yourself!
+                  </div>
                 </div>
+                <div v-else class="relative h-[600px]">
+                  <button
+                    @click="showIframe = false"
+                    class="top-2 right-2 btn btn-circle btn-sm bg-base-100/80 backdrop-blur z-10 absolute"
+                  >
+                    <XMarkIcon class="size-5" />
+                  </button>
+                  <iframe
+                    :src="demoRecipeUrlWithParams"
+                    class="border-base-content/20 rounded-2xl w-full h-full border shadow-sm"
+                    frameborder="0"
+                    allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title="Interactive Mode Demo"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+
+              <!-- CTA / Caption area (fixed height to prevent layout shift) -->
+              <div class="sm:mt-8 flex flex-col items-center justify-center gap-4 text-center">
                 <button
+                  v-if="!showIframe"
                   @click="showIframe = true"
                   class="btn btn-primary btn-lg w-fit gap-3"
                 >
                   <PlayIcon class="size-5" />
                   Try Interactive Mode
                 </button>
+                <p v-else class="text-base-content/50 text-sm italic">
+                  Try it out! Interact with the recipe above (from <a href="https://thesweetestoccasion.com/" target="_blank" class="hover:text-accent underline">The Sweetest Occasion</a>).
+                </p>
               </div>
             </div>
-
-            <!-- Iframe -->
-            <div v-else class="size-full relative max-w-[415px] mx-auto px-5">
-              <button
-                @click="showIframe = false"
-                class="top-6 right-10 btn btn-circle btn-md bg-base-100/80 backdrop-blur z-100 absolute"
-              >
-                <XMarkIcon class="size-7" />
-              </button>
-              <iframe
-                :src="demoRecipeUrlWithParams"
-                class="border-base-content/20 rounded-2xl w-full h-full border shadow-sm"
-                frameborder="0"
-                allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                title="Interactive Mode Demo"
-                loading="lazy"
-              />
-            </div>
           </div>
-
-          <p v-if="showIframe" class="text-base-content/50 mt-4 text-sm italic text-center">
-            Try it out! Interact with the recipe above (from <a href="https://thesweetestoccasion.com/" target="_blank" class="hover:text-accent underline">The Sweetest Occasion</a>).
-          </p>
         </div>
       </div>
     </div>
