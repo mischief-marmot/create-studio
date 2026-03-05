@@ -39,5 +39,24 @@ export default defineContentConfig({
         image: z.string().optional(),
       }),
     }),
+    releases: defineCollection({
+      type: 'page',
+      source: 'releases/**',
+      schema: z.object({
+        _published: z.boolean().optional(),
+        title: z.string(),
+        description: z.string(),
+        version: z.string(),
+        product: z.enum(['create-plugin', 'create-studio']),
+        date: z.string(),
+        ogImage: z.string().optional(),
+        highlights: z.array(z.object({
+          title: z.string(),
+          description: z.string(),
+          type: z.enum(['feature', 'enhancement', 'fix', 'breaking']),
+        })).optional(),
+        previousVersion: z.string().optional(),
+      }),
+    }),
   },
 })
