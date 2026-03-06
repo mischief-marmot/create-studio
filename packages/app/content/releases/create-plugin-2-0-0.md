@@ -41,11 +41,15 @@ previousVersion: '1.9.16'
 
 You've been waiting for years, and we're thrilled to finally release many months of hard work to you. Create 2.0 is a complete reimagining of the Create Plugin — not just new features, but a fundamentally better way to work with structured content. It also sets the stage for a whole new Create experience, going beyond schema cards with more features and innovation coming soon.
 
+Check out all the new features on your own site @ yoursite.com/wp-admin/admin.php?page=mv_create_welcome
+
 ## Interactive Mode
 
 The headline feature of Create 2.0 is **Interactive Mode** — a stunning, mobile-first experience that transforms your recipe cards from static content into living, interactive tools your readers will love.
 
-Readers get a distraction-free experience with built-in timers parsed from your instructions, step-by-step guidance, and automatic progress saving. They can check off ingredients and steps as they cook, adjust servings with a tap, convert between metric and imperial units, and leave a star rating — all without leaving the card. [See Interactive Mode in action →](https://create.studio/#interactive-mode)
+Readers get a distraction-free experience with built-in timers parsed from your instructions, step-by-step guidance, and automatic progress saving. They can check off ingredients and steps as they cook, adjust servings with a tap, convert between metric and imperial units, and leave a star rating — all without leaving the card. 
+
+[See Interactive Mode in action →](https://create.studio/#interactive-mode)
 
 ## Adjustable Servings & Unit Conversion
 

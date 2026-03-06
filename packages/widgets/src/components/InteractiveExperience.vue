@@ -118,7 +118,7 @@
                         class="cs:carousel-item cs:w-full cs:snap-center cs:shrink-0"
                         >
                         <div class="cs:px-4 cs:md:px-8 cs:py-8 cs:flex cs:flex-col cs:space-y-8 cs:overflow-y-auto">
-                            <div class="cs:flex cs:space-x-3 cs:justify-start cs:w-full cs:items-center">
+                            <div class="cs:flex cs:space-x-3 cs:justify-start cs:w-full cs:items-start">
                                 <div class="cs-interactive-step-number">
                                     {{ index + 1 }}
                                 </div>
