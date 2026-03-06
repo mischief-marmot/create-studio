@@ -25,7 +25,7 @@
           <article
             v-for="release in filteredReleases"
             :key="release.stem"
-            class="rounded-lg relative flex flex-col overflow-hidden"
+            class="rounded-lg ring-1 ring-white/10 relative flex flex-col overflow-hidden"
             style="background: linear-gradient(135deg, #1a1a1f 0%, #1f1a28 50%, #1a1a1f 100%)"
           >
             <div class="flex flex-col flex-1 px-6 py-5">
