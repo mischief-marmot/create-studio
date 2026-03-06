@@ -15,6 +15,7 @@ export interface ConsentState {
   lastUpdated: string | null // ISO timestamp
   bannerDismissed: boolean
   showCustomizeModal: boolean
+  consentRequired: boolean // true = user is in a regulated country (GDPR, etc.)
 }
 
 export const useConsentStore = defineStore('consent', {
@@ -24,6 +25,7 @@ export const useConsentStore = defineStore('consent', {
     lastUpdated: null,
     bannerDismissed: false,
     showCustomizeModal: false,
+    consentRequired: true,
   }),
 
   getters: {
@@ -98,6 +100,22 @@ export const useConsentStore = defineStore('consent', {
     },
 
     /**
+     * Auto-accept analytics for users in non-regulated countries.
+     * Only acts when the user has never been asked (analytics === null).
+     */
+    autoAcceptIfAllowed() {
+      const { consentRequired } = useGeoConsent()
+      this.consentRequired = consentRequired
+
+      if (!consentRequired && this.analytics === null) {
+        this.analytics = true
+        this.marketing = true
+        this.bannerDismissed = true
+        this.lastUpdated = new Date().toISOString()
+      }
+    },
+
+    /**
      * Reset consent to ask again
      */
     resetConsent() {
@@ -140,5 +158,7 @@ export const useConsentStore = defineStore('consent', {
     },
   },
 
-  persist: true,
+  persist: {
+    omit: ['consentRequired', 'showCustomizeModal'],
+  },
 })

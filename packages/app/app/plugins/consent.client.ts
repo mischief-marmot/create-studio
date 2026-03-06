@@ -11,6 +11,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     nuxtApp.hook('app:created', () => {
       const consentStore = useConsentStore()
 
+      // Auto-accept analytics for users in non-regulated countries
+      consentStore.autoAcceptIfAllowed()
+
       // Trigger consent for scripts based on stored preferences
       watch(
         () => consentStore.analytics,
