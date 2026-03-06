@@ -49,6 +49,7 @@
     "nuxt": "^4.2.2",
     "nuxt-auth-utils": "^0.5.25",
     "nuxt-og-image": "^5.1.13",
+    "nuxt-schema-org": "^5.0.10",
     "pinia": "^3.0.2",
     "pinia-plugin-persistedstate": "^4.5.0",
     "postmark": "^4.0.5",

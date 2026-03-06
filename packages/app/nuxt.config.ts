@@ -130,6 +130,7 @@ export default defineNuxtConfig({
     "@nuxthub/core",
     "@nuxt/scripts",
     "nuxt-og-image",
+    "nuxt-schema-org",
     "nuxt-auth-utils",
   ],
   ogImage: {
