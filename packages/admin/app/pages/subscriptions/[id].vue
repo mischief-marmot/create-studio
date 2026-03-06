@@ -208,6 +208,44 @@
                   <div class="text-xs text-base-content/50">Remove subscription record entirely</div>
                 </div>
               </button>
+
+              <!-- Sync to Site -->
+              <button
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-info/30 hover:bg-info/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="handleSyncToSite"
+                :disabled="actionLoading"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
+                  <ArrowPathIcon class="w-4 h-4" :class="{ 'animate-spin': syncLoading }" />
+                </div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Sync to Site</div>
+                  <div class="text-xs text-base-content/50">Re-push subscription tier to WordPress</div>
+                </div>
+              </button>
+
+              <!-- Check Site Status -->
+              <button
+                class="w-full flex items-center gap-4 p-4 rounded-lg border border-base-300/50 hover:border-info/30 hover:bg-info/5 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                @click="handleCheckSiteStatus"
+                :disabled="actionLoading"
+              >
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-base-200 text-base-content/70 transition-all">
+                  <ShieldCheckIcon class="w-4 h-4" />
+                </div>
+                <div class="flex flex-col items-start text-left">
+                  <div class="text-sm font-medium text-base-content">Check Site Status</div>
+                  <div class="text-xs text-base-content/50">
+                    <template v-if="siteCheckResult === null">Verify subscription on WordPress site</template>
+                    <template v-else-if="siteCheckResult.inSync">
+                      <span class="text-success">In sync ({{ siteCheckResult.siteTier || 'unknown' }})</span>
+                    </template>
+                    <template v-else>
+                      <span class="text-warning">Out of sync: site={{ siteCheckResult.siteTier || 'unknown' }}, studio={{ siteCheckResult.studioTier }}</span>
+                    </template>
+                  </div>
+                </div>
+              </button>
             </div>
           </div>
         </div>
@@ -661,7 +699,9 @@ import {
   GlobeAltIcon,
   UserIcon,
   TrashIcon,
-  LinkIcon
+  LinkIcon,
+  ArrowPathIcon,
+  ShieldCheckIcon
 } from '@heroicons/vue/24/outline'
 
 definePageMeta({
@@ -738,6 +778,8 @@ const showDeleteModal = ref(false)
 const showLinkStripeModal = ref(false)
 const selectedTier = ref<'free' | 'free-plus' | 'pro'>('free')
 const linkStripeId = ref('')
+const syncLoading = ref(false)
+const siteCheckResult = ref<{ siteTier: string | null; studioTier: string; inSync: boolean } | null>(null)
 
 // Computed
 const hasStripeIntegration = computed(() => {
@@ -900,6 +942,42 @@ const handleLinkStripe = async () => {
   } catch (err: any) {
     console.error('Failed to link Stripe subscription:', err)
     showAlert(err?.data?.message || 'Failed to link Stripe subscription', 'error')
+  } finally {
+    actionLoading.value = false
+  }
+}
+
+const handleSyncToSite = async () => {
+  if (!subscription.value) return
+
+  actionLoading.value = true
+  syncLoading.value = true
+  try {
+    const response = await $fetch<{ message: string; webhookSent: boolean }>(`/api/admin/subscriptions/${subscription.value.id}/sync`, {
+      method: 'POST',
+    })
+    showAlert(response.message || 'Sync pushed successfully', response.webhookSent ? 'success' : 'error')
+  } catch (err: any) {
+    console.error('Failed to sync subscription:', err)
+    showAlert(err?.data?.message || 'Failed to sync subscription to site', 'error')
+  } finally {
+    actionLoading.value = false
+    syncLoading.value = false
+  }
+}
+
+const handleCheckSiteStatus = async () => {
+  if (!subscription.value) return
+
+  actionLoading.value = true
+  siteCheckResult.value = null
+  try {
+    const result = await $fetch<{ siteTier: string | null; studioTier: string; inSync: boolean }>(`/api/admin/subscriptions/${subscription.value.id}/check-site`)
+    siteCheckResult.value = result
+    showAlert(result.inSync ? 'Site is in sync' : `Out of sync: site=${result.siteTier || 'unknown'}, studio=${result.studioTier}`, result.inSync ? 'success' : 'error')
+  } catch (err: any) {
+    console.error('Failed to check site status:', err)
+    showAlert(err?.data?.message || 'Failed to check site subscription status', 'error')
   } finally {
     actionLoading.value = false
   }
