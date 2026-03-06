@@ -1,11 +1,10 @@
 ---
 _published: true
-title: 'Create 2.0 — A Complete Reimagining'
-description: "Create 2.0 brings Interactive Mode, adjustable servings, built-in importers, new themes, a redesigned editor, dashboards with achievements, and so much more to your favorite content creation plugin."
+title: 'Introducting Create 2.0'
+description: "Create 2.0 brings Interactive Mode, adjustable servings and unit conversion, built-in importers, new card themes, a redesigned editor, a dashboard, achievements, and so much more to your favorite content creation plugin."
 version: '2.0.0'
 product: 'create-plugin'
 date: '2026-02-27'
-ogImage: '/img/releases/create-plugin-2-0-0.png'
 highlights:
   - title: 'Interactive Mode'
     description: 'A distraction-free experience with built-in timers, step-by-step guidance, checklists, and automatic progress saving.'

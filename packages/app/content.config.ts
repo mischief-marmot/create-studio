@@ -49,7 +49,6 @@ export default defineContentConfig({
         version: z.string(),
         product: z.enum(['create-plugin', 'create-studio']),
         date: z.string(),
-        ogImage: z.string().optional(),
         highlights: z.array(z.object({
           title: z.string(),
           description: z.string(),

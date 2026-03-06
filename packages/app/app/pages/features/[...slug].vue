@@ -20,72 +20,29 @@ const nextTitle = next?.title.includes('-') ? next?.title.split('-')[0] : next?.
 
 const title = page.value?.title.includes('-') ? page.value?.title.split('-')[0] : page.value?.title
 
-// Set comprehensive page meta for SEO
 useHead({
   title: page.value?.title,
   meta: [
-    // Primary Meta Tags
     { name: 'description', content: page.value?.description },
-    { name: 'keywords', content: page.value?.keywords || '' },
-    { name: 'author', content: 'Create Studio' },
-    { name: 'robots', content: 'index, follow' },
-    { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-
-    // Open Graph / Facebook Meta Tags
-    { property: 'og:type', content: 'article' },
-    { property: 'og:url', content: `https://create.studio${route.path}` },
-    { property: 'og:title', content: page.value?.title },
-    { property: 'og:description', content: page.value?.description },
-    { property: 'og:image', content: page.value?.image || '/img/og-default.jpg' },
-    { property: 'og:site_name', content: 'Create Studio' },
-
-    // Twitter Meta Tags
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { property: 'twitter:domain', content: 'create.studio' },
-    { property: 'twitter:url', content: `https://create.studio${route.path}` },
-    { name: 'twitter:title', content: page.value?.title },
-    { name: 'twitter:description', content: page.value?.description },
-    { name: 'twitter:image', content: page.value?.image || '/img/og-default.jpg' },
-
-    // Additional SEO Meta
-    { name: 'article:author', content: 'Create Studio' },
-    { name: 'article:published_time', content: new Date().toISOString() }
   ],
   link: [
     { rel: 'canonical', href: `https://create.studio${route.path}` }
   ],
-  script: [
-    // JSON-LD Structured Data for Article
-    {
-      type: 'application/ld+json',
-      innerHTML: JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'Article',
-        headline: page.value?.title,
-        description: page.value?.description,
-        image: page.value?.image || '/img/logo/logo-color-light.svg',
-        author: {
-          '@type': 'Organization',
-          name: 'Create Studio',
-          url: 'https://create.studio/'
-        },
-        publisher: {
-          '@type': 'Organization',
-          name: 'Create Studio',
-          logo: {
-            '@type': 'ImageObject',
-            url: 'https://create.studio/img/logo/logo-color-light.svg'
-          }
-        },
-        datePublished: new Date().toISOString(),
-        dateModified: new Date().toISOString(),
-        mainEntityOfPage: {
-          '@type': 'WebPage',
-          '@id': `https://create.studio${route.path}`
-        }
-      })
-    }
-  ]
+})
+
+useSeoMeta({
+  ogTitle: page.value?.title,
+  ogDescription: page.value?.description,
+  ogType: 'article',
+  ogSiteName: 'Create Studio',
+  twitterCard: 'summary_large_image',
+})
+
+defineOgImage({
+  component: 'Feature',
+  title: page.value?.title || '',
+  description: page.value?.description || '',
+  icon: page.value?.icon || '',
 })
 </script>
 

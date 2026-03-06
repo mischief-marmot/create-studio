@@ -31,6 +31,21 @@ useHead({
     { name: 'description', content: page.value?.description }
   ]
 })
+
+useSeoMeta({
+  ogTitle: page.value?.title,
+  ogDescription: page.value?.description,
+  twitterCard: 'summary_large_image',
+})
+
+defineOgImage({
+  component: 'News',
+  title: page.value?.title || '',
+  description: page.value?.description || '',
+  date: page.value?.date ? new Date(page.value.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
+  category: page.value?.category || '',
+  authorName: page.value?.author?.name || '',
+})
 </script>
 
 <template>

@@ -104,8 +104,16 @@ useHead({
 useSeoMeta({
   ogTitle: page.value?.title,
   ogDescription: page.value?.description,
-  ogImage: page.value?.ogImage,
   twitterCard: 'summary_large_image',
+})
+
+defineOgImage({
+  component: 'Release',
+  title: page.value?.title || '',
+  description: page.value?.description || '',
+  version: page.value?.version || '',
+  product: page.value?.product || 'create-plugin',
+  date: page.value?.date ? new Date(page.value.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '',
 })
 </script>
 

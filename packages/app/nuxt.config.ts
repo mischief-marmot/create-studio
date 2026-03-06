@@ -22,7 +22,7 @@ export default defineNuxtConfig({
     preset: "cloudflare_durable",
     rollupConfig: {
       plugins: [vue()],
-      external: ['cloudflare:workers', 'cloudflare:sockets']
+      external: ['cloudflare:workers', 'cloudflare:sockets', /\.wasm\?module$/]
     },
     cors: {
       origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:8074", "http://localhost:8174", "http://localhost:8274", "http://localhost:8374", "http://localhost:8081", "http://localhost:8083"],
@@ -129,8 +129,25 @@ export default defineNuxtConfig({
     "@nuxt/content",  // Must be before @nuxthub/core for database auto-config
     "@nuxthub/core",
     "@nuxt/scripts",
+    "nuxt-og-image",
     "nuxt-auth-utils",
   ],
+  ogImage: {
+    defaults: {
+      width: 1200,
+      height: 630,
+    },
+    compatibility: {
+      runtime: {
+        'resvg': 'wasm',
+        'css-inline': 'wasm',
+      },
+    },
+    fonts: [
+      'Inter:400',
+      'Inter:700',
+    ],
+  },
   content: {
     // Database auto-configured by NuxtHub when registered after @nuxt/content
     build: {

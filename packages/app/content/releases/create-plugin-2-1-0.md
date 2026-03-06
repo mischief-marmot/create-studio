@@ -5,7 +5,6 @@ description: 'Create 2.1 adds video shortcode support with per-card video positi
 version: '2.1.0'
 product: 'create-plugin'
 date: '2026-03-05'
-ogImage: '/img/releases/create-plugin-2-1-0.png'
 highlights:
   - title: 'Video Shortcode Support'
     description: 'Add videos to your cards using YouTube URLs, Mediavine players, or any video shortcode from your favorite plugins.'
