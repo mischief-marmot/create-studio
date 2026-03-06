@@ -66,9 +66,9 @@
 						<NuxtLink class="link link-hover" href="/plugin">Create Plugin</NuxtLink>
 					</nav>
 					<nav>
-						<h6 class="footer-title">Features</h6>
-						<!-- <NuxtLink class="link link-hover" href="/#features">Overview</NuxtLink> -->
-						<!-- <NuxtLink class="link link-hover" href="/features/interactive-mode">Interactive Mode</NuxtLink> -->
+						<h6 class="footer-title"><NuxtLink class="link link-hover" href="/features">Features</NuxtLink></h6>
+						<NuxtLink class="link link-hover" href="/#features">Overview</NuxtLink>
+						<NuxtLink class="link link-hover" href="/#interactive-mode">Interactive Mode</NuxtLink>
 						<NuxtLink class="link link-hover" href="/features/recipe-cards">Recipe Card Schema</NuxtLink>
 						<NuxtLink class="link link-hover" href="/features/how-to-cards">HowTo Card Schema</NuxtLink>
 						<NuxtLink class="link link-hover" href="/features/lists-and-roundups">Lists & Roundups Schema</NuxtLink>
@@ -78,6 +78,7 @@
 						<h6 class="footer-title">Company</h6>
 						<NuxtLink class="link link-hover" href="/about">About</NuxtLink>
 						<NuxtLink class="link link-hover" href="/news">News</NuxtLink>
+						<NuxtLink class="link link-hover" href="/releases">Release Notes</NuxtLink>
 					</nav>
 					<nav>
 						<h6 class="footer-title">Account</h6>
