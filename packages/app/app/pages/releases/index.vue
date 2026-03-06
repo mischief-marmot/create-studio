@@ -21,32 +21,45 @@
         </div>
 
         <!-- Releases grid -->
-        <div class="auto-rows-fr sm:mt-16 lg:mx-0 lg:max-w-none lg:grid-cols-3 grid max-w-2xl grid-cols-1 gap-8 mx-auto mt-12">
+        <div class="auto-rows-fr sm:mt-16 lg:mx-0 lg:max-w-none lg:grid-cols-3 grid max-w-2xl grid-cols-1 gap-6 mx-auto mt-12">
           <article
             v-for="release in filteredReleases"
             :key="release.stem"
-            class="rounded-2xl bg-base-200 ring-1 ring-base-content/10 relative flex flex-col px-8 py-8 overflow-hidden"
+            class="rounded-lg relative flex flex-col overflow-hidden"
+            style="background: linear-gradient(135deg, #1a1a1f 0%, #1f1a28 50%, #1a1a1f 100%)"
           >
-            <!-- Product + Version badges -->
-            <div class="flex items-center gap-2 mb-4">
-              <span class="badge badge-sm" :class="release.product === 'create-plugin' ? 'badge-primary' : 'badge-secondary'">
-                {{ release.product === 'create-plugin' ? 'Plugin' : 'Studio' }}
-              </span>
-              <span class="badge badge-sm badge-outline font-mono">v{{ release.version }}</span>
+            <div class="flex flex-col flex-1 px-6 py-5">
+              <!-- Date + Product -->
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-xs font-bold tracking-widest uppercase" style="color: #e6a640">
+                  {{ formatDate(release.date) }}
+                </span>
+                <span class="text-xs font-mono" style="color: rgba(255,255,255,0.4)">
+                  · v{{ release.version }}
+                </span>
+              </div>
+
+              <h3 class="text-lg/6 font-semibold" style="color: #ffffff">
+                <NuxtLink :to="`/releases/${release.stem?.split('/').pop()}`">
+                  <span class="absolute inset-0" />
+                  {{ release.title }}
+                </NuxtLink>
+              </h3>
+
+              <p class="text-sm/6 line-clamp-3 mt-2" style="color: rgba(255,255,255,0.6)">{{ release.description }}</p>
+
+              <div class="flex items-center gap-2 pt-4 mt-auto">
+                <span
+                  class="badge badge-sm border-0"
+                  :class="release.product === 'create-plugin' ? 'badge-primary' : 'badge-secondary'"
+                >
+                  {{ release.product === 'create-plugin' ? 'Plugin' : 'Studio' }}
+                </span>
+              </div>
             </div>
 
-            <h3 class="text-lg/6 text-base-content font-semibold">
-              <NuxtLink :to="`/releases/${release.stem?.split('/').pop()}`">
-                <span class="absolute inset-0" />
-                {{ release.title }}
-              </NuxtLink>
-            </h3>
-
-            <p class="text-sm/6 text-base-content/60 line-clamp-3 mt-2">{{ release.description }}</p>
-
-            <div class="text-sm/6 text-base-content/50 pt-4 mt-auto">
-              <time :datetime="release.date">{{ formatDate(release.date) }}</time>
-            </div>
+            <!-- Accent line bottom -->
+            <div class="h-1.5 w-full" style="background: linear-gradient(90deg, #b060ff, #ee87cb 30%, #fff1be 72%)" />
           </article>
         </div>
 
