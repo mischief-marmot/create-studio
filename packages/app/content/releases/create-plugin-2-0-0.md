@@ -1,7 +1,7 @@
 ---
 _published: true
-title: 'Introducting Create 2.0'
-description: "Create 2.0 brings Interactive Mode, adjustable servings and unit conversion, built-in importers, new card themes, a redesigned editor, a dashboard, achievements, and so much more to your favorite content creation plugin."
+title: 'Create 2.0: Interactive Recipe Cards, Servings & Unit Conversion for WordPress'
+description: "Create 2.0 adds Interactive Mode, adjustable servings, unit conversion, new card themes, and a redesigned editor to your WordPress recipe cards."
 version: '2.0.0'
 product: 'create-plugin'
 date: '2026-02-27'
@@ -39,11 +39,11 @@ highlights:
 previousVersion: '1.9.16'
 ---
 
-You've been waiting for years, and we're thrilled to finally release many months of hard work to you. Create 2.0 is a complete reimagining of the Create Plugin — not just new features, but a fundamentally better way to work with structured content. It also sets the stage for a whole new Create experience, going beyond schema cards with more features and innovation coming soon.
+You've been waiting for years, and we're thrilled to finally release many months of hard work to you. Create 2.0 is a complete reimagining of the Create WordPress recipe plugin — not just new features, but a fundamentally better way to build [recipe cards](/features/recipe-cards), [how-to guides](/features/how-to-cards), and [lists](/features/lists-and-roundups) with structured data. It also sets the stage for a whole new Create experience, going beyond schema cards with more features and innovation coming soon.
 
-Check out all the new features on your own site @ yoursite.com/wp-admin/admin.php?page=mv_create_welcome
+After updating, visit the **Welcome** screen in your WordPress dashboard to explore everything that's new.
 
-## Interactive Mode
+## Interactive Mode for Recipe Cards
 
 The headline feature of Create 2.0 is **Interactive Mode** — a stunning, mobile-first experience that transforms your recipe cards from static content into living, interactive tools your readers will love.
 
@@ -53,7 +53,7 @@ Readers get a distraction-free experience with built-in timers parsed from your 
 
 ## Adjustable Servings & Unit Conversion
 
-Two of the most-requested features are finally here! Readers can scale ingredient quantities and instantly convert between US and Metric measurements with a tap.
+Two of the most-requested WordPress recipe card features are finally here. Readers can scale ingredient quantities and instantly convert between US and Metric measurements with a tap — no page reload required.
 
 ::release-demo-plugin-200{feature="servings"}
 ::
@@ -61,20 +61,20 @@ Two of the most-requested features are finally here! Readers can scale ingredien
 ::release-demo-plugin-200{feature="conversion"}
 ::
 
-## Built-In Importers
+## Built-In Recipe Importers
 
-Switching to Create has never been easier. The recipe importer is now built right into the plugin — no separate download or third-party tool needed. Import from WP Recipe Maker, Tasty Recipes, EasyRecipe, and 8 other plugins with a single click.
+Switching to Create has never been easier. The recipe importer is now built right into the WordPress plugin — no separate download or third-party tool needed. Import your existing recipe cards from WP Recipe Maker, Tasty Recipes, EasyRecipe, and 8 other plugins with a single click.
 
 ::release-demo-plugin-200{feature="importer"}
 ::
 
-## Your New Home Base
+## New Dashboard & Achievement System
 
-Create 2.0 introduces a brand new **Dashboard** with customizable widgets and milestone achievements to track your progress. Quick-create buttons for recipes, how-tos, and lists, a recent reviews widget, tips, and more — all customizable to how you work.
+Create 2.0 introduces a brand new **Dashboard** with customizable widgets and milestone achievements to track your progress. Quick-create buttons for [recipes](/features/recipe-cards), [how-tos](/features/how-to-cards), and [lists](/features/lists-and-roundups), a recent reviews widget, tips, and more — all customizable to how you work.
 
 Earn milestones as you create cards, collect reviews, and grow your site. Track your progress and unlock achievements like *Create-er*, *Review Magnet*, *Jack of All Cards*, and *Type A*.
 
-## Redesigned Editor
+## Redesigned Card Editor
 
 A more powerful and intuitive editing experience from top to bottom:
 
@@ -92,18 +92,18 @@ Readers can now check off ingredients and steps as they work through your conten
 ::release-demo-plugin-200{feature="checklist"}
 ::
 
-## Redesigned Reviews
+## Redesigned Review Management
 
 Better filtering, clearer review types, and an improved review management experience. Filter by review type, rating, and more. Easily see which are ratings vs. full reviews. Edit, delete, and bulk manage reviews.
 
 ::release-demo-plugin-200{feature="review"}
 ::
 
-## Redesigned Settings
+## Redesigned Plugin Settings
 
 Settings got a complete overhaul: searchable, logically grouped, with collapsible sections and a live **Theme Selector** that lets you preview themes before choosing one. You can even preview Interactive Mode right in settings using one of your own cards.
 
-## Two Stunning New Themes
+## Two New Premium Card Themes
 
 Choose from two beautifully designed premium card themes:
 
@@ -114,7 +114,7 @@ Choose from two beautifully designed premium card themes:
 
 New keyboard shortcuts throughout the app for faster workflows and efficiency. Press **Shift+?** to see them all. (And **Shift+C** to launch confetti.)
 
-## Performance & Quality
+## Performance & WCAG Accessibility Improvements
 
 - Optimized JavaScript bundling for faster card and page loading
 - Improved text contrast in all card themes to meet WCAG standards
