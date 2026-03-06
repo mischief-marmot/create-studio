@@ -40,26 +40,24 @@
   color-scheme: "dark";
 
   /* Base colors - Dark backgrounds */
-  --color-base-100: oklch(0.2282 0.0018 98.5);
-  --color-base-200: oklch(0.2685 0.0035 106.6); 
-  --color-base-300: oklch(0.3032 0.0067 106.6); 
-  --color-base-content: oklch(
-    94% 0.002 247.839
-  ); /* Light text on dark backgrounds */
+  --color-base-100: oklch(0.2242 0.0021 284.27);
+  --color-base-200: oklch(0.2685 0.0035 284.27); 
+  --color-base-300: oklch(0.3332 0.0067 284.27); 
+  --color-base-content: oklch(0.9491 0.002 284.27); /* Light text on dark backgrounds */
 
-  /* Primary - Honey Gold */
-  --color-primary: oklch(0.8647 0.1557 86.553);
-  --color-primary-content: oklch(
-    0.4071 0.1055 94.61
-  ); /* Dark text for contrast */
+    /* Primary - Deep Navy */
+  --color-primary: #3d5b6d;
+  --color-primary-content: oklch(98% 0 0); /* Dark text for contrast */
 
   /* Secondary - Deep Navy */
-  --color-secondary: oklch(0.456 0.0462 235.11);
+  --color-secondary: #CDE7E7;
   --color-secondary-content: oklch(98% 0 0); /* White text */
 
-  /* Accent - Sky Blue */
-  --color-accent: oklch(0.68 0.1207 267.2);
-  --color-accent-content: oklch(98% 0 0); /* White text */
+    /* Accent - Honey Gold */
+  --color-accent: oklch(0.8647 0.1557 86.553);
+  --color-accent-content: oklch(
+    0.4071 0.1055 94.61
+  ); /* Dark text for contrast */
 
   /* Neutral - Mid Gray */
   --color-neutral: oklch(55.754% 0.016 244.893);
@@ -82,9 +80,9 @@
   --color-error-content: oklch(98% 0 0); /* White text */
 
   /* Border Radius - same as light theme */
-  --radius-selector: 0.5rem;
-  --radius-field: 0.375rem;
-  --radius-box: 0.75rem;
+  --radius-selector: 5px;
+  --radius-field: 5px;
+  --radius-box: 5px;
 
   /* Component Sizing - same as light theme */
   --size-selector: 0.25rem;
@@ -92,8 +90,8 @@
 
   /* Visual Properties */
   --border: 1px;
-  --depth: 1;
-  --noise: 1;
+  --depth: 0;
+  --noise: 0;
 }
 
 @plugin "daisyui/theme" {
@@ -103,24 +101,24 @@
   color-scheme: "light";
 
   /* Base colors for backgrounds */
-  --color-base-100: oklch(0.9741 0.0074 80.72);
-  --color-base-200: oklch(0.9473 0.0103 81.79);
-  --color-base-300: oklch(0.9309 0.0111 63.36);
-  --color-base-content: oklch(0.21 0.006 285.885); /* Dark text for base backgrounds */
+  --color-base-100: oklch(0.9891 0.0074 284.27);
+  --color-base-200: oklch(0.9743 0.0103 284.27);
+  --color-base-300: oklch(0.9573 0.0111 284.27);
+  --color-base-content: oklch(0.21 0.006 284.27); /* Dark text for base backgrounds */
 
-  /* Primary - Honey Gold */
-  --color-primary: oklch(0.8647 0.1557 86.553);
-  --color-primary-content: oklch(
-    0.4071 0.1055 94.61
-  ); /* Dark text for contrast */
+  /* Primary - Deep Navy */
+  --color-primary: #3d5b6d;
+  --color-primary-content: oklch(98% 0 0); /* Dark text for contrast */
 
   /* Secondary - Deep Navy */
-  --color-secondary: oklch(0.456 0.0462 235.11);
+  --color-secondary: #CDE7E7;
   --color-secondary-content: oklch(98% 0 0); /* White text */
 
-  /* Accent - Sky Blue */
-  --color-accent: oklch(0.68 0.1207 267.2);
-  --color-accent-content: oklch(98% 0 0); /* White text */
+  /* Accent - Honey Gold */
+  --color-accent: oklch(0.8647 0.1557 86.553);
+  --color-accent-content: oklch(
+    0.4071 0.1055 94.61
+  ); /* Dark text for contrast */
 
   /* Neutral - Mid Gray */
   --color-neutral: oklch(37% 0.01 67.558);
@@ -143,9 +141,9 @@
   --color-error-content: oklch(98% 0 0); /* White text */
 
   /* Border Radius */
-  --radius-selector: 0.5rem;
-  --radius-field: 0.375rem;
-  --radius-box: 0.75rem;
+  --radius-selector: 5px;
+  --radius-field: 5px;
+  --radius-box: 5px;
 
   /* Component Sizing */
   --size-selector: 0.25rem;
@@ -153,8 +151,8 @@
 
   /* Visual Properties */
   --border: 1px;
-  --depth: 1;
-  --noise: 1;
+  --depth: 0;
+  --noise: 0;
 }
 
 @layer utilities {
