@@ -107,6 +107,26 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
+useSchemaOrg([
+  defineArticle({
+    '@type': 'TechArticle',
+    headline: page.value?.title,
+    description: page.value?.description,
+    datePublished: page.value?.date,
+    image: `https://create.studio/__og-image__/image/releases/${route.params.slug?.[0] || ''}/og.png`,
+    author: {
+      '@type': 'Organization',
+      name: 'Create Studio',
+      url: 'https://create.studio',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Create Studio',
+      url: 'https://create.studio',
+    },
+  }),
+])
+
 defineOgImage({
   component: 'Release',
   title: page.value?.title || '',
