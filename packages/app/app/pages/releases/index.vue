@@ -42,24 +42,9 @@
               </NuxtLink>
             </h3>
 
-            <p class="text-sm/6 text-base-content/60 mt-2 line-clamp-3">{{ release.description }}</p>
+            <p class="text-sm/6 text-base-content/60 line-clamp-3 mt-2">{{ release.description }}</p>
 
-            <!-- Highlights preview -->
-            <div v-if="release.highlights?.length" class="flex flex-wrap gap-1.5 mt-4">
-              <span
-                v-for="highlight in release.highlights.slice(0, 3)"
-                :key="highlight.title"
-                class="text-xs px-2 py-0.5 rounded-full"
-                :class="highlightClass(highlight.type)"
-              >
-                {{ highlight.title }}
-              </span>
-              <span v-if="release.highlights.length > 3" class="text-xs text-base-content/40 self-center">
-                +{{ release.highlights.length - 3 }} more
-              </span>
-            </div>
-
-            <div class="text-sm/6 text-base-content/50 mt-auto pt-4">
+            <div class="text-sm/6 text-base-content/50 pt-4 mt-auto">
               <time :datetime="release.date">{{ formatDate(release.date) }}</time>
             </div>
           </article>
@@ -101,7 +86,7 @@ const filteredReleases = computed(() => {
 })
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
+  const date = new Date(dateString + 'T12:00:00')
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 

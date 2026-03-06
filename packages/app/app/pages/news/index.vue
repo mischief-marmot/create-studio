@@ -61,7 +61,7 @@ const { data: posts } = await useAsyncData('news-posts', () => {
 })
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
+  const date = new Date(dateString + 'T12:00:00')
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 </script>

@@ -15,7 +15,7 @@ const { data: surroundings } = await useAsyncData('surround', () => {
 const [prev, next] = surroundings?.value || []
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
+  const date = new Date(dateString + 'T12:00:00')
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',

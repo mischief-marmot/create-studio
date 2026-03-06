@@ -718,7 +718,7 @@ const tierDisplayName = computed(() => {
 })
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString + 'T12:00:00').toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -727,7 +727,7 @@ const formatDate = (dateString: string) => {
 
 const getDaysUntil = (dateString: string) => {
   const now = new Date()
-  const target = new Date(dateString)
+  const target = new Date(dateString + 'T12:00:00')
   const diffTime = target.getTime() - now.getTime()
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   return diffDays > 0 ? diffDays : 0
