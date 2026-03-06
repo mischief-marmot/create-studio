@@ -22,16 +22,16 @@
             :style="{ animationDelay: `${index * 0.1}s` }"
           >
             <!-- Desktop: Content + Number Layout -->
-            <div class="lg:flex lg:gap-6 rounded-2xl hover:shadow-sm hover:-mx-2 hover:px-8 items-center justify-between hidden p-6 transition-all duration-300" :class="getFeatureColors()">
+            <div class="lg:flex lg:gap-6 rounded-2xl hover:shadow-sm hover:-mx-2 hover:px-8 items-center justify-between hidden p-6" :class="getFeatureColors()">
               <!-- Content -->
               <div class="flex-1 min-w-0">
-                <h3 class="text-primary-content group-hover:text-primary-content/70 dark:group-hover:text-primary dark:text-primary/70 mb-2 font-serif text-3xl tracking-wider transition-colors">{{ feature.name }}</h3>
+                <h3 class="text-primary group-hover:text-base-content dark:group-hover:text-primary dark:text-primary-content mb-2 font-serif text-3xl tracking-wider">{{ feature.name }}</h3>
                 <p class="text-base-content/80 text-sm leading-relaxed" v-html="feature.description" />
               </div>
 
               <!-- Number Badge -->
               <div class="flex-shrink-0 text-right">
-                <span class="text-primary-content group-hover:text-primary-content/70 dark:text-primary/70 dark:group-hover:text-primary font-serif text-3xl font-light transition-colors">
+                <span class="text-primary group-hover:text-base-content dark:text-primary-content dark:group-hover:text-primary font-serif text-3xl font-light">
                   {{ String(index + 1).padStart(2, '0') }}
                 </span>
               </div>
@@ -62,18 +62,18 @@
 
         <!-- Demo Area -->
         <div class="lg:mt-0 mt-12">
-          <div class="rounded-3xl shadow-base-300 relative overflow-clip p-1 sm:p-3">
+          <div class="rounded-3xl shadow-base-300 overflow-clip sm:p-3 relative p-1">
             <AbsoluteGradient />
-            <div class="bg-gradient-to-br rounded-2xl from-base-200 to-base-300 sm:p-8 min-h-80 relative p-3">
+            <div class="bg-gradient-to-br rounded-2xl from-base-200 to-base-300 sm:p-6 sm:pt-8 min-h-30 relative p-3">
               <!-- Phone Mockup -->
-              <div class="sm:block hidden max-w-[415px] mx-auto">
+              <div class="sm:block hidden max-w-[445px] mx-auto">
                 <div class="bg-base-100 rounded-[2.5rem] p-2 shadow-xl ring-1 ring-base-300">
                   <!-- Notch -->
-                  <div class="flex justify-center mb-2">
+                  <div v-if="!showIframe" class="flex justify-center mb-2">
                     <div class="bg-base-content min-w-24 h-6 rounded-full" />
                   </div>
                   <!-- Screen -->
-                  <div class="bg-base-200 rounded-[2rem] min-h-[730px] flex flex-col relative overflow-hidden">
+                  <div class="bg-base-200 rounded-[2rem] min-h-[630px] flex flex-col relative overflow-hidden">
                     <!-- Placeholder content -->
                     <div v-if="!showIframe" class="flex flex-col flex-1 p-6">
                       <div class="flex flex-col items-center justify-center flex-1 space-y-6 text-center">
@@ -98,7 +98,7 @@
                     <div v-else class="absolute inset-0">
                       <button
                         @click="showIframe = false"
-                        class="top-2 right-2 btn btn-circle btn-sm bg-base-100/80 backdrop-blur z-10 absolute"
+                        class="top-2 right-2 btn btn-circle btn-sm bg-base-100/80 backdrop-blur absolute z-10"
                       >
                         <XMarkIcon class="size-5" />
                       </button>
@@ -125,7 +125,7 @@
                 <div v-else class="relative h-[600px]">
                   <button
                     @click="showIframe = false"
-                    class="top-2 right-2 btn btn-circle btn-sm bg-base-100/80 backdrop-blur z-10 absolute"
+                    class="top-2 right-2 btn btn-circle btn-sm bg-base-100/80 backdrop-blur absolute z-10"
                   >
                     <XMarkIcon class="size-5" />
                   </button>

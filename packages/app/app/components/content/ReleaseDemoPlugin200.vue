@@ -3,13 +3,13 @@
 
     <!-- ===== Adjustable Servings ===== -->
     <template v-if="!feature || feature === 'servings'">
-      <div class="my-10 rounded-2xl bg-base-200/50 ring-1 ring-base-content/[0.04] overflow-hidden">
+      <div class="my-10 rounded-2xl bg-base-200 ring-1 ring-base-content/[0.04] overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] items-center">
           <div class="sm:p-8 flex flex-col justify-center p-6">
             <div class="text-base-content text-xl font-bold tracking-tight">Adjustable Servings</div>
-            <div class="text-base-content/60 mt-2 text-sm leading-relaxed">Scale ingredient quantities up or down with one-tap multipliers. Readers choose their serving size and every amount updates instantly.</div>
+            <div class="text-base-content/80 mt-2 text-sm leading-relaxed">Scale ingredient quantities up or down with one-tap multipliers. Readers choose their serving size and every amount updates instantly.</div>
           </div>
-          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.05] md:m-4 md:rounded-xl p-4">
+          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.25] md:m-4 md:rounded-xl p-4">
             <div class="flex items-center justify-between mb-3">
               <span class="text-base-content/70 text-xs font-semibold">Serves: 4</span>
               <div class="flex gap-1">
@@ -19,7 +19,7 @@
                   class="px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer"
                   :class="multiplier === m
                     ? 'bg-primary text-primary-content border-primary'
-                    : 'bg-base-100 text-base-content/50 border-base-300 hover:border-primary'"
+                    : 'bg-base-200 text-base-content/50 border-base-300 hover:border-primary'"
                   style="border-width: 1.5px"
                   @click="multiplier = m"
                 >
@@ -38,20 +38,20 @@
 
     <!-- ===== Unit Conversion ===== -->
     <template v-if="!feature || feature === 'conversion'">
-      <div class="my-10 rounded-2xl bg-base-200/50 ring-1 ring-base-content/[0.04] overflow-hidden">
+      <div class="my-10 rounded-2xl bg-base-200 ring-1 ring-base-content/[0.04] overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-[1fr_1.4fr] items-center">
-          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.05] md:m-4 md:rounded-xl p-4">
+          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.25] md:m-4 md:rounded-xl p-4">
             <div class="flex items-center justify-between mb-3">
               <span class="text-base-content/70 text-xs font-semibold">Ingredients</span>
               <div class="flex overflow-hidden rounded-md" style="border: 1.5px solid oklch(var(--bc) / 0.15)">
                 <button
                   class="px-3 py-1 text-xs font-semibold transition-all cursor-pointer"
-                  :class="!isMetric ? 'bg-secondary text-secondary-content' : 'bg-base-100 text-base-content/50'"
+                  :class="!isMetric ? 'bg-primary text-primary-content' : 'bg-base-200 text-base-content/50'"
                   @click="isMetric = false"
                 >US</button>
                 <button
                   class="px-3 py-1 text-xs font-semibold transition-all cursor-pointer"
-                  :class="isMetric ? 'bg-secondary text-secondary-content' : 'bg-base-100 text-base-content/50'"
+                  :class="isMetric ? 'bg-primary text-primary-content' : 'bg-base-200 text-base-content/50'"
                   @click="isMetric = true"
                 >Metric</button>
               </div>
@@ -63,7 +63,7 @@
           </div>
           <div class="sm:p-8 flex flex-col justify-center p-6">
             <div class="text-base-content text-xl font-bold tracking-tight">Unit Conversion</div>
-            <div class="text-base-content/60 mt-2 text-sm leading-relaxed">Toggle between US and Metric measurements with a tap. Cups become grams, tablespoons become milliliters — automatically.</div>
+            <div class="text-base-content/80 mt-2 text-sm leading-relaxed">Toggle between US and Metric measurements with a tap. Cups become grams, tablespoons become milliliters — automatically.</div>
           </div>
         </div>
       </div>
@@ -71,13 +71,13 @@
 
     <!-- ===== Interactive Checklists ===== -->
     <template v-if="!feature || feature === 'checklist'">
-      <div class="my-10 rounded-2xl bg-base-200/50 ring-1 ring-base-content/[0.04] overflow-hidden">
+      <div class="my-10 rounded-2xl bg-base-200 ring-1 ring-base-content/[0.04] overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] items-center">
           <div class="sm:p-8 flex flex-col justify-center p-6">
             <div class="text-base-content text-xl font-bold tracking-tight">Interactive Checklists</div>
-            <div class="text-base-content/60 mt-2 text-sm leading-relaxed">Readers check off ingredients and steps as they cook. Progress is saved automatically so they can pick up where they left off.</div>
+            <div class="text-base-content/80 mt-2 text-sm leading-relaxed">Readers check off ingredients and steps as they cook. Progress is saved automatically so they can pick up where they left off.</div>
           </div>
-          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.05] md:m-4 md:rounded-xl p-4">
+          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.25] md:m-4 md:rounded-xl p-4">
             <div
               v-for="(item, i) in checklistItems"
               :key="i"
@@ -107,10 +107,10 @@
 
     <!-- ===== Built-In Recipe Importer: split card ===== -->
     <template v-if="!feature || feature === 'importer'">
-      <div class="my-10 rounded-2xl bg-base-200/50 ring-1 ring-base-content/[0.04] overflow-hidden">
+      <div class="my-10 rounded-2xl bg-base-200 ring-1 ring-base-content/[0.04] overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-[1.2fr_1fr] items-center">
           <!-- Illustration side -->
-          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.05] md:m-4 md:rounded-xl overflow-hidden">
+          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.25] md:m-4 md:rounded-xl overflow-hidden">
             <div class="flex items-center gap-2.5 px-5 py-3 border-b border-base-200">
               <svg class="text-secondary w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
@@ -119,7 +119,7 @@
               <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/10 text-success">Built-in</span>
               <span class="flex-1" />
               <button
-                class="btn btn-xs btn-secondary"
+                class="btn btn-xs btn-primary"
                 :disabled="importRunning"
                 @click="runImport"
               >
@@ -162,7 +162,7 @@
           <!-- Text side -->
           <div class="sm:p-8 flex flex-col justify-center p-6">
             <div class="text-base-content text-xl font-bold tracking-tight">Built-In Recipe Importer</div>
-            <div class="text-base-content/60 mt-2 text-sm leading-relaxed">The recipe importer is now integrated directly into Create — no separate plugin needed.</div>
+            <div class="text-base-content/80 mt-2 text-sm leading-relaxed">The recipe importer is now integrated directly into Create — no separate plugin needed.</div>
             <ul class="mt-5 space-y-3">
               <li class="flex items-start gap-2.5 text-sm text-base-content/70">
                 <svg class="w-4 h-4 text-success flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -184,12 +184,12 @@
 
     <!-- ===== Redesigned Reviews: split card (text left, illustration right) ===== -->
     <template v-if="!feature || feature === 'review'">
-      <div class="my-10 rounded-2xl bg-base-200/50 ring-1 ring-base-content/[0.04] overflow-hidden">
+      <div class="my-10 rounded-2xl bg-base-200 ring-1 ring-base-content/[0.04] overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] items-center">
           <!-- Text side -->
           <div class="sm:p-8 flex flex-col justify-center p-6">
             <div class="text-base-content text-xl font-bold tracking-tight">Review Management</div>
-            <div class="text-base-content/60 mt-2 text-sm leading-relaxed">Build engagement by responding directly to reader reviews. Edit typos, manage ratings, and showcase your best reviews.</div>
+            <div class="text-base-content/80 mt-2 text-sm leading-relaxed">Build engagement by responding directly to reader reviews. Edit typos, manage ratings, and showcase your best reviews.</div>
             <ul class="mt-5 space-y-3">
               <li class="flex items-start gap-2.5 text-sm text-base-content/70">
                 <svg class="w-4 h-4 text-success flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -206,7 +206,7 @@
             </ul>
           </div>
           <!-- Illustration side -->
-          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.05] md:m-4 md:rounded-xl p-5">
+          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.25] md:m-4 md:rounded-xl p-5">
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
                 <span class="text-base-content text-sm font-semibold">Sarah M.</span>

@@ -3,12 +3,12 @@
 
     <!-- ===== Video Type Selector ===== -->
     <template v-if="!feature || feature === 'video-type'">
-      <div class="my-10 rounded-2xl bg-base-200/50 ring-1 ring-base-content/[0.04] overflow-hidden">
+      <div class="my-10 rounded-2xl bg-base-200 ring-1 ring-base-content/[0.04] overflow-hidden">
         <div class="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] items-center">
           <!-- Text side -->
           <div class="p-6 sm:p-8 flex flex-col justify-center">
             <div class="text-xl font-bold text-base-content tracking-tight">Video Shortcode Support</div>
-            <div class="text-sm text-base-content/60 mt-2 leading-relaxed">Embed videos from any source directly into your cards. YouTube, Mediavine, or any shortcode — just pick and paste.</div>
+            <div class="text-sm text-base-content/80 mt-2 leading-relaxed">Embed videos from any source directly into your cards. YouTube, Mediavine, or any shortcode — just pick and paste.</div>
             <ul class="mt-5 space-y-3">
               <li class="flex items-start gap-2.5 text-sm text-base-content/70">
                 <svg class="w-4 h-4 text-success flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
@@ -25,7 +25,7 @@
             </ul>
           </div>
           <!-- Illustration side -->
-          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.05] md:m-4 md:rounded-xl p-5">
+          <div class="bg-base-100 md:ring-1 md:ring-base-content/[0.25] md:m-4 md:rounded-xl p-5">
             <!-- Collapsible section header -->
             <div class="flex items-center gap-1.5 mb-4">
               <svg class="w-3 h-3 text-base-content/40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" /></svg>

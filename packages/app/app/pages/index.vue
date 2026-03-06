@@ -496,19 +496,19 @@
                 <div class="flex">
                   <button
                     @click="servingsMultiplier = 1"
-                    :class="['btn rounded-r-none btn-sm border border-r-0', servingsMultiplier === 1 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                    :class="['btn rounded-r-none btn-sm border border-r-0', servingsMultiplier === 1 ? 'btn-primary border-base-content' : 'btn-ghost border-base-content']"
                   >
                     1x
                   </button>
                   <button
                     @click="servingsMultiplier = 2"
-                    :class="['btn rounded-none btn-sm border-t', servingsMultiplier === 2 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                    :class="['btn rounded-none btn-sm border-t', servingsMultiplier === 2 ? 'btn-primary border-base-content' : 'btn-ghost border-base-content']"
                   >
                     2x
                   </button>
                   <button
                     @click="servingsMultiplier = 3"
-                    :class="['btn rounded-l-none btn-sm border border-l-0', servingsMultiplier === 3 ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                    :class="['btn rounded-l-none btn-sm border border-l-0', servingsMultiplier === 3 ? 'btn-primary border-base-content' : 'btn-ghost border-base-content']"
                   >
                     3x
                   </button>
@@ -516,13 +516,13 @@
                 <div class="flex">
                   <button
                     @click="unitSystem = 'imperial'"
-                    :class="['btn rounded-r-none btn-sm border border-r-0', unitSystem === 'imperial' ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                    :class="['btn rounded-r-none btn-sm border border-r-0', unitSystem === 'imperial' ? 'btn-primary border-base-content' : 'btn-ghost border-base-content']"
                   >
                     Imperial
                   </button>
                   <button
                     @click="unitSystem = 'metric'"
-                    :class="['btn rounded-l-none btn-sm border border-l-0', unitSystem === 'metric' ? 'btn-primary border-primary-content' : 'btn-ghost border-base-content/50']"
+                    :class="['btn rounded-l-none btn-sm border border-l-0', unitSystem === 'metric' ? 'btn-primary border-base-content' : 'btn-ghost border-base-content']"
                   >
                     Metric
                   </button>
@@ -637,7 +637,7 @@
 
           <!-- Create 2.0 Free+ Plan (Coming Soon) -->
           <div class="bg-base-100/50 border-base-300 rounded-2xl relative p-8 border">
-            <div class="-top-4 left-1/2 badge badge-warning absolute px-4 py-3 text-sm font-bold -translate-x-1/2">
+            <div class="-top-4 left-1/2 badge badge-accent absolute px-4 py-3 text-sm font-bold -translate-x-1/2">
               Coming Soon
             </div>
             <h3 class="mb-2 font-serif text-2xl">Create 2.0 Free+</h3>
@@ -703,7 +703,7 @@
           </div>
 
           <!-- Create 2.0 Pro Plan -->
-          <div class="bg-gradient-to-br from-base-100 to-base-100 border-primary rounded-2xl lg:scale-105 relative p-8 border-2">
+          <div class="bg-gradient-to-br from-base-100 to-base-100 border-primary rounded-2xl lg:scale-105 relative px-4 py-8 border-2">
             <div class="-top-4 left-1/2 bg-gradient-to-r from-primary to-primary/80 text-primary-content absolute px-4 py-1 text-sm font-bold -translate-x-1/2 rounded-lg">
               Recommended
             </div>
@@ -749,6 +749,46 @@
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Interactive Mode <span class="text-base-content/60 text-xs">(ad-supported)</span>
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Premium Themes
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Serving Adjustments
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Unit Conversion
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Review Responses & Management
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Interactive Checklists
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Featured Reviews Block
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Products in Lists
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Bulk Import List Items
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
+                  Custom CSS
+                </li>
+                <li class="text-base-content flex items-start gap-3 text-sm">
+                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
                   Priority Support
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
@@ -758,7 +798,7 @@
               </ul>
             </div>
             <button @click="handleUpgrade" class="btn btn-primary btn-block rounded-xl">Upgrade Now</button>
-            <p class="text-base-content/50 text-xs text-center mt-3">Run multiple sites? Additional sites are 50% off.</p>
+            <p class="text-base-content/80 mt-3 text-xs text-center">Run multiple sites? Additional sites are 50% off.</p>
           </div>
         </div>
       </div>

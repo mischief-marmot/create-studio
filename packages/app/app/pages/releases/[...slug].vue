@@ -19,7 +19,7 @@ const { data: surroundings } = await useAsyncData(`release-surround-${slug}`, ()
 const [prev, next] = surroundings?.value || []
 
 const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
+  const date = new Date(dateString + 'T12:00:00')
   return date.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -122,27 +122,27 @@ defineOgImage({
     <div v-if="page" class="bg-base-100 min-h-screen">
       <div class="max-w-7xl px-6 py-16 mx-auto">
         <!-- Breadcrumbs -->
-        <div class="breadcrumbs text-sm mb-8 max-w-3xl">
+        <div class="breadcrumbs max-w-3xl mb-8 text-sm">
           <ul>
             <li><NuxtLink to="/releases">Releases</NuxtLink></li>
             <li>{{ page.title }}</li>
           </ul>
         </div>
 
-        <div class="lg:grid lg:grid-cols-[220px_1fr] lg:gap-12">
+        <div class="lg:grid lg:grid-cols-[260px_1fr] lg:gap-12">
           <!-- Table of Contents sidebar -->
-          <aside v-if="headings.length" class="hidden lg:block">
-            <nav class="sticky top-24">
-              <div class="text-xs font-semibold text-base-content/40 uppercase tracking-wider mb-3">On this page</div>
-              <ul class="space-y-1 border-l border-base-300">
+          <aside v-if="headings.length" class="lg:block hidden">
+            <nav class="top-24 sticky">
+              <div class="text-base-content/80 mb-3 text-xs font-semibold tracking-wider uppercase">On this page</div>
+              <ul class="border-base-300 space-y-1 border-l">
                 <li v-for="heading in headings" :key="heading.id">
                   <a
                     :href="`#${heading.id}`"
-                    class="block text-sm transition-colors hover:text-base-content border-l -ml-px py-1"
+                    class="hover:text-base-content block py-1 -ml-px text-sm transition-colors border-l-2"
                     :class="[
                       activeHeading === heading.id
-                        ? 'text-primary border-primary font-medium'
-                        : 'text-base-content/50 border-transparent',
+                        ? 'text-base-content border-primary font-medium text-md'
+                        : 'text-base-content/70 border-transparent',
                       heading.depth === 3 ? 'pl-6' : 'pl-4',
                     ]"
                     @click.prevent="scrollToHeading(heading.id)"
@@ -173,26 +173,26 @@ defineOgImage({
             <p class="text-lg/7 text-base-content/70 mt-4">{{ page.description }}</p>
 
             <!-- Content Body -->
-            <div class="mt-12 max-w-none prose-a:no-underline prose-a:hover:underline prose-zinc prose prose-lg">
+            <div class="max-w-none prose-a:no-underline prose-a:hover:underline prose-slate mt-12 prose prose-lg">
               <ContentRenderer :value="page" />
             </div>
 
             <!-- Highlights -->
             <div v-if="page.highlights?.length" class="mt-16">
-              <h2 class="text-xl font-semibold text-base-content mb-6">Release Highlights</h2>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <h2 class="text-base-content mb-6 text-xl font-semibold">Release Highlights</h2>
+              <div class="sm:grid-cols-2 grid grid-cols-1 gap-3">
                 <div
                   v-for="highlight in page.highlights"
                   :key="highlight.title"
-                  class="bg-base-200 rounded-xl px-5 py-4 ring-1 ring-base-content/5"
+                  class="bg-base-200 rounded-xl ring-1 ring-base-content/5 px-5 py-4"
                 >
                   <div class="flex items-center gap-2 mb-1">
                     <span class="text-sm font-bold" :class="highlightClass(highlight.type)">
                       {{ highlightIcon(highlight.type) }}
                     </span>
-                    <span class="text-sm font-semibold text-base-content">{{ highlight.title }}</span>
+                    <span class="text-base-content text-sm font-semibold">{{ highlight.title }}</span>
                   </div>
-                  <p class="text-sm text-base-content/60">{{ highlight.description }}</p>
+                  <p class="text-base-content/60 text-sm">{{ highlight.description }}</p>
                 </div>
               </div>
             </div>
