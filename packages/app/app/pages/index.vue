@@ -655,7 +655,7 @@
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Interactive Mode <span class="text-base-content/60 text-xs">(ad-supported)</span>
+                  Interactive Mode
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
@@ -731,25 +731,17 @@
               </div>
               <p class="text-base-content/60 mt-2 text-xs">{{ proPricing[proBillingPeriod].note }}</p>
             </div>
-            <p class="text-base-content mb-8 text-sm">Everything in Create 2.0 Free+, plus control your own ad network. No Create ads, full customization.</p>
+            <p class="text-base-content mb-8 text-sm">Everything in Create 2.0 Free, plus full customization and premium features to maximize your revenue.</p>
             <div class="mb-8 space-y-3">
               <p class="text-sm font-semibold">Pro features</p>
               <ul class="space-y-2">
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Everything in Free+
-                </li>
-                <li class="text-base-content flex items-start gap-3 text-sm">
-                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Remove Create Ads Entirely
+                  Everything in Free
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
                   Customize Interactive Mode
-                </li>
-                <li class="text-base-content flex items-start gap-3 text-sm">
-                  <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
-                  Interactive Mode <span class="text-base-content/60 text-xs">(ad-supported)</span>
                 </li>
                 <li class="text-base-content flex items-start gap-3 text-sm">
                   <CheckIcon class="size-5 text-primary flex-shrink-0 mt-0.5" />
