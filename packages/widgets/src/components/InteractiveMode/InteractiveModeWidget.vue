@@ -343,6 +343,9 @@ function handleVisibilityChange() {
 }
 
 onMounted(() => {
+  // Track CTA render impression
+  analytics.trackCtaRendered(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
+
   // Detect if device is mobile/tablet
   isMobile.value = window.matchMedia('(max-width: 768px)').matches
 

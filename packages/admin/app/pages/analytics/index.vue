@@ -230,38 +230,64 @@
               <h2 class="text-lg text-base-content mb-2" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
                 CTA Variant Performance
               </h2>
-              <p class="text-xs text-base-content/40 mb-6">Which call-to-action variant users clicked to enter interactive mode</p>
+              <p class="text-xs text-base-content/40 mb-6">Renders vs activations per CTA variant — conversion rate = activations / renders</p>
 
-              <div class="grid grid-cols-2 gap-6 mb-8">
+              <div class="grid grid-cols-3 gap-6 mb-8">
                 <div class="space-y-1">
                   <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ formatNumber(interactiveData.cta.total) }}
+                    {{ formatNumber(interactiveData.cta.totalRenders) }}
+                  </div>
+                  <div class="text-xs text-base-content/50">Total Renders</div>
+                  <div class="text-xs text-base-content/40">Times a CTA was shown</div>
+                </div>
+                <div class="space-y-1">
+                  <div class="text-2xl text-success" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                    {{ formatNumber(interactiveData.cta.totalActivations) }}
                   </div>
                   <div class="text-xs text-base-content/50">Total Activations</div>
-                  <div class="text-xs text-base-content/40">Across all variants</div>
+                  <div class="text-xs text-base-content/40">Times a CTA was clicked</div>
+                </div>
+                <div class="space-y-1">
+                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                    {{ overallCtaConversionRate }}%
+                  </div>
+                  <div class="text-xs text-base-content/50">Overall Conversion</div>
+                  <div class="text-xs text-base-content/40">Activations / Renders</div>
                 </div>
               </div>
 
-              <div v-if="interactiveData.cta.total > 0" class="space-y-3">
-                <div
-                  v-for="(count, variant) in interactiveData.cta.variants"
-                  :key="variant"
-                  class="flex items-center gap-4"
-                >
-                  <div class="font-mono text-xs text-base-content/60 w-28 shrink-0">{{ variant }}</div>
-                  <div class="flex-1 bg-base-200 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      class="bg-primary h-full rounded-full transition-all duration-500"
-                      :style="{ width: `${interactiveData.cta.total > 0 ? Math.round((count / interactiveData.cta.total) * 100) : 0}%` }"
-                    ></div>
-                  </div>
-                  <div class="text-sm text-base-content/70 w-16 text-right shrink-0">
-                    {{ formatNumber(count) }} <span class="text-base-content/40 text-xs">({{ interactiveData.cta.total > 0 ? Math.round((count / interactiveData.cta.total) * 100) : 0 }}%)</span>
-                  </div>
+              <div v-if="interactiveData.cta.totalRenders > 0 || interactiveData.cta.totalActivations > 0">
+                <div class="overflow-x-auto">
+                  <table class="table table-sm w-full">
+                    <thead>
+                      <tr class="border-b border-base-300/50">
+                        <th class="text-xs font-medium text-base-content/50 uppercase tracking-wider">Variant</th>
+                        <th class="text-xs font-medium text-base-content/50 uppercase tracking-wider text-right">Renders</th>
+                        <th class="text-xs font-medium text-base-content/50 uppercase tracking-wider text-right">Activations</th>
+                        <th class="text-xs font-medium text-base-content/50 uppercase tracking-wider text-right">Conversion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr
+                        v-for="(data, variant) in interactiveData.cta.variants"
+                        :key="variant"
+                        class="border-b border-base-300/30 hover:bg-base-200/30"
+                      >
+                        <td class="font-mono text-sm text-base-content/80">{{ variant }}</td>
+                        <td class="text-sm text-right">{{ formatNumber(data.renders) }}</td>
+                        <td class="text-sm text-right">{{ formatNumber(data.activations) }}</td>
+                        <td class="text-sm text-right">
+                          <span :class="data.conversionRate > 0 ? 'text-success' : 'text-base-content/40'">
+                            {{ data.conversionRate }}%
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
               <div v-else class="text-sm text-base-content/40 text-center py-4">
-                No CTA activation data for this period
+                No CTA data for this period
               </div>
             </div>
           </div>
@@ -431,8 +457,9 @@ interface InteractiveAnalytics {
     submitted: number
   }
   cta: {
-    total: number
-    variants: Record<string, number>
+    totalActivations: number
+    totalRenders: number
+    variants: Record<string, { renders: number; activations: number; conversionRate: number }>
   }
 }
 
@@ -551,5 +578,10 @@ const timerCompletionRate = computed(() => {
 const ratingConversionRate = computed(() => {
   if (!interactiveData.value || interactiveData.value.ratings.screensShown === 0) return 0
   return Math.round((interactiveData.value.ratings.submitted / interactiveData.value.ratings.screensShown) * 100)
+})
+
+const overallCtaConversionRate = computed(() => {
+  if (!interactiveData.value || interactiveData.value.cta.totalRenders === 0) return 0
+  return Math.round((interactiveData.value.cta.totalActivations / interactiveData.value.cta.totalRenders) * 10000) / 100
 })
 </script>

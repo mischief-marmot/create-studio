@@ -6,7 +6,7 @@
 import { ref, onBeforeUnmount } from 'vue'
 
 export interface AnalyticsEvent {
-  type: 'timer_start' | 'timer_stop' | 'timer_complete' | 'rating_screen_shown' | 'rating_submitted' | 'page_view' | 'cta_activated'
+  type: 'timer_start' | 'timer_stop' | 'timer_complete' | 'rating_screen_shown' | 'rating_submitted' | 'page_view' | 'cta_activated' | 'cta_rendered'
   timestamp: number
   metadata?: Record<string, any>
 }
@@ -120,6 +120,13 @@ export function useAnalytics(config: AnalyticsConfig) {
   function trackRatingEvent(action: 'screen_shown' | 'submitted', rating?: number) {
     const eventType = `rating_${action}` as AnalyticsEvent['type']
     trackEvent(eventType, rating !== undefined ? { rating } : undefined)
+  }
+
+  /**
+   * Track CTA render (which variant was shown to the user)
+   */
+  function trackCtaRendered(variant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip') {
+    trackEvent('cta_rendered', { variant })
   }
 
   /**
@@ -241,6 +248,7 @@ export function useAnalytics(config: AnalyticsConfig) {
     trackPageView,
     trackTimerEvent,
     trackRatingEvent,
+    trackCtaRendered,
     trackCtaActivated,
     sendBatch,
     userId,

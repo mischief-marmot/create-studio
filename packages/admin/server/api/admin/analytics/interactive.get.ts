@@ -150,34 +150,65 @@ async function getCTAData(startDate: string, endDate: string) {
   const dates = getDateRange(startDate, endDate)
 
   const variants = ['button', 'inline-banner', 'sticky-bar', 'tooltip'] as const
-  const counts: Record<string, number> = {
+  const activations: Record<string, number> = {
     button: 0,
     'inline-banner': 0,
     'sticky-bar': 0,
     tooltip: 0,
   }
-  let total = 0
+  const renders: Record<string, number> = {
+    button: 0,
+    'inline-banner': 0,
+    'sticky-bar': 0,
+    tooltip: 0,
+  }
+  let totalActivations = 0
+  let totalRenders = 0
 
   const allKeys = await kv.keys('analytics')
   const allEventKeys = allKeys.filter((k) => k.startsWith('analytics:events:'))
 
   for (const date of dates) {
     for (const variant of variants) {
-      const variantKeys = allEventKeys.filter((key) => {
+      // Count activations (clicks)
+      const activationKeys = allEventKeys.filter((key) => {
         const parts = key.split(':')
         return parts[4] === `cta_activated_${variant}` && parts[5] === date
       })
 
-      for (const key of variantKeys) {
+      for (const key of activationKeys) {
         const counterData = await kv.get<ApiCounter>(key)
         const count = counterData?.count || 0
-        counts[variant] += count
-        total += count
+        activations[variant] += count
+        totalActivations += count
+      }
+
+      // Count renders (impressions)
+      const renderKeys = allEventKeys.filter((key) => {
+        const parts = key.split(':')
+        return parts[4] === `cta_rendered_${variant}` && parts[5] === date
+      })
+
+      for (const key of renderKeys) {
+        const counterData = await kv.get<ApiCounter>(key)
+        const count = counterData?.count || 0
+        renders[variant] += count
+        totalRenders += count
       }
     }
   }
 
-  return { total, variants: counts }
+  return {
+    totalActivations,
+    totalRenders,
+    variants: Object.fromEntries(
+      variants.map(v => [v, {
+        renders: renders[v],
+        activations: activations[v],
+        conversionRate: renders[v] > 0 ? Math.round((activations[v] / renders[v]) * 10000) / 100 : 0,
+      }])
+    ),
+  }
 }
 
 function getDateRange(startDate: string, endDate: string): string[] {
