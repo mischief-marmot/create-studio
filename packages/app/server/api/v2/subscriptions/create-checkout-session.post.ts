@@ -10,6 +10,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { createCheckoutSession, getMultiSiteCouponId } from '~~/server/utils/stripe'
 import { SiteRepository, SiteUserRepository, SubscriptionRepository } from '~~/server/utils/database'
+import type { TrialStep } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 
 export default defineEventHandler(async (event) => {
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
     const user = session.user
 
     const body = await readBody(event)
-    const { siteId, priceId } = body
+    const { siteId, priceId, trial } = body
 
     if (!siteId || !priceId) {
       setResponseStatus(event, 400)
@@ -82,6 +83,20 @@ export default defineEventHandler(async (event) => {
     const activePaidCount = await subscriptionRepo.getActivePaidCountByUser(user.id)
     const couponId = getMultiSiteCouponId(activePaidCount, config.stripeMultiSiteCouponId)
 
+    // If trial requested, check eligibility
+    let trialCohort: string | undefined
+    if (trial) {
+      const eligibility = await subscriptionRepo.isTrialEligible(siteId)
+      if (!eligibility.eligible) {
+        setResponseStatus(event, 400)
+        return {
+          success: false,
+          error: eligibility.reason || 'Not eligible for trial',
+        }
+      }
+      trialCohort = Math.random() < 0.5 ? 'a' : 'b'
+    }
+
     // Create Stripe Checkout session with selected price
     const checkoutUrl = await createCheckoutSession({
       siteId,
@@ -92,6 +107,8 @@ export default defineEventHandler(async (event) => {
       successUrl: `${baseUrl}/admin/settings?success=true`,
       cancelUrl: `${baseUrl}/admin/settings?canceled=true`,
       couponId,
+      trial: !!trial,
+      trialCohort,
     })
 
     logger.debug('Checkout session created for site', siteId)

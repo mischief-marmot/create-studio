@@ -64,6 +64,8 @@ export default defineEventHandler(async (event) => {
     const subscription = await subscriptionRepo.getBySiteId(siteId)
     const tier = await subscriptionRepo.getActiveTier(siteId)
     const activePaidCount = await subscriptionRepo.getActivePaidCountByUser(userId)
+    const trialInfo = await subscriptionRepo.getTrialInfo(siteId)
+    const eligibility = await subscriptionRepo.isTrialEligible(siteId)
 
     logger.debug('Subscription status checked for site', siteId)
 
@@ -72,6 +74,10 @@ export default defineEventHandler(async (event) => {
       subscription,
       tier,
       activePaidCount,
+      is_trialing: trialInfo.isTrialing,
+      trial_days_remaining: trialInfo.daysRemaining,
+      trial_extensions_used: trialInfo.extensionsUsed,
+      trial_eligible: eligibility.eligible,
     }
 
   } catch (error: any) {
