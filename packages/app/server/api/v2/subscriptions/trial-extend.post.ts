@@ -83,7 +83,7 @@ export default defineEventHandler(async (event) => {
     await subscriptionRepo.recordTrialExtension(siteId, step as TrialStep, newTrialEnd)
 
     // Compute days remaining
-    const daysRemaining = Math.max(0, Math.floor((currentTrialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    const daysRemaining = Math.max(0, Math.ceil((currentTrialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     const extensionsUsed = Object.keys(extensions).length + 1
 
     logger.debug('Trial extended for site', siteId, { step, newTrialEnd, daysRemaining })

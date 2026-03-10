@@ -387,7 +387,7 @@ const bonusSteps = reactive([
   { label: 'Enable servings adjustment', done: true },
   { label: 'Enable unit conversion', done: true },
   { label: 'Enable checklists', done: false },
-  { label: 'Customize your CTA style', done: false },
+  { label: 'Change widget toolbar layout', done: false },
   { label: 'Use bulk list importer', done: false },
   { label: 'Manage a review', done: false },
   { label: 'Try on a premium theme', done: false },

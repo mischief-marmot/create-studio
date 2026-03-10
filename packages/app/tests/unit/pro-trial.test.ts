@@ -60,7 +60,7 @@ const ALLOWED_TRIAL_STEPS = [
   'servings_adjustment',
   'unit_conversion',
   'checklists',
-  'cta_variants',
+  'toolbar_layout',
   'bulk_import',
   'review_management',
   'premium_theme',

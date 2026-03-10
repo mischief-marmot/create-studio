@@ -54,7 +54,7 @@ export const ALLOWED_TRIAL_STEPS = [
   'servings_adjustment',
   'unit_conversion',
   'checklists',
-  'cta_variants',
+  'toolbar_layout',
   'bulk_import',
   'review_management',
   'premium_theme',
@@ -569,7 +569,7 @@ export class SubscriptionRepository {
 
     const now = new Date()
     const trialEnd = new Date(subscription.trial_end)
-    const daysRemaining = Math.max(0, Math.floor((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    const daysRemaining = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
 
     return {
       isTrialing: subscription.status === 'trialing',
