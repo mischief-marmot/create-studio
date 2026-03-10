@@ -145,7 +145,7 @@
                           </p>
                         </div>
 
-                        <div class="flex gap-6 max-w-3xl" :class="{ 'pointer-events-none': tier !== 'pro' || !siteForm.interactive_mode_enabled }">
+                        <div class="flex max-w-3xl gap-6" :class="{ 'pointer-events-none': tier !== 'pro' || !siteForm.interactive_mode_enabled }">
                           <!-- Options -->
                           <div class="flex flex-col gap-2 min-w-[200px] shrink-0">
                             <button
@@ -162,7 +162,7 @@
                             >
                               <span class="flex-1 flex flex-col gap-0.5">
                                 <span class="text-sm font-semibold" :class="siteForm.interactive_mode_cta_variant === variant.value ? 'text-primary' : 'text-base-content'">{{ variant.label }}</span>
-                                <span class="text-xs text-base-content/50">{{ variant.description }}</span>
+                                <span class="text-base-content/50 text-xs">{{ variant.description }}</span>
                               </span>
                               <svg v-if="siteForm.interactive_mode_cta_variant === variant.value" class="shrink-0 text-primary" width="16" height="16" viewBox="0 0 20 20" fill="none">
                                 <path d="M6 10l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -172,27 +172,27 @@
 
                           <!-- Diagram -->
                           <div class="flex-1 min-w-[280px] max-w-[420px]">
-                            <div class="bg-base-200 border border-base-300 rounded-lg p-5 font-sans text-sm relative overflow-hidden">
+                            <div class="bg-base-200 border-base-300 relative p-5 overflow-hidden font-sans text-sm border rounded-lg">
                               <!-- Inline Banner (between sections) -->
                               <div
-                                class="flex items-center gap-3 py-3 mb-3 transition-all border-y border-base-300"
+                                class="border-y border-base-300 flex items-center gap-3 py-3 mb-3 transition-all"
                                 :class="previewVariant === 'inline-banner' ? '' : 'h-0 overflow-hidden opacity-0 mb-0 py-0 border-transparent'"
                               >
-                                <div class="w-8 h-8 rounded-lg border border-base-content/30 flex items-center justify-center shrink-0">
+                                <div class="border-base-content/30 shrink-0 flex items-center justify-center w-8 h-8 border rounded-lg">
                                   <svg class="w-3.5 h-3.5 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                   <div class="text-[11px] font-semibold text-base-content/80 truncate">{{ diagramCtaTitle || 'Cook step-by-step' }}</div>
                                   <div class="text-[9px] text-base-content/50 truncate">{{ diagramCtaSubtitle || 'Full screen with timers & ingredient lists' }}</div>
                                 </div>
-                                <div class="w-6 h-6 rounded-full border border-base-content/30 flex items-center justify-center shrink-0">
-                                  <svg class="w-3 h-3 text-base-content/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                                <div class="border-base-content/30 shrink-0 flex items-center justify-center w-6 h-6 border rounded-full">
+                                  <svg class="text-base-content/50 w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                                 </div>
                               </div>
 
                               <!-- Heading row -->
-                              <div class="flex items-center gap-2 mb-3 flex-wrap">
-                                <span class="font-bold text-base-content/70 text-xs">Instructions</span>
+                              <div class="flex flex-wrap items-center gap-2 mb-3">
+                                <span class="text-base-content/70 text-xs font-bold">Instructions</span>
                                 <!-- Button variant -->
                                 <span
                                   v-if="previewVariant === 'button'"
@@ -212,7 +212,7 @@
                               </div>
 
                               <!-- Placeholder lines -->
-                              <div class="space-y-2 mb-3">
+                              <div class="mb-3 space-y-2">
                                 <div class="h-1.5 bg-base-300 rounded-full w-[80%]"></div>
                                 <div class="h-1.5 bg-base-300 rounded-full w-[64%]"></div>
                                 <div class="h-1.5 bg-base-300 rounded-full w-[72%]"></div>
@@ -220,7 +220,7 @@
 
                               <!-- Sticky Bar (dark bar at bottom) -->
                               <div
-                                class="flex items-center gap-2 rounded px-3 py-2 transition-all"
+                                class="flex items-center gap-2 px-3 py-2 transition-all rounded"
                                 :class="previewVariant === 'sticky-bar'
                                   ? 'bg-neutral text-neutral-content'
                                   : 'h-0 overflow-hidden opacity-0 py-0 px-0'"
@@ -321,6 +321,24 @@
         </div>
 
         <template v-else>
+          <!-- Trial Status Banner -->
+          <div v-if="isTrialing" class="rounded-2xl flex items-start gap-3 px-6 py-5" :class="trialDaysRemaining <= 3 ? 'bg-warning/10 border border-warning/30' : 'bg-primary/5 border border-primary/20'">
+            <SparklesIcon class="size-5 flex-shrink-0 mt-0.5" :class="trialDaysRemaining <= 3 ? 'text-warning' : 'text-primary'" />
+            <div class="flex-1">
+              <div class="flex items-center gap-3 mb-1">
+                <p class="text-base-content text-sm font-medium">Pro Trial: {{ trialDaysRemaining }} {{ trialDaysRemaining === 1 ? 'day' : 'days' }} remaining</p>
+                <span v-if="trialExtensionsUsed > 0" class="text-base-content/50 text-xs">{{ trialExtensionsUsed }}/7 bonus days earned</span>
+              </div>
+              <p class="text-base-content/60 text-xs">
+                <template v-if="trialDaysRemaining <= 3">Your trial is ending soon. Upgrade now to keep Pro features.</template>
+                <template v-else>You're experiencing Pro features during your free trial. Earn bonus days by trying premium features in the plugin.</template>
+              </p>
+              <NuxtLink v-if="trialDaysRemaining <= 3" to="/admin/upgrade" class="btn btn-warning btn-sm mt-3">
+                Upgrade to keep Pro features
+              </NuxtLink>
+            </div>
+          </div>
+
           <!-- Current Plan Card -->
           <div class="bg-base-100 border-base-300 rounded-3xl overflow-hidden border-2">
             <div class="lg:p-12 p-6">
@@ -334,25 +352,28 @@
                 <!-- Plan Header -->
                 <div class="flex items-start justify-between mb-6">
                   <div class="flex flex-col gap-1">
-                    <span class="font-serif text-2xl italic font-light">{{ tier === 'pro' ? 'Pro Plan' : tier === 'free-plus' ? 'Free+ Plan' : 'Free Plan' }}</span>
+                    <span class="font-serif text-2xl italic font-light">{{ tier === 'pro' ? 'Pro Plan' : tier === 'trial' ? 'Premium Trial' : tier === 'free-plus' ? 'Free+ Plan' : 'Free Plan' }}</span>
                     <div class="flex items-center gap-2">
                       <span
                         class="w-2 h-2 rounded-full"
                         :class="{
                           'bg-success shadow-[0_0_8px_rgba(34,197,94,0.4)]': subscription?.status === 'active' && !subscription?.cancel_at_period_end,
                           'bg-base-content/40': tier === 'free',
-                          'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.4)]': subscription?.cancel_at_period_end
+                          'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.4)]': subscription?.cancel_at_period_end,
+                          'bg-primary shadow-[0_0_8px_rgba(99,102,241,0.4)]': isTrialing
                         }"
                       ></span>
                       <span class="text-sm font-medium">
                         {{
-                          subscription?.cancel_at_period_end
-                            ? 'Canceling'
-                            : subscription?.status === 'active'
-                              ? 'Active'
-                              : tier === 'free-plus'
+                          isTrialing
+                            ? `Trial — ${trialDaysRemaining} days left`
+                            : subscription?.cancel_at_period_end
+                              ? 'Canceling'
+                              : subscription?.status === 'active'
                                 ? 'Active'
-                                : 'Free'
+                                : tier === 'free-plus'
+                                  ? 'Active'
+                                  : 'Free'
                         }}
                       </span>
                     </div>
@@ -676,6 +697,9 @@ const subscription = ref<any>(null)
 const stripeDetails = ref<any>(null)
 const tier = ref('free')
 const activePaidCount = ref(0)
+const isTrialing = ref(false)
+const trialDaysRemaining = ref(0)
+const trialExtensionsUsed = ref(0)
 
 const loading = ref(true)
 const subscriptionLoading = ref(true)
@@ -713,12 +737,17 @@ const diagramCtaSubtitle = computed(() => siteForm.value.interactive_mode_cta_su
 
 const tierDisplayName = computed(() => {
   if (tier.value === 'pro') return 'Pro'
+  if (tier.value === 'trial') return 'Trial'
   if (tier.value === 'free-plus') return 'Free+'
   return 'Free'
 })
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString + 'T12:00:00').toLocaleDateString('en-US', {
+  // Handle both date-only strings (2026-03-10) and ISO strings (2026-03-10T...)
+  const date = dateString.includes('T')
+    ? new Date(dateString)
+    : new Date(dateString + 'T12:00:00')
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -762,6 +791,9 @@ const loadSiteData = async () => {
       subscription.value = subResponse.subscription
       tier.value = subResponse.tier || 'free'
       activePaidCount.value = subResponse.activePaidCount ?? 0
+      isTrialing.value = subResponse.is_trialing ?? false
+      trialDaysRemaining.value = subResponse.trial_days_remaining ?? 0
+      trialExtensionsUsed.value = subResponse.trial_extensions_used ?? 0
 
       // Fetch detailed Stripe info for Pro subscribers
       if (tier.value === 'pro' && subscription.value?.stripe_subscription_id) {

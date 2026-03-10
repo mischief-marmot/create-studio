@@ -92,8 +92,8 @@
                 :to="item.href"
                 class="rounded-xl border-1 relative flex items-center gap-4 px-4 py-2 text-sm border-transparent"
                 :class="isActiveRoute(item.href)
-                  ? 'bg-base-100 text-primary-content dark:text-primary shadow-xs'
-                  : 'text-base-content hover:bg-base-100/80 hover:shadow-sm hover:border-base-200/80'"
+                  ? 'bg-base-100 text-base-content shadow-xs'
+                  : 'text-base-content/80 hover:bg-base-100/80 hover:shadow-sm hover:border-base-200/80'"
               >
                 <component :is="item.icon" class=" flex-shrink-0 w-5 h-5 transition-transform duration-300" />
                 <span class="flex-1">{{ item.name }}</span>

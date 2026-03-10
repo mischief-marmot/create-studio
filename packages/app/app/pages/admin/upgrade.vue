@@ -14,9 +14,10 @@
             <li class="font-light">Upgrade to Pro</li>
           </ul>
         </div>
-        <h1 class="text-base-content mb-2 font-serif text-3xl lg:text-5xl">Upgrade to Pro</h1>
+        <h1 class="text-base-content lg:text-5xl mb-2 font-serif text-3xl">{{ trialEligible ? 'Try Pro Free' : 'Upgrade to Pro' }}</h1>
         <p class="text-base-content/70">
-          <template v-if="selectedSite">Upgrading <span class="text-primary italic">{{ selectedSite.name || selectedSite.url }}</span></template>
+          <template v-if="trialEligible && selectedSite">14-day free trial for <span class="text-primary italic">{{ selectedSite.name || selectedSite.url }}</span></template>
+          <template v-else-if="selectedSite">Upgrading <span class="text-primary italic">{{ selectedSite.name || selectedSite.url }}</span></template>
           <template v-else>Unlock premium features for your site</template>
         </p>
       </div>
@@ -26,13 +27,13 @@
     <transition name="float">
       <div
         v-if="showFloatingCta"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        class="bottom-6 left-1/2 fixed z-50 -translate-x-1/2"
       >
         <button
           @click="scrollToPricing"
-          class="btn btn-primary shadow-xl rounded-full px-8 gap-2"
+          class="btn btn-primary gap-2 px-8 rounded-full shadow-xl"
         >
-          Upgrade Now
+          {{ trialEligible ? 'Start Free Trial' : 'Upgrade Now' }}
           <ArrowDownIcon class="size-4" />
         </button>
       </div>
@@ -41,21 +42,40 @@
     <!-- Main Content -->
     <div class="lg:px-12 max-w-[1400px] px-6 py-10 mx-auto space-y-12">
 
-      <!-- Multi-site Discount Banner -->
-      <section v-if="activePaidCount >= 1" class="bg-success/10 border border-success/30 rounded-2xl px-6 py-5 flex items-center gap-3">
+      <!-- Trial CTA (primary banner for eligible users) -->
+      <section v-if="trialEligible" class="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 border-primary/20 rounded-2xl flex items-start gap-4 px-6 py-6 border">
+        <div class="bg-primary/15 rounded-xl p-2.5 flex-shrink-0 mt-0.5">
+          <SparklesIcon class="text-primary size-6" />
+        </div>
+        <div class="flex-1">
+          <p class="text-base-content mb-1 text-base font-semibold">Try Pro free for 14 days</p>
+          <p class="text-base-content/60 text-sm leading-relaxed">
+            Experience all premium features — Interactive Mode, servings adjustment, unit conversion, checklists, and more — for free.
+            <template v-if="sites.length >= 2"> When you upgrade, get <strong class="text-base-content">50% off Pro for your other sites</strong>.</template>
+            <template v-else> Run multiple sites? Upgrade and get <strong class="text-base-content">50% off additional sites</strong>.</template>
+          </p>
+          <button @click="scrollToPricing" class="btn btn-primary btn-sm mt-3 rounded-lg gap-1.5">
+            Start Free Trial
+            <ArrowDownIcon class="size-3.5" />
+          </button>
+        </div>
+      </section>
+
+      <!-- Multi-site Discount Banner (only shown when not trial-eligible and not trialing) -->
+      <section v-else-if="!isTrialing && activePaidCount >= 1" class="bg-success/10 border-success/30 rounded-2xl flex items-center gap-3 px-6 py-5 border">
         <TagIcon class="text-success size-5 flex-shrink-0" />
         <p class="text-base-content text-sm">
           <strong class="text-success">Multi-site discount applied!</strong>
           You're getting 50% off because you already have Pro on another site.
         </p>
       </section>
-      <section v-else-if="activePaidCount === 0 && sites.length >= 2" class="bg-info/10 border border-info/30 rounded-2xl px-6 py-5 flex items-center gap-3">
+      <section v-else-if="!isTrialing && activePaidCount === 0 && sites.length >= 2" class="bg-info/10 border-info/30 rounded-2xl flex items-center gap-3 px-6 py-5 border">
         <TagIcon class="text-info size-5 flex-shrink-0" />
         <p class="text-base-content text-sm">
           <strong>Multi-site discount:</strong> Upgrade this site and get 50% off Pro for your other sites.
         </p>
       </section>
-      <section v-else-if="activePaidCount === 0 && sites.length <= 1" class="bg-base-200/50 border border-base-300 rounded-2xl px-6 py-5 flex items-center gap-3">
+      <section v-else-if="!isTrialing && activePaidCount === 0 && sites.length <= 1" class="bg-base-200/50 border-base-300 rounded-2xl flex items-center gap-3 px-6 py-5 border">
         <TagIcon class="text-base-content/50 size-5 flex-shrink-0" />
         <p class="text-base-content/70 text-sm">
           Run multiple WordPress sites? Additional sites get 50% off Pro.
@@ -63,11 +83,11 @@
       </section>
 
       <!-- Feature Cards — 2x2 grid -->
-      <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section class="lg:grid-cols-2 grid grid-cols-1 gap-6">
         <!-- Interactive Mode -->
-        <div class="bg-base-100 border-base-300 rounded-3xl border-2 p-8 lg:p-12">
-          <h2 class="text-base-content font-serif text-2xl font-light mb-3">Interactive Mode</h2>
-          <p class="text-base-content/70 text-sm leading-relaxed mb-6">
+        <div class="bg-base-100 border-base-300 rounded-3xl lg:p-12 p-8 border-2">
+          <h2 class="text-base-content mb-3 font-serif text-2xl font-light">Interactive Mode</h2>
+          <p class="text-base-content/70 mb-6 text-sm leading-relaxed">
             A mobile-first, step-by-step cooking experience that renders directly on your page.
             Readers swipe through instructions hands-free with smart timers automatically
             parsed from your recipe steps.
@@ -93,9 +113,9 @@
         </div>
 
         <!-- Reader Experience Tools -->
-        <div class="bg-base-100 border-base-300 rounded-3xl border-2 p-8 lg:p-12">
-          <h3 class="text-base-content font-serif text-2xl font-light mb-3">Reader Experience Tools</h3>
-          <p class="text-base-content/70 text-sm leading-relaxed mb-6">
+        <div class="bg-base-100 border-base-300 rounded-3xl lg:p-12 p-8 border-2">
+          <h3 class="text-base-content mb-3 font-serif text-2xl font-light">Reader Experience Tools</h3>
+          <p class="text-base-content/70 mb-6 text-sm leading-relaxed">
             Interactive tools that make your content more useful and keep readers on your site longer.
           </p>
           <div class="space-y-4">
@@ -130,9 +150,9 @@
         </div>
 
         <!-- Themes & Customization -->
-        <div class="bg-base-100 border-base-300 rounded-3xl border-2 p-8 lg:p-12">
-          <h3 class="text-base-content font-serif text-2xl font-light mb-3">Themes & Customization</h3>
-          <p class="text-base-content/70 text-sm leading-relaxed mb-6">
+        <div class="bg-base-100 border-base-300 rounded-3xl lg:p-12 p-8 border-2">
+          <h3 class="text-base-content mb-3 font-serif text-2xl font-light">Themes & Customization</h3>
+          <p class="text-base-content/70 mb-6 text-sm leading-relaxed">
             Make your recipe cards look like they belong on your site with premium themes and full CSS control.
           </p>
           <div class="space-y-4">
@@ -158,9 +178,9 @@
         </div>
 
         <!-- Reviews & Content -->
-        <div class="bg-base-100 border-base-300 rounded-3xl border-2 p-8 lg:p-12">
-          <h3 class="text-base-content font-serif text-2xl font-light mb-3">Reviews & Content Tools</h3>
-          <p class="text-base-content/70 text-sm leading-relaxed mb-6">
+        <div class="bg-base-100 border-base-300 rounded-3xl lg:p-12 p-8 border-2">
+          <h3 class="text-base-content mb-3 font-serif text-2xl font-light">Reviews & Content Tools</h3>
+          <p class="text-base-content/70 mb-6 text-sm leading-relaxed">
             Build social proof and manage your content more efficiently with advanced review and list tools.
           </p>
           <div class="space-y-4">
@@ -209,16 +229,16 @@
             </div>
 
             <!-- Price display -->
-            <div v-if="selectedPlan" class="text-center mb-10">
-              <div v-if="hasMultiSiteDiscount" class="text-base-content/40 text-lg line-through mb-1">
+            <div v-if="selectedPlan" class="mb-10 text-center">
+              <div v-if="hasMultiSiteDiscount" class="text-base-content/40 mb-1 text-lg line-through">
                 ${{ selectedPlan.price }}
               </div>
               <div class="flex items-baseline justify-center gap-1.5">
-                <span class="text-base-content/40 text-2xl font-serif font-light">$</span>
-                <span class="text-base-content text-6xl font-light font-serif tabular-nums pricing-value">{{ displayPrice }}</span>
+                <span class="text-base-content/40 font-serif text-2xl font-light">$</span>
+                <span class="text-base-content tabular-nums pricing-value font-serif text-6xl font-light">{{ displayPrice }}</span>
                 <span class="text-base-content/40 text-base font-light">/ {{ selectedPlan.period }}</span>
               </div>
-              <div class="mt-3 h-6 flex items-center justify-center">
+              <div class="flex items-center justify-center h-6 mt-3">
                 <transition name="fade-slide" mode="out-in">
                   <span
                     v-if="selectedPlan.savings"
@@ -239,7 +259,7 @@
             </div>
 
             <!-- Slider -->
-            <div class="mb-10 px-1">
+            <div class="px-1 mb-10">
               <input
                 type="range"
                 min="0"
@@ -255,7 +275,7 @@
                   v-for="(plan, index) in pricingPlans"
                   :key="plan.id"
                   @click="setSliderIndex(index)"
-                  class="flex flex-col items-center gap-1 group cursor-pointer transition-all duration-200 min-w-0"
+                  class="group flex flex-col items-center min-w-0 gap-1 transition-all duration-200 cursor-pointer"
                   :class="selectedSliderIndex === index ? 'scale-105' : 'opacity-50 hover:opacity-75'"
                 >
                   <span
@@ -271,7 +291,7 @@
             </div>
 
             <!-- Plan description -->
-            <div v-if="selectedPlan" class="text-center mb-8">
+            <div v-if="selectedPlan" class="mb-8 text-center">
               <p class="text-base-content/50 text-sm">{{ selectedPlan.description }}</p>
             </div>
 
@@ -288,18 +308,18 @@
               <button
                 @click="handleUpgrade"
                 :disabled="upgrading || !selectedPriceId"
-                class="btn btn-primary btn-lg rounded-xl w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                class="btn btn-primary btn-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed w-full"
               >
                 <span
                   v-if="upgrading"
                   class="border-primary-content/30 border-t-primary-content animate-spin w-5 h-5 border-2 rounded-full"
                 ></span>
-                {{ upgrading ? 'Processing...' : 'Continue to Checkout' }}
+                {{ upgrading ? 'Processing...' : trialEligible ? 'Start 14-Day Free Trial' : 'Continue to Checkout' }}
               </button>
 
               <p class="text-base-content/40 flex items-center gap-1.5 text-xs">
                 <LockClosedIcon class="size-3 flex-shrink-0" />
-                Secure checkout via Stripe
+                {{ trialEligible ? 'No commitment required' : 'Secure checkout via Stripe' }}
               </p>
             </div>
           </div>
@@ -307,7 +327,7 @@
       </section>
 
       <!-- Back Link -->
-      <div class="text-center pb-8">
+      <div class="pb-8 text-center">
         <NuxtLink
           to="/admin/settings#subscription"
           class="text-base-content/60 hover:text-base-content inline-flex items-center gap-2 text-sm transition-colors"
@@ -337,6 +357,7 @@ import {
   ChatBubbleLeftEllipsisIcon,
   RectangleStackIcon,
   TagIcon,
+  SparklesIcon,
 } from '@heroicons/vue/24/outline'
 import { useSiteContext } from '~/composables/useSiteContext'
 import { useAuthFetch } from '~/composables/useAuthFetch'
@@ -354,6 +375,8 @@ const selectedPriceId = ref<string | null>(null)
 const upgrading = ref(false)
 const error = ref('')
 const activePaidCount = ref(0)
+const trialEligible = ref(false)
+const isTrialing = ref(false)
 
 // Floating CTA visibility — hide once pricing section is in view
 const pricingSection = ref<HTMLElement | null>(null)
@@ -367,12 +390,18 @@ onMounted(async () => {
     await loadSites(siteUrl)
   }
 
-  // Fetch subscription status to determine multi-site discount eligibility
+  // Fetch subscription status to determine multi-site discount and trial eligibility
   if (selectedSiteId.value) {
     try {
       const status = await useAuthFetch(`/api/v2/subscriptions/status/${selectedSiteId.value}`)
       if (status.success && typeof status.activePaidCount === 'number') {
         activePaidCount.value = status.activePaidCount
+      }
+      if (status.success && status.is_trialing) {
+        isTrialing.value = true
+      }
+      if (status.success && status.trial_eligible && !status.is_trialing) {
+        trialEligible.value = true
       }
     } catch {
       // Non-critical — proceed without discount info
@@ -405,7 +434,7 @@ const scrollToPricing = () => {
   pricingSection.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 }
 
-const hasMultiSiteDiscount = computed(() => activePaidCount.value >= 1)
+const hasMultiSiteDiscount = computed(() => activePaidCount.value >= 1 && !isTrialing.value)
 
 const displayPrice = computed(() => {
   if (!selectedPlan.value) return 0
@@ -508,6 +537,7 @@ const handleUpgrade = async () => {
       body: {
         siteId: selectedSiteId.value,
         priceId: selectedPriceId.value,
+        ...(trialEligible.value ? { trial: true } : {}),
       },
     })
 

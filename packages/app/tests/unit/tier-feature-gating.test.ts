@@ -20,14 +20,17 @@ function computeSiteConfig(subscriptionTier: string) {
     renderMode = 'in-dom'
   }
 
+  // Trial tier has same features as free-plus
+  const effectiveTier = subscriptionTier === 'trial' ? 'free-plus' : subscriptionTier
+
   return {
     showInteractiveMode,
     renderMode,
     features: {
       inDomRendering: renderMode === 'in-dom',
-      customStyling: subscriptionTier === 'pro',
-      servingsAdjustment: subscriptionTier !== 'free',
-      unitConversion: subscriptionTier !== 'free',
+      customStyling: effectiveTier === 'pro',
+      servingsAdjustment: effectiveTier !== 'free',
+      unitConversion: effectiveTier !== 'free',
       analytics: true,
     },
   }
@@ -68,6 +71,38 @@ describe('Three-Tier Feature Gating', () => {
 
   describe('Free+ tier', () => {
     const config = computeSiteConfig('free-plus')
+
+    it('should enable interactive mode', () => {
+      expect(config.showInteractiveMode).toBe(true)
+    })
+
+    it('should use iframe render mode', () => {
+      expect(config.renderMode).toBe('iframe')
+    })
+
+    it('should disable in-DOM rendering', () => {
+      expect(config.features.inDomRendering).toBe(false)
+    })
+
+    it('should disable custom styling', () => {
+      expect(config.features.customStyling).toBe(false)
+    })
+
+    it('should enable servings adjustment', () => {
+      expect(config.features.servingsAdjustment).toBe(true)
+    })
+
+    it('should enable unit conversion', () => {
+      expect(config.features.unitConversion).toBe(true)
+    })
+
+    it('should enable analytics', () => {
+      expect(config.features.analytics).toBe(true)
+    })
+  })
+
+  describe('Trial tier (same features as Free+)', () => {
+    const config = computeSiteConfig('trial')
 
     it('should enable interactive mode', () => {
       expect(config.showInteractiveMode).toBe(true)
@@ -169,7 +204,7 @@ describe('Dev Toggle Tier Cycling', () => {
 })
 
 describe('Admin Modify Tier Validation', () => {
-  const validTiers = ['free', 'free-plus', 'pro']
+  const validTiers = ['free', 'free-plus', 'pro', 'trial']
 
   it('should accept free tier', () => {
     expect(validTiers.includes('free')).toBe(true)
@@ -192,7 +227,7 @@ describe('Admin Modify Tier Validation', () => {
   it('should clear cancel_at_period_end for pro and free-plus', () => {
     for (const tier of validTiers) {
       const shouldClear = tier === 'pro' || tier === 'free-plus'
-      if (tier === 'free') {
+      if (tier === 'free' || tier === 'trial') {
         expect(shouldClear).toBe(false)
       } else {
         expect(shouldClear).toBe(true)
@@ -204,6 +239,7 @@ describe('Admin Modify Tier Validation', () => {
 describe('Dashboard Tier Labels', () => {
   const getTierLabel = (tier: string) => {
     if (tier === 'pro') return 'Pro'
+    if (tier === 'trial') return 'Trial'
     if (tier === 'free-plus') return 'Free+'
     return 'Free'
   }
@@ -226,20 +262,21 @@ describe('Dashboard Tier Labels', () => {
 })
 
 describe('Premium Sites Count', () => {
-  it('should count both pro and free-plus as premium', () => {
+  it('should count pro, free-plus, and trial as premium', () => {
     const siteTiers: Record<number, string> = {
       1: 'free',
       2: 'pro',
       3: 'free-plus',
       4: 'free',
       5: 'pro',
+      6: 'trial',
     }
 
     const premiumCount = Object.values(siteTiers).filter(
-      (tier) => tier === 'pro' || tier === 'free-plus'
+      (tier) => tier === 'pro' || tier === 'free-plus' || tier === 'trial'
     ).length
 
-    expect(premiumCount).toBe(3)
+    expect(premiumCount).toBe(4)
   })
 
   it('should return 0 when all sites are free', () => {
@@ -249,7 +286,7 @@ describe('Premium Sites Count', () => {
     }
 
     const premiumCount = Object.values(siteTiers).filter(
-      (tier) => tier === 'pro' || tier === 'free-plus'
+      (tier) => tier === 'pro' || tier === 'free-plus' || tier === 'trial'
     ).length
 
     expect(premiumCount).toBe(0)
@@ -259,12 +296,14 @@ describe('Premium Sites Count', () => {
 describe('Settings Page Tier Display', () => {
   const getTierDisplayName = (tier: string) => {
     if (tier === 'pro') return 'Pro'
+    if (tier === 'trial') return 'Trial'
     if (tier === 'free-plus') return 'Free+'
     return 'Free'
   }
 
   const getPlanName = (tier: string) => {
     if (tier === 'pro') return 'Pro Plan'
+    if (tier === 'trial') return 'Premium Trial'
     if (tier === 'free-plus') return 'Free+ Plan'
     return 'Free Plan'
   }
@@ -344,6 +383,7 @@ describe('Admin Panel Format Tier', () => {
     const tierMap: Record<string, string> = {
       free: 'Free Plan',
       'free-plus': 'Free+ Plan',
+      trial: 'Premium Trial',
       pro: 'Pro Plan',
       enterprise: 'Enterprise Plan',
     }
@@ -353,6 +393,7 @@ describe('Admin Panel Format Tier', () => {
   it('should format all known tiers', () => {
     expect(formatTier('free')).toBe('Free Plan')
     expect(formatTier('free-plus')).toBe('Free+ Plan')
+    expect(formatTier('trial')).toBe('Premium Trial')
     expect(formatTier('pro')).toBe('Pro Plan')
   })
 

@@ -95,10 +95,58 @@
         </div>
       </section>
 
-      <!-- Multi-site Discount Callout -->
-      <section v-if="!loading && sites.length >= 2" class="w-full">
-        <!-- Scenario A: Has Pro, multiple sites -->
-        <div v-if="premiumSitesCount >= 1 && nonProSitesCount > 0" class="bg-success/5 border border-success/20 rounded-2xl px-6 py-5 flex items-center justify-between gap-4">
+      <!-- Trial CTA (shown first for eligible users) -->
+      <section v-if="!loading && anyTrialEligible && premiumSitesCount === 0" class="w-full">
+        <div class="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 border border-primary/20 rounded-2xl px-6 py-6 flex items-center justify-between gap-4">
+          <div class="flex items-start gap-4">
+            <div class="bg-primary/15 rounded-xl p-2.5 flex-shrink-0">
+              <SparklesIcon class="text-primary size-5" />
+            </div>
+            <div>
+              <p class="text-base-content text-sm font-semibold mb-0.5">Try Pro free for 14 days</p>
+              <p class="text-base-content/60 text-sm">
+                Unlock premium features for free.
+                <template v-if="sites.length >= 2"> When you upgrade, get <strong class="text-base-content">50% off Pro for your other sites</strong>.</template>
+              </p>
+            </div>
+          </div>
+          <NuxtLink to="/admin/upgrade" class="btn btn-primary btn-sm flex-shrink-0">
+            Start Free Trial
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- Active Trial Banner -->
+      <section v-else-if="!loading && trialingSiteId" class="w-full">
+        <div
+          class="rounded-2xl px-6 py-5 flex items-center justify-between gap-4"
+          :class="trialDaysRemaining <= 3 ? 'bg-warning/10 border border-warning/30' : 'bg-primary/5 border border-primary/20'"
+        >
+          <div class="flex items-center gap-3">
+            <SparklesIcon class="size-5 flex-shrink-0" :class="trialDaysRemaining <= 3 ? 'text-warning' : 'text-primary'" />
+            <p class="text-base-content text-sm">
+              <strong>Pro Trial</strong> — {{ trialDaysRemaining }} {{ trialDaysRemaining === 1 ? 'day' : 'days' }} remaining.
+              <template v-if="trialDaysRemaining <= 3">
+                <NuxtLink to="/admin/upgrade" class="text-warning font-medium hover:underline">Upgrade now</NuxtLink> to keep Pro features.
+              </template>
+              <template v-else>
+                Earn bonus days by trying premium features in the plugin.
+              </template>
+            </p>
+          </div>
+          <NuxtLink v-if="trialDaysRemaining <= 3" to="/admin/upgrade" class="btn btn-warning btn-sm flex-shrink-0">
+            Upgrade
+          </NuxtLink>
+          <NuxtLink v-else to="/admin/settings#subscription" class="btn btn-primary btn-sm btn-outline flex-shrink-0">
+            View Trial
+          </NuxtLink>
+        </div>
+      </section>
+
+      <!-- Multi-site Discount Callout (only when not trial-eligible) -->
+      <section v-else-if="!loading && sites.length >= 2" class="w-full">
+        <!-- Scenario A: Has paid Pro/Free+, multiple sites -->
+        <div v-if="paidPremiumSitesCount >= 1 && nonProSitesCount > 0" class="bg-success/5 border border-success/20 rounded-2xl px-6 py-5 flex items-center justify-between gap-4">
           <div class="flex items-center gap-3">
             <TagIcon class="text-success size-5 flex-shrink-0" />
             <p class="text-base-content text-sm">
@@ -109,8 +157,8 @@
             Upgrade
           </NuxtLink>
         </div>
-        <!-- Scenario B: No Pro, multiple sites -->
-        <div v-else-if="premiumSitesCount === 0" class="bg-info/5 border border-info/20 rounded-2xl px-6 py-5 flex items-center justify-between gap-4">
+        <!-- Scenario B: No paid Pro, multiple sites -->
+        <div v-else-if="paidPremiumSitesCount === 0" class="bg-info/5 border border-info/20 rounded-2xl px-6 py-5 flex items-center justify-between gap-4">
           <div class="flex items-center gap-3">
             <TagIcon class="text-info size-5 flex-shrink-0" />
             <p class="text-base-content text-sm">
@@ -171,7 +219,7 @@
               <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">Subscription</p>
               <p class="text-base-content">
                 <span :class="getSiteTier(selectedSiteId) !== 'free' ? 'inline-flex size-2 rounded-full bg-success animate-pulse' : 'hidden'"></span>
-                {{ getSiteTier(selectedSiteId) === 'free' ? 'Free' : getSiteTier(selectedSiteId) === 'free-plus' ? 'Free+' : 'Active' }}</p>
+                {{ getSiteTier(selectedSiteId) === 'free' ? 'Free' : getSiteTier(selectedSiteId) === 'trial' ? 'Trial' : getSiteTier(selectedSiteId) === 'free-plus' ? 'Free+' : 'Active' }}</p>
             </div>
             <div>
               <p class="text-base-content/60 mb-2 text-[11px]  tracking-[0.1em] uppercase">WordPress</p>
@@ -385,6 +433,9 @@ const siteTiers = ref<Record<number, string>>({})
 const siteTeamCounts = ref<Record<number, number>>({})
 const scrollPosition = ref(0)
 const togglingTier = ref(false)
+const anyTrialEligible = ref(false)
+const trialingSiteId = ref<number | null>(null)
+const trialDaysRemaining = ref(0)
 
 // Check if in development mode
 const isDev = import.meta.dev
@@ -416,11 +467,16 @@ const greeting = computed(() => {
 })
 
 const premiumSitesCount = computed(() => {
+  return Object.values(siteTiers.value).filter(tier => tier === 'pro' || tier === 'free-plus' || tier === 'trial').length
+})
+
+// Paid premium sites (excludes trial — used for multi-site discount messaging)
+const paidPremiumSitesCount = computed(() => {
   return Object.values(siteTiers.value).filter(tier => tier === 'pro' || tier === 'free-plus').length
 })
 
 const nonProSitesCount = computed(() => {
-  return Object.values(siteTiers.value).filter(tier => tier !== 'pro' && tier !== 'free-plus').length
+  return Object.values(siteTiers.value).filter(tier => tier !== 'pro' && tier !== 'free-plus' && tier !== 'trial').length
 })
 
 const totalTeamMembers = computed(() => {
@@ -460,11 +516,18 @@ const loadDashboardData = async () => {
 
     // Load subscription info and team counts for all sites in parallel
     const dataPromises = sites.value.map(async (site) => {
-      // Load subscription tier
+      // Load subscription tier and trial eligibility
       try {
         const response = await useAuthFetch(`/api/v2/subscriptions/status/${site.id}`)
         if (response.success) {
           siteTiers.value[site.id] = response.tier || 'free'
+          if (response.trial_eligible && !response.is_trialing) {
+            anyTrialEligible.value = true
+          }
+          if (response.is_trialing) {
+            trialingSiteId.value = site.id
+            trialDaysRemaining.value = response.trial_days_remaining || 0
+          }
         }
       } catch (error) {
         console.error(`Failed to load subscription for site ${site.id}:`, error)
@@ -498,6 +561,7 @@ const getSiteTier = (siteId: number) => {
 const getTierLabel = (siteId: number) => {
   const tier = getSiteTier(siteId)
   if (tier === 'pro') return 'Pro'
+  if (tier === 'trial') return 'Trial'
   if (tier === 'free-plus') return 'Free+'
   return 'Free'
 }
