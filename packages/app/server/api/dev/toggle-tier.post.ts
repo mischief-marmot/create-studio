@@ -42,31 +42,53 @@ export default defineEventHandler(async (event) => {
     let subscription = await subscriptionRepo.getBySiteId(siteId)
 
     if (!subscription) {
-      // Create a new free-plus subscription
+      // Create a new trial subscription
       subscription = await subscriptionRepo.create({
         site_id: siteId,
-        status: 'active',
-        tier: 'free-plus',
+        status: 'trialing',
+        tier: 'pro',
+        trial_end: new Date(Date.now() + 14 * 86400 * 1000).toISOString(),
       })
     } else {
-      // Cycle the tier: free → free-plus → pro → free
-      const tierCycle: Record<string, string> = { free: 'free-plus', 'free-plus': 'pro', pro: 'free' }
-      const newTier = tierCycle[subscription.tier] || 'free-plus'
-      const newStatus = newTier === 'free' ? 'free' : 'active'
+      // Cycle the tier: free → trial → free-plus → pro → free
+      const currentTier = subscription.status === 'trialing' ? 'trial' : subscription.tier
+      const tierCycle: Record<string, string> = { free: 'trial', trial: 'free-plus', 'free-plus': 'pro', pro: 'free' }
+      const newTier = tierCycle[currentTier] || 'trial'
+      const newStatus = newTier === 'free' ? 'free' : newTier === 'trial' ? 'trialing' : 'active'
 
       subscription = await subscriptionRepo.update(siteId, {
-        tier: newTier,
+        tier: newTier === 'trial' ? 'pro' : newTier,
         status: newStatus,
+        ...(newTier === 'trial' ? { trial_end: new Date(Date.now() + 14 * 86400 * 1000).toISOString() } : {}),
       })
     }
 
     // Notify the WordPress site of the tier change via webhook.
-    const tier = subscription?.tier || 'free'
+    // Use effective tier: trialing status maps to 'trial' tier
+    const tier = subscription?.status === 'trialing' ? 'trial' : (subscription?.tier || 'free')
     try {
       const site = await siteRepo.findById(siteId)
       if (site?.url) {
         const { sendWebhook } = await import('~~/server/utils/webhooks')
-        sendWebhook(site.url, { type: 'subscription_change', data: { tier } })
+        const isTrialing = subscription?.status === 'trialing'
+
+        // Get active paid count for the site owner
+        let activePaidCount = 0
+        const siteUsers = await siteRepo.getSiteUsers(site.canonical_site_id || site.id!)
+        if (siteUsers.length > 0) {
+          activePaidCount = await subscriptionRepo.getActivePaidCountByUser(siteUsers[0].userId)
+        }
+
+        sendWebhook(site.url, {
+          type: 'subscription_change',
+          data: {
+            tier,
+            is_trialing: isTrialing,
+            trial_days_remaining: isTrialing ? 14 : 0,
+            trial_end: isTrialing ? subscription?.trial_end : null,
+            active_paid_count: activePaidCount,
+          },
+        })
       }
     } catch (_) {
       // Fire-and-forget

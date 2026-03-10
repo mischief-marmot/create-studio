@@ -92,6 +92,7 @@ export default defineEventHandler(async (event) => {
       is_trialing: trialInfo.isTrialing,
       trial_days_remaining: trialInfo.daysRemaining,
       trial_end: trialInfo.trialEnd,
+      trial_extensions: trialInfo.extensions || {},
       trial_eligible: trialEligibility.eligible,
     }
   }

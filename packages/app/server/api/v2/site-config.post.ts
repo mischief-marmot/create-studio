@@ -50,7 +50,7 @@ export default defineEventHandler(async (event) => {
         showInteractiveMode = false
       }
 
-      // Free+ and Pro tiers get Interactive Mode
+      // Free+, Trial, and Pro tiers get Interactive Mode
       // Check if Interactive Mode is disabled by the publisher
       if (settings.interactive_mode_enabled === false) {
         showInteractiveMode = false
@@ -85,6 +85,9 @@ export default defineEventHandler(async (event) => {
     renderMode = 'in-dom'
   }
 
+  // Trial tier has same features as free-plus
+  const effectiveTier = subscriptionTier === 'trial' ? 'free-plus' : subscriptionTier
+
   const config = {
     showInteractiveMode,
     buttonText,
@@ -96,9 +99,9 @@ export default defineEventHandler(async (event) => {
     renderMode,
     features: {
       inDomRendering: renderMode === 'in-dom',
-      customStyling: subscriptionTier === 'pro',
-      servingsAdjustment: subscriptionTier !== 'free',
-      unitConversion: subscriptionTier !== 'free',
+      customStyling: effectiveTier === 'pro',
+      servingsAdjustment: effectiveTier !== 'free',
+      unitConversion: effectiveTier !== 'free',
       analytics: true,
     }
   }
