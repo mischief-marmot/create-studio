@@ -59,18 +59,23 @@ export default defineEventHandler(async (event) => {
       await siteRepo.touch(canonicalSiteId)
     }
 
-    // Look up subscription tier
+    // Look up subscription tier, trial info, and trial eligibility
     const subscriptionRepo = new SubscriptionRepository()
     const subscriptionTier = await subscriptionRepo.getActiveTier(siteId)
+    const trialInfo = await subscriptionRepo.getTrialInfo(siteId)
+    const trialEligibility = await subscriptionRepo.isTrialEligible(siteId)
 
-    // Look up active paid subscription count for the site owner (for multi-site discount messaging)
+    // Look up active paid subscription count and total site count for the site owner (for multi-site discount messaging)
     let activePaidCount = 0
+    let totalSiteCount = 1
     try {
       const siteUsers = await siteRepo.getSiteUsers(canonicalSiteId)
       if (siteUsers.length > 0) {
-        // Use the first user (owner) to count their active paid subscriptions
+        // Use the first user (owner) to count their active paid subscriptions and total sites
         const ownerId = siteUsers[0].userId
         activePaidCount = await subscriptionRepo.getActivePaidCountByUser(ownerId)
+        const userSites = await siteRepo.getUserCanonicalSites(ownerId)
+        totalSiteCount = userSites.length
       }
     } catch (err) {
       logger.debug('Failed to get active paid count', { error: err })
@@ -83,6 +88,11 @@ export default defineEventHandler(async (event) => {
       site_url: site.url,
       site_name: site.name,
       active_paid_count: activePaidCount,
+      total_site_count: totalSiteCount,
+      is_trialing: trialInfo.isTrialing,
+      trial_days_remaining: trialInfo.daysRemaining,
+      trial_end: trialInfo.trialEnd,
+      trial_eligible: trialEligibility.eligible,
     }
   }
   catch (error: any) {

@@ -79,6 +79,10 @@ export const subscriptions = sqliteTable('Subscriptions', {
   current_period_start: text('current_period_start'),
   current_period_end: text('current_period_end'),
   cancel_at_period_end: integer('cancel_at_period_end', { mode: 'boolean' }).default(false),
+  has_trialed: integer('has_trialed', { mode: 'boolean' }).default(false),
+  trial_end: text('trial_end'),
+  metadata: text('metadata', { mode: 'json' }).$type<Record<string, any>>(),
+  trial_extensions: text('trial_extensions', { mode: 'json' }).$type<Record<string, string>>(),
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 }, (table) => [

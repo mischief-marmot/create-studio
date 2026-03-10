@@ -44,7 +44,23 @@ export interface CreateSubscriptionData {
   current_period_start?: string
   current_period_end?: string
   cancel_at_period_end?: boolean
+  has_trialed?: boolean
+  trial_end?: string
+  metadata?: Record<string, any>
+  trial_extensions?: Record<string, string>
 }
+
+export const ALLOWED_TRIAL_STEPS = [
+  'servings_adjustment',
+  'unit_conversion',
+  'checklists',
+  'cta_variants',
+  'bulk_import',
+  'review_management',
+  'premium_theme',
+] as const
+
+export type TrialStep = typeof ALLOWED_TRIAL_STEPS[number]
 
 /**
  * User database operations
@@ -470,6 +486,10 @@ export class SubscriptionRepository {
       current_period_start: data.current_period_start || null,
       current_period_end: data.current_period_end || null,
       cancel_at_period_end: data.cancel_at_period_end || false,
+      has_trialed: data.has_trialed || false,
+      trial_end: data.trial_end || null,
+      metadata: data.metadata || null,
+      trial_extensions: data.trial_extensions || null,
       createdAt: now,
       updatedAt: now,
     }).returning().get()
@@ -489,6 +509,10 @@ export class SubscriptionRepository {
     current_period_start: string | null
     current_period_end: string | null
     cancel_at_period_end: boolean
+    has_trialed: boolean
+    trial_end: string | null
+    metadata: Record<string, any> | null
+    trial_extensions: Record<string, string> | null
   }>) {
     const now = new Date().toISOString()
 
@@ -505,7 +529,7 @@ export class SubscriptionRepository {
       .innerJoin(schema.siteUsers, eq(schema.subscriptions.site_id, schema.siteUsers.site_id))
       .where(and(
         eq(schema.siteUsers.user_id, userId),
-        sql`${schema.subscriptions.status} IN ('active', 'trialing')`,
+        sql`${schema.subscriptions.status} = 'active'`,
         sql`${schema.subscriptions.tier} != 'free'`
       ))
       .get()
@@ -519,12 +543,76 @@ export class SubscriptionRepository {
       return 'free'
     }
 
-    // Check if subscription is active
-    if (subscription.status === 'active' || subscription.status === 'trialing') {
+    if (subscription.status === 'active') {
       return subscription.tier
     }
 
+    // Trialing users get trial tier (same features as free-plus, different labeling)
+    if (subscription.status === 'trialing') {
+      return 'trial'
+    }
+
     return 'free'
+  }
+
+  async hasTrialed(siteId: number): Promise<boolean> {
+    const subscription = await this.getBySiteId(siteId)
+    return subscription?.has_trialed === true
+  }
+
+  async getTrialInfo(siteId: number) {
+    const subscription = await this.getBySiteId(siteId)
+
+    if (!subscription || !subscription.trial_end) {
+      return { isTrialing: false, daysRemaining: 0, trialEnd: null, extensionsUsed: 0, extensions: null }
+    }
+
+    const now = new Date()
+    const trialEnd = new Date(subscription.trial_end)
+    const daysRemaining = Math.max(0, Math.floor((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+
+    return {
+      isTrialing: subscription.status === 'trialing',
+      daysRemaining,
+      trialEnd: subscription.trial_end,
+      extensionsUsed: Object.keys(subscription.trial_extensions || {}).length,
+      extensions: subscription.trial_extensions,
+    }
+  }
+
+  async recordTrialExtension(siteId: number, step: TrialStep, newTrialEnd: string) {
+    const subscription = await this.getBySiteId(siteId)
+    if (!subscription) throw new Error('No subscription found')
+
+    const extensions = subscription.trial_extensions || {}
+    if (extensions[step]) throw new Error('Step already redeemed')
+
+    extensions[step] = new Date().toISOString()
+
+    await this.update(siteId, {
+      trial_end: newTrialEnd,
+      trial_extensions: extensions,
+    })
+
+    return { extensions, trialEnd: newTrialEnd }
+  }
+
+  async isTrialEligible(siteId: number): Promise<{ eligible: boolean; reason?: string }> {
+    const subscription = await this.getBySiteId(siteId)
+
+    if (!subscription) {
+      return { eligible: true }
+    }
+
+    if (subscription.has_trialed) {
+      return { eligible: false, reason: 'Site has already used a trial' }
+    }
+
+    if (subscription.status === 'active' || subscription.status === 'trialing') {
+      return { eligible: false, reason: 'Site already has an active subscription' }
+    }
+
+    return { eligible: true }
   }
 }
 
