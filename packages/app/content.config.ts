@@ -56,6 +56,10 @@ export default defineContentConfig({
           type: z.enum(['feature', 'enhancement', 'fix', 'breaking']),
         })).optional(),
         previousVersion: z.string().optional(),
+        faq: z.array(z.object({
+          question: z.string(),
+          answer: z.string(),
+        })).optional(),
       }),
     }),
   },

@@ -129,6 +129,7 @@ export default defineNuxtConfig({
     "@nuxt/content",  // Must be before @nuxthub/core for database auto-config
     "@nuxthub/core",
     "@nuxt/scripts",
+    "@nuxt/fonts",
     "nuxt-og-image",
     "nuxt-schema-org",
     "nuxt-auth-utils",
@@ -144,10 +145,6 @@ export default defineNuxtConfig({
         'css-inline': 'wasm',
       },
     },
-    fonts: [
-      'Inter:400',
-      'Inter:700',
-    ],
   },
   content: {
     // Database auto-configured by NuxtHub when registered after @nuxt/content

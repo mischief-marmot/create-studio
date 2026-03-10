@@ -38,3 +38,7 @@ Control exactly where the video appears on each individual card. Choose to displ
 
 - **Classic Editor stability** — Resolved a crash in TinyMCE when opening the Create card editor
 - **Card duplication** — Duplicating a card from a collection view now succeeds reliably
+
+## What's Next
+
+[Create 2.2](/releases/create-plugin-2-2-0) introduces a **free 14-day Pro trial** — try every premium feature including [servings adjustment, unit conversion, checklists](/features/recipe-cards), and more with no credit card required.

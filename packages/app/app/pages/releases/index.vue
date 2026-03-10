@@ -85,7 +85,7 @@ const filters = [
 
 const activeFilter = ref('all')
 
-const { data: releases } = await useAsyncData('releases', () => {
+const { data: releases } = await useAsyncData('releases-index', () => {
   return queryCollection('releases')
     .where('_published', '=', true)
     .order('date', 'DESC')

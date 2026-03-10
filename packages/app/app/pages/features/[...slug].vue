@@ -99,8 +99,7 @@ useSchemaOrg([
   }),
 ])
 
-defineOgImage({
-  component: 'Feature',
+defineOgImage('Feature', {
   title: page.value?.title || '',
   description: page.value?.description || '',
   icon: page.value?.icon || '',

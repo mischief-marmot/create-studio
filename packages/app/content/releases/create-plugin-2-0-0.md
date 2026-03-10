@@ -37,6 +37,17 @@ highlights:
     description: 'Optimized JavaScript bundling for faster card and page loading. Improved text contrast to meet WCAG standards.'
     type: 'enhancement'
 previousVersion: '1.9.16'
+faq:
+  - question: 'Is Create 2.0 a free update?'
+    answer: 'Yes. Create 2.0 is a free update for all existing Create plugin users. Premium features like Interactive Mode, adjustable servings, and unit conversion require a [Pro subscription](/features) — or you can [try them free for 14 days](/releases/create-plugin-2-2-0) starting with Create 2.2.'
+  - question: 'How do I import recipes from another plugin?'
+    answer: 'First, enable the importer in **Create > Settings > Advanced**. Then go to **Create > Import** in your WordPress dashboard. Select your source plugin from the list and follow the guided import process. Create supports WP Recipe Maker, Tasty Recipes, EasyRecipe, and 8 other plugins.'
+  - question: 'What is Interactive Mode?'
+    answer: 'Interactive Mode is a mobile-first, distraction-free recipe experience with built-in timers, step-by-step guidance, ingredient checklists, servings adjustment, unit conversion, and automatic progress saving. [See all Pro features](/features).'
+  - question: 'Does Create 2.0 work with the Classic Editor?'
+    answer: 'Yes. Create 2.0 works with both the WordPress block editor (Gutenberg) and the Classic Editor (TinyMCE).'
+  - question: 'Can I try Pro features before buying?'
+    answer: 'Yes. Starting with [Create 2.2](/releases/create-plugin-2-2-0), you can try every Pro feature free for 14 days with no credit card required.'
 ---
 
 You've been waiting for years, and we're thrilled to finally release many months of hard work to you. Create 2.0 is a complete reimagining of the Create WordPress recipe plugin — not just new features, but a fundamentally better way to build [recipe cards](/features/recipe-cards), [how-to guides](/features/how-to-cards), and [lists](/features/lists-and-roundups) with structured data. It also sets the stage for a whole new Create experience, going beyond schema cards with more features and innovation coming soon.
@@ -124,7 +135,7 @@ New keyboard shortcuts throughout the app for faster workflows and efficiency. P
 
 ## What's Next
 
-2.0 is just the beginning. Coming soon:
+2.0 is just the beginning. [Create 2.2](/releases/create-plugin-2-2-0) already brings a free 14-day Pro trial so you can experience every premium feature with no commitment. And there's more coming soon:
 
 - **Card Snippet Blocks** — embed rich card previews directly in your posts with a dedicated Gutenberg block
 - **Featured Card Blocks** — showcase your best cards anywhere on your site

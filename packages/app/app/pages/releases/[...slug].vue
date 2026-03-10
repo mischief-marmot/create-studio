@@ -14,7 +14,7 @@ const { data: page } = await useAsyncData(route.path, () => {
 const { data: surroundings } = await useAsyncData(`release-surround-${slug}`, () => {
   return queryCollectionItemSurroundings('releases', slug)
     .where('_published', '=', true)
-    .order('date', 'DESC')
+    .order('date', 'ASC')
 })
 const [prev, next] = surroundings?.value || []
 
@@ -61,7 +61,7 @@ const activeHeading = ref('')
 onMounted(() => {
   // Read headings from the rendered DOM
   nextTick(() => {
-    const els = document.querySelectorAll('.prose h2[id], .prose h3[id]')
+    const els = document.querySelectorAll('.release-content h2[id], .release-content h3[id]')
     headings.value = Array.from(els).map(el => ({
       id: el.id,
       text: el.textContent?.trim() || '',
@@ -107,28 +107,70 @@ useSeoMeta({
   twitterCard: 'summary_large_image',
 })
 
-useSchemaOrg([
-  defineArticle({
-    '@type': 'TechArticle',
-    headline: page.value?.title,
-    description: page.value?.description,
-    datePublished: page.value?.date,
-    image: `https://create.studio/__og-image__/image/releases/${route.params.slug?.[0] || ''}/og.png`,
-    author: {
-      '@type': 'Organization',
-      name: 'Create Studio',
-      url: 'https://create.studio',
-    },
-    publisher: {
-      '@type': 'Organization',
-      name: 'Create Studio',
-      url: 'https://create.studio',
-    },
-  }),
-])
+const faqEntries = computed(() => (page.value as any)?.faq || [])
 
-defineOgImage({
-  component: 'Release',
+// Render inline markdown (links + bold) to HTML
+function renderInlineMd(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="link link-primary">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+}
+
+// Strip markdown to plain text for schema
+function stripMd(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+}
+
+const schemaOrg = computed(() => {
+  const schemas: any[] = [
+    defineArticle({
+      '@type': 'TechArticle',
+      headline: page.value?.title,
+      description: page.value?.description,
+      datePublished: page.value?.date ? `${page.value.date}T00:00:00+00:00` : undefined,
+      image: `https://create.studio/__og-image__/image/releases/${route.params.slug?.[0] || ''}/og.png`,
+      author: {
+        '@type': 'Organization',
+        name: 'Create Studio',
+        url: 'https://create.studio',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Create Studio',
+        url: 'https://create.studio',
+      },
+    }),
+    defineSoftwareApp({
+      name: page.value?.product === 'create-plugin' ? 'Create Plugin for WordPress' : 'Create Studio',
+      operatingSystem: 'WordPress',
+      applicationCategory: 'LifestyleApplication',
+      softwareVersion: page.value?.version,
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+      },
+    }),
+  ]
+  if (faqEntries.value.length > 0) {
+    schemas.push(defineWebPage({
+      '@type': 'FAQPage',
+    }))
+    for (const entry of faqEntries.value) {
+      schemas.push(defineQuestion({
+        name: entry.question,
+        acceptedAnswer: stripMd(entry.answer),
+      }))
+    }
+  }
+  return schemas
+})
+
+useSchemaOrg(schemaOrg)
+
+defineOgImage('Release', {
   title: page.value?.title || '',
   description: page.value?.description || '',
   version: page.value?.version || '',
@@ -150,8 +192,8 @@ defineOgImage({
         </div>
 
         <div class="lg:grid lg:grid-cols-[260px_1fr] lg:gap-12">
-          <!-- Table of Contents sidebar -->
-          <aside v-if="headings.length" class="lg:block hidden">
+          <!-- Table of Contents sidebar (always rendered for layout stability, content populates on mount) -->
+          <aside class="lg:block hidden">
             <nav class="top-24 sticky">
               <div class="text-base-content/80 mb-3 text-xs font-semibold tracking-wider uppercase">On this page</div>
               <ul class="border-base-300 space-y-1 border-l">
@@ -175,7 +217,7 @@ defineOgImage({
           </aside>
 
           <!-- Main content column -->
-          <div class="max-w-3xl">
+          <div class="release-content max-w-3xl">
             <!-- Header -->
             <div class="flex items-center gap-3 mt-8">
               <span class="badge" :class="page.product === 'create-plugin' ? 'badge-primary' : 'badge-secondary'">
@@ -197,9 +239,20 @@ defineOgImage({
               <ContentRenderer :value="page" />
             </div>
 
+            <!-- FAQ (from frontmatter) -->
+            <div v-if="faqEntries.length" class="mt-16">
+              <h2 id="frequently-asked-questions" class="text-base-content mb-6 text-2xl font-semibold tracking-tight">Frequently Asked Questions</h2>
+              <div class="space-y-6">
+                <div v-for="(entry, i) in faqEntries" :key="i">
+                  <h3 :id="`faq-${i}`" class="text-base-content text-base font-semibold">{{ entry.question }}</h3>
+                  <p class="text-base-content/70 mt-1.5 text-sm leading-relaxed" v-html="renderInlineMd(entry.answer)" />
+                </div>
+              </div>
+            </div>
+
             <!-- Highlights -->
             <div v-if="page.highlights?.length" class="mt-16">
-              <h2 class="text-base-content mb-6 text-xl font-semibold">Release Highlights</h2>
+              <h2 id="release-highlights" class="text-base-content mb-6 text-xl font-semibold">Release Highlights</h2>
               <div class="sm:grid-cols-2 grid grid-cols-1 gap-3">
                 <div
                   v-for="highlight in page.highlights"
@@ -227,25 +280,25 @@ defineOgImage({
               <NuxtLink
                 v-if="prev"
                 :to="`/releases/${prev.stem?.split('/').pop()}`"
-                class="border-base-300 ring-1 ring-base-content/10 text-base-content hover:bg-base-200 flex items-center flex-1 gap-2 px-4 py-3 text-sm font-medium transition-colors border rounded-lg shadow-sm"
+                class="border-base-300 ring-1 ring-base-content/10 text-base-content hover:bg-base-200 flex items-center max-w-[50%] gap-2 px-4 py-3 text-sm font-medium transition-colors border rounded-lg shadow-sm"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4 flex-shrink-0">
                   <path fill-rule="evenodd" d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
                 </svg>
                 <div class="text-left">
                   <div class="text-base-content/60 text-xs">Previous</div>
-                  <div class="truncate">{{ prev.title }}</div>
+                  <div class="text-pretty">{{ prev.title }}</div>
                 </div>
               </NuxtLink>
 
               <NuxtLink
                 v-if="next"
                 :to="`/releases/${next.stem?.split('/').pop()}`"
-                class="border-base-300 ring-1 ring-base-content/10 text-base-content hover:bg-base-200 flex items-center justify-end flex-1 gap-2 px-4 py-3 text-sm font-medium transition-colors border rounded-lg shadow-sm"
+                class="border-base-300 ring-1 ring-base-content/10 text-base-content hover:bg-base-200 flex items-center justify-end max-w-[50%] ml-auto gap-2 px-4 py-3 text-sm font-medium transition-colors border rounded-lg shadow-sm"
               >
                 <div class="text-right">
                   <div class="text-base-content/60 text-xs">Next</div>
-                  <div class="truncate">{{ next.title }}</div>
+                  <div class="text-pretty">{{ next.title }}</div>
                 </div>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4 flex-shrink-0">
                   <path fill-rule="evenodd" d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
