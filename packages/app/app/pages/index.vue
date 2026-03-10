@@ -218,9 +218,9 @@
       <div class="max-w-6xl mx-auto">
         <div class="mb-16 text-center">
           <span class="text-primary-content dark:text-primary text-lg font-semibold tracking-wide uppercase">Why Create?</span>
-          <h2 class="lg:text-7xl mt-2 mb-4 font-serif text-6xl">Core features. Zero cost.</h2>
+          <h2 class="lg:text-7xl mt-2 mb-4 font-serif text-6xl">The essentials should be free</h2>
           <p class="text-base-content text-3xl">See how Create compares to other popular recipe plugins</p>
-          <p class="text-base-content opacity-80 text-md max-w-xl m-auto mt-4">You shouldn't have to pay for basics like Ratings and Nutrition calculation. Fully-functional cards are free with Create.</p>
+          <p class="text-base-content opacity-80 text-md max-w-xl m-auto mt-4">Other plugins charge for basics like Ratings and Nutrition. Create includes them free, and our premium features still cost less.</p>
         </div>
 
         <!-- Desktop Comparison Table -->
@@ -231,15 +231,15 @@
                 <th class="text-base-content px-4 py-4 font-semibold text-left">Feature</th>
                 <th class="text-primary-content bg-primary/80 dark:bg-primary px-4 py-4 font-semibold text-center">
                   Create
-                  <div class="text-primary-content text-xs font-normal">Free-$15/mo</div>
+                  <div class="text-primary-content text-xs font-normal">Free &ndash; $15/mo</div>
                 </th>
                 <th class="text-base-content px-4 py-4 font-semibold text-center">
                   WP Recipe Maker
-                  <div class="text-base-content text-xs font-normal">$49-149/year</div>
+                  <div class="text-base-content text-xs font-normal">Free &ndash; $149/yr</div>
                 </th>
                 <th class="text-base-content px-4 py-4 font-semibold text-center">
                   Tasty Recipes
-                  <div class="text-base-content text-xs font-normal">$49-299/year</div>
+                  <div class="text-base-content text-xs font-normal">From $49/yr</div>
                 </th>
               </tr>
             </thead>
@@ -247,16 +247,19 @@
               <tr v-for="feature in comparisonFeatures" :key="feature.name" class="hover:bg-base-100/50">
                 <td class="text-base-content px-4 py-4">{{ feature.name }}</td>
                 <td class="bg-base-100 px-4 py-4 text-center">
-                  <span v-if="feature.create === 'check'" class="text-success font-semibold">✓</span>
-                  <span v-else class="text-success font-semibold">{{ feature.create }}</span>
+                  <span v-if="feature.create === 'Free+'" class="text-base-content font-medium inline-flex items-center gap-1">
+                    Free+
+                    <button @click="openWaitlistModal" class="tooltip tooltip-top cursor-pointer" data-tip="Coming soon — get notified!">
+                      <BellAlertIcon class="size-5 text-primary" />
+                    </button>
+                  </span>
+                  <span v-else :class="feature.create === 'Free' ? 'text-success font-semibold' : 'text-base-content font-medium'">{{ feature.create }}</span>
                 </td>
                 <td class="px-4 py-4 text-center">
-                  <span v-if="feature.wprm === 'check'" class="text-base-content">✓</span>
-                  <span v-else class="text-error">{{ feature.wprm }}</span>
+                  <span :class="feature.wprm === 'Free' ? 'text-base-content' : feature.wprm === '✗' ? 'text-error' : 'text-base-content/60'">{{ feature.wprm }}</span>
                 </td>
                 <td class="px-4 py-4 text-center">
-                  <span v-if="feature.tasty === 'check'" class="text-base-content">✓</span>
-                  <span v-else class="text-error">{{ feature.tasty }}</span>
+                  <span :class="feature.tasty === '✗' ? 'text-error' : 'text-base-content/60'">{{ feature.tasty }}</span>
                 </td>
               </tr>
             </tbody>
@@ -272,7 +275,7 @@
             >
               <div class="text-left">
                 <h3 class="text-primary-content dark:text-primary font-serif text-2xl font-bold">Create</h3>
-                <p class="text-base-content/60 text-sm">Free</p>
+                <p class="text-base-content/60 text-sm">Free &ndash; $15/mo</p>
               </div>
             </button>
 
@@ -287,8 +290,13 @@
               <div class="border-primary/20 pt-4 mt-4 space-y-3 border-t">
                 <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
                   <span class="text-base-content text-sm">{{ feature.name }}</span>
-                  <span v-if="feature.create === 'check'" class="text-success flex-shrink-0 text-lg font-bold">✓</span>
-                  <span v-else class="text-success flex-shrink-0 text-sm font-semibold">{{ feature.create }}</span>
+                  <span v-if="feature.create === 'Free+'" class="text-base-content flex-shrink-0 text-sm font-semibold inline-flex items-center gap-1">
+                    Free+
+                    <button @click="openWaitlistModal" class="tooltip tooltip-left cursor-pointer" data-tip="Coming soon!">
+                      <BellAlertIcon class="size-5 text-primary" />
+                    </button>
+                  </span>
+                  <span v-else :class="feature.create === 'Free' ? 'text-success' : 'text-base-content'" class="flex-shrink-0 text-sm font-semibold">{{ feature.create }}</span>
                 </div>
               </div>
             </transition>
@@ -302,7 +310,7 @@
             >
               <div class="text-left">
                 <h3 class="text-base-content text-lg font-bold">WP Recipe Maker</h3>
-                <p class="text-base-content/60 text-sm">$49+/year</p>
+                <p class="text-base-content/60 text-sm">Free &ndash; $149/yr</p>
               </div>
               <svg
                 :class="['w-5 h-5 text-base-content/60 transition-transform', expandedProduct === 'wprm' ? 'rotate-180' : '']"
@@ -325,8 +333,7 @@
               <div v-if="expandedProduct === 'wprm'" class="border-base-300 pt-4 mt-4 space-y-3 border-t">
                 <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
                   <span class="text-base-content text-sm">{{ feature.name }}</span>
-                  <span v-if="feature.wprm === 'check'" class="text-base-content flex-shrink-0 text-lg font-bold">✓</span>
-                  <span v-else class="text-error flex-shrink-0 text-sm font-semibold">{{ feature.wprm }}</span>
+                  <span :class="feature.wprm === 'Free' ? 'text-base-content' : feature.wprm === '✗' ? 'text-error' : 'text-base-content/60'" class="flex-shrink-0 text-sm font-semibold">{{ feature.wprm }}</span>
                 </div>
               </div>
             </transition>
@@ -340,7 +347,7 @@
             >
               <div class="text-left">
                 <h3 class="text-base-content text-lg font-bold">Tasty Recipes</h3>
-                <p class="text-base-content/60 text-sm">$49-299/year</p>
+                <p class="text-base-content/60 text-sm">From $49/yr</p>
               </div>
               <svg
                 :class="['w-5 h-5 text-base-content/60 transition-transform', expandedProduct === 'tasty' ? 'rotate-180' : '']"
@@ -363,8 +370,7 @@
               <div v-if="expandedProduct === 'tasty'" class="border-base-300 pt-4 mt-4 space-y-3 border-t">
                 <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
                   <span class="text-base-content text-sm">{{ feature.name }}</span>
-                  <span v-if="feature.tasty === 'check'" class="text-base-content flex-shrink-0 text-lg font-bold">✓</span>
-                  <span v-else class="text-error flex-shrink-0 text-sm font-semibold">{{ feature.tasty }}</span>
+                  <span :class="feature.tasty === '✗' ? 'text-error' : 'text-base-content/60'" class="flex-shrink-0 text-sm font-semibold">{{ feature.tasty }}</span>
                 </div>
               </div>
             </transition>
@@ -821,6 +827,7 @@ import {
   StarIcon,
   BoltIcon,
   PlayIcon,
+  BellAlertIcon,
 } from '@heroicons/vue/20/solid'
 import { createCreationKey } from '@create-studio/shared'
 
@@ -929,13 +936,17 @@ const scrollToSection = (id: string) => {
 
 // Comparison data
 const comparisonFeatures = [
-  { name: 'JSON-LD Schema', wprm: 'check', create: 'check', tasty: 'check' },
-  { name: 'User Experience', wprm: 'Confusing', create: 'Pleasant', tasty: 'Modern' },
-  { name: 'Nutrition API', wprm: 'Paid', create: 'Free', tasty: 'Paid' },
-  { name: 'Card Templates', wprm: 'Dated', create: 'Beautiful', tasty: 'Polished' },
-  { name: 'Interactive Mode', wprm: '✗', create: 'Exclusive', tasty: '✗' },
-  { name: 'Content Types', wprm: 'Repurposed Recipes', create: 'Recipes, How-Tos, Lists', tasty: 'Recipes' },
-  { name: 'User Ratings', wprm: 'Paid', create: 'Free', tasty: 'Paid' },
+  { name: 'JSON-LD Schema', create: 'Free', wprm: 'Free', tasty: 'Free' },
+  { name: 'Nutrition Calculation', create: 'Free', wprm: '$99/yr', tasty: '+$9/mo (Nutrifox)' },
+  { name: 'User Ratings & Reviews', create: 'Free', wprm: '$49/yr', tasty: '$49/yr' },
+  { name: 'Recipe Cards', create: 'Free', wprm: 'Free', tasty: 'Free' },
+  { name: 'How-To Cards', create: 'Free', wprm: 'Free', tasty: '✗' },
+  { name: 'Lists & Roundups', create: 'Free', wprm: 'Basic (Free)', tasty: '+$49/yr (Tasty Roundups)' },
+  { name: 'Product Links in Cards', create: 'Free+', wprm: '$49/yr', tasty: '+$49/yr (Tasty Links)' },
+  { name: 'Interactive Cook Mode', create: 'Free+', wprm: '$49/yr', tasty: '$49/yr' },
+  { name: 'Serving Adjustments', create: 'Free+', wprm: '$49/yr', tasty: '$49/yr' },
+  { name: 'Unit Conversion', create: 'Free+', wprm: '$99/yr', tasty: '$49/yr' },
+  { name: 'Ingredient Checklists', create: 'Free+', wprm: '$49/yr', tasty: '$49/yr' },
 ]
 
 // Page meta
