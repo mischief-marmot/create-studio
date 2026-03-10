@@ -220,7 +220,7 @@
           <span class="text-primary-content dark:text-primary text-lg font-semibold tracking-wide uppercase">Why Create?</span>
           <h2 class="lg:text-7xl mt-2 mb-4 font-serif text-6xl">The essentials should be free</h2>
           <p class="text-base-content text-3xl">See how Create compares to other popular recipe plugins</p>
-          <p class="text-base-content opacity-80 text-md max-w-xl m-auto mt-4">Other plugins charge for basics like Ratings and Nutrition. Create includes them free, and our premium features still cost less.</p>
+          <p class="text-base-content opacity-80 text-md max-w-xl m-auto mt-4">Other plugins charge for basics like Ratings and Nutrition. With Create, they're free.</p>
         </div>
 
         <!-- Desktop Comparison Table -->
