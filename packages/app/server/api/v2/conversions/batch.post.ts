@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
       return { error: 'source_system must be "us_customary" or "metric"' }
     }
 
-    const result = convertBatch(body)
+    const result = await convertBatch(body)
 
     setResponseStatus(event, 200)
     return result

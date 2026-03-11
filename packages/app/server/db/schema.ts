@@ -3,7 +3,7 @@
  * Defines all database tables for NuxtHub v0.10+
  */
 
-import { sqliteTable, text, integer, primaryKey, index } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, primaryKey, index, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
 // Users table
 export const users = sqliteTable('Users', {
@@ -186,6 +186,30 @@ export const siteMeta = sqliteTable('SiteMeta', {
   index('idx_site_meta_site_id').on(table.site_id),
 ])
 
+// USDA reference data for ingredient-specific unit conversion
+export const usdaFoods = sqliteTable('usda_foods', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  fdc_id: integer('fdc_id').notNull(),
+  name: text('name').notNull(),
+  category: text('category'),
+  is_liquid: integer('is_liquid', { mode: 'boolean' }).default(false),
+  cup_grams: real('cup_grams'),
+  tbsp_grams: real('tbsp_grams'),
+  tsp_grams: real('tsp_grams'),
+  created_at: text('created_at'),
+}, (table) => [
+  uniqueIndex('idx_usda_foods_name').on(table.name),
+  index('idx_usda_foods_fdc_id').on(table.fdc_id),
+])
+
+export const usdaAliases = sqliteTable('usda_aliases', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  alias: text('alias').notNull(),
+  usda_food_id: integer('usda_food_id').notNull().references(() => usdaFoods.id, { onDelete: 'cascade' }),
+}, (table) => [
+  uniqueIndex('idx_usda_aliases_alias').on(table.alias),
+])
+
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
 
 // Type exports for use in application code
@@ -205,3 +229,5 @@ export type FeedbackReport = typeof feedbackReports.$inferSelect
 export type NewFeedbackReport = typeof feedbackReports.$inferInsert
 export type SiteMeta = typeof siteMeta.$inferSelect
 export type NewSiteMeta = typeof siteMeta.$inferInsert
+export type UsdaFood = typeof usdaFoods.$inferSelect
+export type UsdaAlias = typeof usdaAliases.$inferSelect
