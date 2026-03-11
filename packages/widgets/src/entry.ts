@@ -632,7 +632,7 @@ const CreateStudio = {
           const mount = document.createElement('div')
           mount.className = 'create-studio-widget cs-servings-adjuster-container'
           toolbar.appendChild(mount)
-          const app = await sdkInstance.mount({ type: 'servings-adjuster', selector: mount, config: { creationId, defaultMultiplier, siteUrl, theme: baseTheme, label: servingsLabel, showLabel: showLabels } })
+          const app = await sdkInstance.mount({ type: 'servings-adjuster', selector: mount, config: { creationId, defaultMultiplier, siteUrl, theme: baseTheme, label: servingsLabel, showLabel: false } })
           if (app) apps.push(app)
         }
 
@@ -640,7 +640,7 @@ const CreateStudio = {
           const mount = document.createElement('div')
           mount.className = 'cs-unit-conversion-wrapper'
           toolbar.appendChild(mount)
-          const ucConfig = { ...unitConversionConfig, showLabel: showLabels }
+          const ucConfig = { ...unitConversionConfig, showLabel: false }
           const app = await sdkInstance.mount({ type: 'unit-conversion', selector: mount, config: { creationId, siteUrl, theme: baseTheme, unitConversion: ucConfig } })
           if (app) apps.push(app)
         }
