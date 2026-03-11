@@ -165,6 +165,26 @@ describe('calculateAdjustedAmount', () => {
   it('returns null for non-numeric input', () => {
     expect(calculateAdjustedAmount('some text', 2)).toBeNull()
   })
+
+  it('adjusts unicode fraction "3½" * 2 = 7', () => {
+    expect(calculateAdjustedAmount('3½', 2)).toBe('7')
+  })
+
+  it('adjusts unicode fraction "3½" * 3 = 10 1/2', () => {
+    expect(calculateAdjustedAmount('3½', 3)).toBe('10 1/2')
+  })
+
+  it('adjusts standalone unicode fraction "¼" * 2 = 1/2', () => {
+    expect(calculateAdjustedAmount('¼', 2)).toBe('1/2')
+  })
+
+  it('adjusts "1¼" * 2 = 2 1/2', () => {
+    expect(calculateAdjustedAmount('1¼', 2)).toBe('2 1/2')
+  })
+
+  it('adjusts "1 ¼" (spaced) * 2 = 2 1/2', () => {
+    expect(calculateAdjustedAmount('1 ¼', 2)).toBe('2 1/2')
+  })
 })
 
 // ─── adjustFraction ─────────────────────────────────────────────────────────
@@ -265,5 +285,140 @@ describe('extractAmount', () => {
   it('returns null for no-amount text', () => {
     expect(extractAmount('salt to taste')).toBeNull()
     expect(extractAmount('a pinch of pepper')).toBeNull()
+  })
+})
+
+// ─── Unicode fraction support ───────────────────────────────────────────────
+
+describe('extractAmount with unicode fractions', () => {
+  it('extracts number + space + unicode fraction: "1 ¼"', () => {
+    expect(extractAmount('1 ¼ cups (156 grams) self-rising flour')).toBe('1 ¼')
+  })
+
+  it('extracts number directly followed by unicode fraction: "3½"', () => {
+    expect(extractAmount('3½ cups bread flour or all-purpose flour (420 grams)')).toBe('3½')
+  })
+
+  it('extracts standalone unicode fraction: "½"', () => {
+    expect(extractAmount('½ teaspoon salt')).toBe('½')
+  })
+
+  it('extracts unicode fraction range: "¾-1"', () => {
+    expect(extractAmount('¾-1 cup of lukewarm water (170 grams to 227 grams)')).toBe('¾-1')
+  })
+
+  it('extracts "1¼" from "1¼ teaspoons salt"', () => {
+    expect(extractAmount('1¼ teaspoons salt')).toBe('1¼')
+  })
+
+  it('extracts "¼" from "¼ cup sugar (50 grams)"', () => {
+    expect(extractAmount('¼ cup sugar (50 grams)')).toBe('¼')
+  })
+})
+
+// ─── Lemon cake ingredient list ─────────────────────────────────────────────
+
+describe('lemon cake ingredients', () => {
+  it('parses "1 ¼ cups (156 grams) self-rising flour"', () => {
+    expect(extractAmount('1 ¼ cups (156 grams) self-rising flour')).toBe('1 ¼')
+  })
+
+  it('parses "4 tablespoons fresh lemon juice"', () => {
+    expect(extractAmount('4 tablespoons fresh lemon juice')).toBe('4')
+  })
+
+  it('parses "3 large eggs"', () => {
+    expect(extractAmount('3 large eggs')).toBe('3')
+  })
+
+  it('parses "1 (14 oz) can..." — amount is 1, no unit matched', () => {
+    expect(extractAmount('1 (14 oz) can (397grams) full-fat sweetened condensed milk')).toBe('1')
+  })
+
+  it('doubles "4 tablespoons fresh lemon juice"', () => {
+    const result = transformIngredient('4 tablespoons fresh lemon juice', null, null, null, 2)
+    expect(result).toBe('8 tablespoons fresh lemon juice')
+  })
+
+  it('doubles "3 large eggs"', () => {
+    const result = transformIngredient('3 large eggs', null, null, null, 2)
+    expect(result).toBe('6 large eggs')
+  })
+
+  it('doubles "1 (14 oz) can..." without mangling parenthetical', () => {
+    const result = transformIngredient('1 (14 oz) can (397grams) full-fat sweetened condensed milk', null, null, null, 2)
+    expect(result).toBe('2 (14 oz) can (397grams) full-fat sweetened condensed milk')
+  })
+
+  it('does not misparse "(14 oz)" as a convertible unit', () => {
+    const config: UnitConversionConfig = {
+      enabled: true,
+      default_system: 'auto',
+      source_system: 'us_customary',
+      label: 'Unit Conversion',
+      conversions: { 'ing-milk': { amount: '397', unit: 'g' } }
+    }
+    const result = transformIngredient(
+      '1 (14 oz) can (397grams) full-fat sweetened condensed milk',
+      'ing-milk', config, 'metric', 1
+    )
+    expect(result).toBe('1 (14 oz) can (397grams) full-fat sweetened condensed milk')
+  })
+})
+
+// ─── Burger bun ingredient list ─────────────────────────────────────────────
+
+describe('burger bun ingredients', () => {
+  it('parses "3½ cups bread flour or all-purpose flour (420 grams)"', () => {
+    expect(extractAmount('3½ cups bread flour or all-purpose flour (420 grams)')).toBe('3½')
+  })
+
+  it('parses "¾-1 cup of lukewarm water (170 grams to 227 grams)"', () => {
+    expect(extractAmount('¾-1 cup of lukewarm water (170 grams to 227 grams)')).toBe('¾-1')
+  })
+
+  it('parses "2 tablespoons butter, at room temperature (28 grams)"', () => {
+    expect(extractAmount('2 tablespoons butter, at room temperature (28 grams)')).toBe('2')
+  })
+
+  it('parses "1 tablespoon instant yeast"', () => {
+    expect(extractAmount('1 tablespoon instant yeast')).toBe('1')
+  })
+
+  it('parses "¼ cup sugar (50 grams)"', () => {
+    expect(extractAmount('¼ cup sugar (50 grams)')).toBe('¼')
+  })
+
+  it('parses "1 large egg"', () => {
+    expect(extractAmount('1 large egg')).toBe('1')
+  })
+
+  it('parses "1¼ teaspoons salt"', () => {
+    expect(extractAmount('1¼ teaspoons salt')).toBe('1¼')
+  })
+
+  it('doubles "3½ cups bread flour..." → 7 cups', () => {
+    const result = transformIngredient('3½ cups bread flour or all-purpose flour (420 grams)', null, null, null, 2)
+    expect(result).toBe('7 cups bread flour or all-purpose flour (420 grams)')
+  })
+
+  it('triples "3½ cups bread flour..." → 10 1/2 cups', () => {
+    const result = transformIngredient('3½ cups bread flour or all-purpose flour (420 grams)', null, null, null, 3)
+    expect(result).toBe('10 1/2 cups bread flour or all-purpose flour (420 grams)')
+  })
+
+  it('doubles "2 tablespoons butter, at room temperature (28 grams)"', () => {
+    const result = transformIngredient('2 tablespoons butter, at room temperature (28 grams)', null, null, null, 2)
+    expect(result).toBe('4 tablespoons butter, at room temperature (28 grams)')
+  })
+
+  it('doubles "1¼ teaspoons salt" → 2 1/2 teaspoons salt', () => {
+    const result = transformIngredient('1¼ teaspoons salt', null, null, null, 2)
+    expect(result).toBe('2 1/2 teaspoons salt')
+  })
+
+  it('doubles "1 large egg"', () => {
+    const result = transformIngredient('1 large egg', null, null, null, 2)
+    expect(result).toBe('2 large egg')
   })
 })

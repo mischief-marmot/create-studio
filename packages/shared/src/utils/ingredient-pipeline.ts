@@ -88,7 +88,7 @@ function applyUnitConversion(
   // AND full words ("2 tablespoons", "1 teaspoon", "8 ounces", "1 pound")
   // Longer patterns listed first so they match before shorter ones
   const match = text.match(
-    /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)\s+(fluid\s+ounces?|fl\.?\s*oz\.?|tablespoons?|teaspoons?|ounces?|pounds?|gallons?|quarts?|pints?|cups?|tbsp\.?|tsp\.?|oz\.?|lbs?\.?|millilit(?:er|re)s?|kilograms?|lit(?:er|re)s?|grams?|mL|ml|L|l|kg|g)\b/i
+    /^(\d+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\d+\s+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\d+\s+\d+\/\d+|\d+\/\d+|[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\d+(?:\.\d+)?)\s+(fluid\s+ounces?|fl\.?\s*oz\.?|tablespoons?|teaspoons?|ounces?|pounds?|gallons?|quarts?|pints?|cups?|tbsp\.?|tsp\.?|oz\.?|lbs?\.?|millilit(?:er|re)s?|kilograms?|lit(?:er|re)s?|grams?|mL|ml|L|l|kg|g)\b/i
   )
 
   if (match) {
@@ -102,7 +102,7 @@ function applyUnitConversion(
 // ─── Servings multiplier ────────────────────────────────────────────────────
 
 function applyServingsMultiplier(text: string, multiplier: number): string {
-  const amountMatch = text.match(/^([\d\s\/\.\-]+)(.*)$/)
+  const amountMatch = text.match(/^([\d\s\/\.\-¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]+)(.*)$/)
   if (!amountMatch) return text
 
   const numericPart = amountMatch[1].trim()
@@ -116,9 +116,61 @@ function applyServingsMultiplier(text: string, multiplier: number): string {
   return text
 }
 
+// ─── Unicode fraction helpers ───────────────────────────────────────────────
+
+const UNICODE_FRACTIONS: Record<string, number> = {
+  '¼': 0.25, '½': 0.5, '¾': 0.75,
+  '⅛': 0.125, '⅜': 0.375, '⅝': 0.625, '⅞': 0.875,
+  '⅓': 1/3, '⅔': 2/3,
+  '⅕': 0.2, '⅖': 0.4, '⅗': 0.6, '⅘': 0.8,
+  '⅙': 1/6, '⅚': 5/6,
+}
+
+const UNICODE_FRACTION_CHARS = Object.keys(UNICODE_FRACTIONS).join('')
+const UNICODE_FRACTION_RE = new RegExp(`[${UNICODE_FRACTION_CHARS}]`)
+
+/** Convert a string that may contain unicode fractions to a decimal number, or return null. */
+function unicodeToDecimal(amount: string): number | null {
+  const trimmed = amount.trim()
+
+  // Standalone unicode fraction: "½"
+  if (UNICODE_FRACTIONS[trimmed] !== undefined) {
+    return UNICODE_FRACTIONS[trimmed]
+  }
+
+  // Number + unicode fraction (attached or spaced): "3½" or "3 ½"
+  const match = trimmed.match(new RegExp(`^(\\d+)\\s*([${UNICODE_FRACTION_CHARS}])$`))
+  if (match) {
+    return parseInt(match[1]) + (UNICODE_FRACTIONS[match[2]] ?? 0)
+  }
+
+  return null
+}
+
 // ─── Amount calculation helpers ─────────────────────────────────────────────
 
 export function calculateAdjustedAmount(amount: string, multiplier: number): string | null {
+  // Handle unicode fractions first (e.g., "3½", "1 ¼", "½")
+  if (UNICODE_FRACTION_RE.test(amount)) {
+    // Handle ranges with unicode fractions (e.g., "¾-1")
+    if (amount.includes('-')) {
+      const parts = amount.split('-').map(p => p.trim())
+      const adjustedParts = parts.map(part => {
+        const dec = unicodeToDecimal(part)
+        if (dec !== null) return decimalToFraction(dec * multiplier)
+        const num = parseFloat(part)
+        if (!isNaN(num)) return formatNumber(num * multiplier)
+        return part
+      })
+      return adjustedParts.join('-')
+    }
+
+    const decimal = unicodeToDecimal(amount)
+    if (decimal !== null) {
+      return decimalToFraction(decimal * multiplier)
+    }
+  }
+
   // Check for mixed fractions first (e.g., "2 1/4")
   if (/^\d+\s+\d+\/\d+$/.test(amount)) {
     return adjustFraction(amount, multiplier)
@@ -240,8 +292,12 @@ export function formatNumber(num: number): string {
  */
 export function extractAmount(text: string): string | null {
   const patterns = [
+    /^(\d+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚])\s+/, // Number directly followed by unicode fraction like "1¼"
+    /^(\d+\s+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚])\s+/, // Number + space + unicode fraction like "1 ¼"
     /^(\d+\s+\d+\/\d+)\s+/, // Mixed fractions like "2 1/4"
     /^(\d+\/\d+)\s+/,       // Simple fractions like "1/2"
+    /^([¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]\s*-\s*\d+(?:\.\d+)?)\s+/, // Unicode fraction range like "¾-1"
+    /^([¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚])\s+/, // Standalone unicode fraction like "½"
     /^(\d+(?:\.\d+)?(?:\s*-\s*\d+(?:\.\d+)?)?)\s+/, // Numbers like "2" or "1.5" or "1-2"
   ]
 
