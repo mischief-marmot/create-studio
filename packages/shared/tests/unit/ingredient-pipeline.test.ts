@@ -366,6 +366,36 @@ describe('lemon cake ingredients', () => {
   })
 })
 
+// ─── Range unit conversion ──────────────────────────────────────────────────
+
+describe('range unit conversion', () => {
+  const config: UnitConversionConfig = {
+    enabled: true,
+    default_system: 'auto',
+    source_system: 'us_customary',
+    label: 'Unit Conversion',
+    conversions: {
+      'ing-water': { amount: '170', unit: 'mL', max_amount: '240' },
+      'ing-oil': { amount: '15', unit: 'mL', max_amount: '30' },
+    }
+  }
+
+  it('converts "¾-1 cup of lukewarm water" with range amounts', () => {
+    const result = transformIngredient('¾-1 cup of lukewarm water', 'ing-water', config, 'metric', 1)
+    expect(result).toBe('170-240 mL of lukewarm water')
+  })
+
+  it('converts "1-2 tablespoons oil" with range amounts', () => {
+    const result = transformIngredient('1-2 tablespoons oil', 'ing-oil', config, 'metric', 1)
+    expect(result).toBe('15-30 mL oil')
+  })
+
+  it('converts range and applies servings multiplier', () => {
+    const result = transformIngredient('1-2 tablespoons oil', 'ing-oil', config, 'metric', 2)
+    expect(result).toBe('30-60 mL oil')
+  })
+})
+
 // ─── Burger bun ingredient list ─────────────────────────────────────────────
 
 describe('burger bun ingredients', () => {

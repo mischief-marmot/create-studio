@@ -79,16 +79,27 @@ export function transformIngredientValue(
 
 // ─── Unit conversion ────────────────────────────────────────────────────────
 
+const AMOUNT_PATTERN = `\\d+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\\d+\\s+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\\d+\\s+\\d+\\/\\d+|\\d+\\/\\d+|[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\\d+(?:\\.\\d+)?`
+const UNIT_PATTERN = `fluid\\s+ounces?|fl\\.?\\s*oz\\.?|tablespoons?|teaspoons?|ounces?|pounds?|gallons?|quarts?|pints?|cups?|tbsp\\.?|tsp\\.?|oz\\.?|lbs?\\.?|millilit(?:er|re)s?|kilograms?|lit(?:er|re)s?|grams?|mL|ml|L|l|kg|g`
+
 function applyUnitConversion(
   text: string,
   conversion: { amount: string; unit: string; max_amount?: string | null }
 ): string {
-  // Match amount+unit at start of ingredient text
-  // Handles abbreviations ("2 cups", "1 1/2 tbsp", "1/4 oz", "3.5 fl oz")
-  // AND full words ("2 tablespoons", "1 teaspoon", "8 ounces", "1 pound")
-  // Longer patterns listed first so they match before shorter ones
+  // Try range match first: "1-2 cups", "¾-1 cup"
+  const rangeMatch = text.match(
+    new RegExp(`^(${AMOUNT_PATTERN})\\s*-\\s*(${AMOUNT_PATTERN})\\s+(${UNIT_PATTERN})\\b`, 'i')
+  )
+
+  if (rangeMatch) {
+    const rest = text.slice(rangeMatch[0].length)
+    const maxAmount = conversion.max_amount || conversion.amount
+    return `${conversion.amount}-${maxAmount} ${conversion.unit}${rest}`
+  }
+
+  // Single amount match: "2 cups", "1 1/2 tbsp", "½ tsp"
   const match = text.match(
-    /^(\d+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\d+\s+[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\d+\s+\d+\/\d+|\d+\/\d+|[¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚]|\d+(?:\.\d+)?)\s+(fluid\s+ounces?|fl\.?\s*oz\.?|tablespoons?|teaspoons?|ounces?|pounds?|gallons?|quarts?|pints?|cups?|tbsp\.?|tsp\.?|oz\.?|lbs?\.?|millilit(?:er|re)s?|kilograms?|lit(?:er|re)s?|grams?|mL|ml|L|l|kg|g)\b/i
+    new RegExp(`^(${AMOUNT_PATTERN})\\s+(${UNIT_PATTERN})\\b`, 'i')
   )
 
   if (match) {
