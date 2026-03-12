@@ -464,6 +464,54 @@ describe('Unit Conversion', () => {
     })
   })
 
+  describe('Mixed US/metric ingredient list (European-style)', () => {
+    it('should handle a real-world mixed ingredient list', async () => {
+      // Simulates a European recipe with mixed US volume + metric weight/volume
+      // source_system = 'us_customary' — US units get converted, metric units are not convertible
+      const result = await convertBatch(makeBatchRequest([
+        { id: 1, amount: '6', unit: 'tbsp', item: 'extra virgin olive oil' },
+        { id: 2, amount: '4', unit: 'tbsp', item: 'butter' },
+        // "1 large onion" — no convertible unit, wouldn't be sent by plugin
+        { id: 3, amount: '2.5', unit: 'tsp', item: 'fresh ginger, finely grated', max_amount: '3' },
+        // "2 cloves garlic" — no convertible unit, wouldn't be sent by plugin
+        { id: 4, amount: '1.800', unit: 'grams', item: 'pumpkin, peeled and cut into chunks' },
+        { id: 5, amount: '300', unit: 'grams', item: 'carrots, peeled and cut into chunks' },
+        { id: 6, amount: '300', unit: 'grams', item: 'sweet potatoes, peeled and cubed' },
+        { id: 7, amount: '2.5', unit: 'litres', item: 'vegetable stock or light chicken stock' },
+        { id: 8, amount: '1', unit: 'tbsp', item: 'sea salt' },
+        // "freshly ground pepper" and "pinch of nutmeg" — no convertible units
+      ]))
+
+      expect(result.target_system).toBe('metric')
+
+      // Olive oil: liquid → generic mL (6 × 14.787 = 88.7 → nearest 5 = 90)
+      expect(result.conversions[0]).toMatchObject({ id: 1, convertible: true, unit: 'mL', amount: '90' })
+
+      // Butter: density → grams (4 × 14.2 = 56.8 → nearest 5 = 55)
+      expect(result.conversions[1]).toMatchObject({ id: 2, convertible: true, unit: 'g', amount: '55' })
+
+      // Ginger: no density match → generic mL (2.5 × 4.929 = 12.3 → nearest 5 = 10)
+      expect(result.conversions[2]).toMatchObject({ id: 3, convertible: true, unit: 'mL' })
+      // max_amount: 3 × 4.929 = 14.787 → nearest 5 = 15
+      expect(result.conversions[2].max_amount).toBe('15')
+
+      // Pumpkin: "grams" is NOT in US_TO_METRIC table → not convertible from us_customary
+      expect(result.conversions[3]).toMatchObject({ id: 4, convertible: false })
+
+      // Carrots: same — grams not convertible from us_customary
+      expect(result.conversions[4]).toMatchObject({ id: 5, convertible: false })
+
+      // Sweet potatoes: same
+      expect(result.conversions[5]).toMatchObject({ id: 6, convertible: false })
+
+      // Vegetable stock: "litres" not in US_TO_METRIC → not convertible
+      expect(result.conversions[6]).toMatchObject({ id: 7, convertible: false })
+
+      // Sea salt: no density match → generic mL (1 × 14.787 = 14.787 → nearest 5 = 15)
+      expect(result.conversions[7]).toMatchObject({ id: 8, convertible: true, unit: 'mL', amount: '15' })
+    })
+  })
+
   describe('Batch processing', () => {
     it('should handle mixed batch with density and generic conversions', async () => {
       const result = await convertBatch(makeBatchRequest([
