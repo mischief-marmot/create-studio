@@ -162,11 +162,17 @@ definePageMeta({
 
 const router = useRouter()
 const route = useRoute()
+const { loggedIn } = useUserSession()
 const { login } = useAuth()
 const { storeRedirect, consumeRedirect } = useAuthRedirect()
 
 // Persist ?redirect= so it survives navigating to login/reset
 storeRedirect()
+
+// Redirect authenticated users to the intended destination or dashboard
+if (loggedIn.value) {
+  await navigateTo(consumeRedirect() || '/admin', { replace: true })
+}
 
 const email = ref('')
 const firstName = ref('')

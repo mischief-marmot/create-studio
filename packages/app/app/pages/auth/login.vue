@@ -83,11 +83,18 @@ definePageMeta({
 
 const router = useRouter()
 const route = useRoute()
+const { loggedIn } = useUserSession()
 const { login } = useAuth()
 const { storeRedirect, consumeRedirect } = useAuthRedirect()
 
 // Persist ?redirect= so it survives navigating to register/reset
 storeRedirect()
+
+// Redirect authenticated users to the intended destination or dashboard
+if (loggedIn.value) {
+  const redirectTo = consumeRedirect()
+  await navigateTo(redirectTo || '/admin', { replace: true })
+}
 
 // Check for account-exists message from registration redirect
 const accountExistsMessage = computed(() => route.query.message === 'account-exists')

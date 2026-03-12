@@ -14,6 +14,7 @@ export function useAuthRedirect() {
 
   /** Persist the redirect from the current URL's ?redirect= param (if present). */
   function storeRedirect() {
+    if (import.meta.server) return
     const redirect = route.query.redirect as string | undefined
     if (redirect && redirect.startsWith('/')) {
       sessionStorage.setItem(STORAGE_KEY, redirect)
@@ -25,6 +26,10 @@ export function useAuthRedirect() {
    * Falls back to the current route's ?redirect= query param.
    */
   function consumeRedirect(): string | null {
+    if (import.meta.server) {
+      const query = route.query.redirect as string | undefined
+      return query && query.startsWith('/') ? query : null
+    }
     const stored = sessionStorage.getItem(STORAGE_KEY)
     if (stored) {
       sessionStorage.removeItem(STORAGE_KEY)
