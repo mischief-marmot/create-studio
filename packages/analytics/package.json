@@ -1,0 +1,20 @@
+{
+  "name": "@create-studio/analytics",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "exports": {
+    ".": "./index.ts",
+    "./schema": "./schema.ts",
+    "./types": "./types.ts",
+    "./sampling": "./sampling.ts",
+    "./queries/*": "./queries/*.ts",
+    "./rollup": "./rollup/index.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.1"
+  }
+}
