@@ -47,6 +47,8 @@ export default defineNuxtConfig({
     db: {
       dialect: "sqlite",
     },
+    // DB_ANALYTICS (analytics D1 database) is configured via wrangler.jsonc binding,
+    // not through hub config — NuxtHub only manages a single D1 via hub.db.
   },
 
   app: {

@@ -35,6 +35,14 @@
                 class="input input-sm input-bordered bg-base-100 text-sm"
               />
             </div>
+            <button
+              class="btn btn-sm btn-outline"
+              :class="{ 'btn-disabled': rollupRunning }"
+              @click="runRollup"
+            >
+              <span v-if="rollupRunning" class="loading loading-spinner loading-xs"></span>
+              <span v-else>Run Rollup</span>
+            </button>
           </div>
         </div>
       </div>
@@ -98,36 +106,6 @@
 
         <!-- Interactive Data -->
         <template v-else>
-          <!-- Top Stats -->
-          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm mb-8">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-              <div class="space-y-1">
-                <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                  {{ formatNumber(interactiveData.interactive.totalSessions) }}
-                </div>
-                <div class="text-sm text-base-content/60">Active Sessions</div>
-              </div>
-              <div class="space-y-1">
-                <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                  {{ formatNumber(interactiveData.interactive.uniqueUsers) }}
-                </div>
-                <div class="text-sm text-base-content/60">Unique Users</div>
-              </div>
-              <div class="space-y-1">
-                <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                  {{ formatDuration(interactiveData.interactive.avgDuration) }}
-                </div>
-                <div class="text-sm text-base-content/60">Avg Duration</div>
-              </div>
-              <div class="space-y-1">
-                <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                  {{ pageViewPercentage }}%
-                </div>
-                <div class="text-sm text-base-content/60">Page View Rate</div>
-              </div>
-            </div>
-          </div>
-
           <div class="space-y-8">
             <!-- Interactive Mode Engagement -->
             <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
@@ -145,24 +123,24 @@
                 </div>
                 <div class="space-y-1">
                   <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ formatNumber(interactiveData.interactive.uniqueUsers) }}
+                    {{ formatNumber(interactiveData.interactive.uniqueDomains) }}
                   </div>
-                  <div class="text-xs text-base-content/50">Unique Users</div>
-                  <div class="text-xs text-base-content/40">Anonymous tracked users</div>
+                  <div class="text-xs text-base-content/50">Unique Sites</div>
+                  <div class="text-xs text-base-content/40">Distinct domains with sessions</div>
                 </div>
                 <div class="space-y-1">
                   <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ formatDuration(interactiveData.interactive.avgDuration) }}
+                    {{ interactiveData.interactive.completionRate.toFixed(1) }}%
                   </div>
-                  <div class="text-xs text-base-content/50">Avg Session Duration</div>
-                  <div class="text-xs text-base-content/40">Time in interactive mode</div>
+                  <div class="text-xs text-base-content/50">Completion Rate</div>
+                  <div class="text-xs text-base-content/40">Sessions completed / started</div>
                 </div>
                 <div class="space-y-1">
                   <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ pageViewPercentage }}%
+                    {{ formatNumber(interactiveData.interactive.totalPageViews) }}
                   </div>
-                  <div class="text-xs text-base-content/50">Page View Rate</div>
-                  <div class="text-xs text-base-content/40">{{ interactiveData.interactive.pagesViewed }} / {{ interactiveData.interactive.totalPages }} pages</div>
+                  <div class="text-xs text-base-content/50">Total Page Views</div>
+                  <div class="text-xs text-base-content/40">Extrapolated from 10% sample</div>
                 </div>
               </div>
             </div>
@@ -333,31 +311,6 @@
 
         <!-- API Data -->
         <template v-else>
-          <!-- Top Stats -->
-          <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm mb-8">
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
-              <div class="space-y-1">
-                <div class="text-3xl text-warning" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                  {{ formatNumber(apiData.v1Total) }}
-                </div>
-                <div class="text-sm text-base-content/60">v1 API Calls</div>
-              </div>
-              <div class="space-y-1">
-                <div class="text-3xl text-success" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                  {{ formatNumber(apiData.v2Total) }}
-                </div>
-                <div class="text-sm text-base-content/60">v2 API Calls</div>
-              </div>
-              <div class="space-y-1">
-                <div class="text-3xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                  {{ v1Percentage }}%
-                </div>
-                <div class="text-sm text-base-content/60">v1 Percentage</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- API Version Usage Details -->
           <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
             <h2 class="text-lg text-base-content mb-6" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
               API Version Usage
@@ -443,18 +396,19 @@ interface ApiUsageData {
 interface InteractiveAnalytics {
   interactive: {
     totalSessions: number
-    uniqueUsers: number
-    avgDuration: number
-    pagesViewed: number
-    totalPages: number
+    uniqueDomains: number
+    completionRate: number
+    totalPageViews: number
   }
   timers: {
     started: number
     completed: number
+    completionRate: number
   }
   ratings: {
     screensShown: number
     submitted: number
+    conversionRate: number
   }
   cta: {
     totalActivations: number
@@ -477,15 +431,35 @@ const apiLoading = ref(false)
 const apiError = ref<string | null>(null)
 const apiData = ref<ApiUsageData | null>(null)
 
+// Rollup state
+const rollupRunning = ref(false)
+
+const runRollup = async () => {
+  rollupRunning.value = true
+  try {
+    const result = await $fetch<{ datesProcessed: string[]; summariesWritten: number; errors: string[] }>('/api/admin/analytics/rollup', {
+      method: 'POST',
+    })
+    const errorNote = result.errors.length > 0 ? ` (${result.errors.length} errors)` : ''
+    const daysNote = result.datesProcessed.length > 0
+      ? `${result.datesProcessed.length} day(s): ${result.datesProcessed[0]} → ${result.datesProcessed[result.datesProcessed.length - 1]}`
+      : 'already up to date'
+    alert(`Rollup complete — ${daysNote}, ${result.summariesWritten} summaries written${errorNote}`)
+    // Refresh current tab data
+    if (activeTab.value === 'interactive') fetchInteractive()
+    else fetchApiUsage()
+  } catch (err: any) {
+    alert(`Rollup failed: ${err?.message || 'Unknown error'}`)
+  } finally {
+    rollupRunning.value = false
+  }
+}
+
 onMounted(() => {
-  const today = new Date()
-  const weekAgo = new Date(today)
-  weekAgo.setDate(today.getDate() - 7)
+  const today = new Date().toISOString().split('T')[0]
+  startDate.value = today
+  endDate.value = today
 
-  endDate.value = today.toISOString().split('T')[0]
-  startDate.value = weekAgo.toISOString().split('T')[0]
-
-  // Only auto-load the interactive tab (the default)
   fetchInteractive()
 })
 
@@ -550,13 +524,6 @@ const formatNumber = (value: number): string => {
   return value.toLocaleString()
 }
 
-const formatDuration = (seconds: number): string => {
-  if (seconds < 60) return `${seconds}s`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ${seconds % 60}s`
-  const hours = Math.floor(minutes / 60)
-  return `${hours}h ${minutes % 60}m`
-}
 
 const v1Percentage = computed(() => {
   if (!apiData.value) return 0
@@ -565,19 +532,14 @@ const v1Percentage = computed(() => {
   return Math.round((apiData.value.v1Total / total) * 100)
 })
 
-const pageViewPercentage = computed(() => {
-  if (!interactiveData.value || interactiveData.value.interactive.totalPages === 0) return 0
-  return Math.round((interactiveData.value.interactive.pagesViewed / interactiveData.value.interactive.totalPages) * 100)
-})
-
 const timerCompletionRate = computed(() => {
-  if (!interactiveData.value || interactiveData.value.timers.started === 0) return 0
-  return Math.round((interactiveData.value.timers.completed / interactiveData.value.timers.started) * 100)
+  if (!interactiveData.value) return 0
+  return Math.round(interactiveData.value.timers.completionRate)
 })
 
 const ratingConversionRate = computed(() => {
-  if (!interactiveData.value || interactiveData.value.ratings.screensShown === 0) return 0
-  return Math.round((interactiveData.value.ratings.submitted / interactiveData.value.ratings.screensShown) * 100)
+  if (!interactiveData.value) return 0
+  return Math.round(interactiveData.value.ratings.conversionRate)
 })
 
 const overallCtaConversionRate = computed(() => {

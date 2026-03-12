@@ -59,6 +59,11 @@
       "binding": "DB_ADMIN",
       "database_name": "create-studio-admin",
       "database_id": "d289dece-7c58-4593-a8ef-e72ed9cdf80e"
+    },
+    {
+      "binding": "DB_ANALYTICS",
+      "database_name": "create-studio-analytics",
+      "database_id": "13a5ab74-2843-4a74-9039-abf13ea8544e"
     }
   ],
   "vars": {
