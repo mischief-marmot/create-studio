@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics Database Architecture — Create Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #121215;
+      --bg-base: #1a1a1f;
+      --bg-elevated: #222228;
+      --bg-card: #26262d;
+      --bg-hover: #2e2e36;
+
+      --border: rgba(255,255,255,0.08);
+      --border-strong: rgba(255,255,255,0.14);
+
+      --text: #e8e8ed;
+      --text-muted: #8e8e9a;
+      --text-dim: #5a5a66;
+
+      --gold: #fff1be;
+      --gold-dim: #c4a84e;
+      --purple: #b060ff;
+      --pink: #ee87cb;
+      --blue: #60a0ff;
+      --green: #5cd89a;
+      --red: #ff6b6b;
+      --orange: #ffaa5c;
+
+      --rainbow: linear-gradient(90deg, #b060ff, #ee87cb 30%, #fff1be 72%);
+
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    * { margin: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg-deep);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Layout */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Header */
+    .page-header {
+      padding: 48px 0 40px;
+      text-align: center;
+      position: relative;
+    }
+    .page-header::after {
+      content: '';
+      display: block;
+      height: 2px;
+      background: var(--rainbow);
+      margin-top: 40px;
+      border-radius: 1px;
+    }
+    .page-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+    .page-header .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+    .badge-draft { background: rgba(176,96,255,0.15); color: var(--purple); }
+
+    /* Navigation */
+    .toc {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(18,18,21,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0;
+    }
+    .toc-inner {
+      display: flex;
+      gap: 4px;
+      padding: 10px 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .toc-inner::-webkit-scrollbar { display: none; }
+    .toc a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: 6px;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .toc a:hover, .toc a.active {
+      color: var(--text);
+      background: var(--bg-elevated);
+    }
+
+    /* Sections */
+    section {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    section:last-of-type { border-bottom: none; }
+
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--gold-dim);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .section-desc {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      max-width: 640px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card-header h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .card-header .card-badge {
+      font-size: 0.65rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .card-body { padding: 20px; }
+
+    /* =========================================================
+       DATA FLOW DIAGRAM
+       ========================================================= */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 32px 16px;
+      overflow-x: auto;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .flow-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 20px;
+      border-radius: var(--radius-lg);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      min-width: 120px;
+      text-align: center;
+      position: relative;
+    }
+    .flow-node .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+    .flow-node .label {
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .flow-node .sublabel {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+    .flow-arrow {
+      color: var(--text-dim);
+      font-size: 1.2rem;
+      padding: 0 6px;
+      flex-shrink: 0;
+    }
+    .flow-node.client .icon { background: rgba(96,160,255,0.15); color: var(--blue); }
+    .flow-node.server .icon { background: rgba(176,96,255,0.15); color: var(--purple); }
+    .flow-node.db .icon { background: rgba(92,216,154,0.15); color: var(--green); }
+    .flow-node.cron .icon { background: rgba(255,170,92,0.15); color: var(--orange); }
+    .flow-node.admin .icon { background: rgba(238,135,203,0.15); color: var(--pink); }
+
+    /* =========================================================
+       SCHEMA TABLES
+       ========================================================= */
+    .schema-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .schema-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .schema-table th {
+      text-align: left;
+      padding: 8px 12px;
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .schema-table td {
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .schema-table tr:last-child td { border-bottom: none; }
+    .schema-table .col-name {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--gold);
+    }
+    .schema-table .col-type {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--purple);
+    }
+    .schema-table .col-note {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+    .idx-badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      background: rgba(92,216,154,0.12);
+      color: var(--green);
+      font-weight: 600;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    /* Example rows */
+    .example-rows {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .example-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+    .example-row {
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+    .example-row .ek { color: var(--text-muted); }
+    .example-row .ev-str { color: var(--green); }
+    .example-row .ev-num { color: var(--orange); }
+    .example-row .ev-key { color: var(--gold); }
+    .example-row .ev-type { color: var(--purple); }
+
+    /* =========================================================
+       SAMPLING TABLE
+       ========================================================= */
+    .sampling-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .sampling-table th {
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .sampling-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sampling-table tr:last-child td { border-bottom: none; }
+    .sampling-table .event-type {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+    .rate-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .rate-bar-track {
+      width: 80px;
+      height: 6px;
+      background: var(--bg-deep);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .rate-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .rate-100 .rate-bar-fill { width: 100%; background: var(--green); }
+    .rate-10 .rate-bar-fill { width: 40%; background: var(--gold); }
+    .rate-01 .rate-bar-fill { width: 10%; background: var(--red); }
+    .rate-value {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 600;
+      min-width: 42px;
+    }
+    .rate-100 .rate-value { color: var(--green); }
+    .rate-10 .rate-value { color: var(--gold); }
+    .rate-01 .rate-value { color: var(--red); }
+
+    /* =========================================================
+       FUNNEL
+       ========================================================= */
+    .funnel {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .funnel-step {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+    }
+    .funnel-bar-wrapper {
+      flex: 1;
+      position: relative;
+    }
+    .funnel-bar {
+      height: 44px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .funnel-bar:hover {
+      filter: brightness(1.15);
+    }
+    .funnel-count {
+      min-width: 80px;
+      text-align: right;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .funnel-pct {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 50px;
+      text-align: right;
+    }
+    .funnel-connector {
+      width: 2px;
+      height: 12px;
+      background: var(--border-strong);
+      margin-left: 48px;
+    }
+    .funnel-drop {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-left: 56px;
+      padding: 2px 0;
+    }
+
+    /* =========================================================
+       EVENT TYPES
+       ========================================================= */
+    .event-types-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+    }
+    .event-type-card {
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .event-type-card:hover {
+      border-color: var(--border-strong);
+      background: var(--bg-elevated);
+    }
+    .event-type-card.active {
+      border-color: var(--purple);
+      background: rgba(176,96,255,0.05);
+    }
+    .event-type-name {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--purple);
+      margin-bottom: 6px;
+    }
+    .event-type-body {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .event-payload {
+      background: var(--bg-deep);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 20px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      min-height: 120px;
+      transition: all 0.2s;
+    }
+
+    /* =========================================================
+       PACKAGE STRUCTURE
+       ========================================================= */
+    .tree {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.9;
+      padding: 8px 0;
+    }
+    .tree-item {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .tree-indent { color: var(--text-dim); user-select: none; }
+    .tree-dir { color: var(--gold); font-weight: 600; }
+    .tree-file { color: var(--text); }
+    .tree-desc { color: var(--text-dim); font-size: 0.72rem; font-family: var(--font-sans); }
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+    footer {
+      padding: 32px 0;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+    footer::before {
+      content: '';
+      display: block;
+      height: 2px;
+      background: var(--rainbow);
+      margin-bottom: 32px;
+      border-radius: 1px;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      margin-bottom: 20px;
+      background: var(--bg-deep);
+      border-radius: 8px;
+      padding: 3px;
+      width: fit-content;
+    }
+    .tab-btn {
+      padding: 6px 16px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s;
+      font-family: var(--font-sans);
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      background: var(--bg-card);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="page-header container">
+    <div class="badge badge-draft">Draft Spec</div>
+    <h1>Analytics Database</h1>
+    <p class="subtitle">Event-sourced analytics on D1, replacing KV</p>
+  </header>
+
+  <!-- NAV -->
+  <nav class="toc">
+    <div class="toc-inner container">
+      <a href="#flow" class="active">Data Flow</a>
+      <a href="#schema">Schema</a>
+      <a href="#sampling">Sampling</a>
+      <a href="#funnel">Funnel</a>
+      <a href="#events">Event Types</a>
+      <a href="#package">Package</a>
+    </div>
+  </nav>
+
+  <main class="container">
+
+    <!-- =====================================================
+         SECTION 1: DATA FLOW
+         ===================================================== -->
+    <section id="flow">
+      <div class="section-label">Architecture</div>
+      <h2 class="section-title">Data Flow</h2>
+      <p class="section-desc">Events flow from client widgets through the server ingestion endpoint into a D1 database, then get rolled up by a daily cron into summary tables that power the admin dashboard.</p>
+
+      <div class="card">
+        <div class="flow-diagram">
+          <div class="flow-node client">
+            <div class="icon">W</div>
+            <div class="label">Widget</div>
+            <div class="sublabel">useAnalytics<br>batches every 15s</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node server">
+            <div class="icon">S</div>
+            <div class="label">Server</div>
+            <div class="sublabel">events.post.ts<br>sampling + insert</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node db">
+            <div class="icon">D</div>
+            <div class="label">D1 Events</div>
+            <div class="sublabel">Raw events<br>30-day retention</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node cron">
+            <div class="icon">C</div>
+            <div class="label">Cron</div>
+            <div class="sublabel">Daily rollup<br>+ purge</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node db">
+            <div class="icon">S</div>
+            <div class="label">Summaries</div>
+            <div class="sublabel">Structured tables<br>kept forever</div>
+          </div>
+          <div class="flow-arrow">&rarr;</div>
+          <div class="flow-node admin">
+            <div class="icon">A</div>
+            <div class="label">Admin</div>
+            <div class="sublabel">Dashboard<br>queries summaries</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parallel write path -->
+      <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="card">
+          <div class="card-header">
+            <h3>Write Path (hot)</h3>
+            <span class="card-badge" style="background: rgba(92,216,154,0.12); color: var(--green);">Real-time</span>
+          </div>
+          <div class="card-body" style="font-size: 0.85rem; color: var(--text-muted);">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div><span style="color: var(--text);">1.</span> Client POST batch of events</div>
+              <div><span style="color: var(--text);">2.</span> Server applies per-type <span style="color: var(--gold);">sampling</span></div>
+              <div><span style="color: var(--text);">3.</span> Batch INSERT surviving events into <span style="font-family: var(--font-mono); color: var(--green);">events</span></div>
+              <div><span style="color: var(--text);">4.</span> Atomic increment <span style="font-family: var(--font-mono); color: var(--green);">counters</span> for funnel events</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>Read Path (dashboard)</h3>
+            <span class="card-badge" style="background: rgba(176,96,255,0.12); color: var(--purple);">Aggregated</span>
+          </div>
+          <div class="card-body" style="font-size: 0.85rem; color: var(--text-muted);">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div><span style="color: var(--text);">Today:</span> Read from <span style="font-family: var(--font-mono); color: var(--green);">counters</span> table</div>
+              <div><span style="color: var(--text);">Historical:</span> Query <span style="font-family: var(--font-mono); color: var(--green);">daily_summaries</span></div>
+              <div><span style="color: var(--text);">Drill-down:</span> Query raw <span style="font-family: var(--font-mono); color: var(--green);">events</span> (30d window)</div>
+              <div><span style="color: var(--text);">Ad-hoc:</span> <span style="font-family: var(--font-mono); color: var(--purple);">json_extract()</span> on body</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SECTION 2: SCHEMA
+         ===================================================== -->
+    <section id="schema">
+      <div class="section-label">Database</div>
+      <h2 class="section-title">Schema</h2>
+      <p class="section-desc">Three tables in a dedicated D1 database (DB_ANALYTICS), shared between the main app and admin workers.</p>
+
+      <div class="tabs" id="schema-tabs">
+        <button class="tab-btn active" data-tab="events">events</button>
+        <button class="tab-btn" data-tab="summaries">daily_summaries</button>
+        <button class="tab-btn" data-tab="counters">counters</button>
+      </div>
+
+      <!-- EVENTS TABLE -->
+      <div class="tab-pane active" id="tab-events">
+        <div class="card">
+          <div class="card-header">
+            <h3>events</h3>
+            <span class="card-badge" style="background: rgba(255,107,107,0.12); color: var(--red);">30-day retention</span>
+          </div>
+          <div class="card-body">
+            <table class="schema-table">
+              <thead>
+                <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="col-name">id</td><td class="col-type">INTEGER PK</td><td class="col-note">Auto-increment</td></tr>
+                <tr><td class="col-name">type<span class="idx-badge">IDX</span></td><td class="col-type">TEXT NOT NULL</td><td class="col-note">Event type discriminator</td></tr>
+                <tr><td class="col-name">body</td><td class="col-type">TEXT NOT NULL</td><td class="col-note">JSON payload shaped per type</td></tr>
+                <tr><td class="col-name">domain<span class="idx-badge">IDX</span></td><td class="col-type">TEXT</td><td class="col-note">Site domain for filtering</td></tr>
+                <tr><td class="col-name">session_id<span class="idx-badge">IDX</span></td><td class="col-type">TEXT</td><td class="col-note">Links events within a session</td></tr>
+                <tr><td class="col-name">sample_rate</td><td class="col-type">REAL</td><td class="col-note">For extrapolation (1.0 = 100%)</td></tr>
+                <tr><td class="col-name">created_at<span class="idx-badge">IDX</span></td><td class="col-type">INTEGER NOT NULL</td><td class="col-note">Unix timestamp (ms)</td></tr>
+              </tbody>
+            </table>
+            <div class="example-rows">
+              <div class="example-label">Example Rows</div>
+              <div class="example-row">
+                <span class="ek">id:</span> <span class="ev-num">1042</span> &nbsp;
+                <span class="ek">type:</span> <span class="ev-str">"cta_rendered"</span> &nbsp;
+                <span class="ek">body:</span> <span class="ev-type">{"variant":"sticky-bar","creation_id":"142"}</span><br>
+                <span class="ek">domain:</span> <span class="ev-str">"adventuresofanurse.com"</span> &nbsp;
+                <span class="ek">session_id:</span> <span class="ev-str">"session_1773074638_k9x2m"</span> &nbsp;
+                <span class="ek">sample_rate:</span> <span class="ev-num">1.0</span> &nbsp;
+                <span class="ek">created_at:</span> <span class="ev-num">1773074638377</span>
+              </div>
+              <div class="example-row">
+                <span class="ek">id:</span> <span class="ev-num">1043</span> &nbsp;
+                <span class="ek">type:</span> <span class="ev-str">"cta_activated"</span> &nbsp;
+                <span class="ek">body:</span> <span class="ev-type">{"variant":"sticky-bar","creation_id":"142"}</span><br>
+                <span class="ek">domain:</span> <span class="ev-str">"adventuresofanurse.com"</span> &nbsp;
+                <span class="ek">session_id:</span> <span class="ev-str">"session_1773074638_k9x2m"</span> &nbsp;
+                <span class="ek">sample_rate:</span> <span class="ev-num">1.0</span> &nbsp;
+                <span class="ek">created_at:</span> <span class="ev-num">1773074652891</span>
+              </div>
+              <div class="example-row">
+                <span class="ek">id:</span> <span class="ev-num">8817</span> &nbsp;
+                <span class="ek">type:</span> <span class="ev-str">"api_call"</span> &nbsp;
+                <span class="ek">body:</span> <span class="ev-type">{"version":"v1"}</span><br>
+                <span class="ek">domain:</span> <span class="ev-str">"blackstonerecipesdaily.com"</span> &nbsp;
+                <span class="ek">session_id:</span> <span class="ev-type">null</span> &nbsp;
+                <span class="ek">sample_rate:</span> <span class="ev-num">0.001</span> &nbsp;
+                <span class="ek">created_at:</span> <span class="ev-num">1773081200000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARIES TABLE -->
+      <div class="tab-pane" id="tab-summaries">
+        <div class="card">
+          <div class="card-header">
+            <h3>daily_summaries</h3>
+            <span class="card-badge" style="background: rgba(92,216,154,0.12); color: var(--green);">Permanent</span>
+          </div>
+          <div class="card-body">
+            <table class="schema-table">
+              <thead>
+                <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="col-name">id</td><td class="col-type">INTEGER PK</td><td class="col-note">Auto-increment</td></tr>
+                <tr><td class="col-name">date<span class="idx-badge">IDX</span></td><td class="col-type">TEXT NOT NULL</td><td class="col-note">YYYY-MM-DD</td></tr>
+                <tr><td class="col-name">domain</td><td class="col-type">TEXT</td><td class="col-note">NULL for global aggregates</td></tr>
+                <tr><td class="col-name">metric<span class="idx-badge">IDX</span></td><td class="col-type">TEXT NOT NULL</td><td class="col-note">e.g. "cta_renders", "im_sessions"</td></tr>
+                <tr><td class="col-name">dimensions</td><td class="col-type">TEXT</td><td class="col-note">JSON grouping keys</td></tr>
+                <tr><td class="col-name">value</td><td class="col-type">REAL NOT NULL</td><td class="col-note">Aggregated count/sum/avg</td></tr>
+                <tr><td class="col-name">sample_rate</td><td class="col-type">REAL</td><td class="col-note">Original sampling rate</td></tr>
+                <tr><td class="col-name">created_at</td><td class="col-type">INTEGER NOT NULL</td><td class="col-note">When rollup ran</td></tr>
+              </tbody>
+            </table>
+            <div class="example-rows">
+              <div class="example-label">Example Rows</div>
+              <div class="example-row">
+                <span class="ek">date:</span> <span class="ev-str">"2026-03-09"</span> &nbsp;
+                <span class="ek">domain:</span> <span class="ev-type">null</span> &nbsp;
+                <span class="ek">metric:</span> <span class="ev-str">"cta_renders"</span> &nbsp;
+                <span class="ek">dimensions:</span> <span class="ev-type">{"variant":"button"}</span> &nbsp;
+                <span class="ek">value:</span> <span class="ev-num">1247</span>
+              </div>
+              <div class="example-row">
+                <span class="ek">date:</span> <span class="ev-str">"2026-03-09"</span> &nbsp;
+                <span class="ek">domain:</span> <span class="ev-str">"adventuresofanurse.com"</span> &nbsp;
+                <span class="ek">metric:</span> <span class="ev-str">"im_sessions"</span> &nbsp;
+                <span class="ek">dimensions:</span> <span class="ev-type">null</span> &nbsp;
+                <span class="ek">value:</span> <span class="ev-num">34</span>
+              </div>
+              <div class="example-row">
+                <span class="ek">date:</span> <span class="ev-str">"2026-03-09"</span> &nbsp;
+                <span class="ek">domain:</span> <span class="ev-type">null</span> &nbsp;
+                <span class="ek">metric:</span> <span class="ev-str">"api_calls"</span> &nbsp;
+                <span class="ek">dimensions:</span> <span class="ev-type">{"version":"v1"}</span> &nbsp;
+                <span class="ek">value:</span> <span class="ev-num">89</span> &nbsp;
+                <span class="ek">sample_rate:</span> <span class="ev-num">0.001</span>
+                <span style="color: var(--text-dim);">&larr; extrapolated: ~89,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COUNTERS TABLE -->
+      <div class="tab-pane" id="tab-counters">
+        <div class="card">
+          <div class="card-header">
+            <h3>counters</h3>
+            <span class="card-badge" style="background: rgba(96,160,255,0.12); color: var(--blue);">Real-time</span>
+          </div>
+          <div class="card-body">
+            <table class="schema-table">
+              <thead>
+                <tr><th>Column</th><th>Type</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="col-name">id</td><td class="col-type">INTEGER PK</td><td class="col-note">Auto-increment</td></tr>
+                <tr><td class="col-name">key<span class="idx-badge">UNIQUE</span></td><td class="col-type">TEXT NOT NULL</td><td class="col-note">Composite key: metric:dimension:date</td></tr>
+                <tr><td class="col-name">value</td><td class="col-type">INTEGER</td><td class="col-note">Atomic counter</td></tr>
+                <tr><td class="col-name">updated_at</td><td class="col-type">INTEGER NOT NULL</td><td class="col-note">Last increment time</td></tr>
+              </tbody>
+            </table>
+            <div class="example-rows">
+              <div class="example-label">Example Rows</div>
+              <div class="example-row">
+                <span class="ek">key:</span> <span class="ev-str">"cta_rendered:button:2026-03-11"</span> &nbsp;
+                <span class="ek">value:</span> <span class="ev-num">482</span> &nbsp;
+                <span class="ek">updated_at:</span> <span class="ev-num">1773074638377</span>
+              </div>
+              <div class="example-row">
+                <span class="ek">key:</span> <span class="ev-str">"cta_activated:button:2026-03-11"</span> &nbsp;
+                <span class="ek">value:</span> <span class="ev-num">71</span> &nbsp;
+                <span class="ek">updated_at:</span> <span class="ev-num">1773075313916</span>
+              </div>
+              <div class="example-row">
+                <span class="ek">key:</span> <span class="ev-str">"im_sessions:2026-03-11"</span> &nbsp;
+                <span class="ek">value:</span> <span class="ev-num">71</span> &nbsp;
+                <span class="ek">updated_at:</span> <span class="ev-num">1773075313916</span>
+              </div>
+              <div class="example-row">
+                <span class="ek">key:</span> <span class="ev-str">"rating_submitted:2026-03-11"</span> &nbsp;
+                <span class="ek">value:</span> <span class="ev-num">12</span> &nbsp;
+                <span class="ek">updated_at:</span> <span class="ev-num">1773081200000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SECTION 3: SAMPLING
+         ===================================================== -->
+    <section id="sampling">
+      <div class="section-label">Ingestion</div>
+      <h2 class="section-title">Sampling Strategy</h2>
+      <p class="section-desc">Server-side sampling applied per event type. Key funnel events are tracked at 100%. High-volume events are sampled and extrapolated using the stored sample_rate.</p>
+
+      <div class="card">
+        <div class="card-body">
+          <table class="sampling-table">
+            <thead>
+              <tr><th>Event Type</th><th>Rate</th><th>Rationale</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="event-type" style="color: var(--green);">cta_rendered</td>
+                <td><div class="rate-bar rate-100"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">100%</span></div></td>
+                <td style="color: var(--text-muted);">Funnel top — exact impression counts</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--green);">cta_activated</td>
+                <td><div class="rate-bar rate-100"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">100%</span></div></td>
+                <td style="color: var(--text-muted);">Funnel conversion point</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--green);">im_session_start</td>
+                <td><div class="rate-bar rate-100"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">100%</span></div></td>
+                <td style="color: var(--text-muted);">Total session count needed</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--green);">im_session_complete</td>
+                <td><div class="rate-bar rate-100"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">100%</span></div></td>
+                <td style="color: var(--text-muted);">Completion rate accuracy</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--green);">rating_screen_shown</td>
+                <td><div class="rate-bar rate-100"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">100%</span></div></td>
+                <td style="color: var(--text-muted);">Ratings funnel step</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--green);">rating_submitted</td>
+                <td><div class="rate-bar rate-100"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">100%</span></div></td>
+                <td style="color: var(--text-muted);">Ratings funnel conversion</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--green);">trial_started</td>
+                <td><div class="rate-bar rate-100"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">100%</span></div></td>
+                <td style="color: var(--text-muted);">Low volume, high business value</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--gold);">page_view</td>
+                <td><div class="rate-bar rate-10"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">10%</span></div></td>
+                <td style="color: var(--text-muted);">High volume — extrapolate from session count</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--gold);">timer_start</td>
+                <td><div class="rate-bar rate-10"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">10%</span></div></td>
+                <td style="color: var(--text-muted);">Lower priority engagement metric</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--gold);">timer_complete</td>
+                <td><div class="rate-bar rate-10"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">10%</span></div></td>
+                <td style="color: var(--text-muted);">Lower priority engagement metric</td>
+              </tr>
+              <tr>
+                <td class="event-type" style="color: var(--red);">api_call</td>
+                <td><div class="rate-bar rate-01"><div class="rate-bar-track"><div class="rate-bar-fill"></div></div><span class="rate-value">0.1%</span></div></td>
+                <td style="color: var(--text-muted);">Very high volume — just need v1 vs v2 trend</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SECTION 4: FUNNEL
+         ===================================================== -->
+    <section id="funnel">
+      <div class="section-label">Conversions</div>
+      <h2 class="section-title">Interactive Mode Funnel</h2>
+      <p class="section-desc">The full conversion funnel from CTA impression to rating submission. All steps tracked at 100% for accurate conversion rates.</p>
+
+      <div class="card">
+        <div class="card-body" style="padding: 32px 20px;">
+          <div class="funnel">
+            <div class="funnel-step">
+              <div class="funnel-bar-wrapper">
+                <div class="funnel-bar" style="width: 100%; background: linear-gradient(90deg, rgba(176,96,255,0.25), rgba(176,96,255,0.15));">
+                  <span style="color: var(--purple);">CTA Rendered</span>
+                </div>
+              </div>
+              <div class="funnel-count" style="color: var(--purple);">12,480</div>
+              <div class="funnel-pct">100%</div>
+            </div>
+            <div class="funnel-connector"></div>
+            <div class="funnel-drop">&darr; 14.7% click-through</div>
+            <div class="funnel-connector"></div>
+
+            <div class="funnel-step">
+              <div class="funnel-bar-wrapper">
+                <div class="funnel-bar" style="width: 82%; background: linear-gradient(90deg, rgba(238,135,203,0.25), rgba(238,135,203,0.15));">
+                  <span style="color: var(--pink);">CTA Activated</span>
+                </div>
+              </div>
+              <div class="funnel-count" style="color: var(--pink);">1,834</div>
+              <div class="funnel-pct">14.7%</div>
+            </div>
+            <div class="funnel-connector"></div>
+            <div class="funnel-drop">&darr; 100% (activation = session start)</div>
+            <div class="funnel-connector"></div>
+
+            <div class="funnel-step">
+              <div class="funnel-bar-wrapper">
+                <div class="funnel-bar" style="width: 82%; background: linear-gradient(90deg, rgba(96,160,255,0.25), rgba(96,160,255,0.15));">
+                  <span style="color: var(--blue);">Session Start</span>
+                </div>
+              </div>
+              <div class="funnel-count" style="color: var(--blue);">1,834</div>
+              <div class="funnel-pct">14.7%</div>
+            </div>
+            <div class="funnel-connector"></div>
+            <div class="funnel-drop">&darr; 68.2% complete all pages</div>
+            <div class="funnel-connector"></div>
+
+            <div class="funnel-step">
+              <div class="funnel-bar-wrapper">
+                <div class="funnel-bar" style="width: 56%; background: linear-gradient(90deg, rgba(92,216,154,0.25), rgba(92,216,154,0.15));">
+                  <span style="color: var(--green);">Session Complete</span>
+                </div>
+              </div>
+              <div class="funnel-count" style="color: var(--green);">1,251</div>
+              <div class="funnel-pct">10.0%</div>
+            </div>
+            <div class="funnel-connector"></div>
+            <div class="funnel-drop">&darr; 89.4% see rating screen</div>
+            <div class="funnel-connector"></div>
+
+            <div class="funnel-step">
+              <div class="funnel-bar-wrapper">
+                <div class="funnel-bar" style="width: 50%; background: linear-gradient(90deg, rgba(255,170,92,0.25), rgba(255,170,92,0.15));">
+                  <span style="color: var(--orange);">Rating Shown</span>
+                </div>
+              </div>
+              <div class="funnel-count" style="color: var(--orange);">1,118</div>
+              <div class="funnel-pct">9.0%</div>
+            </div>
+            <div class="funnel-connector"></div>
+            <div class="funnel-drop">&darr; 41.3% submit a rating</div>
+            <div class="funnel-connector"></div>
+
+            <div class="funnel-step">
+              <div class="funnel-bar-wrapper">
+                <div class="funnel-bar" style="width: 21%; background: linear-gradient(90deg, rgba(255,241,190,0.25), rgba(255,241,190,0.15));">
+                  <span style="color: var(--gold);">Rating Submitted</span>
+                </div>
+              </div>
+              <div class="funnel-count" style="color: var(--gold);">462</div>
+              <div class="funnel-pct">3.7%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Variant breakdown -->
+      <div style="margin-top: 20px;">
+        <div class="card">
+          <div class="card-header">
+            <h3>CTA Variant Breakdown</h3>
+            <span class="card-badge" style="background: rgba(255,241,190,0.12); color: var(--gold);">Per-variant</span>
+          </div>
+          <div class="card-body">
+            <table class="sampling-table">
+              <thead>
+                <tr><th>Variant</th><th>Renders</th><th>Activations</th><th>Conv. Rate</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="event-type" style="color: var(--text);">button</td>
+                  <td style="font-family: var(--font-mono);">8,241</td>
+                  <td style="font-family: var(--font-mono);">1,402</td>
+                  <td><span style="font-family: var(--font-mono); color: var(--green); font-weight: 600;">17.0%</span></td>
+                </tr>
+                <tr>
+                  <td class="event-type" style="color: var(--text);">sticky-bar</td>
+                  <td style="font-family: var(--font-mono);">2,847</td>
+                  <td style="font-family: var(--font-mono);">312</td>
+                  <td><span style="font-family: var(--font-mono); color: var(--gold); font-weight: 600;">11.0%</span></td>
+                </tr>
+                <tr>
+                  <td class="event-type" style="color: var(--text);">inline-banner</td>
+                  <td style="font-family: var(--font-mono);">1,104</td>
+                  <td style="font-family: var(--font-mono);">98</td>
+                  <td><span style="font-family: var(--font-mono); color: var(--orange); font-weight: 600;">8.9%</span></td>
+                </tr>
+                <tr>
+                  <td class="event-type" style="color: var(--text);">tooltip</td>
+                  <td style="font-family: var(--font-mono);">288</td>
+                  <td style="font-family: var(--font-mono);">22</td>
+                  <td><span style="font-family: var(--font-mono); color: var(--red); font-weight: 600;">7.6%</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SECTION 5: EVENT TYPES
+         ===================================================== -->
+    <section id="events">
+      <div class="section-label">TypeScript</div>
+      <h2 class="section-title">Event Types</h2>
+      <p class="section-desc">Discriminated union types enforce the JSON body shape per event type. Click any event to see its full payload.</p>
+
+      <div class="event-types-grid" id="event-grid">
+        <!-- populated by JS -->
+      </div>
+
+      <div class="event-payload" id="event-payload">
+        <span style="color: var(--text-dim);">Click an event type above to see its payload</span>
+      </div>
+    </section>
+
+    <!-- =====================================================
+         SECTION 6: PACKAGE STRUCTURE
+         ===================================================== -->
+    <section id="package">
+      <div class="section-label">Code</div>
+      <h2 class="section-title">Package Structure</h2>
+      <p class="section-desc">A shared packages/analytics package provides schema, types, and query helpers imported by both the main app and admin workers.</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="card">
+          <div class="card-header">
+            <h3>packages/analytics/</h3>
+          </div>
+          <div class="card-body">
+            <div class="tree">
+              <div class="tree-item"><span class="tree-dir">packages/analytics/</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;</span><span class="tree-file">index.ts</span> <span class="tree-desc">Public API exports</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;</span><span class="tree-file">schema.ts</span> <span class="tree-desc">Drizzle schema definitions</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;</span><span class="tree-file">types.ts</span> <span class="tree-desc">Event types, discriminated unions</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;</span><span class="tree-file">sampling.ts</span> <span class="tree-desc">Rate config + shouldSample()</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;</span><span class="tree-dir">queries/</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;&ensp;&ensp;</span><span class="tree-file">events.ts</span> <span class="tree-desc">Insert + query raw events</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;&ensp;&ensp;</span><span class="tree-file">summaries.ts</span> <span class="tree-desc">Query summary tables</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;&ensp;&ensp;</span><span class="tree-file">counters.ts</span> <span class="tree-desc">Increment + read counters</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;</span><span class="tree-dir">rollup/</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;&ensp;&ensp;</span><span class="tree-file">index.ts</span> <span class="tree-desc">Cron handler: aggregate + purge</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;&ensp;&ensp;</span><span class="tree-file">aggregators.ts</span> <span class="tree-desc">Per-metric aggregation logic</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;</span><span class="tree-dir">migrations/</span></div>
+              <div class="tree-item"><span class="tree-indent">&ensp;&ensp;&ensp;&ensp;</span><span class="tree-file">0001_init.sql</span> <span class="tree-desc">Initial schema creation</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Integration Points</h3>
+          </div>
+          <div class="card-body">
+            <div style="display: flex; flex-direction: column; gap: 16px; font-size: 0.85rem;">
+              <div>
+                <div style="color: var(--gold); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;">Main App (packages/app)</div>
+                <div style="color: var(--text-muted);">
+                  <div style="font-family: var(--font-mono); font-size: 0.78rem; margin-bottom: 2px;">server/api/analytics/events.post.ts</div>
+                  <div style="font-size: 0.78rem;">Imports insert helpers, sampling config</div>
+                  <div style="font-family: var(--font-mono); font-size: 0.78rem; margin-top: 8px; margin-bottom: 2px;">server/middleware/analytics.ts</div>
+                  <div style="font-size: 0.78rem;">Imports insert helpers for API tracking</div>
+                  <div style="font-family: var(--font-mono); font-size: 0.78rem; margin-top: 8px; margin-bottom: 2px;">wrangler.jsonc</div>
+                  <div style="font-size: 0.78rem;">DB_ANALYTICS binding added</div>
+                </div>
+              </div>
+              <div style="border-top: 1px solid var(--border); padding-top: 16px;">
+                <div style="color: var(--pink); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;">Admin (packages/admin)</div>
+                <div style="color: var(--text-muted);">
+                  <div style="font-family: var(--font-mono); font-size: 0.78rem; margin-bottom: 2px;">server/api/admin/analytics/*.ts</div>
+                  <div style="font-size: 0.78rem;">Imports query helpers for summaries + counters</div>
+                  <div style="font-family: var(--font-mono); font-size: 0.78rem; margin-top: 8px; margin-bottom: 2px;">wrangler.jsonc</div>
+                  <div style="font-size: 0.78rem;">DB_ANALYTICS binding added (same DB)</div>
+                </div>
+              </div>
+              <div style="border-top: 1px solid var(--border); padding-top: 16px;">
+                <div style="color: var(--blue); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;">Widgets (packages/widgets)</div>
+                <div style="color: var(--text-muted);">
+                  <div style="font-family: var(--font-mono); font-size: 0.78rem; margin-bottom: 2px;">src/composables/useAnalytics.ts</div>
+                  <div style="font-size: 0.78rem;">Client-side batching unchanged; event types updated</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>Create Studio &middot; Analytics Database Spec &middot; Draft &middot; 2026-03-11</p>
+    </div>
+  </footer>
+
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => [...document.querySelectorAll(sel)];
+
+    // =====================================================
+    // TAB SWITCHING
+    // =====================================================
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.tab-btn');
+      if (!btn) return;
+      const tabGroup = btn.closest('.tabs') || btn.parentElement;
+      const section = btn.closest('section');
+
+      tabGroup.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      section.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      const target = section.querySelector(`#tab-${btn.dataset.tab}`);
+      if (target) target.classList.add('active');
+    });
+
+    // =====================================================
+    // STICKY NAV ACTIVE STATE
+    // =====================================================
+    const tocLinks = $$('.toc a');
+    const sections = $$('section[id]');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(a => a.classList.remove('active'));
+          const active = document.querySelector(`.toc a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(s => observer.observe(s));
+
+    // =====================================================
+    // EVENT TYPE CARDS
+    // =====================================================
+    const eventTypes = [
+      {
+        type: 'cta_rendered',
+        body: '{ variant: string, creation_id: string }',
+        example: {
+          type: 'cta_rendered',
+          body: { variant: 'sticky-bar', creation_id: '142' },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 1.0,
+          created_at: 1773074638377
+        }
+      },
+      {
+        type: 'cta_activated',
+        body: '{ variant: string, creation_id: string }',
+        example: {
+          type: 'cta_activated',
+          body: { variant: 'button', creation_id: '314' },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 1.0,
+          created_at: 1773074652891
+        }
+      },
+      {
+        type: 'im_session_start',
+        body: '{ creation_id: string, total_pages: number, theme_id?: string }',
+        example: {
+          type: 'im_session_start',
+          body: { creation_id: '314', total_pages: 6 },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 1.0,
+          created_at: 1773074653100
+        }
+      },
+      {
+        type: 'im_session_complete',
+        body: '{ creation_id: string, duration: number, pages_viewed: number, theme_id?: string }',
+        example: {
+          type: 'im_session_complete',
+          body: { creation_id: '314', duration: 245, pages_viewed: 6 },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 1.0,
+          created_at: 1773074898000
+        }
+      },
+      {
+        type: 'rating_screen_shown',
+        body: '{ creation_id: string }',
+        example: {
+          type: 'rating_screen_shown',
+          body: { creation_id: '314' },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 1.0,
+          created_at: 1773074899000
+        }
+      },
+      {
+        type: 'rating_submitted',
+        body: '{ creation_id: string, rating: number }',
+        example: {
+          type: 'rating_submitted',
+          body: { creation_id: '314', rating: 5 },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 1.0,
+          created_at: 1773074905000
+        }
+      },
+      {
+        type: 'page_view',
+        body: '{ creation_id: string, page_number: number, total_pages: number }',
+        example: {
+          type: 'page_view',
+          body: { creation_id: '314', page_number: 3, total_pages: 6 },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 0.1,
+          created_at: 1773074700000
+        }
+      },
+      {
+        type: 'api_call',
+        body: '{ version: "v1" | "v2" }',
+        example: {
+          type: 'api_call',
+          body: { version: 'v1' },
+          domain: 'blackstonerecipesdaily.com',
+          session_id: null,
+          sample_rate: 0.001,
+          created_at: 1773081200000
+        }
+      },
+      {
+        type: 'trial_started',
+        body: '{ user_id: string, plan?: string, source?: string }',
+        example: {
+          type: 'trial_started',
+          body: { user_id: 'user_2abc123', plan: 'pro', source: 'pricing_page' },
+          domain: null,
+          session_id: null,
+          sample_rate: 1.0,
+          created_at: 1773090000000
+        }
+      },
+      {
+        type: 'trial_converted',
+        body: '{ user_id: string, plan: string }',
+        example: {
+          type: 'trial_converted',
+          body: { user_id: 'user_2abc123', plan: 'pro' },
+          domain: null,
+          session_id: null,
+          sample_rate: 1.0,
+          created_at: 1774300000000
+        }
+      },
+      {
+        type: 'timer_start',
+        body: '{ creation_id: string, timer_id?: string }',
+        example: {
+          type: 'timer_start',
+          body: { creation_id: '142', timer_id: 'prep-timer' },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 0.1,
+          created_at: 1773074750000
+        }
+      },
+      {
+        type: 'timer_complete',
+        body: '{ creation_id: string, timer_id?: string }',
+        example: {
+          type: 'timer_complete',
+          body: { creation_id: '142', timer_id: 'prep-timer' },
+          domain: 'adventuresofanurse.com',
+          session_id: 'session_1773074638_k9x2m',
+          sample_rate: 0.1,
+          created_at: 1773075650000
+        }
+      }
+    ];
+
+    function syntaxHighlight(json) {
+      const str = JSON.stringify(json, null, 2);
+      return str.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+        let cls = 'ev-num';
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'ev-key';
+            match = match.replace(/:$/, '') + ':';
+          } else {
+            cls = 'ev-str';
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'ev-type';
+        } else if (/null/.test(match)) {
+          cls = 'ev-type';
+        }
+        return `<span class="${cls}">${match}</span>`;
+      });
+    }
+
+    const grid = $('#event-grid');
+    const payload = $('#event-payload');
+
+    eventTypes.forEach((evt, i) => {
+      const card = document.createElement('div');
+      card.className = 'event-type-card';
+      card.innerHTML = `
+        <div class="event-type-name">${evt.type}</div>
+        <div class="event-type-body">body: ${evt.body}</div>
+      `;
+      card.addEventListener('click', () => {
+        $$('.event-type-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        payload.innerHTML = syntaxHighlight(evt.example);
+      });
+      grid.appendChild(card);
+    });
+
+    // Select first by default
+    if (eventTypes.length > 0) {
+      grid.children[0].classList.add('active');
+      payload.innerHTML = syntaxHighlight(eventTypes[0].example);
+    }
+  </script>
+</body>
+</html>
