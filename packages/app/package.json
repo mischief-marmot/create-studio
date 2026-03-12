@@ -23,6 +23,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@create-studio/analytics": "*",
     "@create-studio/shared": "*",
     "@headlessui/vue": "^1.7.23",
     "@heroicons/vue": "^2.2.0",
@@ -40,6 +41,7 @@
     "@tailwindplus/elements": "^1.0.1",
     "@unhead/vue": "^2.0.14",
     "@vue-email/components": "^0.0.21",
+    "@vue-email/nuxt": "^0.8.19",
     "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.6.2",
     "cheerio": "^1.1.2",

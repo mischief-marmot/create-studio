@@ -1,10 +1,18 @@
 /**
  * API usage tracking middleware
- * Tracks all API calls to measure v1 vs v2 usage
+ * Tracks API calls to measure v1 vs v2 usage via D1 analytics database.
+ *
+ * Samples 0.1% of matching requests and inserts an `api_call` event
+ * into the analytics D1 — replacing the old KV-based counters.
  */
 
-export default defineEventHandler(async (event) => {
+import { insertEvents } from '@create-studio/analytics/queries/events'
+import { shouldSample, getSampleRate } from '@create-studio/analytics/sampling'
+import { useAnalyticsDB } from '#server/utils/analytics-db'
+
+export default defineEventHandler((event) => {
   const path = event.path
+
   // Only track API calls (not static assets, pages, etc.)
   if (!path.startsWith('/api/')) {
     return
@@ -18,30 +26,26 @@ export default defineEventHandler(async (event) => {
     return
   }
 
-  // 1% sampling to avoid KV 429s (≈6 KV ops per tracked request)
-  if (Math.random() > 0.01) {
+  if (!shouldSample('api_call')) {
     return
   }
 
   const [_, version, endpoint] = match
 
-  const now = new Date()
-  const date = getDateString(now)
-  const hour = now.getHours()
+  // Fire async — don't block the response
+  const analyticsDb = useAnalyticsDB(event)
+  const now = Math.floor(Date.now() / 1000)
 
-  // Immediately track in KV (don't wait for response)
-  try {
-    const dailyKey = getAnalyticsKey(['api', version, endpoint, date])
-    await incrementCounter(dailyKey)
-
-    // Increment hourly counter
-    const hourlyKey = getAnalyticsKey(['api', version, endpoint, date, hour.toString()])
-    await incrementCounter(hourlyKey)
-
-    // Increment global API summary
-    const summaryKey = getAnalyticsKey(['summary', 'api', date])
-    await incrementCounter(summaryKey)
-  } catch (error) {
-    console.error('[Analytics] Error tracking API call:', error)
-  }
+  insertEvents(analyticsDb, [
+    {
+      type: 'api_call',
+      body: JSON.stringify({ version, endpoint }),
+      domain: null,
+      session_id: null,
+      sample_rate: getSampleRate('api_call'),
+      created_at: now,
+    },
+  ]).catch((err) => {
+    console.error('[Analytics] Error tracking API call:', err)
+  })
 })

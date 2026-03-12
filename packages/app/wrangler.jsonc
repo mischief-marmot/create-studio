@@ -11,6 +11,9 @@
   "observability": {
     "enabled": true
   },
+  "triggers": {
+    "crons": ["0 2 * * *"]
+  },
   "r2_buckets": [
     {
       "binding": "BLOB",
@@ -33,6 +36,11 @@
       "database_id": "75b7c9cc-c82c-41c2-b1dc-ac3a50a86b19",
       "migrations_table": "_hub_migrations",
       "migrations_dir": "./.output/server/db/migrations"
+    },
+    {
+      "binding": "DB_ANALYTICS",
+      "database_id": "13a5ab74-2843-4a74-9039-abf13ea8544e",
+      "database_name": "create-studio-analytics"
     }
   ],
   "vars": {
@@ -79,6 +87,11 @@
           "database_id": "d0f371df-bcba-4017-a34d-2987d3d408aa",
           "migrations_table": "_hub_migrations",
           "migrations_dir": "./.output/server/db/migrations"
+        },
+        {
+          "binding": "DB_ANALYTICS",
+          "database_id": "13a5ab74-2843-4a74-9039-abf13ea8544e",
+      "database_name": "create-studio-analytics"
         }
       ],
       "vars": {

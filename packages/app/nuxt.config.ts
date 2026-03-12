@@ -50,6 +50,11 @@ export default defineNuxtConfig({
     experimental: {
       openAPI: true,
       websocket: true,
+      tasks: true,
+    },
+    scheduledTasks: {
+      // Daily analytics rollup at 2am UTC (matches wrangler.jsonc cron trigger)
+      '0 2 * * *': ['analytics:rollup'],
     },
     routeRules: {
       "/embed/**": {
@@ -161,8 +166,10 @@ export default defineNuxtConfig({
     db: {
       applyMigrationsDuringBuild: false,
       dialect: 'sqlite',
-    },  
+    },
     cache: true,
+    // DB_ANALYTICS (analytics D1 database) is configured via wrangler.jsonc binding,
+    // not through hub config — NuxtHub only manages a single D1 via hub.db.
   },
   app: {
     head: {
