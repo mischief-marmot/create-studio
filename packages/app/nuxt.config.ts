@@ -22,7 +22,7 @@ export default defineNuxtConfig({
     preset: "cloudflare_durable",
     rollupConfig: {
       plugins: [vue()],
-      external: ['cloudflare:workers', 'cloudflare:sockets', /\.wasm\?module$/]
+      external: ['cloudflare:workers', 'cloudflare:sockets']
     },
     cors: {
       origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:8074", "http://localhost:8174", "http://localhost:8274", "http://localhost:8374", "http://localhost:8081", "http://localhost:8083"],
