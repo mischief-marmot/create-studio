@@ -736,6 +736,7 @@
                 </div>
               </div>
               <p class="text-base-content/60 mt-2 text-xs">{{ proPricing[proBillingPeriod].note }}</p>
+              <p class="text-primary mt-3 text-sm font-medium">Start with a 14-day free trial</p>
             </div>
             <p class="text-base-content mb-8 text-sm">Everything in Create 2.0 Free, plus full customization and premium features to maximize your revenue.</p>
             <div class="mb-8 space-y-3">
@@ -795,7 +796,7 @@
                 </li>
               </ul>
             </div>
-            <button @click="handleUpgrade" class="btn btn-primary btn-block rounded-xl">Upgrade Now</button>
+            <button @click="handleUpgrade" class="btn btn-primary btn-block rounded-xl">Start Free Trial</button>
             <p class="text-base-content/80 mt-3 text-xs text-center">Run multiple sites? Additional sites are 50% off.</p>
           </div>
         </div>
@@ -936,11 +937,11 @@ const scrollToSection = (id: string) => {
 
 // Comparison data
 const comparisonFeatures = [
-  { name: 'JSON-LD Schema', create: 'Free', wprm: 'Free', tasty: 'Free' },
+  { name: 'JSON-LD Schema', create: 'Free', wprm: 'Free', tasty: '$49/yr' },
   { name: 'Nutrition Calculation', create: 'Free', wprm: '$99/yr', tasty: '+$9/mo (Nutrifox)' },
   { name: 'User Ratings & Reviews', create: 'Free', wprm: '$49/yr', tasty: '$49/yr' },
-  { name: 'Recipe Cards', create: 'Free', wprm: 'Free', tasty: 'Free' },
-  { name: 'How-To Cards', create: 'Free', wprm: 'Free', tasty: '✗' },
+  { name: 'Recipe Cards', create: 'Free', wprm: 'Free', tasty: '$49/yr' },
+  { name: 'How-To Cards', create: 'Free', wprm: 'Free', tasty: '✗a' },
   { name: 'Lists & Roundups', create: 'Free', wprm: 'Basic (Free)', tasty: '+$49/yr (Tasty Roundups)' },
   { name: 'Product Links in Cards', create: 'Free+', wprm: '$49/yr', tasty: '+$49/yr (Tasty Links)' },
   { name: 'Interactive Cook Mode', create: 'Free+', wprm: '$49/yr', tasty: '$49/yr' },
