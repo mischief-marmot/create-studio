@@ -23,13 +23,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event)
-  const { siteId, tier } = body
+  const { siteId, tier, is_trialing, trial_days_remaining, trial_end } = body
 
   if (!siteId || !tier) {
     throw createError({ statusCode: 400, message: 'siteId and tier are required' })
   }
 
-  if (!['free', 'free-plus', 'pro'].includes(tier)) {
+  if (!['free', 'free-plus', 'pro', 'trial'].includes(tier)) {
     throw createError({ statusCode: 400, message: 'Invalid tier' })
   }
 
@@ -42,8 +42,13 @@ export default defineEventHandler(async (event) => {
 
   logger.debug(`Admin triggered subscription_change webhook for site ${siteId} (tier=${tier})`)
 
+  const webhookData: Record<string, any> = { tier }
+  if (is_trialing !== undefined) webhookData.is_trialing = is_trialing
+  if (trial_days_remaining !== undefined) webhookData.trial_days_remaining = trial_days_remaining
+  if (trial_end !== undefined) webhookData.trial_end = trial_end
+
   try {
-    await sendWebhook(site.url, { type: 'subscription_change', data: { tier } })
+    await sendWebhook(site.url, { type: 'subscription_change', data: webhookData })
   } catch (err) {
     logger.warn(`Webhook delivery failed for site ${siteId}:`, err)
     return { success: true, webhookSent: false, message: 'Tier updated but webhook delivery failed' }

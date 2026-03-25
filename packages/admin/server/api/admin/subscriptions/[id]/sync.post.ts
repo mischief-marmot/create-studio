@@ -44,13 +44,27 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  // Compute effective tier and trial info matching what the Stripe webhook sends
+  const isTrialing = sub.status === 'trialing'
+  const effectiveTier = isTrialing ? 'trial' : sub.tier
+  const trialEnd = sub.trial_end || null
+  const trialDaysRemaining = trialEnd
+    ? Math.max(0, Math.floor((new Date(trialEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : 0
+
   const response = await fetch(`${mainAppUrl}/api/v2/internal/notify-subscription-change`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'X-Admin-Api-Key': config.mainAppApiKey || '',
     },
-    body: JSON.stringify({ siteId: sub.site_id, tier: sub.tier }),
+    body: JSON.stringify({
+      siteId: sub.site_id,
+      tier: effectiveTier,
+      is_trialing: isTrialing,
+      trial_days_remaining: trialDaysRemaining,
+      trial_end: trialEnd,
+    }),
   })
 
   const result = await response.json().catch(() => null)
