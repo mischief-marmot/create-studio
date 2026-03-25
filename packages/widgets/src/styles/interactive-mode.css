@@ -307,6 +307,7 @@
   }
 
   & .cs-interactive-mode-tooltip-text {
+    font-size: 13px !important;
     color: var(--color-base-100, #fff);
   }
 
@@ -345,7 +346,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 8px;
+    font-size: 8px !important;
     color: var(--color-base-100, #fff);
     line-height: 1;
   }
