@@ -109,7 +109,7 @@ export async function getInteractiveMetrics(
   // Weighted average of daily averages (weighted by completions per day/domain)
   let avgSessionDuration = 0
   if (durationRows.length > 0 && totalCompletions > 0) {
-    const totalWeightedDuration = durationRows.reduce((sum, row) => sum + row.value * row.sampleRate, 0)
+    const totalWeightedDuration = durationRows.reduce((sum, row) => sum + row.value * (row.sample_rate ?? 1), 0)
     avgSessionDuration = Math.round(totalWeightedDuration / durationRows.length)
   }
 
