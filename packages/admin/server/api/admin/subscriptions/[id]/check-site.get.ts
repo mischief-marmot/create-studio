@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const sub = subscriptionResult[0]
-  const studioTier = sub.tier
+  const studioTier = sub.status === 'trialing' ? 'trial' : sub.tier
 
   const adminEnv = getAdminEnvironment(event)
   const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
