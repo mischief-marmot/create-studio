@@ -9,27 +9,14 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { verifyWebhookSignature, handleWebhookEvent } from '~~/server/utils/stripe'
 
-/**
- * Read raw body directly from the Node.js request stream.
- * H3/Nitro's readRawBody can return a re-serialized version if the body
- * was already parsed, which breaks Stripe's signature verification.
- */
-function getRawBody(req: import('node:http').IncomingMessage): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (chunk: Buffer) => chunks.push(chunk))
-    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')))
-    req.on('error', reject)
-  })
-}
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
   const logger = useLogger('API:StripeWebhook', debug)
 
   try {
-    // Read raw body directly from Node request stream to preserve exact bytes
-    const body = await getRawBody(event.node.req)
+    // Read raw body to preserve exact bytes for signature verification
+    const body = await readRawBody(event, 'utf-8')
     const signature = getHeader(event, 'stripe-signature')
 
     if (!body || !signature) {
