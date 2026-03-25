@@ -91,16 +91,34 @@ export async function getInteractiveMetrics(
       lte(dailySummaries.date, endDate),
     ))
 
+  // Query 5: average session duration
+  const durationRows = await db
+    .select()
+    .from(dailySummaries)
+    .where(and(
+      eq(dailySummaries.metric, 'im_session_avg_duration'),
+      gte(dailySummaries.date, startDate),
+      lte(dailySummaries.date, endDate),
+    ))
+
   const totalSessions = sumRaw(sessionStartRows)
   const totalCompletions = sumRaw(sessionCompleteRows)
   const uniqueDomains = domainRows.length
   const totalPageViews = sumExtrapolated(pageViewRows)
+
+  // Weighted average of daily averages (weighted by completions per day/domain)
+  let avgSessionDuration = 0
+  if (durationRows.length > 0 && totalCompletions > 0) {
+    const totalWeightedDuration = durationRows.reduce((sum, row) => sum + row.value * row.sampleRate, 0)
+    avgSessionDuration = Math.round(totalWeightedDuration / durationRows.length)
+  }
 
   return {
     totalSessions,
     uniqueDomains,
     completionRate: totalSessions > 0 ? Math.min((totalCompletions / totalSessions) * 100, 100) : 0,
     totalPageViews,
+    avgSessionDuration,
   }
 }
 

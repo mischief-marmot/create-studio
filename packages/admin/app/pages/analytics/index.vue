@@ -113,7 +113,7 @@
                 Interactive Mode Engagement
               </h2>
 
-              <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="grid grid-cols-2 lg:grid-cols-5 gap-6">
                 <div class="space-y-1">
                   <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
                     {{ formatNumber(interactiveData.interactive.totalSessions) }}
@@ -134,6 +134,13 @@
                   </div>
                   <div class="text-xs text-base-content/50">Completion Rate</div>
                   <div class="text-xs text-base-content/40">Sessions completed / started</div>
+                </div>
+                <div class="space-y-1">
+                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                    {{ formatDuration(interactiveData.interactive.avgSessionDuration) }}
+                  </div>
+                  <div class="text-xs text-base-content/50">Avg Session Duration</div>
+                  <div class="text-xs text-base-content/40">Time in interactive mode</div>
                 </div>
                 <div class="space-y-1">
                   <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
@@ -399,6 +406,7 @@ interface InteractiveAnalytics {
     uniqueDomains: number
     completionRate: number
     totalPageViews: number
+    avgSessionDuration: number
   }
   timers: {
     started: number
@@ -522,6 +530,13 @@ watch([startDate, endDate], () => {
 
 const formatNumber = (value: number): string => {
   return value.toLocaleString()
+}
+
+const formatDuration = (seconds: number): string => {
+  if (seconds < 60) return `${seconds}s`
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
 }
 
 
