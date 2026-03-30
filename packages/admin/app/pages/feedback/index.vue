@@ -32,7 +32,33 @@
               label="Status"
               @change="handleFilterChange"
             />
+            <button
+              class="btn btn-sm gap-2"
+              :class="groupMode ? 'btn-primary' : 'btn-outline'"
+              @click="groupMode = !groupMode"
+            >
+              <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              Group
+            </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Bulk Actions Bar -->
+      <div
+        v-if="selectedIds.size > 0"
+        class="bg-primary/10 border border-primary/20 rounded-xl px-6 py-3 mb-4 flex items-center justify-between"
+      >
+        <span class="text-sm font-medium">
+          {{ selectedIds.size }} report{{ selectedIds.size === 1 ? '' : 's' }} selected
+        </span>
+        <div class="flex items-center gap-2">
+          <button class="btn btn-xs btn-ghost" @click="selectedIds.clear()">Clear</button>
+          <button class="btn btn-xs btn-info" @click="bulkUpdateStatus('new')" :disabled="bulkUpdating">New</button>
+          <button class="btn btn-xs btn-warning" @click="bulkUpdateStatus('acknowledged')" :disabled="bulkUpdating">Acknowledge</button>
+          <button class="btn btn-xs btn-success" @click="bulkUpdateStatus('resolved')" :disabled="bulkUpdating">Resolve</button>
         </div>
       </div>
 
@@ -64,12 +90,99 @@
           </div>
         </div>
 
-        <!-- Table -->
+        <!-- Grouped Table -->
+        <div v-else-if="groupMode && groupedReports.length > 0">
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-base-300/50">
+                  <th class="py-4 px-6 w-10">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="allGroupedSelected"
+                      :indeterminate="someGroupedSelected && !allGroupedSelected"
+                      @change="toggleAllGrouped"
+                    />
+                  </th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Error</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Count</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Sites</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Status</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Latest</th>
+                  <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="group in groupedReports"
+                  :key="group.id"
+                  class="border-b border-base-300/30 last:border-b-0 hover:bg-base-50 transition-colors"
+                >
+                  <td class="py-4 px-6">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="groupIdsSelected(group.report_ids)"
+                      @change="toggleGroupIds(group.report_ids)"
+                    />
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm text-base-content truncate block max-w-[400px]">{{ group.error_message }}</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="badge badge-ghost badge-sm font-mono">{{ group.occurrence_count }}</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm text-base-content/70">{{ group.site_count }} site{{ group.site_count === 1 ? '' : 's' }}</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="badge badge-sm" :class="getStatusBadgeClass(group.status)">
+                      {{ group.status }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="text-sm text-base-content/70">{{ formatDate(group.latest_at) }}</span>
+                  </td>
+                  <td class="py-4 px-6">
+                    <NuxtLink
+                      :to="`/feedback/group/${encodeErrorHash(group.error_message)}`"
+                      class="btn btn-ghost btn-xs"
+                    >
+                      View All
+                    </NuxtLink>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination (grouped) -->
+          <FeedbackPagination
+            v-if="pagination.totalPages > 1"
+            :pagination="pagination"
+            :start-index="startIndex"
+            :end-index="endIndex"
+            :visible-pages="visiblePages"
+            @page-change="handlePageChange"
+          />
+        </div>
+
+        <!-- Flat Table -->
         <div v-else-if="reports.length > 0">
           <div class="overflow-x-auto">
             <table class="w-full">
               <thead>
                 <tr class="border-b border-base-300/50">
+                  <th class="py-4 px-6 w-10">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="allSelected"
+                      :indeterminate="someSelected && !allSelected"
+                      @change="toggleAll"
+                    />
+                  </th>
                   <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Date</th>
                   <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Site</th>
                   <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Error</th>
@@ -83,6 +196,14 @@
                   :key="report.id"
                   class="border-b border-base-300/30 last:border-b-0 hover:bg-base-50 transition-colors"
                 >
+                  <td class="py-4 px-6">
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      :checked="selectedIds.has(report.id)"
+                      @change="toggleSelect(report.id)"
+                    />
+                  </td>
                   <td class="py-4 px-6">
                     <span class="text-sm text-base-content/70">{{ formatDate(report.createdAt) }}</span>
                   </td>
@@ -113,54 +234,15 @@
             </table>
           </div>
 
-          <!-- Pagination -->
-          <div
+          <!-- Pagination (flat) -->
+          <FeedbackPagination
             v-if="pagination.totalPages > 1"
-            class="border-t border-base-300/50 px-6 py-4 flex items-center justify-between"
-          >
-            <div class="text-base-content/50 text-sm">
-              Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, pagination.total) }} of {{ pagination.total }} reports
-            </div>
-            <div class="flex items-center gap-2">
-              <button
-                class="p-2 rounded-lg text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                :disabled="pagination.page === 1"
-                @click="handlePageChange(pagination.page - 1)"
-                aria-label="Previous page"
-              >
-                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <div class="flex items-center gap-1">
-                <button
-                  v-for="page in visiblePages"
-                  :key="page"
-                  class="min-w-[32px] h-8 px-2 rounded-lg text-sm font-medium transition-all"
-                  :class="page === pagination.page
-                    ? 'bg-primary text-primary-content'
-                    : 'text-base-content/70 hover:text-base-content hover:bg-base-200'"
-                  @click="handlePageChange(page)"
-                  :aria-label="`Go to page ${page}`"
-                  :aria-current="page === pagination.page ? 'page' : undefined"
-                >
-                  {{ page }}
-                </button>
-              </div>
-
-              <button
-                class="p-2 rounded-lg text-base-content/50 hover:text-base-content hover:bg-base-200 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                :disabled="pagination.page === pagination.totalPages"
-                @click="handlePageChange(pagination.page + 1)"
-                aria-label="Next page"
-              >
-                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
-          </div>
+            :pagination="pagination"
+            :start-index="startIndex"
+            :end-index="endIndex"
+            :visible-pages="visiblePages"
+            @page-change="handlePageChange"
+          />
         </div>
 
         <!-- Empty State -->
@@ -171,7 +253,7 @@
             </svg>
           </div>
           <h3 class="text-lg text-base-content mb-1" style="font-family: 'Instrument Serif', serif;">No Feedback Reports</h3>
-          <p class="text-sm text-base-content/50">No error reports have been submitted yet</p>
+          <p class="text-sm text-base-content/50">No error reports match the current filters</p>
         </div>
       </div>
     </div>
@@ -179,7 +261,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 
 definePageMeta({
   layout: 'admin'
@@ -202,6 +284,17 @@ interface FeedbackReport {
   site_url: string | null
 }
 
+interface GroupedReport {
+  id: number
+  error_message: string
+  status: string
+  occurrence_count: number
+  site_count: number
+  latest_at: string
+  earliest_at: string
+  report_ids: string
+}
+
 interface Pagination {
   page: number
   limit: number
@@ -210,6 +303,7 @@ interface Pagination {
 }
 
 const reports = ref<FeedbackReport[]>([])
+const groupedReports = ref<GroupedReport[]>([])
 const pagination = ref<Pagination>({
   page: 1,
   limit: 20,
@@ -218,11 +312,15 @@ const pagination = ref<Pagination>({
 })
 const loading = ref(false)
 const error = ref<string | null>(null)
+const bulkUpdating = ref(false)
 
 const searchQuery = ref('')
-const statusFilter = ref<string | number | null>(null)
+const statusFilter = ref<string | number | null>('active')
+const groupMode = ref(true)
+const selectedIds = reactive(new Set<number>())
 
 const statusOptions = [
+  { value: 'active', label: 'Active' },
   { value: 'new', label: 'New' },
   { value: 'acknowledged', label: 'Acknowledged' },
   { value: 'resolved', label: 'Resolved' },
@@ -248,6 +346,95 @@ const visiblePages = computed(() => {
   return pages
 })
 
+// Flat mode selection
+const allSelected = computed(() => reports.value.length > 0 && reports.value.every(r => selectedIds.has(r.id)))
+const someSelected = computed(() => reports.value.some(r => selectedIds.has(r.id)))
+
+const toggleAll = () => {
+  if (allSelected.value) {
+    reports.value.forEach(r => selectedIds.delete(r.id))
+  } else {
+    reports.value.forEach(r => selectedIds.add(r.id))
+  }
+}
+
+const toggleSelect = (id: number) => {
+  if (selectedIds.has(id)) {
+    selectedIds.delete(id)
+  } else {
+    selectedIds.add(id)
+  }
+}
+
+// Grouped mode selection
+const parseGroupIds = (reportIds: string): number[] => {
+  return reportIds.split(',').map(Number).filter(id => !isNaN(id))
+}
+
+const allGroupedSelected = computed(() => {
+  if (groupedReports.value.length === 0) return false
+  return groupedReports.value.every(g => {
+    const ids = parseGroupIds(g.report_ids)
+    return ids.every(id => selectedIds.has(id))
+  })
+})
+
+const someGroupedSelected = computed(() => {
+  return groupedReports.value.some(g => {
+    const ids = parseGroupIds(g.report_ids)
+    return ids.some(id => selectedIds.has(id))
+  })
+})
+
+const groupIdsSelected = (reportIds: string): boolean => {
+  const ids = parseGroupIds(reportIds)
+  return ids.every(id => selectedIds.has(id))
+}
+
+const toggleGroupIds = (reportIds: string) => {
+  const ids = parseGroupIds(reportIds)
+  const allSelected = ids.every(id => selectedIds.has(id))
+  if (allSelected) {
+    ids.forEach(id => selectedIds.delete(id))
+  } else {
+    ids.forEach(id => selectedIds.add(id))
+  }
+}
+
+const toggleAllGrouped = () => {
+  if (allGroupedSelected.value) {
+    groupedReports.value.forEach(g => {
+      parseGroupIds(g.report_ids).forEach(id => selectedIds.delete(id))
+    })
+  } else {
+    groupedReports.value.forEach(g => {
+      parseGroupIds(g.report_ids).forEach(id => selectedIds.add(id))
+    })
+  }
+}
+
+// Bulk actions
+const bulkUpdateStatus = async (status: string) => {
+  if (selectedIds.size === 0) return
+  bulkUpdating.value = true
+
+  try {
+    await $fetch('/api/admin/feedback/bulk', {
+      method: 'PATCH',
+      body: {
+        ids: Array.from(selectedIds),
+        status,
+      },
+    })
+    selectedIds.clear()
+    await fetchReports()
+  } catch (err: any) {
+    console.error('Bulk update failed:', err)
+  } finally {
+    bulkUpdating.value = false
+  }
+}
+
 const fetchReports = async () => {
   loading.value = true
   error.value = null
@@ -265,12 +452,23 @@ const fetchReports = async () => {
       params.append('status', statusFilter.value.toString())
     }
 
+    if (groupMode.value) {
+      params.append('group', 'true')
+    }
+
     const response = await $fetch<{
-      data: FeedbackReport[]
+      data: any[]
+      grouped: boolean
       pagination: Pagination
     }>(`/api/admin/feedback?${params.toString()}`)
 
-    reports.value = response.data
+    if (response.grouped) {
+      groupedReports.value = response.data as GroupedReport[]
+      reports.value = []
+    } else {
+      reports.value = response.data as FeedbackReport[]
+      groupedReports.value = []
+    }
     pagination.value = response.pagination
   } catch (err: any) {
     console.error('Failed to fetch feedback reports:', err)
@@ -284,8 +482,9 @@ onMounted(() => {
   fetchReports()
 })
 
-watch([searchQuery, statusFilter], () => {
+watch([searchQuery, statusFilter, groupMode], () => {
   pagination.value.page = 1
+  selectedIds.clear()
   fetchReports()
 })
 
@@ -324,6 +523,10 @@ const formatDate = (dateString: string): string => {
     return `${months} ${months === 1 ? 'month' : 'months'} ago`
   }
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const encodeErrorHash = (errorMessage: string): string => {
+  return btoa(errorMessage).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 const getStatusBadgeClass = (status: string): string => {

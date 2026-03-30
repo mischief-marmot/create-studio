@@ -1,17 +1,18 @@
-import { eq, like, or, desc, count, and } from 'drizzle-orm'
+import { eq, like, or, desc, count, and, ne, sql, inArray } from 'drizzle-orm'
 import { useAdminDb, feedbackReports, sites } from '~~/server/utils/admin-db'
 
 /**
  * GET /api/admin/feedback
- * Returns paginated list of feedback reports with filtering and search.
+ * Returns paginated list of feedback reports with filtering, search, and grouping.
  * Excludes screenshot_base64 from list response for performance.
  *
  * Query params:
  * - page: number (default: 1)
  * - limit: number (default: 20)
  * - search: string (search in error_message, user_message)
- * - status: 'new' | 'acknowledged' | 'resolved'
+ * - status: 'new' | 'acknowledged' | 'resolved' | 'active' (active = new + acknowledged)
  * - site_id: number
+ * - group: 'true' to group identical error_messages
  */
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -31,6 +32,7 @@ export default defineEventHandler(async (event) => {
     const search = query.search as string | undefined
     const statusFilter = query.status as string | undefined
     const siteIdFilter = query.site_id ? Number(query.site_id) : undefined
+    const groupBy = query.group === 'true'
     const offset = (page - 1) * limit
 
     const conditions: any[] = []
@@ -45,7 +47,10 @@ export default defineEventHandler(async (event) => {
       )
     }
 
-    if (statusFilter && ['new', 'acknowledged', 'resolved'].includes(statusFilter)) {
+    if (statusFilter === 'active') {
+      // Active = not resolved
+      conditions.push(ne(feedbackReports.status, 'resolved'))
+    } else if (statusFilter && ['new', 'acknowledged', 'resolved'].includes(statusFilter)) {
       conditions.push(eq(feedbackReports.status, statusFilter))
     }
 
@@ -55,6 +60,48 @@ export default defineEventHandler(async (event) => {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
+    if (groupBy) {
+      // Grouped mode: aggregate identical error_messages
+      const countResult = await db
+        .select({ count: sql<number>`count(distinct ${feedbackReports.error_message})` })
+        .from(feedbackReports)
+        .where(whereClause)
+
+      const total = countResult[0]?.count || 0
+      const totalPages = Math.ceil(total / limit)
+
+      const grouped = await db
+        .select({
+          id: sql<number>`max(${feedbackReports.id})`,
+          error_message: feedbackReports.error_message,
+          status: sql<string>`
+            case
+              when sum(case when ${feedbackReports.status} = 'new' then 1 else 0 end) > 0 then 'new'
+              when sum(case when ${feedbackReports.status} = 'acknowledged' then 1 else 0 end) > 0 then 'acknowledged'
+              else 'resolved'
+            end
+          `,
+          occurrence_count: sql<number>`count(*)`,
+          site_count: sql<number>`count(distinct ${feedbackReports.site_id})`,
+          latest_at: sql<string>`max(${feedbackReports.createdAt})`,
+          earliest_at: sql<string>`min(${feedbackReports.createdAt})`,
+          report_ids: sql<string>`group_concat(${feedbackReports.id})`,
+        })
+        .from(feedbackReports)
+        .where(whereClause)
+        .groupBy(feedbackReports.error_message)
+        .orderBy(desc(sql`max(${feedbackReports.createdAt})`))
+        .limit(limit)
+        .offset(offset)
+
+      return {
+        data: grouped,
+        grouped: true,
+        pagination: { page, limit, total, totalPages },
+      }
+    }
+
+    // Flat mode (default)
     const countResult = await db
       .select({ count: count() })
       .from(feedbackReports)
@@ -89,6 +136,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       data: reports,
+      grouped: false,
       pagination: {
         page,
         limit,
