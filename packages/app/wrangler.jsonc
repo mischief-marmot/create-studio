@@ -60,7 +60,8 @@
     "NUXT_PUBLIC_STRIPE_PRICE_QUARTERLY": "price_1SxrawASy46wWIm6mXqQt6yv",
     "NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_live_51KFM5TASy46wWIm6xF74trOMNh8jWEEaHhG27bTnA62KsMxPHBOANkPrRzx6d8Xsymc6AZzZMOB2lZNMYHcgZpxo00uXJZVub5",
     "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio",
-    "NUXT_STRIPE_MULTI_SITE_COUPON_ID": "multi_site_50"
+    "NUXT_STRIPE_MULTI_SITE_COUPON_ID": "multi_site_50",
+    "NUXT_CLOUDFLARE_ZONE_ID": "a84ddf8341030a9327d0e2b5bc0a45f9"
   },
   "env": {
     "preview": {
@@ -112,7 +113,8 @@
         "NUXT_PUBLIC_STRIPE_PRICE_QUARTERLY": "price_1SFcybPSeSjfZ8mlSBaKplrB",
         "NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51SFcrnPSeSjfZ8mlt0Zz4Hk7Yp2cBddFGOhp3QXXFlpYj8XImS3FA09lfWh7OZG13XZyuuJzSaCH3rZIyMlc10VA00cvRHdN2f",
         "NUXT_PUBLIC_SUPPORT_EMAIL": "support@create.studio",
-        "NUXT_STRIPE_MULTI_SITE_COUPON_ID": "multi_site_50"
+        "NUXT_STRIPE_MULTI_SITE_COUPON_ID": "multi_site_50",
+        "NUXT_CLOUDFLARE_ZONE_ID": "a84ddf8341030a9327d0e2b5bc0a45f9"
       }
     }
   }

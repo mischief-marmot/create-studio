@@ -38,6 +38,26 @@ export default defineEventHandler(async (event) => {
       }
     );
 
+    // Purge edge cache globally so the new version is served immediately
+    const { cloudflareApiToken, cloudflareZoneId, public: { rootUrl } } = useRuntimeConfig()
+    if (cloudflareApiToken && cloudflareZoneId) {
+      try {
+        const purgeUrl = `https://api.cloudflare.com/client/v4/zones/${cloudflareZoneId}/purge_cache`
+        await $fetch(purgeUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${cloudflareApiToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: {
+            files: [`${rootUrl}/embed/${body.filename}`],
+          },
+        })
+      } catch {
+        // Cache purge failed — will expire naturally via max-age
+      }
+    }
+
     return {
       success: true,
       message: `${body.filename} uploaded to blob storage`,
