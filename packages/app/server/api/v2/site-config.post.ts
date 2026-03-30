@@ -3,6 +3,15 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 import { SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { eq } from 'drizzle-orm'
 
+// Edge cache TTL — 10 minutes; site config changes are infrequent
+const EDGE_CACHE_MAX_AGE = 600
+
+/** Build a synthetic GET cache key for Cloudflare Cache API, keyed on siteUrl */
+function buildEdgeCacheKey(rootUrl: string, siteUrl: string): Request {
+  const siteKey = btoa(siteUrl)
+  return new Request(`${rootUrl}/api/v2/site-config/${siteKey}`, { method: 'GET' })
+}
+
 export default defineEventHandler(async (event) => {
   const runtimeConfig = useRuntimeConfig()
   const logger = useLogger('SiteConfig', runtimeConfig.debug)
@@ -22,6 +31,24 @@ export default defineEventHandler(async (event) => {
       statusCode: 400,
       statusMessage: 'siteUrl is required'
     })
+  }
+
+  const isProduction = !runtimeConfig.debug
+
+  // Check Cloudflare edge cache first
+  if (isProduction) {
+    try {
+      const cache = (caches as any).default as Cache | undefined
+      if (cache) {
+        const edgeCacheKey = buildEdgeCacheKey(runtimeConfig.public.rootUrl, siteUrl)
+        const cachedResponse = await cache.match(edgeCacheKey)
+        if (cachedResponse) {
+          return cachedResponse.json()
+        }
+      }
+    } catch {
+      // Cache API not available — fall through
+    }
   }
 
   // Look up site and subscription tier
@@ -88,27 +115,52 @@ export default defineEventHandler(async (event) => {
   // Trial tier has same features as free-plus
   const effectiveTier = subscriptionTier === 'trial' ? 'free-plus' : subscriptionTier
 
-  const config = {
-    showInteractiveMode,
-    buttonText,
-    ctaVariant,
-    ctaTitle,
-    ctaSubtitle,
-    baseUrl: runtimeConfig.public.rootUrl,
-    subscriptionTier,
-    renderMode,
-    features: {
-      inDomRendering: renderMode === 'in-dom',
-      customStyling: effectiveTier === 'pro',
-      servingsAdjustment: effectiveTier !== 'free',
-      unitConversion: effectiveTier !== 'free',
-      analytics: true,
+  const result = {
+    success: true,
+    config: {
+      showInteractiveMode,
+      buttonText,
+      ctaVariant,
+      ctaTitle,
+      ctaSubtitle,
+      baseUrl: runtimeConfig.public.rootUrl,
+      subscriptionTier,
+      renderMode,
+      features: {
+        inDomRendering: renderMode === 'in-dom',
+        customStyling: effectiveTier === 'pro',
+        servingsAdjustment: effectiveTier !== 'free',
+        unitConversion: effectiveTier !== 'free',
+        analytics: true,
+      }
+    },
+    siteUrl
+  }
+
+  // Store in edge cache for next time
+  if (isProduction) {
+    try {
+      const cache = (caches as any).default as Cache | undefined
+      if (cache) {
+        const edgeCacheKey = buildEdgeCacheKey(runtimeConfig.public.rootUrl, siteUrl)
+        const response = new Response(JSON.stringify(result), {
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': `public, max-age=${EDGE_CACHE_MAX_AGE}`,
+            'Access-Control-Allow-Origin': '*',
+          }
+        })
+        const ctx = (event.context.cloudflare as any)?.context
+        if (ctx?.waitUntil) {
+          ctx.waitUntil(cache.put(edgeCacheKey, response))
+        } else {
+          cache.put(edgeCacheKey, response).catch(() => {})
+        }
+      }
+    } catch {
+      // Edge cache write failed — not critical
     }
   }
 
-  return {
-    success: true,
-    config,
-    siteUrl
-  }
+  return result
 })

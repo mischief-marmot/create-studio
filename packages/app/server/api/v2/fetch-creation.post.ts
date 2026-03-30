@@ -49,6 +49,18 @@ interface CachedCreation {
   cachedAt: string
 }
 
+// Edge cache TTL — 1 day; KV cache handles the longer 30-day window
+const EDGE_CACHE_MAX_AGE = 86400
+
+/**
+ * Build a synthetic GET cache key for Cloudflare Cache API.
+ * Uses the same btoa("domain:creationId") pattern as the /interactive route.
+ */
+function buildEdgeCacheKey(rootUrl: string, siteUrl: string, creationId: number): Request {
+  const creationKey = btoa(`${siteUrl}:${creationId}`)
+  return new Request(`${rootUrl}/api/v2/fetch-creation/${creationKey}`, { method: 'GET' })
+}
+
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
   const logger = useLogger('FetchCreation', config.debug)
@@ -60,9 +72,9 @@ export default defineEventHandler(async (event) => {
   setHeader(event, 'Access-Control-Allow-Methods', 'POST, OPTIONS')
   setHeader(event, 'Access-Control-Allow-Headers', 'Content-Type, Authorization, Cache-Control')
 
-  // Set cache control headers - 30 days to match HubKV TTL
-  setHeader(event, 'Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400')
-  setHeader(event, 'CDN-Cache-Control', 'public, max-age=2592000, stale-while-revalidate=86400')
+  // Set cache control headers
+  setHeader(event, 'Cache-Control', `public, max-age=${EDGE_CACHE_MAX_AGE}, stale-while-revalidate=86400`)
+  setHeader(event, 'CDN-Cache-Control', `public, max-age=${EDGE_CACHE_MAX_AGE}, stale-while-revalidate=86400`)
 
   const body = await readBody<FetchCreationBody>(event)
   checkpoints.readBody = performance.now()
@@ -76,14 +88,30 @@ export default defineEventHandler(async (event) => {
     })
   }
 
+  const isProduction = !config.debug
+
+  // Check Cloudflare edge cache first (fastest path — no KV or WP call)
+  if (isProduction && !cache_bust) {
+    try {
+      const cache = (caches as any).default as Cache | undefined
+      if (cache) {
+        const edgeCacheKey = buildEdgeCacheKey(config.public.rootUrl, site_url, creation_id)
+        const cachedResponse = await cache.match(edgeCacheKey)
+        if (cachedResponse) {
+          return cachedResponse.json()
+        }
+      }
+    } catch {
+      // Cache API not available — fall through to KV
+    }
+  }
+
   // Initialize KV storage
   const storage = kv
   const cacheKey = `creation:${site_url}:${creation_id}`
   const TTL = 30 * 24 * 60 * 60 // 30 days in seconds
 
-  // logger.info(`📋 Request params - site_url: ${site_url}, creation_id: ${creation_id}, cache_bust: ${cache_bust}`)
-
-  // Check cache if not busting
+  // Check KV cache if not busting
   let cachedCreation: CachedCreation | null = null
   if (!cache_bust) {
     try {
@@ -92,16 +120,6 @@ export default defineEventHandler(async (event) => {
       checkpoints.cacheCheckEnd = performance.now()
 
       if (cachedCreation) {
-        // const cacheCheckDuration = checkpoints.cacheCheckEnd - checkpoints.cacheCheckStart
-        // logger.info(`📦 Cache found: ${cacheKey}`)
-        // logger.info(`  - Cached modified: ${cachedCreation.modified}`)
-        // logger.info(`  - Cache lookup: ${cacheCheckDuration.toFixed(2)}ms`)
-
-        // Return cached data immediately - we'll validate freshness in background
-        // const totalTime = performance.now() - startTime
-        // logger.info(`✅ CACHE HIT (returning immediately): ${cacheKey}`)
-        // logger.info(`📊 Performance: ${totalTime.toFixed(2)}ms`)
-
         // Trigger background validation (check if stale and refresh if needed)
         validateAndRefreshCacheInBackground(
           storage,
@@ -110,8 +128,13 @@ export default defineEventHandler(async (event) => {
           cachedCreation,
           logger,
           TTL,
-          creation_id
+          creation_id,
+          event,
+          config
         ).catch(err => logger.error('Background validation failed:', err))
+
+        // Store in edge cache for next time
+        storeInEdgeCache(event, config, site_url, creation_id, cachedCreation.data)
 
         return cachedCreation.data
       }
@@ -120,6 +143,10 @@ export default defineEventHandler(async (event) => {
     }
   } else {
     logger.info(`🔄 Cache bust requested for ${cacheKey}`)
+    // Purge edge cache on cache bust
+    if (isProduction) {
+      purgeEdgeCache(config, site_url, creation_id)
+    }
   }
 
   // No cache - fetch fresh data from WordPress API
@@ -131,16 +158,12 @@ export default defineEventHandler(async (event) => {
     const response = await $fetch<WPCreationResponse>(url)
     checkpoints.wpFetchEnd = performance.now()
 
-    // logger.info(`  - WordPress API response received in ${(checkpoints.wpFetchEnd - checkpoints.wpFetchStart).toFixed(2)}ms`)
-
     // Transform the response to HowTo format
     checkpoints.transformStart = performance.now()
     const transformedData = await transformCreationToHowTo(response, site_url)
     checkpoints.transformEnd = performance.now()
 
-    // logger.info(`  - Data transformation completed in ${(checkpoints.transformEnd - checkpoints.transformStart).toFixed(2)}ms`)
-
-    // Cache the transformed data
+    // Cache the transformed data in KV
     try {
       checkpoints.cacheWriteStart = performance.now()
       const wrappedData: CachedCreation = {
@@ -150,20 +173,12 @@ export default defineEventHandler(async (event) => {
       }
       await storage.set(cacheKey, wrappedData, { ttl: TTL })
       checkpoints.cacheWriteEnd = performance.now()
-      // logger.info(`  - Data cached in HubKV in ${(checkpoints.cacheWriteEnd - checkpoints.cacheWriteStart).toFixed(2)}ms`)
     } catch (error) {
       logger.error('Cache write error:', error)
     }
 
-    const totalTime = performance.now() - startTime
-    // logger.info(`✅ Fresh fetch completed in ${totalTime.toFixed(2)}ms`)
-    // logger.info(`📊 Detailed breakdown:`)
-    // logger.info(`  - Read body: ${(checkpoints.readBody - startTime).toFixed(2)}ms`)
-    // logger.info(`  - WordPress fetch: ${(checkpoints.wpFetchEnd - checkpoints.wpFetchStart).toFixed(2)}ms`)
-    // logger.info(`  - Transform: ${(checkpoints.transformEnd - checkpoints.transformStart).toFixed(2)}ms`)
-    if (checkpoints.cacheWriteEnd) {
-      // logger.info(`  - Cache write: ${(checkpoints.cacheWriteEnd - checkpoints.cacheWriteStart).toFixed(2)}ms`)
-    }
+    // Store in edge cache
+    storeInEdgeCache(event, config, site_url, creation_id, transformedData)
 
     return transformedData
   } catch (error: any) {
@@ -184,6 +199,43 @@ export default defineEventHandler(async (event) => {
   }
 })
 
+/** Store a response in the Cloudflare edge cache (fire-and-forget) */
+function storeInEdgeCache(event: any, config: any, siteUrl: string, creationId: number, data: HowTo) {
+  if (config.debug) return
+  try {
+    const cache = (caches as any).default as Cache | undefined
+    if (!cache) return
+    const edgeCacheKey = buildEdgeCacheKey(config.public.rootUrl, siteUrl, creationId)
+    const response = new Response(JSON.stringify(data), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${EDGE_CACHE_MAX_AGE}`,
+        'Access-Control-Allow-Origin': '*',
+      }
+    })
+    const ctx = (event.context.cloudflare as any)?.context
+    if (ctx?.waitUntil) {
+      ctx.waitUntil(cache.put(edgeCacheKey, response))
+    } else {
+      cache.put(edgeCacheKey, response).catch(() => {})
+    }
+  } catch {
+    // Edge cache write failed — not critical
+  }
+}
+
+/** Purge a creation from the edge cache */
+function purgeEdgeCache(config: any, siteUrl: string, creationId: number) {
+  try {
+    const cache = (caches as any).default as Cache | undefined
+    if (!cache) return
+    const edgeCacheKey = buildEdgeCacheKey(config.public.rootUrl, siteUrl, creationId)
+    cache.delete(edgeCacheKey).catch(() => {})
+  } catch {
+    // Not critical
+  }
+}
+
 // Validate cache freshness and refresh if stale - doesn't block the response
 async function validateAndRefreshCacheInBackground(
   storage: any,
@@ -192,30 +244,17 @@ async function validateAndRefreshCacheInBackground(
   cachedCreation: CachedCreation,
   logger: any,
   ttl: number,
-  creationId: number
+  creationId: number,
+  event: any,
+  config: any
 ) {
-  const validationStartTime = performance.now()
-
   try {
-    // logger.info(`🔍 Background validation started for ${cacheKey}`)
-
-    // Fetch fresh modified timestamp from WordPress
     const url = `${siteUrl}/wp-json/mv-create/v1/creations/${creationId}`
-
     const response = await $fetch<WPCreationResponse>(url)
-    const validationFetchTime = performance.now() - validationStartTime
 
     // Check if cache is stale
     if (response.modified !== cachedCreation.modified) {
-      // logger.info(`⚠️  Cache is stale for ${cacheKey}`)
-      // logger.info(`  - Cached modified: ${cachedCreation.modified}`)
-      // logger.info(`  - Fresh modified: ${response.modified}`)
-      // logger.info(`  - WordPress fetch: ${validationFetchTime.toFixed(2)}ms`)
-
-      // Transform and update cache
-      const transformStartTime = performance.now()
       const transformedData = await transformCreationToHowTo(response, siteUrl)
-      const transformTime = performance.now() - transformStartTime
 
       const wrappedData: CachedCreation = {
         data: transformedData,
@@ -224,49 +263,11 @@ async function validateAndRefreshCacheInBackground(
       }
       await storage.set(cacheKey, wrappedData, { ttl })
 
-      const totalTime = performance.now() - validationStartTime
-      // logger.info(`✅ Background refresh completed for ${cacheKey} in ${totalTime.toFixed(2)}ms`)
-      // logger.info(`  - WordPress fetch: ${validationFetchTime.toFixed(2)}ms`)
-      // logger.info(`  - Transform: ${transformTime.toFixed(2)}ms`)
-    } else {
-      // logger.info(`✅ Cache is fresh for ${cacheKey}`)
-      // logger.info(`  - Validation time: ${validationStartTime.toFixed(2)}ms`)
+      // Also refresh edge cache with the new data
+      storeInEdgeCache(event, config, siteUrl, creationId, transformedData)
     }
   } catch (error: any) {
-    const validationTime = performance.now() - validationStartTime
-    // logger.error(`⚠️  Background validation failed after ${validationTime.toFixed(2)}ms:`, error?.message || error)
+    // Background validation failed — stale data was already returned
   }
 }
 
-// Background refresh function - doesn't block the response (kept for backward compatibility)
-async function refreshCacheInBackground(
-  storage: any,
-  cacheKey: string,
-  wpResponse: WPCreationResponse,
-  siteUrl: string,
-  logger: any,
-  ttl: number
-) {
-  const refreshStartTime = performance.now()
-
-  try {
-    logger.info(`🔄 Background refresh started for ${cacheKey}`)
-
-    // Transform the fresh data
-    const transformedData = await transformCreationToHowTo(wpResponse, siteUrl)
-
-    // Update cache with fresh data
-    const wrappedData: CachedCreation = {
-      data: transformedData,
-      modified: wpResponse.modified || new Date().toISOString(),
-      cachedAt: new Date().toISOString()
-    }
-    await storage.set(cacheKey, wrappedData, { ttl })
-
-    const refreshTime = performance.now() - refreshStartTime
-    logger.info(`✅ Background refresh completed for ${cacheKey} in ${refreshTime.toFixed(2)}ms`)
-  } catch (error: any) {
-    const refreshTime = performance.now() - refreshStartTime
-    logger.error(`❌ Background refresh failed after ${refreshTime.toFixed(2)}ms:`, error?.message || error)
-  }
-}
