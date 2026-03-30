@@ -652,6 +652,9 @@ const totalSlides = computed(() => steps.value.length + 2); // intro + steps + c
 // Reactive state with defaults - will be updated client-side
 const currentSlide = ref(0);
 
+// Start the interactive session — duration is measured from here
+analytics.trackSessionStart(totalSlides.value)
+
 // Track page views when slide changes
 watch(currentSlide, (newSlide) => {
   analytics.trackPageView(newSlide, totalSlides.value)

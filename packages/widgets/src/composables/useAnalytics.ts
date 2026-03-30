@@ -6,7 +6,7 @@
 import { ref, onBeforeUnmount } from 'vue'
 
 export interface AnalyticsEvent {
-  type: 'timer_start' | 'timer_stop' | 'timer_complete' | 'rating_screen_shown' | 'rating_submitted' | 'page_view' | 'cta_activated' | 'cta_rendered'
+  type: 'im_session_start' | 'im_session_complete' | 'timer_start' | 'timer_stop' | 'timer_complete' | 'rating_screen_shown' | 'rating_submitted' | 'page_view' | 'cta_activated' | 'cta_rendered'
   timestamp: number
   metadata?: Record<string, any>
 }
@@ -25,9 +25,6 @@ export interface SessionData {
   creationId: string
   startTime: number
   endTime: number
-  totalDuration: number
-  pagesViewed: number
-  totalPages: number
   events: AnalyticsEvent[]
   isDemo?: boolean
 }
@@ -72,10 +69,8 @@ export function useAnalytics(config: AnalyticsConfig) {
   const events = ref<AnalyticsEvent[]>([])
   const pagesViewed = ref(new Set<number>())
   const totalPages = ref(0)
-  const sessionStartTime = ref(Date.now())
-  const totalActiveTime = ref(0)
-  const lastActivityTime = ref(Date.now())
-  const isActive = ref(true)
+  let sessionStartedAt: number | null = null
+  let sessionEnded = false
 
   const analyticsEndpoint = config.baseUrl ? `${config.baseUrl}/api/analytics/events` : 'https://create.studio/api/analytics/events'
 
@@ -88,9 +83,37 @@ export function useAnalytics(config: AnalyticsConfig) {
       timestamp: Date.now(),
       metadata
     })
+  }
 
-    // Update last activity time
-    lastActivityTime.value = Date.now()
+  /**
+   * Track session start — call once when user enters interactive mode
+   */
+  function trackSessionStart(total: number) {
+    if (sessionStartedAt !== null) return // already started
+    sessionStartedAt = Date.now()
+    totalPages.value = total
+    trackEvent('im_session_start', {
+      creationId: config.creationId,
+      totalPages: total
+    })
+  }
+
+  /**
+   * Track session end — call when modal closes or page unloads.
+   * Wall-clock duration from start to now.
+   */
+  function trackSessionEnd() {
+    if (sessionStartedAt === null || sessionEnded) return
+    sessionEnded = true
+    const duration = Math.round((Date.now() - sessionStartedAt) / 1000)
+    trackEvent('im_session_complete', {
+      creationId: config.creationId,
+      duration,
+      pagesViewed: pagesViewed.value.size,
+      totalPages: totalPages.value
+    })
+    // Send immediately — this is the end of the session
+    sendBatch()
   }
 
   /**
@@ -137,23 +160,6 @@ export function useAnalytics(config: AnalyticsConfig) {
   }
 
   /**
-   * Calculate total active time
-   * Only counts time when user is actively interacting (not idle)
-   */
-  function calculateActiveTime(): number {
-    const now = Date.now()
-    const timeSinceLastActivity = now - lastActivityTime.value
-
-    // If less than 30 seconds since last activity, count it as active time
-    if (timeSinceLastActivity < 30000) {
-      totalActiveTime.value += now - sessionStartTime.value
-      sessionStartTime.value = now
-    }
-
-    return Math.round(totalActiveTime.value / 1000) // Convert to seconds
-  }
-
-  /**
    * Send batched events to server
    */
   async function sendBatch() {
@@ -161,27 +167,15 @@ export function useAnalytics(config: AnalyticsConfig) {
       return
     }
 
-    let sessionData: SessionData
-
-    try {
-      const activeTime = calculateActiveTime()
-
-      sessionData = {
-        userId,
-        sessionId,
-        domain: config.domain,
-        creationId: config.creationId,
-        startTime,
-        endTime: Date.now(),
-        totalDuration: activeTime,
-        pagesViewed: pagesViewed.value.size,
-        totalPages: totalPages.value,
-        events: events.value,
-        isDemo: config.isDemo || false
-      }
-    } catch (error) {
-      console.error('[Analytics] Error building session data:', error)
-      return
+    const sessionData: SessionData = {
+      userId,
+      sessionId,
+      domain: config.domain,
+      creationId: config.creationId,
+      startTime,
+      endTime: Date.now(),
+      events: events.value,
+      isDemo: config.isDemo || false
     }
 
     try {
@@ -205,29 +199,14 @@ export function useAnalytics(config: AnalyticsConfig) {
   }
 
   /**
-   * Track visibility changes to pause/resume timing
-   */
-  if (typeof document !== 'undefined') {
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        isActive.value = false
-        calculateActiveTime()
-      } else {
-        isActive.value = true
-        sessionStartTime.value = Date.now()
-      }
-    })
-  }
-
-  /**
-   * Send batch on page unload
+   * Send batch on page unload — also ends session if still active
    */
   if (typeof window !== 'undefined') {
     window.addEventListener('beforeunload', () => {
-      sendBatch()
+      trackSessionEnd()
     })
 
-    // Periodic auto-send every 15 seconds
+    // Periodic auto-send every 15 seconds (for CTA/page_view events)
     const intervalId = setInterval(() => {
       sendBatch()
     }, 15000) // 15 seconds
@@ -238,13 +217,15 @@ export function useAnalytics(config: AnalyticsConfig) {
     })
   }
 
-  // Also set up automatic cleanup
+  // End session and send remaining events on unmount
   onBeforeUnmount(() => {
-    sendBatch()
+    trackSessionEnd()
   })
 
   return {
     trackEvent,
+    trackSessionStart,
+    trackSessionEnd,
     trackPageView,
     trackTimerEvent,
     trackRatingEvent,

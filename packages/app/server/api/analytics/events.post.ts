@@ -25,9 +25,6 @@ interface SessionData {
   creationId: string
   startTime: number
   endTime: number
-  totalDuration: number
-  pagesViewed: number
-  totalPages: number
   events: ClientEvent[]
   isDemo?: boolean
 }
@@ -45,6 +42,24 @@ function mapClientEvent(
   const creationId = session.creationId
 
   switch (type) {
+    case 'im_session_start':
+      return {
+        type: 'im_session_start',
+        body: {
+          creation_id: metadata?.creationId ?? creationId,
+          total_pages: metadata?.totalPages ?? 0,
+        },
+      }
+    case 'im_session_complete':
+      return {
+        type: 'im_session_complete',
+        body: {
+          creation_id: metadata?.creationId ?? creationId,
+          duration: metadata?.duration ?? 0,
+          pages_viewed: metadata?.pagesViewed ?? 0,
+          total_pages: metadata?.totalPages ?? 0,
+        },
+      }
     case 'cta_rendered':
       return {
         type: 'cta_rendered',
@@ -118,46 +133,15 @@ export default defineEventHandler(async (event) => {
     const analyticsDb = useAnalyticsDB(event)
     const now = Math.floor(Date.now() / 1000)
 
-    // --- Synthesize session-level events ---
+    // --- Map client events ---
 
-    // im_session_start: one per batch (the session started when the first batch arrives)
-    const sessionEvents: { type: AnalyticsEventType; body: Record<string, any> }[] = []
-
-    // If the session has page views, emit an im_session_start
-    if (body.pagesViewed > 0) {
-      sessionEvents.push({
-        type: 'im_session_start',
-        body: {
-          creation_id: body.creationId,
-          total_pages: body.totalPages,
-        },
-      })
-    }
-
-    // If duration > 0, emit an im_session_complete
-    if (body.totalDuration > 0) {
-      sessionEvents.push({
-        type: 'im_session_complete',
-        body: {
-          creation_id: body.creationId,
-          duration: body.totalDuration,
-          pages_viewed: body.pagesViewed,
-          total_pages: body.totalPages,
-        },
-      })
-    }
-
-    // --- Map individual client events ---
-
-    const mappedClientEvents: { type: AnalyticsEventType; body: Record<string, any> }[] = []
+    const allMapped: { type: AnalyticsEventType; body: Record<string, any> }[] = []
     for (const clientEvt of body.events) {
       const mapped = mapClientEvent(clientEvt, body)
       if (mapped) {
-        mappedClientEvents.push(mapped)
+        allMapped.push(mapped)
       }
     }
-
-    const allMapped = [...sessionEvents, ...mappedClientEvents]
 
     // --- Apply per-event-type sampling ---
 

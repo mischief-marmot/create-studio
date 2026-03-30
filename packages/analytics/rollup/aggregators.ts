@@ -90,13 +90,13 @@ export async function aggregateImSessionMetrics(
     })
   }
 
-  // Average duration: take MAX duration per session_id (since each batch sends
-  // a growing cumulative duration), then AVG those per-session maximums.
-  const perSessionDuration = db
+  // Average duration: each session now emits exactly one im_session_complete
+  // with the wall-clock duration in seconds, so we just AVG directly.
+  const durationRows = await db
     .select({
       domain: events.domain,
       sample_rate: events.sample_rate,
-      max_dur: sql<number>`MAX(json_extract(${events.body}, '$.duration'))`.as('max_dur'),
+      avg_duration: sql<number>`AVG(json_extract(${events.body}, '$.duration'))`.as('avg_duration'),
     })
     .from(events)
     .where(
@@ -106,17 +106,7 @@ export async function aggregateImSessionMetrics(
         lte(events.created_at, endTs),
       ),
     )
-    .groupBy(events.session_id, events.domain, events.sample_rate)
-    .as('per_session')
-
-  const durationRows = await db
-    .select({
-      domain: perSessionDuration.domain,
-      sample_rate: perSessionDuration.sample_rate,
-      avg_duration: sql<number>`AVG(${perSessionDuration.max_dur})`.as('avg_duration'),
-    })
-    .from(perSessionDuration)
-    .groupBy(perSessionDuration.domain, perSessionDuration.sample_rate)
+    .groupBy(events.domain, events.sample_rate)
 
   for (const row of durationRows) {
     if (row.avg_duration !== null) {
@@ -131,14 +121,13 @@ export async function aggregateImSessionMetrics(
     }
   }
 
-  // Page completion: take MAX pages_viewed per session (latest batch has most pages),
-  // paired with total_pages, then compute AVG(pages_viewed / total_pages).
-  const perSessionPages = db
+  // Page completion: each im_session_complete has pages_viewed and total_pages.
+  // AVG(pages_viewed / total_pages) across all sessions.
+  const completionRows = await db
     .select({
       domain: events.domain,
       sample_rate: events.sample_rate,
-      max_pages: sql<number>`MAX(json_extract(${events.body}, '$.pages_viewed'))`.as('max_pages'),
-      total_p: sql<number>`MAX(json_extract(${events.body}, '$.total_pages'))`.as('total_p'),
+      avg_completion: sql<number>`AVG(CASE WHEN json_extract(${events.body}, '$.total_pages') > 0 THEN CAST(json_extract(${events.body}, '$.pages_viewed') AS REAL) / json_extract(${events.body}, '$.total_pages') ELSE 0 END)`.as('avg_completion'),
     })
     .from(events)
     .where(
@@ -148,17 +137,7 @@ export async function aggregateImSessionMetrics(
         lte(events.created_at, endTs),
       ),
     )
-    .groupBy(events.session_id, events.domain, events.sample_rate)
-    .as('per_session_pages')
-
-  const completionRows = await db
-    .select({
-      domain: perSessionPages.domain,
-      sample_rate: perSessionPages.sample_rate,
-      avg_completion: sql<number>`AVG(CASE WHEN ${perSessionPages.total_p} > 0 THEN CAST(${perSessionPages.max_pages} AS REAL) / ${perSessionPages.total_p} ELSE 0 END)`.as('avg_completion'),
-    })
-    .from(perSessionPages)
-    .groupBy(perSessionPages.domain, perSessionPages.sample_rate)
+    .groupBy(events.domain, events.sample_rate)
 
   for (const row of completionRows) {
     if (row.avg_completion !== null) {
