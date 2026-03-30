@@ -107,47 +107,155 @@
         <!-- Interactive Data -->
         <template v-else>
           <div class="space-y-8">
-            <!-- Interactive Mode Engagement -->
-            <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
-              <h2 class="text-lg text-base-content mb-6" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.01em;">
-                Interactive Mode Engagement
-              </h2>
+            <!-- Interactive Mode Engagement Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Sessions Chart -->
+              <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+                <div class="flex items-baseline justify-between mb-4">
+                  <div>
+                    <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                      {{ formatNumber(interactiveData.interactive.totalSessions) }}
+                    </div>
+                    <div class="text-xs text-base-content/50 mt-0.5">Total Sessions</div>
+                  </div>
+                </div>
+                <div class="h-32 flex items-end gap-px" v-if="interactiveData.timeSeries?.sessions?.length > 1">
+                  <div
+                    v-for="(point, i) in interactiveData.timeSeries.sessions"
+                    :key="i"
+                    class="flex-1 min-w-0 group relative h-full flex items-end"
+                  >
+                    <div
+                      class="w-full rounded-t bg-primary/70 hover:bg-primary transition-colors cursor-default"
+                      :style="{ height: barHeight(point.value, interactiveData.timeSeries.sessions) }"
+                    ></div>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-base-300 text-base-content text-xs rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      {{ formatDate(point.date) }}: {{ point.value }}
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="h-32 flex items-center justify-center text-xs text-base-content/30">
+                  {{ singlePointLabel(interactiveData.timeSeries?.sessions, 'sessions') }}
+                </div>
+              </div>
 
-              <div class="grid grid-cols-2 lg:grid-cols-5 gap-6">
-                <div class="space-y-1">
-                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ formatNumber(interactiveData.interactive.totalSessions) }}
+              <!-- Unique Sites Chart -->
+              <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+                <div class="flex items-baseline justify-between mb-4">
+                  <div>
+                    <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                      {{ formatNumber(interactiveData.interactive.uniqueDomains) }}
+                    </div>
+                    <div class="text-xs text-base-content/50 mt-0.5">Unique Sites</div>
                   </div>
-                  <div class="text-xs text-base-content/50">Total Sessions</div>
-                  <div class="text-xs text-base-content/40">Across all sites</div>
                 </div>
-                <div class="space-y-1">
-                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ formatNumber(interactiveData.interactive.uniqueDomains) }}
+                <div class="h-32 flex items-end gap-px" v-if="interactiveData.timeSeries?.uniqueSites?.length > 1">
+                  <div
+                    v-for="(point, i) in interactiveData.timeSeries.uniqueSites"
+                    :key="i"
+                    class="flex-1 min-w-0 group relative h-full flex items-end"
+                  >
+                    <div
+                      class="w-full rounded-t bg-secondary/70 hover:bg-secondary transition-colors cursor-default"
+                      :style="{ height: barHeight(point.value, interactiveData.timeSeries.uniqueSites) }"
+                    ></div>
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-base-300 text-base-content text-xs rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                      {{ formatDate(point.date) }}: {{ point.value }} sites
+                    </div>
                   </div>
-                  <div class="text-xs text-base-content/50">Unique Sites</div>
-                  <div class="text-xs text-base-content/40">Distinct domains with sessions</div>
                 </div>
-                <div class="space-y-1">
-                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ interactiveData.interactive.completionRate.toFixed(1) }}%
-                  </div>
-                  <div class="text-xs text-base-content/50">Completion Rate</div>
-                  <div class="text-xs text-base-content/40">Sessions completed / started</div>
+                <div v-else class="h-32 flex items-center justify-center text-xs text-base-content/30">
+                  {{ singlePointLabel(interactiveData.timeSeries?.uniqueSites, 'sites') }}
                 </div>
-                <div class="space-y-1">
-                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ formatDuration(interactiveData.interactive.avgSessionDuration) }}
+              </div>
+
+              <!-- Page Completion Chart (area chart) -->
+              <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+                <div class="flex items-baseline justify-between mb-4">
+                  <div>
+                    <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                      {{ interactiveData.interactive.completionRate.toFixed(1) }}%
+                    </div>
+                    <div class="text-xs text-base-content/50 mt-0.5">Page Completion</div>
+                    <div class="text-xs text-base-content/40">
+                      {{ formatNumber(interactiveData.interactive.totalPageViews) }} pages viewed
+                    </div>
                   </div>
-                  <div class="text-xs text-base-content/50">Avg Session Duration</div>
-                  <div class="text-xs text-base-content/40">Time in interactive mode</div>
                 </div>
-                <div class="space-y-1">
-                  <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
-                    {{ formatNumber(interactiveData.interactive.totalPageViews) }}
+                <div class="h-32 relative" v-if="interactiveData.timeSeries?.pageCompletion?.length > 1">
+                  <svg class="w-full h-full" preserveAspectRatio="none" :viewBox="`0 0 ${interactiveData.timeSeries.pageCompletion.length - 1} 100`">
+                    <polygon
+                      :points="areaPoints(interactiveData.timeSeries.pageCompletion, 100)"
+                      class="fill-success/20"
+                    />
+                    <polyline
+                      :points="linePoints(interactiveData.timeSeries.pageCompletion, 100)"
+                      class="stroke-success"
+                      fill="none"
+                      stroke-width="1.5"
+                      vector-effect="non-scaling-stroke"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <!-- Hover zones -->
+                  <div class="absolute inset-0 flex">
+                    <div
+                      v-for="(point, i) in interactiveData.timeSeries.pageCompletion"
+                      :key="i"
+                      class="flex-1 group relative"
+                    >
+                      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-base-300 text-base-content text-xs rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                        {{ formatDate(point.date) }}: {{ point.value }}%
+                      </div>
+                      <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-success opacity-0 group-hover:opacity-100 transition-opacity" :style="{ bottom: point.value + '%' }"></div>
+                    </div>
                   </div>
-                  <div class="text-xs text-base-content/50">Total Page Views</div>
-                  <div class="text-xs text-base-content/40">Extrapolated from 10% sample</div>
+                </div>
+                <div v-else class="h-32 flex items-center justify-center text-xs text-base-content/30">
+                  {{ singlePointLabel(interactiveData.timeSeries?.pageCompletion, '%') }}
+                </div>
+              </div>
+
+              <!-- Avg Session Duration Chart (line chart) -->
+              <div class="bg-base-100 rounded-xl border border-base-300/50 p-6 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+                <div class="flex items-baseline justify-between mb-4">
+                  <div>
+                    <div class="text-2xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400;">
+                      {{ formatDuration(interactiveData.interactive.avgSessionDuration) }}
+                    </div>
+                    <div class="text-xs text-base-content/50 mt-0.5">Avg Session Duration</div>
+                  </div>
+                </div>
+                <div class="h-32 relative" v-if="interactiveData.timeSeries?.avgDuration?.length > 1">
+                  <svg class="w-full h-full" preserveAspectRatio="none" :viewBox="`0 0 ${interactiveData.timeSeries.avgDuration.length - 1} 100`">
+                    <polygon
+                      :points="areaPoints(interactiveData.timeSeries.avgDuration)"
+                      class="fill-warning/15"
+                    />
+                    <polyline
+                      :points="linePoints(interactiveData.timeSeries.avgDuration)"
+                      class="stroke-warning"
+                      fill="none"
+                      stroke-width="1.5"
+                      vector-effect="non-scaling-stroke"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <!-- Hover zones -->
+                  <div class="absolute inset-0 flex">
+                    <div
+                      v-for="(point, i) in interactiveData.timeSeries.avgDuration"
+                      :key="i"
+                      class="flex-1 group relative"
+                    >
+                      <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-base-300 text-base-content text-xs rounded shadow-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                        {{ formatDate(point.date) }}: {{ formatDuration(point.value) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="h-32 flex items-center justify-center text-xs text-base-content/30">
+                  {{ singlePointLabel(interactiveData.timeSeries?.avgDuration, 'seconds') }}
                 </div>
               </div>
             </div>
@@ -263,7 +371,7 @@
                         <td class="text-sm text-right">{{ formatNumber(data.activations) }}</td>
                         <td class="text-sm text-right">
                           <span :class="data.conversionRate > 0 ? 'text-success' : 'text-base-content/40'">
-                            {{ data.conversionRate }}%
+                            {{ roundRate(data.conversionRate) }}%
                           </span>
                         </td>
                       </tr>
@@ -400,6 +508,11 @@ interface ApiUsageData {
   v1Endpoints: Record<string, { count: number; errors: number }>
 }
 
+interface TimeSeriesPoint {
+  date: string
+  value: number
+}
+
 interface InteractiveAnalytics {
   interactive: {
     totalSessions: number
@@ -407,6 +520,12 @@ interface InteractiveAnalytics {
     completionRate: number
     totalPageViews: number
     avgSessionDuration: number
+  }
+  timeSeries: {
+    sessions: TimeSeriesPoint[]
+    uniqueSites: TimeSeriesPoint[]
+    avgDuration: TimeSeriesPoint[]
+    pageCompletion: TimeSeriesPoint[]
   }
   timers: {
     started: number
@@ -464,9 +583,11 @@ const runRollup = async () => {
 }
 
 onMounted(() => {
-  const today = new Date().toISOString().split('T')[0]
-  startDate.value = today
-  endDate.value = today
+  const today = new Date()
+  endDate.value = today.toISOString().split('T')[0]
+  const thirtyDaysAgo = new Date(today)
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  startDate.value = thirtyDaysAgo.toISOString().split('T')[0]
 
   fetchInteractive()
 })
@@ -539,6 +660,61 @@ const formatDuration = (seconds: number): string => {
   return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`
 }
 
+const formatDate = (dateStr: string): string => {
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+/**
+ * Calculate bar height as percentage of the max value in the series.
+ * Minimum 2px so zero-value bars are still visible.
+ */
+const barHeight = (value: number, series: TimeSeriesPoint[]): string => {
+  const max = Math.max(...series.map(p => p.value))
+  if (max === 0) return '2px'
+  const pct = (value / max) * 100
+  return `${Math.max(pct, 1.5)}%`
+}
+
+/**
+ * For percentage metrics (0-100), scale against 100 rather than the max.
+ */
+const percentBarHeight = (value: number): string => {
+  return `${Math.max(value, 1.5)}%`
+}
+
+/**
+ * Generate SVG polyline points from time series data.
+ * X = index (0 to n-1), Y = inverted value (SVG Y-axis is top-down).
+ * If maxVal is provided, scale against it; otherwise scale against series max.
+ */
+const linePoints = (series: TimeSeriesPoint[], maxVal?: number): string => {
+  const max = maxVal ?? Math.max(...series.map(p => p.value))
+  if (max === 0) return series.map((_, i) => `${i},100`).join(' ')
+  return series
+    .map((p, i) => `${i},${100 - (p.value / max) * 100}`)
+    .join(' ')
+}
+
+/**
+ * Generate SVG polygon points (closed area under the line).
+ */
+const areaPoints = (series: TimeSeriesPoint[], maxVal?: number): string => {
+  const line = linePoints(series, maxVal)
+  const lastX = series.length - 1
+  return `0,100 ${line} ${lastX},100`
+}
+
+const roundRate = (value: number): string => {
+  return (Math.round(value * 1000) / 1000).toFixed(3)
+}
+
+const singlePointLabel = (series: TimeSeriesPoint[] | undefined, unit: string): string => {
+  if (!series || series.length === 0) return 'No daily data'
+  const first = series[0]!
+  if (series.length === 1) return `${first.value} ${unit} on ${formatDate(first.date)}`
+  return 'No daily data'
+}
 
 const v1Percentage = computed(() => {
   if (!apiData.value) return 0
