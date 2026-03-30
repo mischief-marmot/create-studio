@@ -15,6 +15,12 @@ import { broadcasts } from '~~/server/db/schema'
  * - Version matching: basic semver comparison against min/max
  */
 export default defineEventHandler(async (event) => {
+  // Cache broadcasts for 5 minutes at browser and edge
+  setResponseHeaders(event, {
+    'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+    'CDN-Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+  })
+
   const query = getQuery(event)
   const tier = (query.tier as string) || 'free'
   const createVersion = query.create_version as string | undefined

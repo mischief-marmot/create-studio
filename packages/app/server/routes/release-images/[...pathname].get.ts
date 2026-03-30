@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
     setResponseHeaders(event, {
       'Content-Type': IMAGE_TYPES[ext],
       'Cache-Control': 'public, max-age=31536000', // 1 year — images are immutable
+      'CDN-Cache-Control': 'public, max-age=31536000',
     })
 
     return file.stream()

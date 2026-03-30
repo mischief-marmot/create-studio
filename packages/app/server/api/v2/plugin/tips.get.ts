@@ -30,7 +30,13 @@
  *   - "dashboard"             → Create Dashboard
  *   - "cards"                 → Cards collection
  */
-export default defineEventHandler(() => {
+export default defineEventHandler((event) => {
+  // Cache static tips for 1 day at both browser and edge
+  setResponseHeaders(event, {
+    'Cache-Control': 'public, max-age=86400',
+    'CDN-Cache-Control': 'public, max-age=86400',
+  })
+
   // TODO: Replace with database-backed admin UI.
   // For now, return a static list of tips and announcements.
   const tips = [

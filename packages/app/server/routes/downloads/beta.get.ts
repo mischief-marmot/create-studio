@@ -34,6 +34,7 @@ export default defineEventHandler(async (event) => {
       'Content-Length': String(arrayBuffer.byteLength),
       'Content-Disposition': `attachment; filename="${BETA_BLOB_KEY}"`,
       'Cache-Control': config.debug ? 'public, max-age=0' : 'public, max-age=86400',
+      'CDN-Cache-Control': config.debug ? 'public, max-age=0' : 'public, max-age=86400',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET',
     })

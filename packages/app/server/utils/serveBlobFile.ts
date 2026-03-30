@@ -129,7 +129,8 @@ export async function serveBlobFile(
     // Build headers
     const headers: Record<string, string> = {
       'Content-Type': contentType,
-      'Cache-Control': cacheControl
+      'Cache-Control': cacheControl,
+      'CDN-Cache-Control': cacheControl,
     }
 
     // Add Content-Disposition header for downloads

@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
     setResponseHeaders(event, {
       'Content-Type': IMAGE_TYPES[ext],
       'Cache-Control': 'public, max-age=86400', // Cache for 1 day
+      'CDN-Cache-Control': 'public, max-age=86400',
     })
 
     // Return the blob stream
