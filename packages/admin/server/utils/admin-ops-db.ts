@@ -124,6 +124,138 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
     CREATE INDEX IF NOT EXISTS idx_release_emails_status ON ReleaseEmails (status);
     CREATE INDEX IF NOT EXISTS idx_release_emails_product ON ReleaseEmails (product);
     CREATE INDEX IF NOT EXISTS idx_release_emails_created_at ON ReleaseEmails (createdAt);
+
+    -- Publisher Intelligence Pipeline
+
+    CREATE TABLE IF NOT EXISTS AdNetworks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      sellers_json_url TEXT NOT NULL,
+      last_fetched_at TEXT,
+      publisher_count INTEGER DEFAULT 0,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_ad_networks_slug ON AdNetworks (slug);
+
+    CREATE TABLE IF NOT EXISTS Contacts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      name TEXT,
+      email TEXT NOT NULL UNIQUE,
+      source TEXT,
+      site_count INTEGER DEFAULT 0,
+      create_studio_user_id INTEGER,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_contacts_email ON Contacts (email);
+    CREATE INDEX IF NOT EXISTS idx_contacts_create_studio_user_id ON Contacts (create_studio_user_id);
+
+    CREATE TABLE IF NOT EXISTS Publishers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      domain TEXT NOT NULL UNIQUE,
+      site_name TEXT,
+      ad_networks TEXT DEFAULT '[]',
+      is_wordpress INTEGER DEFAULT 0,
+      rest_api_available INTEGER DEFAULT 0,
+      site_category TEXT,
+      post_count INTEGER,
+      oldest_post_date TEXT,
+      newest_post_date TEXT,
+      top_content TEXT,
+      social_links TEXT,
+      scrape_status TEXT NOT NULL DEFAULT 'pending',
+      scrape_error TEXT,
+      last_scraped_at TEXT,
+      contact_id INTEGER REFERENCES Contacts(id),
+      create_studio_site_id INTEGER,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_publishers_domain ON Publishers (domain);
+    CREATE INDEX IF NOT EXISTS idx_publishers_scrape_status ON Publishers (scrape_status);
+    CREATE INDEX IF NOT EXISTS idx_publishers_site_category ON Publishers (site_category);
+    CREATE INDEX IF NOT EXISTS idx_publishers_contact_id ON Publishers (contact_id);
+    CREATE INDEX IF NOT EXISTS idx_publishers_is_wordpress ON Publishers (is_wordpress);
+    CREATE INDEX IF NOT EXISTS idx_publishers_create_studio_site_id ON Publishers (create_studio_site_id);
+
+    CREATE TABLE IF NOT EXISTS Plugins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      namespace TEXT NOT NULL UNIQUE,
+      name TEXT,
+      category TEXT,
+      is_paid INTEGER DEFAULT 0,
+      is_competitor INTEGER DEFAULT 0,
+      replaceable_by_create INTEGER DEFAULT 0,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_plugins_namespace ON Plugins (namespace);
+    CREATE INDEX IF NOT EXISTS idx_plugins_category ON Plugins (category);
+    CREATE INDEX IF NOT EXISTS idx_plugins_is_competitor ON Plugins (is_competitor);
+
+    CREATE TABLE IF NOT EXISTS PublisherPlugins (
+      publisher_id INTEGER NOT NULL REFERENCES Publishers(id) ON DELETE CASCADE,
+      plugin_id INTEGER NOT NULL REFERENCES Plugins(id) ON DELETE CASCADE,
+      discovered_at TEXT,
+      PRIMARY KEY (publisher_id, plugin_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_publisher_plugins_plugin_id ON PublisherPlugins (plugin_id);
+
+    CREATE TABLE IF NOT EXISTS ScrapeJobs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'queued',
+      total_count INTEGER DEFAULT 0,
+      completed_count INTEGER DEFAULT 0,
+      failed_count INTEGER DEFAULT 0,
+      started_at TEXT,
+      completed_at TEXT,
+      error_log TEXT,
+      started_by INTEGER REFERENCES Admins(id),
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_scrape_jobs_type ON ScrapeJobs (type);
+    CREATE INDEX IF NOT EXISTS idx_scrape_jobs_status ON ScrapeJobs (status);
+    CREATE INDEX IF NOT EXISTS idx_scrape_jobs_started_by ON ScrapeJobs (started_by);
+    CREATE INDEX IF NOT EXISTS idx_scrape_jobs_created_at ON ScrapeJobs (createdAt);
+
+    -- CRM Layer
+
+    CREATE TABLE IF NOT EXISTS Outreach (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      contact_type TEXT NOT NULL,
+      publisher_id INTEGER REFERENCES Publishers(id),
+      user_id INTEGER,
+      segment TEXT,
+      status TEXT NOT NULL DEFAULT 'queued',
+      stage TEXT NOT NULL DEFAULT 'queued',
+      rating INTEGER,
+      notes TEXT,
+      last_contacted_at TEXT,
+      createdAt TEXT,
+      updatedAt TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_outreach_contact_type ON Outreach (contact_type);
+    CREATE INDEX IF NOT EXISTS idx_outreach_publisher_id ON Outreach (publisher_id);
+    CREATE INDEX IF NOT EXISTS idx_outreach_user_id ON Outreach (user_id);
+    CREATE INDEX IF NOT EXISTS idx_outreach_status ON Outreach (status);
+    CREATE INDEX IF NOT EXISTS idx_outreach_stage ON Outreach (stage);
+    CREATE INDEX IF NOT EXISTS idx_outreach_created_at ON Outreach (createdAt);
+
+    CREATE TABLE IF NOT EXISTS OutreachEmails (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      outreach_id INTEGER NOT NULL REFERENCES Outreach(id) ON DELETE CASCADE,
+      direction TEXT NOT NULL,
+      subject TEXT,
+      template_variant TEXT,
+      summary TEXT,
+      sent_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_outreach_emails_outreach_id ON OutreachEmails (outreach_id);
+    CREATE INDEX IF NOT EXISTS idx_outreach_emails_sent_at ON OutreachEmails (sent_at);
   `)
 }
 
