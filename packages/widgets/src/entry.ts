@@ -288,7 +288,10 @@ const CreateStudio = {
         const instructionsSection = section.querySelector('.mv-create-instructions')
         if (ingredientsSection && instructionsSection) {
           const bannerContainer = document.createElement('div')
-          bannerContainer.className = 'create-studio-widget cs-interactive-mode-banner-container'
+          bannerContainer.className = 'create-studio-widget cs-interactive-mode-banner-container ezoic-no-insert adthrive-no-insert'
+          bannerContainer.setAttribute('data-no-optimize', 'true')
+          bannerContainer.setAttribute('data-nosnippet', '')
+          bannerContainer.setAttribute('data-ad-frequency-hint', '0')
           instructionsSection.parentElement?.insertBefore(bannerContainer, instructionsSection)
           mountTarget = bannerContainer
           logger.debug('📦 Created banner container between ingredients and instructions')
