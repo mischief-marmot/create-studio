@@ -234,7 +234,7 @@ export default defineNuxtConfig({
     webhookPrivateKey: "",
     adminApiKey: "",
     betaUploadApiKey: "",
-    cloudflareApiToken: process.env.CLOUDFLARE_API_TOKEN || "",
+    cloudflareApiToken: "",
     cloudflareZoneId: "",
     // Comma-separated list of domain patterns allowed for testing (e.g., ".local,.test")
     // These bypass the production block on internal/reserved domains
