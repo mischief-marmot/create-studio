@@ -2,7 +2,7 @@ export type AnalyticsEvent =
   | { type: 'cta_rendered'; body: { variant: string; creation_id: string } }
   | { type: 'cta_activated'; body: { variant: string; creation_id: string } }
   | { type: 'im_session_start'; body: { creation_id: string; total_pages: number; theme_id?: string } }
-  | { type: 'im_session_complete'; body: { creation_id: string; duration: number; pages_viewed: number; theme_id?: string } }
+  | { type: 'im_session_complete'; body: { creation_id: string; duration: number; pages_viewed: number; total_pages?: number; theme_id?: string } }
   | { type: 'rating_screen_shown'; body: { creation_id: string } }
   | { type: 'rating_submitted'; body: { creation_id: string; rating: number } }
   | { type: 'page_view'; body: { creation_id: string; page_number: number; total_pages: number } }

@@ -4,7 +4,7 @@
  */
 
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
-import { and, eq, gte, lte, sql, sum, isNull } from 'drizzle-orm'
+import { and, eq, gte, lte, sql, sum, isNull, asc } from 'drizzle-orm'
 import { dailySummaries } from '@create-studio/analytics/schema'
 
 // ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ export async function getInteractiveMetrics(
       lte(dailySummaries.date, endDate),
     ))
 
-  // Query 5: average session duration
+  // Query 5: average session duration (already per-session MAX'd in rollup)
   const durationRows = await db
     .select()
     .from(dailySummaries)
@@ -101,22 +101,38 @@ export async function getInteractiveMetrics(
       lte(dailySummaries.date, endDate),
     ))
 
+  // Query 6: page completion rate (avg pages_viewed / total_pages per session)
+  const pageCompletionRows = await db
+    .select()
+    .from(dailySummaries)
+    .where(and(
+      eq(dailySummaries.metric, 'im_page_completion_avg'),
+      gte(dailySummaries.date, startDate),
+      lte(dailySummaries.date, endDate),
+    ))
+
   const totalSessions = sumRaw(sessionStartRows)
-  const totalCompletions = sumRaw(sessionCompleteRows)
   const uniqueDomains = domainRows.length
   const totalPageViews = sumExtrapolated(pageViewRows)
 
-  // Weighted average of daily averages (weighted by completions per day/domain)
+  // Weighted average of daily avg durations
   let avgSessionDuration = 0
-  if (durationRows.length > 0 && totalCompletions > 0) {
-    const totalWeightedDuration = durationRows.reduce((sum, row) => sum + row.value * (row.sample_rate ?? 1), 0)
-    avgSessionDuration = Math.round(totalWeightedDuration / durationRows.length)
+  if (durationRows.length > 0) {
+    const totalDuration = durationRows.reduce((sum, row) => sum + row.value, 0)
+    avgSessionDuration = Math.round(totalDuration / durationRows.length)
+  }
+
+  // Weighted average of daily page completion rates (0-1 scale → percentage)
+  let pageCompletionRate = 0
+  if (pageCompletionRows.length > 0) {
+    const totalCompletion = pageCompletionRows.reduce((sum, row) => sum + row.value, 0)
+    pageCompletionRate = (totalCompletion / pageCompletionRows.length) * 100
   }
 
   return {
     totalSessions,
     uniqueDomains,
-    completionRate: totalSessions > 0 ? Math.min((totalCompletions / totalSessions) * 100, 100) : 0,
+    completionRate: pageCompletionRate,
     totalPageViews,
     avgSessionDuration,
   }
@@ -300,6 +316,87 @@ export async function getCTAMetrics(
 }
 
 // ---------------------------------------------------------------------------
+// 1b. Interactive Time Series (daily breakdowns for charts)
+// ---------------------------------------------------------------------------
+
+interface TimeSeriesPoint {
+  date: string
+  value: number
+}
+
+export async function getInteractiveTimeSeries(
+  db: DrizzleD1Database,
+  startDate: string,
+  endDate: string,
+) {
+  // Helper to query a metric grouped by date
+  async function queryMetricByDate(metric: string): Promise<TimeSeriesPoint[]> {
+    const rows = await db
+      .select({
+        date: dailySummaries.date,
+        total: sql<number>`SUM(${dailySummaries.value})`.as('total'),
+      })
+      .from(dailySummaries)
+      .where(and(
+        eq(dailySummaries.metric, metric),
+        gte(dailySummaries.date, startDate),
+        lte(dailySummaries.date, endDate),
+      ))
+      .groupBy(dailySummaries.date)
+      .orderBy(asc(dailySummaries.date))
+
+    return rows.map(r => ({ date: r.date, value: Number(r.total) || 0 }))
+  }
+
+  // Helper to query avg metric by date (for duration and completion which are averages)
+  async function queryAvgMetricByDate(metric: string): Promise<TimeSeriesPoint[]> {
+    const rows = await db
+      .select({
+        date: dailySummaries.date,
+        avg: sql<number>`AVG(${dailySummaries.value})`.as('avg'),
+      })
+      .from(dailySummaries)
+      .where(and(
+        eq(dailySummaries.metric, metric),
+        gte(dailySummaries.date, startDate),
+        lte(dailySummaries.date, endDate),
+      ))
+      .groupBy(dailySummaries.date)
+      .orderBy(asc(dailySummaries.date))
+
+    return rows.map(r => ({ date: r.date, value: Number(r.avg) || 0 }))
+  }
+
+  // Unique domains per day: count distinct domains with sessions
+  const uniqueSitesRows = await db
+    .select({
+      date: dailySummaries.date,
+      count: sql<number>`COUNT(DISTINCT ${dailySummaries.domain})`.as('count'),
+    })
+    .from(dailySummaries)
+    .where(and(
+      eq(dailySummaries.metric, 'im_session_start_count'),
+      gte(dailySummaries.date, startDate),
+      lte(dailySummaries.date, endDate),
+    ))
+    .groupBy(dailySummaries.date)
+    .orderBy(asc(dailySummaries.date))
+
+  const [sessions, duration, pageCompletion] = await Promise.all([
+    queryMetricByDate('im_session_start_count'),
+    queryAvgMetricByDate('im_session_avg_duration'),
+    queryAvgMetricByDate('im_page_completion_avg'),
+  ])
+
+  return {
+    sessions,
+    uniqueSites: uniqueSitesRows.map(r => ({ date: r.date, value: Number(r.count) || 0 })),
+    avgDuration: duration.map(r => ({ ...r, value: Math.round(r.value) })),
+    pageCompletion: pageCompletion.map(r => ({ ...r, value: Math.round(r.value * 100) })),
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 5. API Usage Metrics
 // ---------------------------------------------------------------------------
 
@@ -379,6 +476,7 @@ export async function getApiUsageMetrics(
 export const _queryFns = {
   getApiUsageMetrics,
   getInteractiveMetrics,
+  getInteractiveTimeSeries,
   getTimerMetrics,
   getRatingMetrics,
   getCTAMetrics,

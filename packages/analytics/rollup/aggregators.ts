@@ -90,13 +90,13 @@ export async function aggregateImSessionMetrics(
     })
   }
 
-  // Average duration from im_session_complete events
-  const durationRows = await db
+  // Average duration: take MAX duration per session_id (since each batch sends
+  // a growing cumulative duration), then AVG those per-session maximums.
+  const perSessionDuration = db
     .select({
       domain: events.domain,
       sample_rate: events.sample_rate,
-      avg_duration: sql<number>`AVG(json_extract(${events.body}, '$.duration'))`.as('avg_duration'),
-      count: count(),
+      max_dur: sql<number>`MAX(json_extract(${events.body}, '$.duration'))`.as('max_dur'),
     })
     .from(events)
     .where(
@@ -106,7 +106,17 @@ export async function aggregateImSessionMetrics(
         lte(events.created_at, endTs),
       ),
     )
-    .groupBy(events.domain, events.sample_rate)
+    .groupBy(events.session_id, events.domain, events.sample_rate)
+    .as('per_session')
+
+  const durationRows = await db
+    .select({
+      domain: perSessionDuration.domain,
+      sample_rate: perSessionDuration.sample_rate,
+      avg_duration: sql<number>`AVG(${perSessionDuration.max_dur})`.as('avg_duration'),
+    })
+    .from(perSessionDuration)
+    .groupBy(perSessionDuration.domain, perSessionDuration.sample_rate)
 
   for (const row of durationRows) {
     if (row.avg_duration !== null) {
@@ -116,6 +126,48 @@ export async function aggregateImSessionMetrics(
         metric: 'im_session_avg_duration',
         dimensions: null,
         value: row.avg_duration,
+        sample_rate: row.sample_rate,
+      })
+    }
+  }
+
+  // Page completion: take MAX pages_viewed per session (latest batch has most pages),
+  // paired with total_pages, then compute AVG(pages_viewed / total_pages).
+  const perSessionPages = db
+    .select({
+      domain: events.domain,
+      sample_rate: events.sample_rate,
+      max_pages: sql<number>`MAX(json_extract(${events.body}, '$.pages_viewed'))`.as('max_pages'),
+      total_p: sql<number>`MAX(json_extract(${events.body}, '$.total_pages'))`.as('total_p'),
+    })
+    .from(events)
+    .where(
+      and(
+        eq(events.type, 'im_session_complete'),
+        gte(events.created_at, startTs),
+        lte(events.created_at, endTs),
+      ),
+    )
+    .groupBy(events.session_id, events.domain, events.sample_rate)
+    .as('per_session_pages')
+
+  const completionRows = await db
+    .select({
+      domain: perSessionPages.domain,
+      sample_rate: perSessionPages.sample_rate,
+      avg_completion: sql<number>`AVG(CASE WHEN ${perSessionPages.total_p} > 0 THEN CAST(${perSessionPages.max_pages} AS REAL) / ${perSessionPages.total_p} ELSE 0 END)`.as('avg_completion'),
+    })
+    .from(perSessionPages)
+    .groupBy(perSessionPages.domain, perSessionPages.sample_rate)
+
+  for (const row of completionRows) {
+    if (row.avg_completion !== null) {
+      summaries.push({
+        date,
+        domain: row.domain,
+        metric: 'im_page_completion_avg',
+        dimensions: null,
+        value: row.avg_completion,
         sample_rate: row.sample_rate,
       })
     }

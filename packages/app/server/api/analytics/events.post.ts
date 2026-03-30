@@ -142,6 +142,7 @@ export default defineEventHandler(async (event) => {
           creation_id: body.creationId,
           duration: body.totalDuration,
           pages_viewed: body.pagesViewed,
+          total_pages: body.totalPages,
         },
       })
     }

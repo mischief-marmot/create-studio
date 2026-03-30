@@ -6,6 +6,7 @@
 import { drizzle } from 'drizzle-orm/d1'
 import {
   getInteractiveMetrics,
+  getInteractiveTimeSeries,
   getTimerMetrics,
   getRatingMetrics,
   getCTAMetrics,
@@ -32,14 +33,15 @@ export default defineEventHandler(async (event) => {
     const d1 = event.context.cloudflare.env.DB_ANALYTICS as D1Database
     const db = drizzle(d1)
 
-    const [interactive, timers, ratings, cta] = await Promise.all([
+    const [interactive, timeSeries, timers, ratings, cta] = await Promise.all([
       getInteractiveMetrics(db, startDate, endDate),
+      getInteractiveTimeSeries(db, startDate, endDate),
       getTimerMetrics(db, startDate, endDate),
       getRatingMetrics(db, startDate, endDate),
       getCTAMetrics(db, startDate, endDate),
     ])
 
-    return { interactive, timers, ratings, cta }
+    return { interactive, timeSeries, timers, ratings, cta }
   } catch (error) {
     console.error('Error fetching interactive analytics data:', error)
     throw createError({
