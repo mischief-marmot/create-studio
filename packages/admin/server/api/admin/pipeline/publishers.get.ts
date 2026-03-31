@@ -5,7 +5,7 @@
  * Query params: page, limit, status, category, network, search, wordpress
  */
 import { eq, like, sql, and, desc } from 'drizzle-orm'
-import { useAdminOpsDb, publishers } from '~~/server/utils/admin-ops-db'
+import { useAdminOpsDb, publishers, contacts } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -43,9 +43,15 @@ export default defineEventHandler(async (event) => {
   const db = useAdminOpsDb(event)
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 
-  const [data, countResult] = await Promise.all([
-    db.select()
+  const [rows, countResult] = await Promise.all([
+    db.select({
+      publisher: publishers,
+      contactEmail: contacts.email,
+      contactName: contacts.name,
+      contactSource: contacts.source,
+    })
       .from(publishers)
+      .leftJoin(contacts, eq(publishers.contactId, contacts.id))
       .where(whereClause)
       .orderBy(desc(publishers.createdAt))
       .limit(limit)
@@ -56,6 +62,14 @@ export default defineEventHandler(async (event) => {
   ])
 
   const total = countResult[0]?.total ?? 0
+
+  // Flatten the join result
+  const data = rows.map((row) => ({
+    ...row.publisher,
+    contactEmail: row.contactEmail,
+    contactName: row.contactName,
+    contactSource: row.contactSource,
+  }))
 
   return {
     data,

@@ -446,11 +446,23 @@
           </div>
 
           <!-- Contact Info -->
-          <div v-if="selectedPublisher.contactId">
-            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-1">Contact</div>
-            <div class="flex items-center gap-2">
-              <UserIcon class="w-4 h-4 text-base-content/40" />
-              <span class="text-sm text-base-content">Contact #{{ selectedPublisher.contactId }}</span>
+          <div v-if="selectedPublisher.contactEmail || selectedPublisher.contactId">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Contact</div>
+            <div class="bg-base-200/50 rounded-lg p-3 space-y-1">
+              <div v-if="selectedPublisher.contactName" class="font-medium text-base-content text-sm">
+                {{ selectedPublisher.contactName }}
+              </div>
+              <div v-if="selectedPublisher.contactEmail" class="flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-base-content/40 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+                <a :href="`mailto:${selectedPublisher.contactEmail}`" class="text-sm text-primary hover:underline">
+                  {{ selectedPublisher.contactEmail }}
+                </a>
+              </div>
+              <div v-if="selectedPublisher.contactSource" class="text-xs text-base-content/40">
+                Found via {{ selectedPublisher.contactSource.replace(/_/g, ' ') }}
+              </div>
             </div>
           </div>
 
@@ -526,6 +538,9 @@ interface Publisher {
   scrapeError: string | null
   lastScrapedAt: string | null
   contactId: number | null
+  contactEmail: string | null
+  contactName: string | null
+  contactSource: string | null
   createStudioSiteId: number | null
   createdAt: string
 }
