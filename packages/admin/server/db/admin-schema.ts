@@ -87,6 +87,15 @@ export interface SocialLinks {
   tiktok?: string
 }
 
+export interface StudioData {
+  createVersion: string | null
+  lastActiveAt: string | null
+  subscriptionTier: string | null    // free, free-plus, pro
+  subscriptionStatus: string | null  // free, active, canceled, past_due, trialing
+  isActive: boolean                  // last_active_at within 30 days
+  isLegacy: boolean                  // version < 2.0.0 or null
+}
+
 export interface ScrapeJobError {
   domain?: string
   error: string
@@ -141,6 +150,7 @@ export const publishers = sqliteTable('Publishers', {
   lastScrapedAt: text('last_scraped_at'),
   contactId: integer('contact_id').references(() => contacts.id),
   createStudioSiteId: integer('create_studio_site_id'), // cross-DB ref to main app Sites (no FK constraint)
+  studioData: text('studio_data', { mode: 'json' }).$type<StudioData>(), // version, activity, subscription from Create Studio
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 }, (table) => [

@@ -99,6 +99,14 @@
             <span v-if="detectingPlugins" class="loading loading-spinner loading-xs"></span>
             {{ detectingPlugins ? 'Detecting...' : 'Detect Plugins (50)' }}
           </button>
+          <button
+            class="btn btn-outline btn-xs"
+            :disabled="linkingStudio"
+            @click="linkStudio"
+          >
+            <span v-if="linkingStudio" class="loading loading-spinner loading-xs"></span>
+            {{ linkingStudio ? 'Linking...' : 'Link Studio' }}
+          </button>
         </div>
         <div class="p-6">
           <div v-if="pluginStats" class="grid grid-cols-3 gap-4">
@@ -239,6 +247,7 @@ const jobs = ref<ScrapeJob[]>([])
 const jobsLoading = ref(false)
 const enrichingPlugins = ref(false)
 const detectingPlugins = ref(false)
+const linkingStudio = ref(false)
 const pluginStats = ref<{ total: number; enriched: number; unenriched: number } | null>(null)
 let pollInterval: ReturnType<typeof setInterval> | null = null
 
@@ -288,6 +297,18 @@ const detectPluginsAction = async () => {
     // ignore
   } finally {
     detectingPlugins.value = false
+  }
+}
+
+const linkStudio = async () => {
+  linkingStudio.value = true
+  try {
+    await $fetch('/api/admin/pipeline/link-studio', { method: 'POST' })
+    await fetchJobs()
+  } catch {
+    // ignore
+  } finally {
+    linkingStudio.value = false
   }
 }
 
@@ -357,6 +378,9 @@ const jobStage = (status: string): string | null => {
     enrich: 'Enriching Publishers',
     contacts: 'Scraping Contacts',
     enrich_plugins: 'Enriching Plugins',
+    fetch_studio: 'Fetching Studio Data',
+    link_sites: 'Linking Sites',
+    link_users: 'Linking Users',
   }
   return labels[stage || ''] || stage || null
 }

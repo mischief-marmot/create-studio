@@ -170,6 +170,7 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
       last_scraped_at TEXT,
       contact_id INTEGER REFERENCES Contacts(id),
       create_studio_site_id INTEGER,
+      studio_data TEXT,
       createdAt TEXT,
       updatedAt TEXT
     );
