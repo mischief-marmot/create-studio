@@ -113,7 +113,12 @@
                   <span class="badge badge-sm badge-outline">{{ job.type }}</span>
                 </td>
                 <td class="py-3 px-6">
-                  <span class="badge badge-sm" :class="jobStatusClass(job.status)">{{ job.status }}</span>
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-sm" :class="jobStatusClass(job.status)">{{ jobStatusLabel(job.status) }}</span>
+                    <span v-if="jobStage(job.status)" class="text-xs text-base-content/50 font-medium uppercase tracking-wider">
+                      {{ jobStage(job.status) }}
+                    </span>
+                  </div>
                 </td>
                 <td class="py-3 px-6">
                   <div class="flex items-center gap-2">
@@ -121,6 +126,9 @@
                     <span class="text-sm text-base-content/40">/</span>
                     <span class="text-sm text-base-content/60">{{ job.totalCount || 0 }}</span>
                     <span v-if="job.failedCount" class="text-xs text-error">({{ job.failedCount }} failed)</span>
+                    <span v-if="job.totalCount && job.status.startsWith('running')" class="text-xs text-base-content/40">
+                      ({{ Math.round(((job.completedCount || 0) / job.totalCount) * 100) }}%)
+                    </span>
                   </div>
                 </td>
                 <td class="py-3 px-6">
@@ -177,7 +185,7 @@ const jobs = ref<ScrapeJob[]>([])
 const jobsLoading = ref(false)
 let pollInterval: ReturnType<typeof setInterval> | null = null
 
-const hasRunningJobs = computed(() => jobs.value.some((j) => j.status === 'running'))
+const hasRunningJobs = computed(() => jobs.value.some((j) => j.status.startsWith('running')))
 
 const fetchStats = async () => {
   try {
@@ -218,13 +226,29 @@ const fetchJobs = async () => {
 }
 
 const jobStatusClass = (status: string): string => {
+  if (status.startsWith('running')) return 'badge-info badge-outline'
   const map: Record<string, string> = {
     queued: 'badge-ghost',
-    running: 'badge-info badge-outline',
     completed: 'badge-success badge-outline',
     failed: 'badge-error badge-outline',
   }
   return map[status] || 'badge-ghost'
+}
+
+const jobStatusLabel = (status: string): string => {
+  if (status.startsWith('running')) return 'running'
+  return status
+}
+
+const jobStage = (status: string): string | null => {
+  if (!status.includes(':')) return null
+  const stage = status.split(':')[1]
+  const labels: Record<string, string> = {
+    probe: 'Probing WordPress',
+    enrich: 'Enriching',
+    contacts: 'Scraping Contacts',
+  }
+  return labels[stage || ''] || stage || null
 }
 
 const formatDate = (dateString: string): string => {

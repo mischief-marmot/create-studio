@@ -42,6 +42,16 @@ export default defineEventHandler(async (event) => {
     let totalProcessed = 0
     let totalFailed = 0
 
+    /** Helper to update job stage + progress */
+    const updateJob = async (stage: string, completed: number, total: number) => {
+      await db.update(scrapeJobs).set({
+        status: `running:${stage}`,
+        completedCount: completed,
+        totalCount: total,
+        updatedAt: new Date().toISOString(),
+      }).where(eq(scrapeJobs.id, parentJob.id))
+    }
+
     try {
       // === STAGE 1: Probe WordPress ===
       const pendingProbe = await db.select({ id: publishers.id, domain: publishers.domain })
@@ -50,20 +60,14 @@ export default defineEventHandler(async (event) => {
         .limit(limit)
 
       if (pendingProbe.length > 0) {
-        await db.update(scrapeJobs)
-          .set({ totalCount: pendingProbe.length, updatedAt: new Date().toISOString() })
-          .where(eq(scrapeJobs.id, parentJob.id))
+        await updateJob('probe', 0, pendingProbe.length)
 
         const knownPlugins = await db.select().from(plugins)
         const pluginMap = new Map(knownPlugins.map((p) => [p.namespace, p]))
         const probeResults = await probeBatch(
           pendingProbe.map((p) => p.domain),
           15,
-          async (completed) => {
-            await db.update(scrapeJobs)
-              .set({ completedCount: completed, updatedAt: new Date().toISOString() })
-              .where(eq(scrapeJobs.id, parentJob.id))
-          },
+          async (completed) => { await updateJob('probe', completed, pendingProbe.length) },
         )
 
         const domainToId = new Map(pendingProbe.map((p) => [p.domain, p.id]))
@@ -112,14 +116,12 @@ export default defineEventHandler(async (event) => {
         .limit(limit)
 
       if (pendingEnrich.length > 0) {
+        await updateJob('enrich', 0, pendingEnrich.length)
+
         const enrichResults = await enrichBatch(
           pendingEnrich.map((p) => p.domain),
           10,
-          async (completed) => {
-            await db.update(scrapeJobs)
-              .set({ completedCount: totalProcessed + completed, updatedAt: new Date().toISOString() })
-              .where(eq(scrapeJobs.id, parentJob.id))
-          },
+          async (completed) => { await updateJob('enrich', completed, pendingEnrich.length) },
         )
 
         const domainToId = new Map(pendingEnrich.map((p) => [p.domain, p.id]))
@@ -152,14 +154,12 @@ export default defineEventHandler(async (event) => {
         .limit(limit)
 
       if (pendingContacts.length > 0) {
+        await updateJob('contacts', 0, pendingContacts.length)
+
         const contactResults = await scrapeBatch(
           pendingContacts.map((p) => p.domain),
           8,
-          async (completed) => {
-            await db.update(scrapeJobs)
-              .set({ completedCount: totalProcessed + completed, updatedAt: new Date().toISOString() })
-              .where(eq(scrapeJobs.id, parentJob.id))
-          },
+          async (completed) => { await updateJob('contacts', completed, pendingContacts.length) },
         )
 
         const domainToId = new Map(pendingContacts.map((p) => [p.domain, p.id]))
