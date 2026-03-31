@@ -31,8 +31,9 @@ const PREMIUM_DIRECTORIES = new Set([
   'feast-plugin',
   // SEO
   'wordpress-seo-premium', 'seo-by-rank-math-pro',
-  // Page builders
-  'elementor-pro', 'beaver-builder', 'divi-builder',
+  // Page builders / Elementor paid products
+  'elementor-pro', 'elementor-one', 'elementor-ai',
+  'beaver-builder', 'divi-builder',
   // Forms (wpforms without -lite IS the pro version)
   // ACF
   'advanced-custom-fields-pro',
@@ -50,7 +51,7 @@ const PAID_ONLY_PLUGINS = new Set([
   'tasty-recipes', 'tasty-pins', 'tasty-links',
   'feast-plugin', 'wp-rocket', 'perfmatters',
   'link-whisper', 'link-whisper-premium',
-  'elementor-pro', 'beaver-builder',
+  'elementor-pro', 'elementor-one', 'elementor-ai', 'beaver-builder',
   'wordpress-seo-premium', 'seo-by-rank-math-pro',
   'wp-recipe-maker-premium',
   'advanced-custom-fields-pro',
