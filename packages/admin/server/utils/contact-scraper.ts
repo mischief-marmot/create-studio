@@ -6,6 +6,7 @@
  * and JSON-LD structured data.
  */
 
+import { createHash } from 'node:crypto'
 import type { SocialLinks } from '../db/admin-schema'
 
 export interface ContactScrapeResult {
@@ -198,6 +199,110 @@ function extractFromJsonLd(html: string): { email: string; name: string | null }
 }
 
 /**
+ * Fetch the first WordPress user and extract name, slug, and Gravatar hash.
+ */
+async function fetchWpUser(domain: string): Promise<{
+  name: string
+  slug: string
+  gravatarHash: string | null
+} | null> {
+  try {
+    const data = await $fetch<Array<{
+      name?: string
+      slug?: string
+      avatar_urls?: Record<string, string>
+    }>>(`https://${domain}/wp-json/wp/v2/users?per_page=1&orderby=id&order=asc&_fields=name,slug,avatar_urls`, {
+      timeout: 8000,
+      headers: { 'User-Agent': 'CreateStudio/1.0 (Publisher Intelligence)' },
+    })
+
+    if (!data?.[0]) return null
+
+    const user = data[0]
+    const avatarUrl = user.avatar_urls?.['96'] || ''
+    const hashMatch = avatarUrl.match(/\/avatar\/([a-f0-9]+)/)
+    const gravatarHash = hashMatch?.[1] || null
+
+    return {
+      name: user.name || '',
+      slug: user.slug || '',
+      gravatarHash,
+    }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Generate candidate emails from a name, slug, and domain.
+ */
+function generateCandidateEmails(name: string, slug: string, domain: string): string[] {
+  const candidates: string[] = []
+  const parts = name.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/).filter(Boolean)
+  const first = parts[0]
+  const last = parts.length > 1 ? parts[parts.length - 1] : null
+  const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9]/g, '')
+
+  // firstname@domain (highest hit rate)
+  if (first) {
+    candidates.push(`${first}@${domain}`)
+  }
+
+  // slug@gmail.com (catches usernames like "themuffinmyth")
+  if (cleanSlug && cleanSlug !== first) {
+    candidates.push(`${slug}@gmail.com`)
+  }
+
+  // firstlast@gmail.com
+  if (first && last && first !== last) {
+    candidates.push(`${first}${last}@gmail.com`)
+    candidates.push(`${first}.${last}@gmail.com`)
+    candidates.push(`${first}.${last}@${domain}`)
+    candidates.push(`${first}${last}@${domain}`)
+  }
+
+  if (first) {
+    candidates.push(`${first}@gmail.com`)
+  }
+
+  // common prefixes
+  candidates.push(`hello@${domain}`)
+  candidates.push(`contact@${domain}`)
+  candidates.push(`info@${domain}`)
+
+  // sitename@gmail (strip TLD from domain)
+  const siteName = domain.split('.')[0]
+  if (siteName) {
+    candidates.push(`${siteName}@gmail.com`)
+  }
+
+  return [...new Set(candidates)]
+}
+
+/**
+ * Verify candidate emails against a Gravatar hash.
+ * Handles both MD5 (32 chars) and SHA-256 (64 chars) hashes.
+ */
+function verifyEmailAgainstGravatar(
+  candidates: string[],
+  gravatarHash: string
+): string | null {
+  const isMd5 = gravatarHash.length === 32
+
+  for (const email of candidates) {
+    const hash = isMd5
+      ? createHash('md5').update(email.toLowerCase()).digest('hex')
+      : createHash('sha256').update(email.toLowerCase()).digest('hex')
+
+    if (hash === gravatarHash) {
+      return email
+    }
+  }
+
+  return null
+}
+
+/**
  * Scrape contact information from a single publisher domain.
  */
 export async function scrapeDomain(domain: string): Promise<ContactScrapeResult> {
@@ -254,6 +359,27 @@ export async function scrapeDomain(domain: string): Promise<ContactScrapeResult>
         bestEmail = ldResult.email
         contactName = ldResult.name
         source = 'json_ld'
+      }
+    }
+
+    // Try WordPress users API + Gravatar hash verification
+    if (!bestEmail) {
+      const wpUser = await fetchWpUser(domain)
+      if (wpUser) {
+        // Use the WP user name if we don't have one yet
+        if (!contactName && wpUser.name) {
+          contactName = wpUser.name
+        }
+
+        // Try to verify email via Gravatar hash
+        if (wpUser.gravatarHash) {
+          const candidates = generateCandidateEmails(wpUser.name, wpUser.slug, domain)
+          const verified = verifyEmailAgainstGravatar(candidates, wpUser.gravatarHash)
+          if (verified) {
+            bestEmail = verified
+            source = 'gravatar'
+          }
+        }
       }
     }
 
