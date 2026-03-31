@@ -36,6 +36,10 @@ export default defineEventHandler(async (event) => {
     conditions.push(eq(publishers.isWordpress, true))
   }
 
+  if (query.network && typeof query.network === 'string') {
+    conditions.push(like(publishers.adNetworks, `%"${query.network}"%`))
+  }
+
   const db = useAdminOpsDb(event)
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined
 

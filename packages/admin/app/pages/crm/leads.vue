@@ -12,39 +12,44 @@
           <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
             Leads
           </h1>
-          <button
-            class="btn btn-primary btn-sm"
-            :disabled="scraping"
-            @click="runScrape"
-          >
-            <span v-if="scraping" class="loading loading-spinner loading-xs"></span>
-            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-            </svg>
-            {{ scraping ? 'Scraping...' : 'Scrape sellers.json' }}
-          </button>
-          <button
-            class="btn btn-outline btn-sm"
-            :disabled="probing"
-            @click="runProbe"
-          >
-            <span v-if="probing" class="loading loading-spinner loading-xs"></span>
-            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-            </svg>
-            {{ probing ? 'Probing...' : 'Probe WordPress (100)' }}
-          </button>
-          <button
-            class="btn btn-outline btn-sm"
-            :disabled="enriching"
-            @click="runEnrich"
-          >
-            <span v-if="enriching" class="loading loading-spinner loading-xs"></span>
-            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
-            </svg>
-            {{ enriching ? 'Enriching...' : 'Enrich (100)' }}
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              class="btn btn-primary btn-sm"
+              :disabled="scraping"
+              @click="runScrape"
+            >
+              <span v-if="scraping" class="loading loading-spinner loading-xs"></span>
+              <ArrowPathIcon v-else class="w-4 h-4" />
+              {{ scraping ? 'Scraping...' : 'Scrape sellers.json' }}
+            </button>
+            <button
+              class="btn btn-outline btn-sm"
+              :disabled="probing"
+              @click="runProbe"
+            >
+              <span v-if="probing" class="loading loading-spinner loading-xs"></span>
+              <GlobeAltIcon v-else class="w-4 h-4" />
+              {{ probing ? 'Probing...' : 'Probe WordPress (100)' }}
+            </button>
+            <button
+              class="btn btn-outline btn-sm"
+              :disabled="enriching"
+              @click="runEnrich"
+            >
+              <span v-if="enriching" class="loading loading-spinner loading-xs"></span>
+              <SparklesIcon v-else class="w-4 h-4" />
+              {{ enriching ? 'Enriching...' : 'Enrich (100)' }}
+            </button>
+            <button
+              class="btn btn-outline btn-sm"
+              :disabled="scrapingContacts"
+              @click="runContactScrape"
+            >
+              <span v-if="scrapingContacts" class="loading loading-spinner loading-xs"></span>
+              <UserIcon v-else class="w-4 h-4" />
+              {{ scrapingContacts ? 'Scraping...' : 'Scrape Contacts (100)' }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -56,7 +61,7 @@
       </div>
 
       <!-- Stats Cards -->
-      <div v-if="stats" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      <div v-if="stats" class="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6">
         <div class="bg-base-100 rounded-xl border border-base-300/50 p-4 shadow-sm">
           <div class="text-2xl font-bold text-base-content">{{ stats.publishers.total.toLocaleString() }}</div>
           <div class="text-xs text-base-content/50 uppercase tracking-wider mt-1">Total Publishers</div>
@@ -72,6 +77,41 @@
         <div class="bg-base-100 rounded-xl border border-base-300/50 p-4 shadow-sm">
           <div class="text-2xl font-bold text-base-content">{{ stats.outreach.total.toLocaleString() }}</div>
           <div class="text-xs text-base-content/50 uppercase tracking-wider mt-1">Outreach</div>
+        </div>
+
+        <!-- Pipeline Progress Card -->
+        <div class="bg-base-100 rounded-xl border border-base-300/50 p-4 shadow-sm">
+          <div class="text-2xl font-bold text-base-content">{{ pipelineProcessed.toLocaleString() }}</div>
+          <div class="text-xs text-base-content/50 uppercase tracking-wider mt-1">Processed</div>
+          <div v-if="stats.publishers.byStatus" class="mt-2 flex gap-0.5 h-1.5 rounded-full overflow-hidden bg-base-200">
+            <div
+              v-if="stats.publishers.byStatus.complete"
+              class="bg-success h-full"
+              :style="{ width: pipelineBarWidth('complete') }"
+              :title="`Complete: ${stats.publishers.byStatus.complete}`"
+            ></div>
+            <div
+              v-if="stats.publishers.byStatus.contacts_scraped"
+              class="bg-accent h-full"
+              :style="{ width: pipelineBarWidth('contacts_scraped') }"
+              :title="`Contacts scraped: ${stats.publishers.byStatus.contacts_scraped}`"
+            ></div>
+            <div
+              v-if="stats.publishers.byStatus.enriched"
+              class="bg-warning h-full"
+              :style="{ width: pipelineBarWidth('enriched') }"
+              :title="`Enriched: ${stats.publishers.byStatus.enriched}`"
+            ></div>
+            <div
+              v-if="stats.publishers.byStatus.plugins_scraped"
+              class="bg-info h-full"
+              :style="{ width: pipelineBarWidth('plugins_scraped') }"
+              :title="`Plugins scraped: ${stats.publishers.byStatus.plugins_scraped}`"
+            ></div>
+          </div>
+          <div v-if="stats.publishers.byStatus?.pending" class="text-[10px] text-base-content/40 mt-1">
+            {{ stats.publishers.byStatus.pending.toLocaleString() }} pending
+          </div>
         </div>
       </div>
 
@@ -99,6 +139,12 @@
               label="WordPress"
               @change="handleFilterChange"
             />
+            <AdminFilterDropdown
+              v-model="networkFilter"
+              :options="networkOptions"
+              label="Ad Network"
+              @change="handleFilterChange"
+            />
           </div>
         </div>
       </div>
@@ -116,9 +162,7 @@
         <!-- Error -->
         <div v-else-if="error" class="flex flex-col items-center justify-center py-16 text-center px-6">
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error/10 border border-error/20 mb-4">
-            <svg class="w-8 h-8 text-error" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <ExclamationCircleIcon class="w-8 h-8 text-error" />
           </div>
           <h3 class="text-xl text-base-content mb-2" style="font-family: 'Instrument Serif', serif;">Unable to Load Leads</h3>
           <p class="text-sm text-base-content/60 mb-4">{{ error }}</p>
@@ -145,6 +189,7 @@
                   v-for="pub in publishers"
                   :key="pub.id"
                   class="border-b border-base-300/30 last:border-b-0 hover:bg-base-50 transition-colors cursor-pointer"
+                  @click="openDrawer(pub)"
                 >
                   <td class="py-4 px-6">
                     <div class="font-medium text-base-content">{{ pub.domain }}</div>
@@ -164,9 +209,7 @@
                   <td class="py-4 px-6">
                     <div class="flex items-center gap-1.5">
                       <template v-if="pub.isWordpress">
-                        <svg class="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <CheckCircleIcon class="w-4 h-4 text-success" />
                         <span class="text-sm text-base-content/70">Yes</span>
                       </template>
                       <template v-else-if="pub.scrapeStatus === 'pending'">
@@ -216,9 +259,7 @@
                 @click="handlePageChange(pagination.page - 1)"
                 aria-label="Previous page"
               >
-                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
+                <ChevronLeftIcon class="size-4" />
               </button>
               <div class="flex items-center gap-1">
                 <button
@@ -237,9 +278,7 @@
                 @click="handlePageChange(pagination.page + 1)"
                 aria-label="Next page"
               >
-                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRightIcon class="size-4" />
               </button>
             </div>
           </div>
@@ -248,9 +287,7 @@
         <!-- Empty State -->
         <div v-else class="flex flex-col items-center justify-center py-16 text-center px-6">
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
-            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
-            </svg>
+            <GlobeAltIcon class="w-8 h-8" />
           </div>
           <h3 class="text-xl text-base-content mb-2" style="font-family: 'Instrument Serif', serif;">No Leads Yet</h3>
           <p class="text-sm text-base-content/50 mb-4">Run a sellers.json scrape to discover publishers</p>
@@ -264,19 +301,213 @@
       <div v-if="scrapeResult" class="toast toast-end toast-bottom">
         <div class="alert" :class="scrapeResult.success ? 'alert-success' : 'alert-error'">
           <span>{{ scrapeResult.message }}</span>
-          <button class="btn btn-ghost btn-xs" @click="scrapeResult = null">✕</button>
+          <button class="btn btn-ghost btn-xs" @click="scrapeResult = null">
+            <XMarkIcon class="w-4 h-4" />
+          </button>
         </div>
       </div>
+    </div>
+
+    <!-- Drawer Overlay -->
+    <Transition name="fade">
+      <div
+        v-if="drawerOpen"
+        class="fixed inset-0 bg-black/30 z-30"
+        @click="closeDrawer"
+      ></div>
+    </Transition>
+
+    <!-- Publisher Detail Drawer -->
+    <div
+      class="fixed top-0 right-0 w-[520px] max-w-full h-screen bg-base-100 border-l border-base-300 z-[31] flex flex-col transition-transform duration-250 ease-out overflow-y-auto"
+      :class="drawerOpen ? 'translate-x-0' : 'translate-x-full'"
+    >
+      <template v-if="selectedPublisher">
+        <!-- Drawer Header -->
+        <div class="px-6 py-5 border-b border-base-300/50 flex items-center justify-between sticky top-0 bg-base-100 z-[1]">
+          <div class="min-w-0">
+            <h3 class="text-lg font-semibold text-base-content truncate">{{ selectedPublisher.domain }}</h3>
+            <p v-if="selectedPublisher.siteName" class="text-sm text-base-content/50 truncate">{{ selectedPublisher.siteName }}</p>
+          </div>
+          <button class="btn btn-ghost btn-sm btn-square flex-shrink-0" @click="closeDrawer">
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Drawer Body -->
+        <div class="p-6 flex-1 space-y-6">
+          <!-- Ad Networks -->
+          <div>
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Ad Networks</div>
+            <div class="flex flex-wrap gap-1.5">
+              <span
+                v-for="network in (selectedPublisher.adNetworks as string[] || [])"
+                :key="network"
+                class="badge badge-sm badge-outline"
+              >
+                {{ network }}
+              </span>
+              <span v-if="!selectedPublisher.adNetworks?.length" class="text-sm text-base-content/40">&mdash;</span>
+            </div>
+          </div>
+
+          <!-- WordPress & REST API Status -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-1">WordPress</div>
+              <div class="flex items-center gap-1.5">
+                <template v-if="selectedPublisher.isWordpress">
+                  <CheckCircleIcon class="w-4 h-4 text-success" />
+                  <span class="text-sm text-base-content">Yes</span>
+                </template>
+                <template v-else-if="selectedPublisher.scrapeStatus === 'pending'">
+                  <span class="text-sm text-base-content/40">Unknown</span>
+                </template>
+                <template v-else>
+                  <XCircleIcon class="w-4 h-4 text-base-content/30" />
+                  <span class="text-sm text-base-content/50">No</span>
+                </template>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-1">REST API</div>
+              <div class="flex items-center gap-1.5">
+                <template v-if="selectedPublisher.restApiAvailable">
+                  <CheckCircleIcon class="w-4 h-4 text-success" />
+                  <span class="text-sm text-base-content">Available</span>
+                </template>
+                <template v-else>
+                  <span class="text-sm text-base-content/40">&mdash;</span>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Site Category -->
+          <div>
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-1">Category</div>
+            <span v-if="selectedPublisher.siteCategory" class="badge badge-sm" :class="categoryBadgeClass(selectedPublisher.siteCategory)">
+              {{ selectedPublisher.siteCategory }}
+            </span>
+            <span v-else class="text-sm text-base-content/40">&mdash;</span>
+          </div>
+
+          <!-- Publishing Stats -->
+          <div>
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Publishing Stats</div>
+            <div class="grid grid-cols-3 gap-3">
+              <div class="bg-base-200/50 rounded-lg p-3 text-center">
+                <div class="text-lg font-bold text-base-content">{{ selectedPublisher.postCount?.toLocaleString() || '&mdash;' }}</div>
+                <div class="text-[10px] text-base-content/50 uppercase tracking-wider">Posts</div>
+              </div>
+              <div class="bg-base-200/50 rounded-lg p-3 text-center">
+                <div class="text-lg font-bold text-base-content">{{ drawerYearsPublishing || '&mdash;' }}</div>
+                <div class="text-[10px] text-base-content/50 uppercase tracking-wider">Years</div>
+              </div>
+              <div class="bg-base-200/50 rounded-lg p-3 text-center">
+                <div class="text-lg font-bold text-base-content">{{ drawerPostsPerMonth || '&mdash;' }}</div>
+                <div class="text-[10px] text-base-content/50 uppercase tracking-wider">Posts/Mo</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Content -->
+          <div v-if="selectedPublisher.topContent?.length">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Top Content</div>
+            <div class="space-y-1.5">
+              <div
+                v-for="(item, idx) in (selectedPublisher.topContent as TopContentEntry[])"
+                :key="idx"
+                class="flex items-center justify-between gap-2 py-1.5 px-2 rounded-md hover:bg-base-200/50 transition-colors"
+              >
+                <span class="text-sm text-base-content truncate">{{ item.title }}</span>
+                <span v-if="item.comments" class="text-xs text-base-content/40 flex-shrink-0">{{ item.comments }} comments</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social Links -->
+          <div v-if="hasSocialLinks">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Social Links</div>
+            <div class="flex flex-wrap gap-2">
+              <a
+                v-for="(url, platform) in (selectedPublisher.socialLinks as SocialLinks)"
+                :key="platform"
+                :href="url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-ghost btn-sm gap-1.5 text-base-content/70 hover:text-primary"
+                :title="String(platform)"
+              >
+                <LinkIcon class="w-3.5 h-3.5" />
+                <span class="text-xs capitalize">{{ platform }}</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Contact Info -->
+          <div v-if="selectedPublisher.contactId">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-1">Contact</div>
+            <div class="flex items-center gap-2">
+              <UserIcon class="w-4 h-4 text-base-content/40" />
+              <span class="text-sm text-base-content">Contact #{{ selectedPublisher.contactId }}</span>
+            </div>
+          </div>
+
+          <!-- Scrape Status -->
+          <div>
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Scrape Status</div>
+            <div class="flex items-center gap-3">
+              <span class="badge badge-sm" :class="statusBadgeClass(selectedPublisher.scrapeStatus)">
+                {{ selectedPublisher.scrapeStatus }}
+              </span>
+              <span v-if="selectedPublisher.lastScrapedAt" class="text-xs text-base-content/50">
+                {{ formatDate(selectedPublisher.lastScrapedAt) }}
+              </span>
+            </div>
+            <p v-if="selectedPublisher.scrapeError" class="text-xs text-error/80 mt-1.5">
+              {{ selectedPublisher.scrapeError }}
+            </p>
+          </div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import {
+  ArrowPathIcon,
+  GlobeAltIcon,
+  SparklesIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  XMarkIcon,
+  ExclamationCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  LinkIcon,
+  UserIcon,
+} from '@heroicons/vue/24/outline'
 
 definePageMeta({
   layout: 'admin'
 })
+
+interface TopContentEntry {
+  title: string
+  comments: number
+}
+
+interface SocialLinks {
+  instagram?: string
+  pinterest?: string
+  youtube?: string
+  facebook?: string
+  twitter?: string
+  tiktok?: string
+}
 
 interface Publisher {
   id: number
@@ -287,6 +518,10 @@ interface Publisher {
   restApiAvailable: boolean
   siteCategory: string | null
   postCount: number | null
+  oldestPostDate: string | null
+  newestPostDate: string | null
+  topContent: TopContentEntry[] | null
+  socialLinks: SocialLinks | null
   scrapeStatus: string
   scrapeError: string | null
   lastScrapedAt: string | null
@@ -318,12 +553,18 @@ const stats = ref<Stats | null>(null)
 const scraping = ref(false)
 const probing = ref(false)
 const enriching = ref(false)
+const scrapingContacts = ref(false)
 const scrapeResult = ref<{ success: boolean; message: string } | null>(null)
+
+// Drawer
+const drawerOpen = ref(false)
+const selectedPublisher = ref<Publisher | null>(null)
 
 // Filters
 const searchQuery = ref('')
 const statusFilter = ref<string | number | null>(null)
 const wordpressFilter = ref<string | number | null>(null)
+const networkFilter = ref<string | number | null>(null)
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
@@ -336,6 +577,15 @@ const statusOptions = [
 
 const wordpressOptions = [
   { value: 'true', label: 'WordPress' },
+]
+
+const networkOptions = [
+  { value: 'raptive', label: 'Raptive' },
+  { value: 'mediavine', label: 'Mediavine' },
+  { value: 'shemedia', label: 'SHE Media' },
+  { value: 'journey', label: 'Journey' },
+  { value: 'pubnation', label: 'PubNation' },
+  { value: 'monumetric', label: 'Monumetric' },
 ]
 
 // Pagination helpers
@@ -356,6 +606,53 @@ const visiblePages = computed(() => {
   return pages
 })
 
+// Pipeline stats helpers
+const pipelineProcessed = computed(() => {
+  if (!stats.value?.publishers.byStatus) return 0
+  const byStatus = stats.value.publishers.byStatus
+  return (byStatus.plugins_scraped || 0) + (byStatus.enriched || 0) + (byStatus.contacts_scraped || 0) + (byStatus.complete || 0)
+})
+
+const pipelineBarWidth = (status: string): string => {
+  if (!stats.value?.publishers.total) return '0%'
+  const count = stats.value.publishers.byStatus?.[status] || 0
+  return `${(count / stats.value.publishers.total) * 100}%`
+}
+
+// Drawer computed
+const drawerYearsPublishing = computed(() => {
+  if (!selectedPublisher.value?.oldestPostDate) return null
+  const oldest = new Date(selectedPublisher.value.oldestPostDate)
+  const now = new Date()
+  const years = (now.getTime() - oldest.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+  return years < 1 ? '< 1' : Math.round(years).toString()
+})
+
+const drawerPostsPerMonth = computed(() => {
+  if (!selectedPublisher.value?.postCount || !selectedPublisher.value?.oldestPostDate) return null
+  const oldest = new Date(selectedPublisher.value.oldestPostDate)
+  const now = new Date()
+  const months = (now.getTime() - oldest.getTime()) / (1000 * 60 * 60 * 24 * 30.44)
+  if (months < 1) return selectedPublisher.value.postCount.toString()
+  return Math.round(selectedPublisher.value.postCount / months).toString()
+})
+
+const hasSocialLinks = computed(() => {
+  const links = selectedPublisher.value?.socialLinks as SocialLinks | null
+  if (!links) return false
+  return Object.values(links).some(v => !!v)
+})
+
+// Drawer actions
+const openDrawer = (pub: Publisher) => {
+  selectedPublisher.value = pub
+  drawerOpen.value = true
+}
+
+const closeDrawer = () => {
+  drawerOpen.value = false
+}
+
 // Fetch
 const fetchPublishers = async () => {
   loading.value = true
@@ -369,6 +666,7 @@ const fetchPublishers = async () => {
     if (searchQuery.value) params.append('search', searchQuery.value)
     if (statusFilter.value) params.append('status', statusFilter.value.toString())
     if (wordpressFilter.value) params.append('wordpress', wordpressFilter.value.toString())
+    if (networkFilter.value) params.append('network', networkFilter.value.toString())
 
     const response = await $fetch<{ data: Publisher[]; pagination: Pagination }>(
       `/api/admin/pipeline/publishers?${params.toString()}`
@@ -408,7 +706,6 @@ const runScrape = async () => {
       message: `Discovered ${result.totalPublishers.toLocaleString()} publishers (${result.inserted} new, ${result.updated} updated)`,
     }
 
-    // Refresh data
     await Promise.all([fetchPublishers(), fetchStats()])
   } catch (err: any) {
     scrapeResult.value = {
@@ -484,6 +781,35 @@ const runEnrich = async () => {
   }
 }
 
+const runContactScrape = async () => {
+  scrapingContacts.value = true
+  scrapeResult.value = null
+
+  try {
+    const result = await $fetch<{
+      success: boolean
+      scraped: number
+      withEmail: number
+      withSocial: number
+      failed: number
+    }>('/api/admin/pipeline/scrape-contacts?limit=100', { method: 'POST' })
+
+    scrapeResult.value = {
+      success: true,
+      message: `Scraped ${result.scraped} publishers: ${result.withEmail} emails found, ${result.withSocial} with social links, ${result.failed} failed.`,
+    }
+
+    await Promise.all([fetchPublishers(), fetchStats()])
+  } catch (err: any) {
+    scrapeResult.value = {
+      success: false,
+      message: err?.data?.message || 'Contact scrape failed',
+    }
+  } finally {
+    scrapingContacts.value = false
+  }
+}
+
 // Handlers
 const handleSearch = () => { pagination.value.page = 1; fetchPublishers() }
 const handleFilterChange = () => { pagination.value.page = 1; fetchPublishers() }
@@ -523,7 +849,7 @@ const formatDate = (dateString: string): string => {
 }
 
 // Watchers
-watch([searchQuery, statusFilter, wordpressFilter], () => {
+watch([searchQuery, statusFilter, wordpressFilter, networkFilter], () => {
   pagination.value.page = 1
   fetchPublishers()
 })
@@ -533,3 +859,14 @@ onMounted(() => {
   fetchStats()
 })
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
