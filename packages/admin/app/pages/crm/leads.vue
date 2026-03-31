@@ -29,7 +29,7 @@
             >
               <span v-if="probing" class="loading loading-spinner loading-xs"></span>
               <GlobeAltIcon v-else class="w-4 h-4" />
-              {{ probing ? 'Probing...' : 'Probe WordPress (100)' }}
+              {{ probing ? 'Probing...' : 'Probe WordPress (500)' }}
             </button>
             <button
               class="btn btn-outline btn-sm"
@@ -38,7 +38,7 @@
             >
               <span v-if="enriching" class="loading loading-spinner loading-xs"></span>
               <SparklesIcon v-else class="w-4 h-4" />
-              {{ enriching ? 'Enriching...' : 'Enrich (100)' }}
+              {{ enriching ? 'Enriching...' : 'Enrich (500)' }}
             </button>
             <div class="flex items-center gap-1">
               <button
@@ -49,7 +49,7 @@
               >
                 <span v-if="scrapingContacts" class="loading loading-spinner loading-xs"></span>
                 <UserIcon v-else class="w-4 h-4" />
-                {{ scrapingContacts ? 'Scraping...' : rescrapeMode ? 'Re-scrape Contacts (100)' : 'Scrape Contacts (100)' }}
+                {{ scrapingContacts ? 'Scraping...' : rescrapeMode ? 'Re-scrape Contacts (100)' : 'Scrape Contacts (500)' }}
               </button>
               <button
                 class="btn btn-outline btn-sm rounded-l-none border-l-0 px-2"
@@ -753,19 +753,15 @@ const runProbe = async () => {
   try {
     const result = await $fetch<{
       success: boolean
-      probed: number
-      wordpress: number
-      notWordpress: number
-      failed: number
-      newPluginsDiscovered: number
-    }>('/api/admin/pipeline/probe-wordpress?limit=100', { method: 'POST' })
+      jobId: number
+      status: string
+      count: number
+    }>('/api/admin/pipeline/probe-wordpress?limit=500', { method: 'POST' })
 
     scrapeResult.value = {
       success: true,
-      message: `Probed ${result.probed} domains: ${result.wordpress} WordPress, ${result.notWordpress} not WP, ${result.failed} failed. ${result.newPluginsDiscovered} new plugins discovered.`,
+      message: `Probing ${result.count} publishers in background (Job #${result.jobId}). Check Pipeline page for progress.`,
     }
-
-    await Promise.all([fetchPublishers(), fetchStats()])
   } catch (err: any) {
     scrapeResult.value = {
       success: false,
@@ -783,23 +779,15 @@ const runEnrich = async () => {
   try {
     const result = await $fetch<{
       success: boolean
-      enriched: number
-      failed: number
-      categories: Record<string, number>
-    }>('/api/admin/pipeline/enrich-publishers?limit=100', { method: 'POST' })
-
-    const catSummary = Object.entries(result.categories)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([cat, count]) => `${cat}: ${count}`)
-      .join(', ')
+      jobId: number
+      status: string
+      count: number
+    }>('/api/admin/pipeline/enrich-publishers?limit=500', { method: 'POST' })
 
     scrapeResult.value = {
       success: true,
-      message: `Enriched ${result.enriched} publishers (${result.failed} failed). Categories: ${catSummary || 'none detected'}`,
+      message: `Enriching ${result.count} publishers in background (Job #${result.jobId}). Check Pipeline page for progress.`,
     }
-
-    await Promise.all([fetchPublishers(), fetchStats()])
   } catch (err: any) {
     scrapeResult.value = {
       success: false,
@@ -817,18 +805,15 @@ const runContactScrape = async () => {
   try {
     const result = await $fetch<{
       success: boolean
-      scraped: number
-      withEmail: number
-      withSocial: number
-      failed: number
-    }>(`/api/admin/pipeline/scrape-contacts?limit=100${rescrapeMode.value ? '&rescrape=true' : ''}`, { method: 'POST' })
+      jobId: number
+      status: string
+      count: number
+    }>(`/api/admin/pipeline/scrape-contacts?limit=500${rescrapeMode.value ? '&rescrape=true' : ''}`, { method: 'POST' })
 
     scrapeResult.value = {
       success: true,
-      message: `Scraped ${result.scraped} publishers: ${result.withEmail} emails found, ${result.withSocial} with social links, ${result.failed} failed.`,
+      message: `Scraping contacts for ${result.count} publishers in background (Job #${result.jobId}). Check Pipeline page for progress.`,
     }
-
-    await Promise.all([fetchPublishers(), fetchStats()])
   } catch (err: any) {
     scrapeResult.value = {
       success: false,
