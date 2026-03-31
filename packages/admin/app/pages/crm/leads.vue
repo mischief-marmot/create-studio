@@ -29,7 +29,7 @@
             >
               <span v-if="pipelineRunning" class="loading loading-spinner loading-xs"></span>
               <SparklesIcon v-else class="w-4 h-4" />
-              {{ pipelineRunning ? 'Running...' : 'Run Pipeline (50)' }}
+              {{ pipelineRunning ? 'Running...' : 'Run Pipeline (100)' }}
             </button>
           </div>
         </div>
@@ -855,7 +855,7 @@ const runPipeline = async () => {
       jobId: number
       status: string
       limit: number
-    }>('/api/admin/pipeline/run?limit=50', { method: 'POST' })
+    }>('/api/admin/pipeline/run?limit=100', { method: 'POST' })
 
     scrapeResult.value = {
       success: true,
