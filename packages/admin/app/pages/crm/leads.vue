@@ -314,7 +314,11 @@
         <!-- Drawer Header -->
         <div class="px-6 py-5 border-b border-base-300/50 flex items-center justify-between sticky top-0 bg-base-100 z-[1]">
           <div class="min-w-0">
-            <h3 class="text-lg font-semibold text-base-content truncate">{{ selectedPublisher.domain }}</h3>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-semibold text-base-content truncate">{{ selectedPublisher.domain }}</h3>
+              <span v-if="publisherDetail?.stats.isActive" class="badge badge-sm badge-success badge-outline">Active</span>
+              <span v-else-if="publisherDetail && !publisherDetail.stats.isActive" class="badge badge-sm badge-ghost">Inactive</span>
+            </div>
             <p v-if="selectedPublisher.siteName" class="text-sm text-base-content/50 truncate">{{ selectedPublisher.siteName }}</p>
           </div>
           <button class="btn btn-ghost btn-sm btn-square flex-shrink-0" @click="closeDrawer">
@@ -323,7 +327,10 @@
         </div>
 
         <!-- Drawer Body -->
-        <div class="p-6 flex-1 space-y-6">
+        <div v-if="detailLoading" class="flex-1 flex items-center justify-center">
+          <span class="loading loading-spinner loading-lg text-primary"></span>
+        </div>
+        <div v-else class="p-6 flex-1 space-y-6">
           <!-- Ad Networks -->
           <div>
             <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Ad Networks</div>
@@ -399,6 +406,40 @@
             </div>
           </div>
 
+          <!-- Plugin Stack -->
+          <div v-if="publisherDetail?.plugins?.length">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Plugin Stack</div>
+
+            <!-- Summary badges -->
+            <div class="flex flex-wrap gap-2 mb-3">
+              <span v-if="publisherDetail.stats.paidPluginCount" class="badge badge-sm badge-primary badge-outline">
+                {{ publisherDetail.stats.paidPluginCount }} paid
+              </span>
+              <span v-if="publisherDetail.stats.competitorPluginCount" class="badge badge-sm badge-error badge-outline">
+                {{ publisherDetail.stats.competitorPluginCount }} competitor
+              </span>
+              <span v-if="publisherDetail.stats.replaceablePluginCount" class="badge badge-sm badge-warning badge-outline">
+                {{ publisherDetail.stats.replaceablePluginCount }} replaceable
+              </span>
+            </div>
+
+            <!-- Plugin list -->
+            <div class="space-y-1">
+              <div v-for="plugin in publisherDetail.plugins" :key="plugin.namespace"
+                class="flex items-center justify-between py-1.5 px-2 rounded-md bg-base-200/30">
+                <div class="min-w-0">
+                  <span class="text-sm text-base-content">{{ plugin.name || plugin.namespace }}</span>
+                  <span v-if="plugin.category" class="text-xs text-base-content/40 ml-1.5">{{ plugin.category }}</span>
+                </div>
+                <div class="flex gap-1 flex-shrink-0">
+                  <span v-if="plugin.isCompetitor" class="badge badge-xs badge-error badge-outline">competitor</span>
+                  <span v-if="plugin.isPaid" class="badge badge-xs badge-primary badge-outline">paid</span>
+                  <span v-if="plugin.replaceableByCreate" class="badge badge-xs badge-warning badge-outline">replaceable</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Top Content -->
           <div v-if="selectedPublisher.topContent?.length">
             <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Top Content</div>
@@ -469,7 +510,7 @@
               {{ selectedPublisher.scrapeError }}
             </p>
           </div>
-        </div>
+        </div> <!-- end v-else (drawer body content) -->
       </template>
     </div>
   </div>
@@ -533,6 +574,19 @@ interface Publisher {
   createdAt: string
 }
 
+interface PublisherDetail {
+  publisher: Publisher & { contactEmail: string | null; contactName: string | null; contactSource: string | null }
+  plugins: Array<{ namespace: string; name: string | null; category: string | null; isPaid: boolean; isCompetitor: boolean; replaceableByCreate: boolean }>
+  stats: {
+    isActive: boolean
+    yearsPublishing: number | null
+    postsPerMonth: number | null
+    paidPluginCount: number
+    competitorPluginCount: number
+    replaceablePluginCount: number
+  }
+}
+
 interface Pagination {
   page: number
   limit: number
@@ -560,6 +614,8 @@ const scrapeResult = ref<{ success: boolean; message: string } | null>(null)
 // Drawer
 const drawerOpen = ref(false)
 const selectedPublisher = ref<Publisher | null>(null)
+const publisherDetail = ref<PublisherDetail | null>(null)
+const detailLoading = ref(false)
 
 // Filters
 const searchQuery = ref('')
@@ -627,6 +683,10 @@ const pipelineBarWidth = (status: string): string => {
 
 // Drawer computed
 const drawerYearsPublishing = computed(() => {
+  if (publisherDetail.value?.stats.yearsPublishing != null) {
+    const y = publisherDetail.value.stats.yearsPublishing
+    return y < 1 ? '< 1' : Math.round(y).toString()
+  }
   if (!selectedPublisher.value?.oldestPostDate) return null
   const oldest = new Date(selectedPublisher.value.oldestPostDate)
   const now = new Date()
@@ -635,6 +695,9 @@ const drawerYearsPublishing = computed(() => {
 })
 
 const drawerPostsPerMonth = computed(() => {
+  if (publisherDetail.value?.stats.postsPerMonth != null) {
+    return Math.round(publisherDetail.value.stats.postsPerMonth).toString()
+  }
   if (!selectedPublisher.value?.postCount || !selectedPublisher.value?.oldestPostDate) return null
   const oldest = new Date(selectedPublisher.value.oldestPostDate)
   const now = new Date()
@@ -650,9 +713,15 @@ const hasSocialLinks = computed(() => {
 })
 
 // Drawer actions
-const openDrawer = (pub: Publisher) => {
+const openDrawer = async (pub: Publisher) => {
   selectedPublisher.value = pub
+  publisherDetail.value = null
   drawerOpen.value = true
+  detailLoading.value = true
+  try {
+    publisherDetail.value = await $fetch<PublisherDetail>(`/api/admin/pipeline/publishers/${pub.id}`)
+  } catch { /* ignore */ }
+  finally { detailLoading.value = false }
 }
 
 const closeDrawer = () => {
