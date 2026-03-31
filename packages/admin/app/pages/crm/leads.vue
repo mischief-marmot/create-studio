@@ -24,44 +24,13 @@
             </button>
             <button
               class="btn btn-outline btn-sm"
-              :disabled="probing"
-              @click="runProbe"
+              :disabled="pipelineRunning"
+              @click="runPipeline"
             >
-              <span v-if="probing" class="loading loading-spinner loading-xs"></span>
-              <GlobeAltIcon v-else class="w-4 h-4" />
-              {{ probing ? 'Probing...' : 'Probe WordPress (500)' }}
-            </button>
-            <button
-              class="btn btn-outline btn-sm"
-              :disabled="enriching"
-              @click="runEnrich"
-            >
-              <span v-if="enriching" class="loading loading-spinner loading-xs"></span>
+              <span v-if="pipelineRunning" class="loading loading-spinner loading-xs"></span>
               <SparklesIcon v-else class="w-4 h-4" />
-              {{ enriching ? 'Enriching...' : 'Enrich (500)' }}
+              {{ pipelineRunning ? 'Running...' : 'Run Pipeline (500)' }}
             </button>
-            <div class="flex items-center gap-1">
-              <button
-                class="btn btn-outline btn-sm"
-                :class="{ 'rounded-r-none': true }"
-                :disabled="scrapingContacts"
-                @click="runContactScrape"
-              >
-                <span v-if="scrapingContacts" class="loading loading-spinner loading-xs"></span>
-                <UserIcon v-else class="w-4 h-4" />
-                {{ scrapingContacts ? 'Scraping...' : rescrapeMode ? 'Re-scrape Contacts (100)' : 'Scrape Contacts (500)' }}
-              </button>
-              <button
-                class="btn btn-outline btn-sm rounded-l-none border-l-0 px-2"
-                :class="rescrapeMode ? 'btn-warning' : ''"
-                @click="rescrapeMode = !rescrapeMode"
-                :title="rescrapeMode ? 'Re-scrape mode ON — will re-process already-scraped publishers' : 'Click to enable re-scrape mode'"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -579,10 +548,7 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 const stats = ref<Stats | null>(null)
 const scraping = ref(false)
-const probing = ref(false)
-const enriching = ref(false)
-const scrapingContacts = ref(false)
-const rescrapeMode = ref(false)
+const pipelineRunning = ref(false)
 const scrapeResult = ref<{ success: boolean; message: string } | null>(null)
 
 // Drawer
@@ -746,8 +712,8 @@ const runScrape = async () => {
   }
 }
 
-const runProbe = async () => {
-  probing.value = true
+const runPipeline = async () => {
+  pipelineRunning.value = true
   scrapeResult.value = null
 
   try {
@@ -755,72 +721,20 @@ const runProbe = async () => {
       success: boolean
       jobId: number
       status: string
-      count: number
-    }>('/api/admin/pipeline/probe-wordpress?limit=500', { method: 'POST' })
+      limit: number
+    }>('/api/admin/pipeline/run?limit=500', { method: 'POST' })
 
     scrapeResult.value = {
       success: true,
-      message: `Probing ${result.count} publishers in background (Job #${result.jobId}). Check Pipeline page for progress.`,
+      message: `Pipeline started (Job #${result.jobId}): probe → enrich → contacts for up to ${result.limit} publishers. Check Pipeline page for progress.`,
     }
   } catch (err: any) {
     scrapeResult.value = {
       success: false,
-      message: err?.data?.message || 'Probe failed',
+      message: err?.data?.message || 'Pipeline failed to start',
     }
   } finally {
-    probing.value = false
-  }
-}
-
-const runEnrich = async () => {
-  enriching.value = true
-  scrapeResult.value = null
-
-  try {
-    const result = await $fetch<{
-      success: boolean
-      jobId: number
-      status: string
-      count: number
-    }>('/api/admin/pipeline/enrich-publishers?limit=500', { method: 'POST' })
-
-    scrapeResult.value = {
-      success: true,
-      message: `Enriching ${result.count} publishers in background (Job #${result.jobId}). Check Pipeline page for progress.`,
-    }
-  } catch (err: any) {
-    scrapeResult.value = {
-      success: false,
-      message: err?.data?.message || 'Enrichment failed',
-    }
-  } finally {
-    enriching.value = false
-  }
-}
-
-const runContactScrape = async () => {
-  scrapingContacts.value = true
-  scrapeResult.value = null
-
-  try {
-    const result = await $fetch<{
-      success: boolean
-      jobId: number
-      status: string
-      count: number
-    }>(`/api/admin/pipeline/scrape-contacts?limit=500${rescrapeMode.value ? '&rescrape=true' : ''}`, { method: 'POST' })
-
-    scrapeResult.value = {
-      success: true,
-      message: `Scraping contacts for ${result.count} publishers in background (Job #${result.jobId}). Check Pipeline page for progress.`,
-    }
-  } catch (err: any) {
-    scrapeResult.value = {
-      success: false,
-      message: err?.data?.message || 'Contact scrape failed',
-    }
-  } finally {
-    scrapingContacts.value = false
+    pipelineRunning.value = false
   }
 }
 
