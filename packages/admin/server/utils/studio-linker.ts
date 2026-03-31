@@ -2,11 +2,22 @@
  * Create Studio linker
  *
  * Matches publishers and contacts to existing Create Studio
- * sites and users by domain/email. Uses wrangler CLI to query
- * the production D1 database in local dev.
+ * sites and users by domain/email. Reads from local JSON fixtures
+ * dumped from production D1 via wrangler.
+ *
+ * To refresh fixtures:
+ *   npx wrangler d1 execute create-studio --remote --json \
+ *     --command "SELECT s.id, s.url, s.create_version, s.last_active_at, sub.tier, sub.status FROM Sites s LEFT JOIN Subscriptions sub ON s.id = sub.site_id WHERE s.url IS NOT NULL" \
+ *     | python3 -c "import sys,json; json.dump(json.load(sys.stdin)[0]['results'], open('packages/admin/server/data/studio-sites.json','w'))"
+ *
+ *   npx wrangler d1 execute create-studio --remote --json \
+ *     --command "SELECT id, email FROM Users WHERE email IS NOT NULL" \
+ *     | python3 -c "import sys,json; json.dump(json.load(sys.stdin)[0]['results'], open('packages/admin/server/data/studio-users.json','w'))"
  */
 
-import { execSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { StudioData } from '../db/admin-schema'
 
 interface StudioSite {
@@ -23,6 +34,12 @@ interface StudioUser {
   email: string
 }
 
+function getDataDir(): string {
+  const __filename = fileURLToPath(import.meta.url)
+  const __dirname = dirname(__filename)
+  return join(__dirname, '../data')
+}
+
 /**
  * Normalize a URL to a bare domain for matching.
  */
@@ -37,18 +54,12 @@ function urlToDomain(url: string): string {
     .trim()
 }
 
-/**
- * Check if a version string is pre-2.0 (legacy).
- */
 function isLegacyVersion(version: string | null): boolean {
-  if (!version) return true // unknown version = legacy
+  if (!version) return true
   const major = parseInt(version.split('.')[0] || '0', 10)
   return major < 2
 }
 
-/**
- * Check if a date is within the last N days.
- */
 function isRecentlyActive(dateStr: string | null, days: number = 30): boolean {
   if (!dateStr) return false
   const date = new Date(dateStr)
@@ -71,19 +82,12 @@ export function buildStudioData(site: StudioSite): StudioData {
 }
 
 /**
- * Fetch all sites from Create Studio production D1 via wrangler.
- * Includes subscription data for tier/status info.
+ * Load Studio sites from local JSON fixture.
  */
 export function fetchStudioSites(): Map<string, StudioSite> {
-  const sql = 'SELECT s.id, s.url, s.create_version, s.last_active_at, sub.tier, sub.status FROM Sites s LEFT JOIN Subscriptions sub ON s.id = sub.site_id WHERE s.url IS NOT NULL'
-
-  const result = execSync(
-    `npx wrangler d1 execute create-studio --remote --json --command "${sql}"`,
-    { timeout: 60000, encoding: 'utf-8' }
-  )
-
-  const parsed = JSON.parse(result)
-  const sites = parsed[0]?.results as StudioSite[] || []
+  const filePath = join(getDataDir(), 'studio-sites.json')
+  const raw = readFileSync(filePath, 'utf-8')
+  const sites: StudioSite[] = JSON.parse(raw)
 
   const siteMap = new Map<string, StudioSite>()
   for (const site of sites) {
@@ -101,16 +105,12 @@ export function fetchStudioSites(): Map<string, StudioSite> {
 }
 
 /**
- * Fetch all users from Create Studio production D1 via wrangler.
+ * Load Studio users from local JSON fixture.
  */
 export function fetchStudioUsers(): Map<string, StudioUser> {
-  const result = execSync(
-    'npx wrangler d1 execute create-studio --remote --json --command "SELECT id, email FROM Users WHERE email IS NOT NULL"',
-    { timeout: 60000, encoding: 'utf-8' }
-  )
-
-  const parsed = JSON.parse(result)
-  const users = parsed[0]?.results as StudioUser[] || []
+  const filePath = join(getDataDir(), 'studio-users.json')
+  const raw = readFileSync(filePath, 'utf-8')
+  const users: StudioUser[] = JSON.parse(raw)
 
   const userMap = new Map<string, StudioUser>()
   for (const user of users) {

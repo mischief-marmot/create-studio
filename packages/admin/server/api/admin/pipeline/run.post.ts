@@ -30,9 +30,52 @@ export default defineEventHandler(async (event) => {
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
 
+  // === Pre-check: gather batch BEFORE creating job ===
+  // Over-fetch generously to account for locked IDs from concurrent jobs
+  const overFetch = limit * 10
+
+  const rawContacts = await db.select({ id: publishers.id, domain: publishers.domain })
+    .from(publishers)
+    .where(and(eq(publishers.scrapeStatus, 'enriched'), eq(publishers.isWordpress, true)))
+    .limit(overFetch)
+  const needContacts = filterUnlocked(rawContacts).slice(0, limit)
+  let remaining = limit - needContacts.length
+
+  let needEnrich: typeof needContacts = []
+  if (remaining > 0) {
+    const raw = await db.select({ id: publishers.id, domain: publishers.domain })
+      .from(publishers)
+      .where(and(eq(publishers.scrapeStatus, 'plugins_scraped'), eq(publishers.isWordpress, true)))
+      .limit(overFetch)
+    needEnrich = filterUnlocked(raw).slice(0, remaining)
+    remaining -= needEnrich.length
+  }
+
+  let needProbe: typeof needContacts = []
+  if (remaining > 0) {
+    const raw = await db.select({ id: publishers.id, domain: publishers.domain })
+      .from(publishers)
+      .where(eq(publishers.scrapeStatus, 'pending'))
+      .limit(overFetch)
+    needProbe = filterUnlocked(raw).slice(0, remaining)
+  }
+
+  const totalBatch = needContacts.length + needEnrich.length + needProbe.length
+  if (totalBatch === 0) {
+    return { success: true, message: 'No publishers available to process', jobId: null, status: 'skipped', limit }
+  }
+
+  // Lock IDs before creating job
+  const allLockedIds = lockPublisherIds([
+    ...needContacts.map((p) => p.id),
+    ...needEnrich.map((p) => p.id),
+    ...needProbe.map((p) => p.id),
+  ])
+
   const [job] = await db.insert(scrapeJobs).values({
     type: 'full_pipeline',
     status: 'running',
+    totalCount: totalBatch,
     startedAt: now,
     startedBy: (session.user as any).id,
     createdAt: now,
@@ -40,13 +83,13 @@ export default defineEventHandler(async (event) => {
   }).returning()
 
   if (!job) {
+    unlockPublisherIds(allLockedIds)
     throw createError({ statusCode: 500, message: 'Failed to create pipeline job' })
   }
 
   runInBackground(event, async () => {
     let totalProcessed = 0
     let totalFailed = 0
-    let allLockedIds: number[] = []
 
     const updateJob = async (stage: string, completed: number, total: number) => {
       await db.update(scrapeJobs).set({
@@ -58,52 +101,6 @@ export default defineEventHandler(async (event) => {
     }
 
     try {
-      // === Gather batch, filling from bottom up ===
-      const overFetch = limit * 3
-
-      // Priority 1: enriched → need contacts only
-      const rawContacts = await db.select({ id: publishers.id, domain: publishers.domain })
-        .from(publishers)
-        .where(and(eq(publishers.scrapeStatus, 'enriched'), eq(publishers.isWordpress, true)))
-        .limit(overFetch)
-      const needContacts = filterUnlocked(rawContacts).slice(0, limit)
-      let remaining = limit - needContacts.length
-
-      // Priority 2: plugins_scraped → need enrich + contacts
-      let needEnrich: typeof needContacts = []
-      if (remaining > 0) {
-        const raw = await db.select({ id: publishers.id, domain: publishers.domain })
-          .from(publishers)
-          .where(and(eq(publishers.scrapeStatus, 'plugins_scraped'), eq(publishers.isWordpress, true)))
-          .limit(overFetch)
-        needEnrich = filterUnlocked(raw).slice(0, remaining)
-        remaining -= needEnrich.length
-      }
-
-      // Priority 3: pending → need full pipeline
-      let needProbe: typeof needContacts = []
-      if (remaining > 0) {
-        const raw = await db.select({ id: publishers.id, domain: publishers.domain })
-          .from(publishers)
-          .where(eq(publishers.scrapeStatus, 'pending'))
-          .limit(overFetch)
-        needProbe = filterUnlocked(raw).slice(0, remaining)
-      }
-
-      const totalBatch = needContacts.length + needEnrich.length + needProbe.length
-      if (totalBatch === 0) {
-        await db.update(scrapeJobs).set({
-          status: 'completed', completedCount: 0, totalCount: 0,
-          completedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-        }).where(eq(scrapeJobs.id, job.id))
-        return
-      }
-
-      allLockedIds = lockPublisherIds([
-        ...needContacts.map((p) => p.id),
-        ...needEnrich.map((p) => p.id),
-        ...needProbe.map((p) => p.id),
-      ])
 
       // Load plugin map
       const knownPlugins = await db.select().from(plugins)
