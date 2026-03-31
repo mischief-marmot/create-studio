@@ -45,6 +45,12 @@ export default defineEventHandler(async (event) => {
     isPaid: plugins.isPaid,
     isCompetitor: plugins.isCompetitor,
     replaceableByCreate: plugins.replaceableByCreate,
+    wpSlug: plugins.wpSlug,
+    wpUrl: plugins.wpUrl,
+    homepageUrl: plugins.homepageUrl,
+    description: plugins.description,
+    activeInstalls: plugins.activeInstalls,
+    rating: plugins.rating,
   })
     .from(publisherPlugins)
     .innerJoin(plugins, eq(publisherPlugins.pluginId, plugins.id))

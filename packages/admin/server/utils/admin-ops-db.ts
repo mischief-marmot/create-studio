@@ -188,11 +188,19 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
       is_paid INTEGER DEFAULT 0,
       is_competitor INTEGER DEFAULT 0,
       replaceable_by_create INTEGER DEFAULT 0,
+      wp_slug TEXT,
+      wp_url TEXT,
+      homepage_url TEXT,
+      description TEXT,
+      active_installs INTEGER,
+      rating INTEGER,
+      enriched_at TEXT,
       createdAt TEXT,
       updatedAt TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_plugins_namespace ON Plugins (namespace);
     CREATE INDEX IF NOT EXISTS idx_plugins_category ON Plugins (category);
+    CREATE INDEX IF NOT EXISTS idx_plugins_wp_slug ON Plugins (wp_slug);
     CREATE INDEX IF NOT EXISTS idx_plugins_is_competitor ON Plugins (is_competitor);
 
     CREATE TABLE IF NOT EXISTS PublisherPlugins (

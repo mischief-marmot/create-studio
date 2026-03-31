@@ -155,18 +155,26 @@ export const publishers = sqliteTable('Publishers', {
 // Plugins — known WordPress plugins identified by REST API namespace
 export const plugins = sqliteTable('Plugins', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  namespace: text('namespace').notNull().unique(), // e.g. "wp-recipe-maker", "yoast/v1"
-  name: text('name'), // human-readable, may be null initially when auto-discovered
+  namespace: text('namespace').notNull().unique(), // e.g. "wp-recipe-maker", "rankmath"
+  name: text('name'), // human-readable from wordpress.org
   category: text('category'), // recipe, seo, forms, ecommerce, etc.
   isPaid: integer('is_paid', { mode: 'boolean' }).default(false),
   isCompetitor: integer('is_competitor', { mode: 'boolean' }).default(false),
   replaceableByCreate: integer('replaceable_by_create', { mode: 'boolean' }).default(false),
+  wpSlug: text('wp_slug'), // wordpress.org slug (may differ from namespace)
+  wpUrl: text('wp_url'), // wordpress.org plugin page URL
+  homepageUrl: text('homepage_url'), // plugin's own website
+  description: text('description'), // short description from wordpress.org
+  activeInstalls: integer('active_installs'), // from wordpress.org
+  rating: integer('rating'), // 0-100 from wordpress.org
+  enrichedAt: text('enriched_at'), // when wordpress.org data was last fetched
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 }, (table) => [
   index('idx_plugins_namespace').on(table.namespace),
   index('idx_plugins_category').on(table.category),
   index('idx_plugins_is_competitor').on(table.isCompetitor),
+  index('idx_plugins_wp_slug').on(table.wpSlug),
 ])
 
 // PublisherPlugins — junction: which publishers have which plugins installed

@@ -315,7 +315,11 @@
         <div class="px-6 py-5 border-b border-base-300/50 flex items-center justify-between sticky top-0 bg-base-100 z-[1]">
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <h3 class="text-lg font-semibold text-base-content truncate">{{ selectedPublisher.domain }}</h3>
+              <a :href="`https://${selectedPublisher.domain}`" target="_blank" rel="noopener noreferrer"
+                class="text-lg font-semibold text-base-content hover:text-primary transition-colors truncate flex items-center gap-1.5">
+                {{ selectedPublisher.domain }}
+                <LinkIcon class="w-4 h-4 text-base-content/30 flex-shrink-0" />
+              </a>
               <span v-if="publisherDetail?.stats.isActive" class="badge badge-sm badge-success badge-outline">Active</span>
               <span v-else-if="publisherDetail && !publisherDetail.stats.isActive" class="badge badge-sm badge-ghost">Inactive</span>
             </div>
@@ -436,7 +440,10 @@
 
           <!-- Plugin Stack -->
           <div v-if="publisherDetail?.plugins?.length">
-            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Plugin Stack</div>
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">
+              Plugin Stack
+              <span class="text-base-content/30 normal-case tracking-normal font-normal ml-1">{{ publisherDetail.plugins.length }} plugins</span>
+            </div>
 
             <!-- Summary badges -->
             <div class="flex flex-wrap gap-2 mb-3">
@@ -452,17 +459,43 @@
             </div>
 
             <!-- Plugin list -->
-            <div class="space-y-1">
+            <div class="space-y-1.5">
               <div v-for="plugin in publisherDetail.plugins" :key="plugin.namespace"
-                class="flex items-center justify-between py-1.5 px-2 rounded-md bg-base-200/30">
-                <div class="min-w-0">
-                  <span class="text-sm text-base-content">{{ plugin.name || plugin.namespace }}</span>
-                  <span v-if="plugin.category" class="text-xs text-base-content/40 ml-1.5">{{ plugin.category }}</span>
-                </div>
-                <div class="flex gap-1 flex-shrink-0">
-                  <span v-if="plugin.isCompetitor" class="badge badge-xs badge-error badge-outline">competitor</span>
-                  <span v-if="plugin.isPaid" class="badge badge-xs badge-primary badge-outline">paid</span>
-                  <span v-if="plugin.replaceableByCreate" class="badge badge-xs badge-warning badge-outline">replaceable</span>
+                class="py-2 px-3 rounded-lg bg-base-200/30 hover:bg-base-200/60 transition-colors">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <a v-if="plugin.wpUrl || plugin.homepageUrl"
+                        :href="plugin.wpUrl || plugin.homepageUrl"
+                        target="_blank" rel="noopener noreferrer"
+                        class="text-sm font-medium text-base-content hover:text-primary transition-colors"
+                      >
+                        {{ plugin.name || plugin.namespace }}
+                      </a>
+                      <span v-else class="text-sm font-medium text-base-content">{{ plugin.name || plugin.namespace }}</span>
+                      <LinkIcon v-if="plugin.wpUrl || plugin.homepageUrl" class="w-3 h-3 text-base-content/30 flex-shrink-0" />
+                    </div>
+                    <div v-if="plugin.description" class="text-xs text-base-content/50 mt-0.5 line-clamp-1">
+                      {{ plugin.description }}
+                    </div>
+                    <div class="flex items-center gap-3 mt-1">
+                      <span v-if="plugin.activeInstalls" class="text-[10px] text-base-content/40">
+                        {{ formatInstalls(plugin.activeInstalls) }} installs
+                      </span>
+                      <span v-if="plugin.rating" class="text-[10px] text-base-content/40">
+                        {{ (plugin.rating / 20).toFixed(1) }}/5 rating
+                      </span>
+                      <span v-if="plugin.category" class="text-[10px] text-base-content/40 uppercase">
+                        {{ plugin.category }}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-1 flex-shrink-0 items-end">
+                    <span v-if="plugin.isCompetitor" class="badge badge-xs badge-error badge-outline">competitor</span>
+                    <span v-if="plugin.isPaid" class="badge badge-xs badge-primary badge-outline">paid</span>
+                    <span v-if="plugin.replaceableByCreate" class="badge badge-xs badge-warning badge-outline">replaceable</span>
+                    <span v-if="!plugin.wpUrl && !plugin.isCompetitor && !plugin.isPaid" class="badge badge-xs badge-ghost">unknown</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -584,7 +617,12 @@ interface Publisher {
 
 interface PublisherDetail {
   publisher: Publisher & { contactEmail: string | null; contactName: string | null; contactSource: string | null }
-  plugins: Array<{ namespace: string; name: string | null; category: string | null; isPaid: boolean; isCompetitor: boolean; replaceableByCreate: boolean }>
+  plugins: Array<{
+    namespace: string; name: string | null; category: string | null
+    isPaid: boolean; isCompetitor: boolean; replaceableByCreate: boolean
+    wpSlug: string | null; wpUrl: string | null; homepageUrl: string | null
+    description: string | null; activeInstalls: number | null; rating: number | null
+  }>
   stats: {
     isActive: boolean
     yearsPublishing: number | null
@@ -869,6 +907,12 @@ const categoryBadgeClass = (category: string): string => {
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+const formatInstalls = (n: number): string => {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`
+  return n.toLocaleString()
 }
 
 // Watchers
