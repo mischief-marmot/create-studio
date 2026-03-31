@@ -79,6 +79,40 @@
         </div>
       </div>
 
+      <!-- Plugin Enrichment -->
+      <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm mb-6">
+        <div class="px-6 py-4 border-b border-base-300/50 flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-base-content uppercase tracking-wider">Plugin Enrichment</h2>
+          <button
+            class="btn btn-primary btn-xs"
+            :disabled="enrichingPlugins"
+            @click="enrichPlugins"
+          >
+            <span v-if="enrichingPlugins" class="loading loading-spinner loading-xs"></span>
+            {{ enrichingPlugins ? 'Enriching...' : 'Enrich Plugins (100)' }}
+          </button>
+        </div>
+        <div class="p-6">
+          <div v-if="pluginStats" class="grid grid-cols-3 gap-4">
+            <div class="text-center p-3 rounded-lg bg-base-200/50">
+              <div class="text-xl font-bold text-base-content">{{ pluginStats.total }}</div>
+              <div class="text-xs text-base-content/50 mt-1">Total Plugins</div>
+            </div>
+            <div class="text-center p-3 rounded-lg bg-base-200/50">
+              <div class="text-xl font-bold text-success">{{ pluginStats.enriched }}</div>
+              <div class="text-xs text-base-content/50 mt-1">Enriched</div>
+            </div>
+            <div class="text-center p-3 rounded-lg bg-base-200/50">
+              <div class="text-xl font-bold text-base-content/50">{{ pluginStats.unenriched }}</div>
+              <div class="text-xs text-base-content/50 mt-1">Unenriched</div>
+            </div>
+          </div>
+          <div v-else class="flex items-center justify-center py-4">
+            <span class="loading loading-spinner loading-sm text-primary"></span>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Jobs -->
       <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm">
         <div class="px-6 py-4 border-b border-base-300/50 flex items-center justify-between">
@@ -195,6 +229,8 @@ interface ScrapeJob {
 const stats = ref<Stats | null>(null)
 const jobs = ref<ScrapeJob[]>([])
 const jobsLoading = ref(false)
+const enrichingPlugins = ref(false)
+const pluginStats = ref<{ total: number; enriched: number; unenriched: number } | null>(null)
 let pollInterval: ReturnType<typeof setInterval> | null = null
 
 const hasRunningJobs = computed(() => jobs.value.some((j) => j.status.startsWith('running')))
@@ -209,6 +245,28 @@ const fetchStats = async () => {
     stats.value = await $fetch<Stats>('/api/admin/pipeline/stats')
   } catch {
     // Non-critical
+  }
+}
+
+const fetchPluginStats = async () => {
+  try {
+    // Quick count of enriched vs unenriched plugins
+    const data = await $fetch<{ total: number; enriched: number; unenriched: number }>('/api/admin/pipeline/plugin-stats')
+    pluginStats.value = data
+  } catch {
+    // Non-critical
+  }
+}
+
+const enrichPlugins = async () => {
+  enrichingPlugins.value = true
+  try {
+    await $fetch('/api/admin/pipeline/enrich-plugins?limit=100', { method: 'POST' })
+    await fetchJobs()
+  } catch {
+    // ignore
+  } finally {
+    enrichingPlugins.value = false
   }
 }
 
@@ -293,6 +351,7 @@ const formatDateTime = (dateString: string): string => {
 onMounted(() => {
   fetchStats()
   fetchJobs()
+  fetchPluginStats()
 })
 
 onUnmounted(() => {
