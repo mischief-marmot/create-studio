@@ -17,6 +17,7 @@ import {
   MoonIcon,
   ArrowDownTrayIcon,
   EnvelopeIcon,
+  UserGroupIcon,
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
@@ -37,6 +38,7 @@ const navigation = [
   { name: 'Plugin Releases', href: '/plugin-releases', icon: ArrowDownTrayIcon },
   { name: 'Release Emails', href: '/release-emails', icon: EnvelopeIcon },
   { name: 'Feedback', href: '/feedback', icon: ChatBubbleLeftEllipsisIcon },
+  { name: 'CRM', href: '/crm', icon: UserGroupIcon },
   { name: 'Audit Logs', href: '/audit-logs', icon: DocumentTextIcon },
   { name: 'Analytics', href: '/analytics', icon: ChartBarIcon },
 ]
