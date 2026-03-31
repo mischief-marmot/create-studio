@@ -13,7 +13,7 @@
  * Query params:
  *   limit: batch size (default 50, max 2000)
  */
-import { eq, and } from 'drizzle-orm'
+import { eq, and, sql } from 'drizzle-orm'
 import { useAdminOpsDb, publishers, plugins, publisherPlugins, contacts, scrapeJobs } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
@@ -27,6 +27,19 @@ export default defineEventHandler(async (event) => {
 
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
+
+  // Prevent concurrent pipeline runs
+  const [running] = await db.select({ id: scrapeJobs.id })
+    .from(scrapeJobs)
+    .where(and(
+      eq(scrapeJobs.type, 'full_pipeline'),
+      sql`${scrapeJobs.status} LIKE 'running%'`,
+    ))
+    .limit(1)
+
+  if (running) {
+    throw createError({ statusCode: 409, message: 'A pipeline is already running. Wait for it to finish or reset stalled jobs.' })
+  }
 
   // Create job
   const [job] = await db.insert(scrapeJobs).values({
