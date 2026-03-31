@@ -33,12 +33,16 @@ const PREMIUM_DIRECTORIES = new Set([
   'wordpress-seo-premium', 'seo-by-rank-math-pro',
   // Page builders
   'elementor-pro', 'beaver-builder', 'divi-builder',
-  // Forms
-  // Note: wpforms (without -lite) IS the pro version
+  // Forms (wpforms without -lite IS the pro version)
+  // ACF
+  'advanced-custom-fields-pro',
   // Misc premium
   'shiftnav-pro', 'link-whisper', 'link-whisper-premium',
   'wp-rocket', 'perfmatters', 'imagify',
   'mediavine-create', // our own — has pro tier
+  // WooCommerce paid extensions
+  'woocommerce-subscriptions', 'woocommerce-memberships', 'woocommerce-bookings',
+  'woocommerce-product-addons',
 ])
 
 // Known paid-only plugins (no free version exists)
@@ -49,7 +53,9 @@ const PAID_ONLY_PLUGINS = new Set([
   'elementor-pro', 'beaver-builder',
   'wordpress-seo-premium', 'seo-by-rank-math-pro',
   'wp-recipe-maker-premium',
+  'advanced-custom-fields-pro',
   'shiftnav-pro',
+  'woocommerce-subscriptions', 'woocommerce-memberships', 'woocommerce-bookings',
 ])
 
 // Plugins where the -lite suffix means free, without suffix means paid

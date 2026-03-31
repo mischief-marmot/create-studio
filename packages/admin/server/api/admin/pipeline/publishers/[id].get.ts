@@ -56,14 +56,39 @@ export default defineEventHandler(async (event) => {
     .innerJoin(plugins, eq(publisherPlugins.pluginId, plugins.id))
     .where(eq(publisherPlugins.publisherId, id))
 
-  // Deduplicate plugins by base namespace
-  const seen = new Set<string>()
-  const dedupedPlugins = pluginRows.filter((p) => {
-    const base = (p.namespace.split('/')[0] || p.namespace).toLowerCase()
-    if (seen.has(base)) return false
-    seen.add(base)
-    return true
-  })
+  // Deduplicate plugins: merge entries that share the same wp_slug or base namespace.
+  // When merging, prefer the entry with the most data (name, isPaid, etc.)
+  const pluginByKey = new Map<string, typeof pluginRows[0]>()
+
+  for (const p of pluginRows) {
+    // Use wp_slug as dedup key if available, otherwise base namespace
+    const key = (p.wpSlug || p.namespace.split('/')[0] || p.namespace).toLowerCase()
+
+    const existing = pluginByKey.get(key)
+    if (existing) {
+      // Merge: upgrade isPaid/isCompetitor/replaceable if either is true
+      if (p.isPaid && !existing.isPaid) existing.isPaid = true
+      if (p.isCompetitor && !existing.isCompetitor) existing.isCompetitor = true
+      if (p.replaceableByCreate && !existing.replaceableByCreate) existing.replaceableByCreate = true
+      // Prefer entry with a name
+      if (p.name && !existing.name) {
+        existing.name = p.name
+        existing.description = p.description
+        existing.wpUrl = p.wpUrl
+        existing.homepageUrl = p.homepageUrl
+        existing.activeInstalls = p.activeInstalls
+        existing.rating = p.rating
+      }
+      // Special: keep elementor-pro as separate from elementor
+      if (p.namespace === 'elementor-pro' && key === 'elementor') {
+        pluginByKey.set('elementor-pro', p)
+      }
+    } else {
+      pluginByKey.set(key, { ...p })
+    }
+  }
+
+  const dedupedPlugins = Array.from(pluginByKey.values())
 
   // Compute derived stats
   const now = new Date()
