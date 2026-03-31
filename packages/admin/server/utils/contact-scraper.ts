@@ -198,6 +198,138 @@ function extractFromJsonLd(html: string): { email: string; name: string | null }
   return null
 }
 
+// Known email provider domains that appear in slugs
+const EMAIL_PROVIDER_SUFFIXES = [
+  'gmail-com', 'yahoo-com', 'hotmail-com', 'outlook-com', 'icloud-com',
+  'aol-com', 'protonmail-com', 'proton-me', 'mail-com', 'ymail-com',
+  'live-com', 'msn-com', 'me-com', 'mac-com', 'comcast-net',
+  'att-net', 'sbcglobal-net', 'verizon-net', 'cox-net',
+]
+
+/**
+ * Decode an email from a WordPress author slug.
+ * Slugs like "alicia-skousengmail-com" → "alicia.skousen@gmail.com"
+ */
+function decodeEmailFromSlug(slug: string): string | null {
+  const normalized = slug.toLowerCase()
+
+  for (const suffix of EMAIL_PROVIDER_SUFFIXES) {
+    if (normalized.endsWith(suffix)) {
+      const provider = suffix.replace('-', '.')  // gmail-com → gmail.com
+      const localPart = normalized.slice(0, -(suffix.length))
+
+      // Strip trailing dash from local part
+      const cleanLocal = localPart.replace(/-$/, '')
+      if (!cleanLocal) continue
+
+      // Convert remaining dashes to dots for the local part
+      const email = `${cleanLocal.replace(/-/g, '.')}@${provider}`
+
+      // Basic validation
+      if (email.includes('@') && email.includes('.') && !email.startsWith('.')) {
+        return email
+      }
+    }
+  }
+
+  // Also check if the slug contains the site's own domain encoded
+  // e.g., "cweinershrivermedia-com" → "cweiner@shrivermedia.com"
+  // This is harder to detect reliably, so skip for now
+
+  return null
+}
+
+/**
+ * Fetch author slugs from WordPress sitemaps.
+ * Tries Yoast/RankMath author-sitemap.xml first, then WP native.
+ */
+async function fetchAuthorSlugs(domain: string): Promise<string[]> {
+  const paths = ['/author-sitemap.xml', '/wp-sitemap-users-1.xml']
+
+  for (const path of paths) {
+    const xml = await fetchPage(`https://${domain}${path}`)
+    if (!xml) continue
+
+    // Extract slugs from <loc> URLs containing /author/
+    const slugs: string[] = []
+    const matches = xml.matchAll(/\/author\/([^/<"]+)/g)
+    for (const match of matches) {
+      if (match[1]) {
+        const slug = match[1].replace(/\/$/, '')
+        if (slug && !slugs.includes(slug)) {
+          slugs.push(slug)
+        }
+      }
+    }
+
+    if (slugs.length > 0) return slugs
+  }
+
+  return []
+}
+
+/**
+ * Try to find emails from author sitemap slugs + Gravatar verification.
+ *
+ * Strategy:
+ * 1. Fetch author sitemap to get all author slugs
+ * 2. Check each slug for encoded email patterns (e.g., "name-gmail-com")
+ * 3. For slugs without obvious emails, generate candidates and verify against Gravatar
+ */
+async function scrapeAuthorSitemap(domain: string): Promise<{
+  email: string | null
+  name: string | null
+  source: string
+} | null> {
+  const slugs = await fetchAuthorSlugs(domain)
+  if (slugs.length === 0) return null
+
+  // First pass: check for email-encoded slugs (highest confidence)
+  for (const slug of slugs) {
+    const decoded = decodeEmailFromSlug(slug)
+    if (decoded) {
+      return { email: decoded, name: null, source: 'author_sitemap' }
+    }
+  }
+
+  // Second pass: for each slug, try to fetch user data and verify via Gravatar
+  // Only try the first few slugs to avoid too many requests
+  for (const slug of slugs.slice(0, 3)) {
+    // Skip generic slugs
+    if (['admin', 'administrator', 'editor', 'wpengine', 'developer'].includes(slug)) continue
+
+    try {
+      const userData = await $fetch<Array<{
+        name?: string
+        slug?: string
+        avatar_urls?: Record<string, string>
+      }>>(`https://${domain}/wp-json/wp/v2/users?slug=${slug}&_fields=name,slug,avatar_urls`, {
+        timeout: 8000,
+        headers: { 'User-Agent': 'CreateStudio/1.0 (Publisher Intelligence)' },
+      })
+
+      if (!userData?.[0]) continue
+
+      const user = userData[0]
+      const avatarUrl = user.avatar_urls?.['96'] || ''
+      const hashMatch = avatarUrl.match(/\/avatar\/([a-f0-9]+)/)
+      const gravatarHash = hashMatch?.[1]
+
+      if (gravatarHash) {
+        const candidates = generateCandidateEmails(user.name || '', slug, domain)
+        const verified = verifyEmailAgainstGravatar(candidates, gravatarHash)
+        if (verified) {
+          return { email: verified, name: user.name || null, source: 'author_sitemap_gravatar' }
+        }
+      }
+    } catch {
+      // Users endpoint may be blocked — that's fine, we still got the slug decode above
+    }
+  }
+
+  return null
+}
+
 /**
  * Fetch the first WordPress user and extract name, slug, and Gravatar hash.
  */
@@ -379,6 +511,18 @@ export async function scrapeDomain(domain: string): Promise<ContactScrapeResult>
             bestEmail = verified
             source = 'gravatar'
           }
+        }
+      }
+    }
+
+    // Try author sitemap: decode emails from slugs + Gravatar verify
+    if (!bestEmail) {
+      const sitemapResult = await scrapeAuthorSitemap(domain)
+      if (sitemapResult?.email) {
+        bestEmail = sitemapResult.email
+        source = sitemapResult.source
+        if (!contactName && sitemapResult.name) {
+          contactName = sitemapResult.name
         }
       }
     }

@@ -9,7 +9,7 @@
  *   limit: number of publishers to scrape (default 100, max 500)
  *   concurrency: parallel requests (default 3, max 10)
  */
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
 import { useAdminOpsDb, publishers, contacts, scrapeJobs } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
@@ -25,13 +25,17 @@ export default defineEventHandler(async (event) => {
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
 
-  // Get enriched WordPress publishers that need contact scraping
+  // rescrape=true allows re-processing already-scraped publishers
+  const rescrape = query.rescrape === 'true'
+
+  const statusFilter = rescrape
+    ? inArray(publishers.scrapeStatus, ['enriched', 'contacts_scraped'])
+    : eq(publishers.scrapeStatus, 'enriched')
+
+  // Get WordPress publishers that need contact scraping
   const pending = await db.select({ id: publishers.id, domain: publishers.domain })
     .from(publishers)
-    .where(and(
-      eq(publishers.scrapeStatus, 'enriched'),
-      eq(publishers.isWordpress, true),
-    ))
+    .where(and(statusFilter, eq(publishers.isWordpress, true)))
     .limit(limit)
 
   if (pending.length === 0) {
