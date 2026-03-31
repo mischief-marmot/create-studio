@@ -561,7 +561,7 @@ export async function scrapeDomain(domain: string): Promise<ContactScrapeResult>
  */
 export async function scrapeBatch(
   domains: string[],
-  concurrency: number = 3,
+  concurrency: number = 8,
   onProgress?: (completed: number, total: number) => void | Promise<void>,
 ): Promise<ContactScrapeResult[]> {
   const results: ContactScrapeResult[] = []

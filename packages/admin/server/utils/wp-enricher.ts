@@ -155,7 +155,7 @@ export async function enrichDomain(domain: string): Promise<EnrichmentResult> {
  */
 export async function enrichBatch(
   domains: string[],
-  concurrency: number = 3,
+  concurrency: number = 10,
   onProgress?: (completed: number, total: number) => void,
 ): Promise<EnrichmentResult[]> {
   const results: EnrichmentResult[] = []

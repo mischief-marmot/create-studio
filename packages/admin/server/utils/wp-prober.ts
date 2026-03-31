@@ -84,7 +84,7 @@ export async function probeDomain(domain: string): Promise<WpProbeResult> {
  */
 export async function probeBatch(
   domains: string[],
-  concurrency: number = 5,
+  concurrency: number = 15,
   onProgress?: (completed: number, total: number) => void,
 ): Promise<WpProbeResult[]> {
   const results: WpProbeResult[] = []

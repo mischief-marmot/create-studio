@@ -7,9 +7,12 @@
  * Only processes publishers with scrape_status = 'plugins_scraped'
  * (i.e., confirmed WordPress sites).
  *
+ * Non-blocking: returns immediately after creating the job, then
+ * processes enrichment in the background.
+ *
  * Query params:
- *   limit: number of publishers to enrich (default 100, max 500)
- *   concurrency: parallel requests (default 3, max 10)
+ *   limit: number of publishers to enrich (default 500, max 2000)
+ *   concurrency: parallel requests (default 10, max 20)
  */
 import { eq } from 'drizzle-orm'
 import { useAdminOpsDb, publishers, scrapeJobs } from '~~/server/utils/admin-ops-db'
@@ -21,8 +24,8 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event)
-  const limit = Math.min(500, Math.max(1, Number(query.limit) || 100))
-  const concurrency = Math.min(10, Math.max(1, Number(query.concurrency) || 3))
+  const limit = Math.min(2000, Math.max(1, Number(query.limit) || 500))
+  const concurrency = Math.min(20, Math.max(1, Number(query.concurrency) || 10))
 
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
@@ -52,81 +55,84 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, message: 'Failed to create enrichment job' })
   }
 
-  const domains = pending.map((p) => p.domain)
-  const domainToId = new Map(pending.map((p) => [p.domain, p.id]))
+  // Dispatch batch processing to background
+  runInBackground(event, async () => {
+    const domains = pending.map((p) => p.domain)
+    const domainToId = new Map(pending.map((p) => [p.domain, p.id]))
 
-  let enrichedCount = 0
-  let failedCount = 0
-  const errors: Array<{ domain: string; error: string; timestamp: string }> = []
-  const categoryCounts: Record<string, number> = {}
+    let enrichedCount = 0
+    let failedCount = 0
+    const errors: Array<{ domain: string; error: string; timestamp: string }> = []
+    const categoryCounts: Record<string, number> = {}
 
-  // Enrich in batches
-  const results = await enrichBatch(domains, concurrency, async (completed, total) => {
-    if (completed % 10 === 0 || completed === total) {
-      await db.update(scrapeJobs)
-        .set({ completedCount: completed, updatedAt: new Date().toISOString() })
-        .where(eq(scrapeJobs.id, job.id))
-    }
-  })
+    // Enrich in batches
+    const results = await enrichBatch(domains, concurrency, async (completed, total) => {
+      if (completed % 10 === 0 || completed === total) {
+        await db.update(scrapeJobs)
+          .set({ completedCount: completed, updatedAt: new Date().toISOString() })
+          .where(eq(scrapeJobs.id, job.id))
+      }
+    })
 
-  // Process results
-  for (const result of results) {
-    const publisherId = domainToId.get(result.domain)
-    if (!publisherId) continue
+    // Process results
+    for (const result of results) {
+      const publisherId = domainToId.get(result.domain)
+      if (!publisherId) continue
 
-    if (result.error) {
-      failedCount++
-      errors.push({ domain: result.domain, error: result.error, timestamp: now })
+      if (result.error) {
+        failedCount++
+        errors.push({ domain: result.domain, error: result.error, timestamp: now })
 
-      // Don't change status on error — leave as plugins_scraped for retry
+        // Don't change status on error — leave as plugins_scraped for retry
+        await db.update(publishers)
+          .set({
+            scrapeError: result.error,
+            lastScrapedAt: now,
+            updatedAt: now,
+          })
+          .where(eq(publishers.id, publisherId))
+        continue
+      }
+
+      enrichedCount++
+
+      if (result.siteCategory) {
+        categoryCounts[result.siteCategory] = (categoryCounts[result.siteCategory] || 0) + 1
+      }
+
       await db.update(publishers)
         .set({
-          scrapeError: result.error,
+          postCount: result.postCount,
+          oldestPostDate: result.oldestPostDate,
+          newestPostDate: result.newestPostDate,
+          siteCategory: result.siteCategory,
+          topContent: result.topContent,
+          scrapeStatus: 'enriched',
+          scrapeError: null,
           lastScrapedAt: now,
           updatedAt: now,
         })
         .where(eq(publishers.id, publisherId))
-      continue
     }
 
-    enrichedCount++
-
-    if (result.siteCategory) {
-      categoryCounts[result.siteCategory] = (categoryCounts[result.siteCategory] || 0) + 1
-    }
-
-    await db.update(publishers)
+    // Mark job complete
+    await db.update(scrapeJobs)
       .set({
-        postCount: result.postCount,
-        oldestPostDate: result.oldestPostDate,
-        newestPostDate: result.newestPostDate,
-        siteCategory: result.siteCategory,
-        topContent: result.topContent,
-        scrapeStatus: 'enriched',
-        scrapeError: null,
-        lastScrapedAt: now,
-        updatedAt: now,
+        status: 'completed',
+        completedCount: enrichedCount,
+        failedCount,
+        completedAt: new Date().toISOString(),
+        errorLog: errors.length > 0 ? errors : null,
+        updatedAt: new Date().toISOString(),
       })
-      .where(eq(publishers.id, publisherId))
-  }
+      .where(eq(scrapeJobs.id, job.id))
+  })
 
-  // Mark job complete
-  await db.update(scrapeJobs)
-    .set({
-      status: 'completed',
-      completedCount: enrichedCount,
-      failedCount,
-      completedAt: new Date().toISOString(),
-      errorLog: errors.length > 0 ? errors : null,
-      updatedAt: new Date().toISOString(),
-    })
-    .where(eq(scrapeJobs.id, job.id))
-
+  // Return immediately
   return {
     success: true,
     jobId: job.id,
-    enriched: enrichedCount,
-    failed: failedCount,
-    categories: categoryCounts,
+    status: 'started',
+    count: pending.length,
   }
 })

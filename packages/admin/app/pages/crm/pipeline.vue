@@ -147,7 +147,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 definePageMeta({
   layout: 'admin'
@@ -175,6 +175,9 @@ interface ScrapeJob {
 const stats = ref<Stats | null>(null)
 const jobs = ref<ScrapeJob[]>([])
 const jobsLoading = ref(false)
+let pollInterval: ReturnType<typeof setInterval> | null = null
+
+const hasRunningJobs = computed(() => jobs.value.some((j) => j.status === 'running'))
 
 const fetchStats = async () => {
   try {
@@ -189,6 +192,24 @@ const fetchJobs = async () => {
   try {
     const response = await $fetch<{ data: ScrapeJob[] }>('/api/admin/pipeline/jobs?limit=20')
     jobs.value = response.data
+
+    // Auto-poll: start polling when running jobs exist, stop when they finish
+    if (hasRunningJobs.value && !pollInterval) {
+      pollInterval = setInterval(async () => {
+        try {
+          const resp = await $fetch<{ data: ScrapeJob[] }>('/api/admin/pipeline/jobs?limit=20')
+          jobs.value = resp.data
+          // Also refresh stats while jobs are running
+          await fetchStats()
+        } catch { /* ignore */ }
+
+        // Stop polling when no more running jobs
+        if (!hasRunningJobs.value && pollInterval) {
+          clearInterval(pollInterval)
+          pollInterval = null
+        }
+      }, 3000)
+    }
   } catch {
     // Non-critical
   } finally {
@@ -219,5 +240,12 @@ const formatDateTime = (dateString: string): string => {
 onMounted(() => {
   fetchStats()
   fetchJobs()
+})
+
+onUnmounted(() => {
+  if (pollInterval) {
+    clearInterval(pollInterval)
+    pollInterval = null
+  }
 })
 </script>
