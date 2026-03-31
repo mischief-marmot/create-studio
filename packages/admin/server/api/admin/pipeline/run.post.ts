@@ -1,19 +1,21 @@
 /**
  * POST /api/admin/pipeline/run
  *
- * Runs the full pipeline, prioritizing publishers furthest along.
- * Fills the batch from the bottom up:
- *   1. enriched → scrape contacts
- *   2. plugins_scraped → enrich → scrape contacts
- *   3. pending → probe → enrich → scrape contacts
+ * Full pipeline in one pass. Fills batch from bottom up (most-progressed first),
+ * then each publisher flows through all remaining stages:
  *
- * Each publisher flows through all remaining stages in one run.
+ *   1. Probe — detect WordPress, get REST namespaces
+ *   2. Detect plugins — scan homepage + post HTML for /wp-content/plugins/ paths, flag premium
+ *   3. Enrich publisher — post counts, categories, top content
+ *   4. Scrape contacts — emails, social links, Gravatar verification
+ *   5. Enrich plugins — look up new plugins on wordpress.org (once per plugin, not per publisher)
+ *
  * Non-blocking — returns immediately, runs in background.
  *
  * Query params:
  *   limit: batch size (default 50, max 2000)
  */
-import { eq, and } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import { useAdminOpsDb, publishers, plugins, publisherPlugins, contacts, scrapeJobs } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
@@ -28,7 +30,6 @@ export default defineEventHandler(async (event) => {
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
 
-  // Create job
   const [job] = await db.insert(scrapeJobs).values({
     type: 'full_pipeline',
     status: 'running',
@@ -45,6 +46,7 @@ export default defineEventHandler(async (event) => {
   runInBackground(event, async () => {
     let totalProcessed = 0
     let totalFailed = 0
+    let allLockedIds: number[] = []
 
     const updateJob = async (stage: string, completed: number, total: number) => {
       await db.update(scrapeJobs).set({
@@ -55,44 +57,37 @@ export default defineEventHandler(async (event) => {
       }).where(eq(scrapeJobs.id, job.id))
     }
 
-    // Track all IDs we lock so we can unlock on completion/failure
-    let allLockedIds: number[] = []
-
     try {
       // === Gather batch, filling from bottom up ===
-      // Over-fetch to account for locked IDs being filtered out
       const overFetch = limit * 3
 
-      // 1. Enriched publishers → need contact scraping only
+      // Priority 1: enriched → need contacts only
       const rawContacts = await db.select({ id: publishers.id, domain: publishers.domain })
         .from(publishers)
         .where(and(eq(publishers.scrapeStatus, 'enriched'), eq(publishers.isWordpress, true)))
         .limit(overFetch)
-      const availContacts = filterUnlocked(rawContacts)
-      const needContacts = availContacts.slice(0, limit)
+      const needContacts = filterUnlocked(rawContacts).slice(0, limit)
       let remaining = limit - needContacts.length
 
-      // 2. Plugins-scraped publishers → need enrich + contacts
+      // Priority 2: plugins_scraped → need enrich + contacts
       let needEnrich: typeof needContacts = []
       if (remaining > 0) {
-        const rawEnrich = await db.select({ id: publishers.id, domain: publishers.domain })
+        const raw = await db.select({ id: publishers.id, domain: publishers.domain })
           .from(publishers)
           .where(and(eq(publishers.scrapeStatus, 'plugins_scraped'), eq(publishers.isWordpress, true)))
           .limit(overFetch)
-        const availEnrich = filterUnlocked(rawEnrich)
-        needEnrich = availEnrich.slice(0, remaining)
+        needEnrich = filterUnlocked(raw).slice(0, remaining)
         remaining -= needEnrich.length
       }
 
-      // 3. Pending publishers → need probe + enrich + contacts
+      // Priority 3: pending → need full pipeline
       let needProbe: typeof needContacts = []
       if (remaining > 0) {
-        const rawProbe = await db.select({ id: publishers.id, domain: publishers.domain })
+        const raw = await db.select({ id: publishers.id, domain: publishers.domain })
           .from(publishers)
           .where(eq(publishers.scrapeStatus, 'pending'))
           .limit(overFetch)
-        const availProbe = filterUnlocked(rawProbe)
-        needProbe = availProbe.slice(0, remaining)
+        needProbe = filterUnlocked(raw).slice(0, remaining)
       }
 
       const totalBatch = needContacts.length + needEnrich.length + needProbe.length
@@ -104,21 +99,53 @@ export default defineEventHandler(async (event) => {
         return
       }
 
-      // Lock all claimed IDs
       allLockedIds = lockPublisherIds([
         ...needContacts.map((p) => p.id),
         ...needEnrich.map((p) => p.id),
         ...needProbe.map((p) => p.id),
       ])
 
-      // === STAGE: Probe (only for needProbe set) ===
+      // Load plugin map
+      const knownPlugins = await db.select().from(plugins)
+      const pluginMap = new Map(knownPlugins.map((p) => [p.namespace, p]))
+
+      // Helper to upsert a plugin
+      const upsertPlugin = async (namespace: string, isPaid?: boolean) => {
+        let plugin = pluginMap.get(namespace)
+        if (!plugin) {
+          try {
+            const [created] = await db.insert(plugins).values({
+              namespace, isPaid: isPaid || false, createdAt: now, updatedAt: now,
+            }).returning()
+            if (created) { plugin = created; pluginMap.set(namespace, created) }
+          } catch {
+            const [existing] = await db.select().from(plugins).where(eq(plugins.namespace, namespace)).limit(1)
+            if (existing) { plugin = existing; pluginMap.set(namespace, existing) }
+          }
+        }
+        if (plugin && isPaid && !plugin.isPaid) {
+          await db.update(plugins).set({ isPaid: true, updatedAt: now }).where(eq(plugins.id, plugin.id))
+          plugin = { ...plugin, isPaid: true }
+          pluginMap.set(namespace, plugin)
+        }
+        return plugin
+      }
+
+      // Helper to link publisher ↔ plugin
+      const linkPlugin = async (publisherId: number, pluginId: number) => {
+        try {
+          await db.insert(publisherPlugins).values({ publisherId, pluginId, discoveredAt: now })
+        } catch { /* dup */ }
+      }
+
+      // ================================================================
+      // STAGE 1: Probe (pending publishers only)
+      // ================================================================
       const wordpressFromProbe: Array<{ id: number; domain: string }> = []
 
       if (needProbe.length > 0) {
         await updateJob('probe', 0, needProbe.length)
 
-        const knownPlugins = await db.select().from(plugins)
-        const pluginMap = new Map(knownPlugins.map((p) => [p.namespace, p]))
         const probeResults = await probeBatch(
           needProbe.map((p) => p.domain), 15,
           async (completed) => { await updateJob('probe', completed, needProbe.length) },
@@ -139,15 +166,18 @@ export default defineEventHandler(async (event) => {
           }
 
           if (result.isWordpress) {
-            // WordPress site → continue through pipeline
             await db.update(publishers).set({
               isWordpress: true, restApiAvailable: result.restApiAvailable,
               siteName: result.siteName || undefined,
               scrapeStatus: 'plugins_scraped', scrapeError: null, lastScrapedAt: now, updatedAt: now,
             }).where(eq(publishers.id, publisherId))
             wordpressFromProbe.push({ id: publisherId, domain: result.domain })
+
+            for (const ns of result.namespaces) {
+              const plugin = await upsertPlugin(ns)
+              if (plugin) await linkPlugin(publisherId, plugin.id)
+            }
           } else {
-            // Not WordPress → skip to terminal status
             await db.update(publishers).set({
               isWordpress: false, restApiAvailable: result.restApiAvailable,
               siteName: result.siteName || undefined,
@@ -155,28 +185,56 @@ export default defineEventHandler(async (event) => {
             }).where(eq(publishers.id, publisherId))
             totalProcessed++
           }
+        }
+      }
 
-          for (const namespace of result.namespaces) {
-            let plugin = pluginMap.get(namespace)
-            if (!plugin) {
-              try {
-                const [created] = await db.insert(plugins).values({ namespace, createdAt: now, updatedAt: now }).returning()
-                if (created) { plugin = created; pluginMap.set(namespace, created) }
-              } catch {
-                const [existing] = await db.select().from(plugins).where(eq(plugins.namespace, namespace)).limit(1)
-                if (existing) { plugin = existing; pluginMap.set(namespace, existing) }
-              }
-            }
-            if (plugin) {
-              try { await db.insert(publisherPlugins).values({ publisherId, pluginId: plugin.id, discoveredAt: now }) } catch { /* dup */ }
-            }
+      // ================================================================
+      // STAGE 2: Detect plugins via HTML scanning
+      // (all WordPress publishers that need enrich or were just probed)
+      // ================================================================
+      const allWordpress = [...needEnrich, ...wordpressFromProbe, ...needContacts]
+
+      if (allWordpress.length > 0) {
+        await updateJob('detect_plugins', 0, allWordpress.length)
+
+        // Get existing namespaces per publisher
+        const existingLinks = await db.select({
+          publisherId: publisherPlugins.publisherId,
+          namespace: plugins.namespace,
+        })
+          .from(publisherPlugins)
+          .innerJoin(plugins, eq(publisherPlugins.pluginId, plugins.id))
+
+        const pubNamespaces = new Map<number, string[]>()
+        for (const link of existingLinks) {
+          const ns = pubNamespaces.get(link.publisherId) || []
+          ns.push(link.namespace)
+          pubNamespaces.set(link.publisherId, ns)
+        }
+
+        const detectResults = await detectPluginsBatch(
+          allWordpress.map((p) => ({ domain: p.domain, namespaces: pubNamespaces.get(p.id) })),
+          5,
+          async (completed) => { await updateJob('detect_plugins', completed, allWordpress.length) },
+        )
+
+        const domainToId = new Map(allWordpress.map((p) => [p.domain, p.id]))
+
+        for (const result of detectResults) {
+          const publisherId = domainToId.get(result.domain)
+          if (!publisherId) continue
+
+          for (const detected of result.plugins) {
+            const plugin = await upsertPlugin(detected.slug, detected.isPremium)
+            if (plugin) await linkPlugin(publisherId, plugin.id)
           }
         }
       }
 
-      // === STAGE: Enrich (needEnrich + WordPress from probe) ===
+      // ================================================================
+      // STAGE 3: Enrich publishers (needEnrich + WordPress from probe)
+      // ================================================================
       const toEnrich = [...needEnrich, ...wordpressFromProbe]
-
       const enrichedIds: Array<{ id: number; domain: string }> = []
 
       if (toEnrich.length > 0) {
@@ -212,7 +270,9 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // === STAGE: Contacts (needContacts + newly enriched) ===
+      // ================================================================
+      // STAGE 4: Scrape contacts (needContacts + newly enriched)
+      // ================================================================
       const toScrapeContacts = [...needContacts, ...enrichedIds]
 
       if (toScrapeContacts.length > 0) {
@@ -273,7 +333,46 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // Mark pipeline complete
+      // ================================================================
+      // STAGE 5: Enrich newly discovered plugins on wordpress.org
+      // ================================================================
+      const unenrichedPlugins = await db.select({ id: plugins.id, namespace: plugins.namespace })
+        .from(plugins)
+        .where(isNull(plugins.enrichedAt))
+        .limit(100)
+
+      if (unenrichedPlugins.length > 0) {
+        await updateJob('enrich_plugins', 0, unenrichedPlugins.length)
+
+        const enrichResults = await enrichPluginBatch(
+          unenrichedPlugins.map((p) => p.namespace),
+          async (completed, total) => { await updateJob('enrich_plugins', completed, total) },
+        )
+
+        const nsToId = new Map(unenrichedPlugins.map((p) => [p.namespace, p.id]))
+
+        for (const result of enrichResults) {
+          const pluginId = nsToId.get(result.namespace)
+          if (!pluginId) continue
+
+          if (result.found) {
+            await db.update(plugins).set({
+              name: result.name, wpSlug: result.wpSlug, wpUrl: result.wpUrl,
+              homepageUrl: result.homepageUrl, description: result.description,
+              activeInstalls: result.activeInstalls, rating: result.rating,
+              enrichedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+            }).where(eq(plugins.id, pluginId))
+          } else {
+            await db.update(plugins).set({
+              enrichedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+            }).where(eq(plugins.id, pluginId))
+          }
+        }
+      }
+
+      // ================================================================
+      // Done
+      // ================================================================
       await db.update(scrapeJobs).set({
         status: 'completed',
         totalCount: totalProcessed + totalFailed,
@@ -291,7 +390,6 @@ export default defineEventHandler(async (event) => {
         updatedAt: new Date().toISOString(),
       }).where(eq(scrapeJobs.id, job.id))
     } finally {
-      // Always release locks
       unlockPublisherIds(allLockedIds)
     }
   })

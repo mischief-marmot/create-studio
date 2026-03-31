@@ -353,8 +353,10 @@ const jobStage = (status: string): string | null => {
   const stage = status.split(':')[1]
   const labels: Record<string, string> = {
     probe: 'Probing WordPress',
-    enrich: 'Enriching',
+    detect_plugins: 'Detecting Plugins',
+    enrich: 'Enriching Publishers',
     contacts: 'Scraping Contacts',
+    enrich_plugins: 'Enriching Plugins',
   }
   return labels[stage || ''] || stage || null
 }
