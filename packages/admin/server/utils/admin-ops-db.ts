@@ -292,7 +292,7 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
         ('flavor', 'Flavor', 'recipe', 0, 1, 1, datetime('now')),
         ('tasty-recipes', 'Tasty Recipes', 'recipe', 1, 1, 1, datetime('now')),
         ('jeherve-flavors-flavor', 'Flavor (Jeherve)', 'recipe', 0, 1, 1, datetime('now')),
-        ('mv-create', 'Create', 'recipe', 1, 0, 0, datetime('now')),
+        ('mv-create', 'Create', 'recipe', 0, 0, 0, datetime('now')),
         ('zip-recipes', 'Zip Recipes', 'recipe', 1, 1, 1, datetime('now')),
         ('easy-recipe', 'Easy Recipe', 'recipe', 0, 1, 1, datetime('now')),
         ('yoast', 'Yoast SEO', 'seo', 1, 0, 0, datetime('now')),

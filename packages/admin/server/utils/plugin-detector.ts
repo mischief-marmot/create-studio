@@ -40,7 +40,7 @@ const PREMIUM_DIRECTORIES = new Set([
   // Misc premium
   'shiftnav-pro', 'link-whisper', 'link-whisper-premium',
   'wp-rocket', 'perfmatters', 'imagify',
-  'mediavine-create', // our own — has pro tier
+  // mediavine-create: free by default, pro status determined later
   // WooCommerce paid extensions
   'woocommerce-subscriptions', 'woocommerce-memberships', 'woocommerce-bookings',
   'woocommerce-product-addons',
