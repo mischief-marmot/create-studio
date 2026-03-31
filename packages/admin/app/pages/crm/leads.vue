@@ -40,15 +40,28 @@
               <SparklesIcon v-else class="w-4 h-4" />
               {{ enriching ? 'Enriching...' : 'Enrich (100)' }}
             </button>
-            <button
-              class="btn btn-outline btn-sm"
-              :disabled="scrapingContacts"
-              @click="runContactScrape"
-            >
-              <span v-if="scrapingContacts" class="loading loading-spinner loading-xs"></span>
-              <UserIcon v-else class="w-4 h-4" />
-              {{ scrapingContacts ? 'Scraping...' : 'Scrape Contacts (100)' }}
-            </button>
+            <div class="flex items-center gap-1">
+              <button
+                class="btn btn-outline btn-sm"
+                :class="{ 'rounded-r-none': true }"
+                :disabled="scrapingContacts"
+                @click="runContactScrape"
+              >
+                <span v-if="scrapingContacts" class="loading loading-spinner loading-xs"></span>
+                <UserIcon v-else class="w-4 h-4" />
+                {{ scrapingContacts ? 'Scraping...' : rescrapeMode ? 'Re-scrape Contacts (100)' : 'Scrape Contacts (100)' }}
+              </button>
+              <button
+                class="btn btn-outline btn-sm rounded-l-none border-l-0 px-2"
+                :class="rescrapeMode ? 'btn-warning' : ''"
+                @click="rescrapeMode = !rescrapeMode"
+                :title="rescrapeMode ? 'Re-scrape mode ON — will re-process already-scraped publishers' : 'Click to enable re-scrape mode'"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -569,6 +582,7 @@ const scraping = ref(false)
 const probing = ref(false)
 const enriching = ref(false)
 const scrapingContacts = ref(false)
+const rescrapeMode = ref(false)
 const scrapeResult = ref<{ success: boolean; message: string } | null>(null)
 
 // Drawer
@@ -807,7 +821,7 @@ const runContactScrape = async () => {
       withEmail: number
       withSocial: number
       failed: number
-    }>('/api/admin/pipeline/scrape-contacts?limit=100', { method: 'POST' })
+    }>(`/api/admin/pipeline/scrape-contacts?limit=100${rescrapeMode.value ? '&rescrape=true' : ''}`, { method: 'POST' })
 
     scrapeResult.value = {
       success: true,
