@@ -83,7 +83,18 @@
       <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm">
         <div class="px-6 py-4 border-b border-base-300/50 flex items-center justify-between">
           <h2 class="text-sm font-semibold text-base-content uppercase tracking-wider">Recent Jobs</h2>
-          <button class="btn btn-ghost btn-xs" @click="fetchJobs">Refresh</button>
+          <div class="flex items-center gap-2">
+            <button
+              v-if="hasStalledJobs"
+              class="btn btn-warning btn-xs"
+              :disabled="resettingStalled"
+              @click="resetStalled"
+            >
+              <span v-if="resettingStalled" class="loading loading-spinner loading-xs"></span>
+              Reset Stalled
+            </button>
+            <button class="btn btn-ghost btn-xs" @click="fetchJobs">Refresh</button>
+          </div>
         </div>
 
         <!-- Loading -->
@@ -178,6 +189,7 @@ interface ScrapeJob {
   startedAt: string | null
   completedAt: string | null
   createdAt: string
+  updatedAt: string | null
 }
 
 const stats = ref<Stats | null>(null)
@@ -186,6 +198,11 @@ const jobsLoading = ref(false)
 let pollInterval: ReturnType<typeof setInterval> | null = null
 
 const hasRunningJobs = computed(() => jobs.value.some((j) => j.status.startsWith('running')))
+const hasStalledJobs = computed(() => {
+  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+  return jobs.value.some((j) => j.status.startsWith('running') && j.updatedAt && j.updatedAt < fiveMinutesAgo)
+})
+const resettingStalled = ref(false)
 
 const fetchStats = async () => {
   try {
@@ -222,6 +239,18 @@ const fetchJobs = async () => {
     // Non-critical
   } finally {
     jobsLoading.value = false
+  }
+}
+
+const resetStalled = async () => {
+  resettingStalled.value = true
+  try {
+    await $fetch('/api/admin/pipeline/reset-stalled', { method: 'POST' })
+    await fetchJobs()
+  } catch {
+    // ignore
+  } finally {
+    resettingStalled.value = false
   }
 }
 
