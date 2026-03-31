@@ -142,7 +142,10 @@ export async function detectPlugins(
     if (existingNamespaces?.length) {
       for (const ns of existingNamespaces) {
         const base = ns.split('/')[0]?.toLowerCase()
-        if (base) addPlugin(base, 'namespace', false)
+        if (base) {
+          const isPremium = PREMIUM_DIRECTORIES.has(base) || PAID_ONLY_PLUGINS.has(base) || base.endsWith('-premium') || base.endsWith('-pro')
+          addPlugin(base, 'namespace', isPremium)
+        }
       }
     }
 
