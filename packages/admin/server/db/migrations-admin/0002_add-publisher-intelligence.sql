@@ -108,7 +108,7 @@ CREATE TABLE `ScrapeJobs` (
 	`started_at` text,
 	`completed_at` text,
 	`error_log` text,
-	`started_by` integer REFERENCES `Admins`(`id`),
+	`started_by` integer,
 	`createdAt` text,
 	`updatedAt` text
 );

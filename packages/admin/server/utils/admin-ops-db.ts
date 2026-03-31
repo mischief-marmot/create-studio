@@ -213,7 +213,7 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
       started_at TEXT,
       completed_at TEXT,
       error_log TEXT,
-      started_by INTEGER REFERENCES Admins(id),
+      started_by INTEGER,
       createdAt TEXT,
       updatedAt TEXT
     );

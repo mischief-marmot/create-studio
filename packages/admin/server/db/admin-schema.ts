@@ -190,7 +190,7 @@ export const scrapeJobs = sqliteTable('ScrapeJobs', {
   startedAt: text('started_at'),
   completedAt: text('completed_at'),
   errorLog: text('error_log', { mode: 'json' }).$type<ScrapeJobError[]>(),
-  startedBy: integer('started_by').references(() => admins.id),
+  startedBy: integer('started_by'), // admin who started the job (no FK — Admins table may be empty locally)
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 }, (table) => [
