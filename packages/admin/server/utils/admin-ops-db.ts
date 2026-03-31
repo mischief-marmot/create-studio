@@ -258,6 +258,15 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
     CREATE INDEX IF NOT EXISTS idx_outreach_emails_sent_at ON OutreachEmails (sent_at);
   `)
 
+  // Seed admin user if none exists
+  const adminCount = sqlite.prepare('SELECT COUNT(*) as count FROM Admins').get() as { count: number }
+  if (adminCount.count === 0) {
+    sqlite.exec(`
+      INSERT INTO Admins (email, password, firstname, lastname, role, createdAt) VALUES
+        ('jmlallier1291@gmail.com', '$2b$10$9z.9.hYh9lma7Ers6NeuQ.PuRSwYTctjLjQ.fqlVuMnX9AZcyUpNW', 'JM', 'Lallier', 'super_admin', datetime('now'));
+    `)
+  }
+
   // Seed reference data if tables are empty
   const networkCount = sqlite.prepare('SELECT COUNT(*) as count FROM AdNetworks').get() as { count: number }
   if (networkCount.count === 0) {
