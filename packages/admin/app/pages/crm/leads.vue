@@ -34,6 +34,17 @@
             </svg>
             {{ probing ? 'Probing...' : 'Probe WordPress (100)' }}
           </button>
+          <button
+            class="btn btn-outline btn-sm"
+            :disabled="enriching"
+            @click="runEnrich"
+          >
+            <span v-if="enriching" class="loading loading-spinner loading-xs"></span>
+            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+            </svg>
+            {{ enriching ? 'Enriching...' : 'Enrich (100)' }}
+          </button>
         </div>
       </div>
 
@@ -306,6 +317,7 @@ const error = ref<string | null>(null)
 const stats = ref<Stats | null>(null)
 const scraping = ref(false)
 const probing = ref(false)
+const enriching = ref(false)
 const scrapeResult = ref<{ success: boolean; message: string } | null>(null)
 
 // Filters
@@ -435,6 +447,40 @@ const runProbe = async () => {
     }
   } finally {
     probing.value = false
+  }
+}
+
+const runEnrich = async () => {
+  enriching.value = true
+  scrapeResult.value = null
+
+  try {
+    const result = await $fetch<{
+      success: boolean
+      enriched: number
+      failed: number
+      categories: Record<string, number>
+    }>('/api/admin/pipeline/enrich-publishers?limit=100', { method: 'POST' })
+
+    const catSummary = Object.entries(result.categories)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([cat, count]) => `${cat}: ${count}`)
+      .join(', ')
+
+    scrapeResult.value = {
+      success: true,
+      message: `Enriched ${result.enriched} publishers (${result.failed} failed). Categories: ${catSummary || 'none detected'}`,
+    }
+
+    await Promise.all([fetchPublishers(), fetchStats()])
+  } catch (err: any) {
+    scrapeResult.value = {
+      success: false,
+      message: err?.data?.message || 'Enrichment failed',
+    }
+  } finally {
+    enriching.value = false
   }
 }
 
