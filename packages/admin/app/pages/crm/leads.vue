@@ -535,6 +535,46 @@
             </div>
           </div>
 
+          <!-- Create Studio -->
+          <div v-if="publisherDetail?.publisher.studioData">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Create Studio</div>
+            <div class="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-medium text-base-content">Create User</span>
+                <div class="flex gap-1.5">
+                  <span v-if="publisherDetail.publisher.studioData.isActive" class="badge badge-xs badge-success">Active</span>
+                  <span v-else class="badge badge-xs badge-ghost">Inactive</span>
+                  <span v-if="publisherDetail.publisher.studioData.isLegacy" class="badge badge-xs badge-warning">Legacy</span>
+                  <span v-else class="badge badge-xs badge-info">v2.0+</span>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span class="text-base-content/40">Version</span>
+                  <div class="font-medium text-base-content">{{ publisherDetail.publisher.studioData.createVersion || 'Unknown' }}</div>
+                </div>
+                <div>
+                  <span class="text-base-content/40">Subscription</span>
+                  <div class="font-medium text-base-content capitalize">{{ publisherDetail.publisher.studioData.subscriptionTier || 'Free' }}</div>
+                </div>
+                <div>
+                  <span class="text-base-content/40">Last Active</span>
+                  <div class="font-medium text-base-content">
+                    {{ publisherDetail.publisher.studioData.lastActiveAt ? formatDate(publisherDetail.publisher.studioData.lastActiveAt) : 'Never' }}
+                  </div>
+                </div>
+                <div>
+                  <span class="text-base-content/40">Status</span>
+                  <div class="font-medium text-base-content capitalize">{{ publisherDetail.publisher.studioData.subscriptionStatus || 'Free' }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="publisherDetail?.publisher.createStudioSiteId">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Create Studio</div>
+            <div class="text-sm text-base-content/60">Linked (Site #{{ publisherDetail.publisher.createStudioSiteId }})</div>
+          </div>
+
           <!-- Scrape Status -->
           <div>
             <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Scrape Status</div>
@@ -612,6 +652,14 @@ interface Publisher {
   contactName: string | null
   contactSource: string | null
   createStudioSiteId: number | null
+  studioData: {
+    createVersion: string | null
+    lastActiveAt: string | null
+    subscriptionTier: string | null
+    subscriptionStatus: string | null
+    isActive: boolean
+    isLegacy: boolean
+  } | null
   createdAt: string
 }
 
