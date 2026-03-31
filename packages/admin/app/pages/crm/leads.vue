@@ -387,6 +387,34 @@
             <span v-else class="text-sm text-base-content/40">&mdash;</span>
           </div>
 
+          <!-- Contact Info -->
+          <div v-if="publisherDetail?.publisher.contactEmail || selectedPublisher.contactEmail || selectedPublisher.contactId">
+            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Contact</div>
+            <div class="bg-base-200/50 rounded-lg p-3 flex items-start gap-3">
+              <img v-if="contactGravatarUrl"
+                :src="contactGravatarUrl"
+                class="w-12 h-12 rounded-full flex-shrink-0"
+                alt=""
+              />
+              <div class="space-y-1 min-w-0">
+                <div v-if="publisherDetail?.publisher.contactName || selectedPublisher.contactName" class="font-medium text-base-content text-sm">
+                  {{ publisherDetail?.publisher.contactName || selectedPublisher.contactName }}
+                </div>
+                <div v-if="publisherDetail?.publisher.contactEmail || selectedPublisher.contactEmail" class="flex items-center gap-2">
+                  <svg class="w-3.5 h-3.5 text-base-content/40 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  <a :href="`mailto:${publisherDetail?.publisher.contactEmail || selectedPublisher.contactEmail}`" class="text-sm text-primary hover:underline">
+                    {{ publisherDetail?.publisher.contactEmail || selectedPublisher.contactEmail }}
+                  </a>
+                </div>
+                <div v-if="publisherDetail?.publisher.contactSource || selectedPublisher.contactSource" class="text-xs text-base-content/40">
+                  Found via {{ (publisherDetail?.publisher.contactSource || selectedPublisher.contactSource || '').replace(/_/g, ' ') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Publishing Stats -->
           <div>
             <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Publishing Stats</div>
@@ -474,27 +502,6 @@
             </div>
           </div>
 
-          <!-- Contact Info -->
-          <div v-if="selectedPublisher.contactEmail || selectedPublisher.contactId">
-            <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Contact</div>
-            <div class="bg-base-200/50 rounded-lg p-3 space-y-1">
-              <div v-if="selectedPublisher.contactName" class="font-medium text-base-content text-sm">
-                {{ selectedPublisher.contactName }}
-              </div>
-              <div v-if="selectedPublisher.contactEmail" class="flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 text-base-content/40 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                </svg>
-                <a :href="`mailto:${selectedPublisher.contactEmail}`" class="text-sm text-primary hover:underline">
-                  {{ selectedPublisher.contactEmail }}
-                </a>
-              </div>
-              <div v-if="selectedPublisher.contactSource" class="text-xs text-base-content/40">
-                Found via {{ selectedPublisher.contactSource.replace(/_/g, ' ') }}
-              </div>
-            </div>
-          </div>
-
           <!-- Scrape Status -->
           <div>
             <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Scrape Status</div>
@@ -518,6 +525,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { getGravatarUrl } from '~/composables/useAvatar'
 import {
   ArrowPathIcon,
   GlobeAltIcon,
@@ -682,6 +690,12 @@ const pipelineBarWidth = (status: string): string => {
 }
 
 // Drawer computed
+const contactGravatarUrl = computed(() => {
+  const email = publisherDetail.value?.publisher.contactEmail || selectedPublisher.value?.contactEmail
+  if (!email) return null
+  return getGravatarUrl(email, 80)
+})
+
 const drawerYearsPublishing = computed(() => {
   if (publisherDetail.value?.stats.yearsPublishing != null) {
     const y = publisherDetail.value.stats.yearsPublishing

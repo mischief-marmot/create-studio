@@ -50,6 +50,15 @@ export default defineEventHandler(async (event) => {
     .innerJoin(plugins, eq(publisherPlugins.pluginId, plugins.id))
     .where(eq(publisherPlugins.publisherId, id))
 
+  // Deduplicate plugins by base namespace
+  const seen = new Set<string>()
+  const dedupedPlugins = pluginRows.filter((p) => {
+    const base = (p.namespace.split('/')[0] || p.namespace).toLowerCase()
+    if (seen.has(base)) return false
+    seen.add(base)
+    return true
+  })
+
   // Compute derived stats
   const now = new Date()
   const newestPostDate = row.publisher.newestPostDate ? new Date(row.publisher.newestPostDate) : null
@@ -73,9 +82,9 @@ export default defineEventHandler(async (event) => {
     ? Math.round((row.publisher.postCount / monthsSinceOldest) * 10) / 10
     : null
 
-  const paidPluginCount = pluginRows.filter((p) => p.isPaid).length
-  const competitorPluginCount = pluginRows.filter((p) => p.isCompetitor).length
-  const replaceablePluginCount = pluginRows.filter((p) => p.replaceableByCreate).length
+  const paidPluginCount = dedupedPlugins.filter((p) => p.isPaid).length
+  const competitorPluginCount = dedupedPlugins.filter((p) => p.isCompetitor).length
+  const replaceablePluginCount = dedupedPlugins.filter((p) => p.replaceableByCreate).length
 
   return {
     publisher: {
@@ -84,7 +93,7 @@ export default defineEventHandler(async (event) => {
       contactName: row.contactName,
       contactSource: row.contactSource,
     },
-    plugins: pluginRows,
+    plugins: dedupedPlugins,
     stats: {
       isActive,
       yearsPublishing,

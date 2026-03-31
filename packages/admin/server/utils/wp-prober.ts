@@ -21,6 +21,17 @@ interface WpJsonResponse {
 }
 
 /**
+ * Normalize a REST API namespace to a base plugin name.
+ * e.g. "rank-math/v1/ca" → "rankmath", "wc/v2" → "wc", "elementor/v1/documents" → "elementor"
+ */
+function normalizeNamespace(ns: string): string {
+  // Take the first path segment (before any /)
+  const base = ns.split('/')[0] || ns
+  // Normalize: lowercase, strip hyphens/underscores, strip trailing version numbers
+  return base.toLowerCase().replace(/[-_]/g, '').replace(/v\d+$/, '')
+}
+
+/**
  * Probe a single domain's /wp-json/ endpoint.
  * Returns plugin namespaces and WordPress detection result.
  */
@@ -55,11 +66,14 @@ export async function probeDomain(domain: string): Promise<WpProbeResult> {
     const coreNamespaces = new Set(['wp/v2', 'wp-site-health/v1', 'wp-block-editor/v1', 'oembed/1.0'])
     const pluginNamespaces = namespaces.filter((ns: string) => !coreNamespaces.has(ns) && ns !== '')
 
+    // Normalize to base plugin names: "rank-math/v1/ca" → "rankmath", "wc/v2" → "wc"
+    const normalizedNamespaces = [...new Set(pluginNamespaces.map(normalizeNamespace))]
+
     return {
       domain,
       isWordpress: true,
       restApiAvailable: true,
-      namespaces: pluginNamespaces,
+      namespaces: normalizedNamespaces,
       siteName: response.name || undefined,
     }
   } catch (err: any) {
