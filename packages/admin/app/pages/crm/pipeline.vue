@@ -199,8 +199,8 @@ let pollInterval: ReturnType<typeof setInterval> | null = null
 
 const hasRunningJobs = computed(() => jobs.value.some((j) => j.status.startsWith('running')))
 const hasStalledJobs = computed(() => {
-  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
-  return jobs.value.some((j) => j.status.startsWith('running') && j.updatedAt && j.updatedAt < fiveMinutesAgo)
+  const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString()
+  return jobs.value.some((j) => j.status.startsWith('running') && j.updatedAt && j.updatedAt < oneMinuteAgo)
 })
 const resettingStalled = ref(false)
 

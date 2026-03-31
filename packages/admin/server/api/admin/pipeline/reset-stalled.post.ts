@@ -19,14 +19,14 @@ export default defineEventHandler(async (event) => {
 
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
-  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+  const oneMinuteAgo = new Date(Date.now() - 60 * 1000).toISOString()
 
   // Find all running jobs (including running:stage variants) that haven't been updated in 5+ minutes
   const stalledJobs = await db.select({ id: scrapeJobs.id, type: scrapeJobs.type, status: scrapeJobs.status, updatedAt: scrapeJobs.updatedAt })
     .from(scrapeJobs)
     .where(and(
       sql`${scrapeJobs.status} LIKE 'running%'`,
-      lt(scrapeJobs.updatedAt, fiveMinutesAgo),
+      lt(scrapeJobs.updatedAt, oneMinuteAgo),
     ))
 
   if (stalledJobs.length === 0) {
@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     await db.update(scrapeJobs)
       .set({
         status: 'failed',
-        errorLog: [{ error: 'Job stalled — no progress for 5+ minutes', timestamp: now }],
+        errorLog: [{ error: 'Job stalled — no progress for 1+ minute', timestamp: now }],
         completedAt: now,
         updatedAt: now,
       })
