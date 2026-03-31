@@ -101,13 +101,17 @@ export default defineEventHandler(async (event) => {
       $('meta[property="og:description"]').attr("content") ||
       null;
 
+    // Extract lead image and its alt text
+    const leadImage = extractImage($, html);
+
     // Format response to match original Mercury parser format
     const scrapeResult = {
       title,
       content: content || extractContent(html),
       author,
       date_published: null,
-      lead_image_url: extractImage(html),
+      lead_image_url: leadImage.url,
+      lead_image_alt: leadImage.alt,
       dek: excerpt,
       url: url,
       domain: parsedUrl.hostname,
@@ -167,24 +171,31 @@ function extractContent(html: string): string | null {
 }
 
 /**
- * Extract lead image from HTML
+ * Extract lead image URL and alt text from HTML
  */
-function extractImage(html: string): string | null {
+function extractImage($: cheerio.CheerioAPI, html: string): { url: string | null; alt: string | null } {
   // Try meta property og:image first
-  const ogImageMatch = html.match(
-    /<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i
-  );
-  if (ogImageMatch) return ogImageMatch[1];
+  const ogImage = $('meta[property="og:image"]').attr("content");
+  if (ogImage) {
+    const ogImageAlt = $('meta[property="og:image:alt"]').attr("content") || null;
+    return { url: ogImage, alt: ogImageAlt };
+  }
 
   // Try meta name twitter:image
-  const twitterImageMatch = html.match(
-    /<meta[^>]*name="twitter:image"[^>]*content="([^"]+)"/i
-  );
-  if (twitterImageMatch) return twitterImageMatch[1];
+  const twitterImage = $('meta[name="twitter:image"]').attr("content");
+  if (twitterImage) {
+    const twitterImageAlt = $('meta[name="twitter:image:alt"]').attr("content") || null;
+    return { url: twitterImage, alt: twitterImageAlt };
+  }
 
-  // Try first img tag
-  const imgMatch = html.match(/<img[^>]*src="([^"]+)"/i);
-  if (imgMatch) return imgMatch[1];
+  // Try first img tag (includes alt text)
+  const firstImg = $("img").first();
+  if (firstImg.length) {
+    return {
+      url: firstImg.attr("src") || null,
+      alt: firstImg.attr("alt") || null,
+    };
+  }
 
-  return null;
+  return { url: null, alt: null };
 }
