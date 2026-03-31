@@ -127,6 +127,12 @@
               label="Ad Network"
               @change="handleFilterChange"
             />
+            <AdminFilterDropdown
+              v-model="hasEmailFilter"
+              :options="hasEmailOptions"
+              label="Email"
+              @change="handleFilterChange"
+            />
           </div>
         </div>
       </div>
@@ -560,6 +566,11 @@ const searchQuery = ref('')
 const statusFilter = ref<string | number | null>(null)
 const wordpressFilter = ref<string | number | null>(null)
 const networkFilter = ref<string | number | null>(null)
+const hasEmailFilter = ref<string | number | null>(null)
+
+const hasEmailOptions = [
+  { value: 'true', label: 'Has Email' },
+]
 
 const statusOptions = [
   { value: 'pending', label: 'Pending' },
@@ -662,6 +673,7 @@ const fetchPublishers = async () => {
     if (statusFilter.value) params.append('status', statusFilter.value.toString())
     if (wordpressFilter.value) params.append('wordpress', wordpressFilter.value.toString())
     if (networkFilter.value) params.append('network', networkFilter.value.toString())
+    if (hasEmailFilter.value) params.append('hasEmail', hasEmailFilter.value.toString())
 
     const response = await $fetch<{ data: Publisher[]; pagination: Pagination }>(
       `/api/admin/pipeline/publishers?${params.toString()}`
@@ -777,7 +789,7 @@ const formatDate = (dateString: string): string => {
 }
 
 // Watchers
-watch([searchQuery, statusFilter, wordpressFilter, networkFilter], () => {
+watch([searchQuery, statusFilter, wordpressFilter, networkFilter, hasEmailFilter], () => {
   pagination.value.page = 1
   fetchPublishers()
 })

@@ -4,7 +4,7 @@
  * List publishers with filtering and pagination.
  * Query params: page, limit, status, category, network, search, wordpress
  */
-import { eq, like, sql, and, desc } from 'drizzle-orm'
+import { eq, like, sql, and, desc, isNotNull } from 'drizzle-orm'
 import { useAdminOpsDb, publishers, contacts } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
@@ -38,6 +38,10 @@ export default defineEventHandler(async (event) => {
 
   if (query.network && typeof query.network === 'string') {
     conditions.push(like(publishers.adNetworks, `%"${query.network}"%`))
+  }
+
+  if (query.hasEmail === 'true') {
+    conditions.push(isNotNull(publishers.contactId))
   }
 
   const db = useAdminOpsDb(event)
