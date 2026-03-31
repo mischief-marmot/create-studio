@@ -138,15 +138,22 @@ export default defineEventHandler(async (event) => {
             continue
           }
 
-          await db.update(publishers).set({
-            isWordpress: result.isWordpress, restApiAvailable: result.restApiAvailable,
-            siteName: result.siteName || undefined,
-            scrapeStatus: 'plugins_scraped', scrapeError: null, lastScrapedAt: now, updatedAt: now,
-          }).where(eq(publishers.id, publisherId))
-
-          // Track WordPress sites for next stage
           if (result.isWordpress) {
+            // WordPress site → continue through pipeline
+            await db.update(publishers).set({
+              isWordpress: true, restApiAvailable: result.restApiAvailable,
+              siteName: result.siteName || undefined,
+              scrapeStatus: 'plugins_scraped', scrapeError: null, lastScrapedAt: now, updatedAt: now,
+            }).where(eq(publishers.id, publisherId))
             wordpressFromProbe.push({ id: publisherId, domain: result.domain })
+          } else {
+            // Not WordPress → skip to terminal status
+            await db.update(publishers).set({
+              isWordpress: false, restApiAvailable: result.restApiAvailable,
+              siteName: result.siteName || undefined,
+              scrapeStatus: 'contacts_scraped', scrapeError: null, lastScrapedAt: now, updatedAt: now,
+            }).where(eq(publishers.id, publisherId))
+            totalProcessed++
           }
 
           for (const namespace of result.namespaces) {
