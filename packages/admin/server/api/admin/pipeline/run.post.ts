@@ -13,7 +13,7 @@
  * Query params:
  *   limit: batch size (default 50, max 2000)
  */
-import { eq, and, sql } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { useAdminOpsDb, publishers, plugins, publisherPlugins, contacts, scrapeJobs } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
@@ -27,19 +27,6 @@ export default defineEventHandler(async (event) => {
 
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
-
-  // Prevent concurrent pipeline runs
-  const [running] = await db.select({ id: scrapeJobs.id })
-    .from(scrapeJobs)
-    .where(and(
-      eq(scrapeJobs.type, 'full_pipeline'),
-      sql`${scrapeJobs.status} LIKE 'running%'`,
-    ))
-    .limit(1)
-
-  if (running) {
-    throw createError({ statusCode: 409, message: 'A pipeline is already running. Wait for it to finish or reset stalled jobs.' })
-  }
 
   // Create job
   const [job] = await db.insert(scrapeJobs).values({
@@ -68,35 +55,45 @@ export default defineEventHandler(async (event) => {
       }).where(eq(scrapeJobs.id, job.id))
     }
 
+    // Track all IDs we lock so we can unlock on completion/failure
+    let allLockedIds: number[] = []
+
     try {
       // === Gather batch, filling from bottom up ===
-      let remaining = limit
+      // Over-fetch to account for locked IDs being filtered out
+      const overFetch = limit * 3
 
       // 1. Enriched publishers → need contact scraping only
-      const needContacts = remaining > 0
-        ? await db.select({ id: publishers.id, domain: publishers.domain })
-            .from(publishers)
-            .where(and(eq(publishers.scrapeStatus, 'enriched'), eq(publishers.isWordpress, true)))
-            .limit(remaining)
-        : []
-      remaining -= needContacts.length
+      const rawContacts = await db.select({ id: publishers.id, domain: publishers.domain })
+        .from(publishers)
+        .where(and(eq(publishers.scrapeStatus, 'enriched'), eq(publishers.isWordpress, true)))
+        .limit(overFetch)
+      const availContacts = filterUnlocked(rawContacts)
+      const needContacts = availContacts.slice(0, limit)
+      let remaining = limit - needContacts.length
 
       // 2. Plugins-scraped publishers → need enrich + contacts
-      const needEnrich = remaining > 0
-        ? await db.select({ id: publishers.id, domain: publishers.domain })
-            .from(publishers)
-            .where(and(eq(publishers.scrapeStatus, 'plugins_scraped'), eq(publishers.isWordpress, true)))
-            .limit(remaining)
-        : []
-      remaining -= needEnrich.length
+      let needEnrich: typeof needContacts = []
+      if (remaining > 0) {
+        const rawEnrich = await db.select({ id: publishers.id, domain: publishers.domain })
+          .from(publishers)
+          .where(and(eq(publishers.scrapeStatus, 'plugins_scraped'), eq(publishers.isWordpress, true)))
+          .limit(overFetch)
+        const availEnrich = filterUnlocked(rawEnrich)
+        needEnrich = availEnrich.slice(0, remaining)
+        remaining -= needEnrich.length
+      }
 
       // 3. Pending publishers → need probe + enrich + contacts
-      const needProbe = remaining > 0
-        ? await db.select({ id: publishers.id, domain: publishers.domain })
-            .from(publishers)
-            .where(eq(publishers.scrapeStatus, 'pending'))
-            .limit(remaining)
-        : []
+      let needProbe: typeof needContacts = []
+      if (remaining > 0) {
+        const rawProbe = await db.select({ id: publishers.id, domain: publishers.domain })
+          .from(publishers)
+          .where(eq(publishers.scrapeStatus, 'pending'))
+          .limit(overFetch)
+        const availProbe = filterUnlocked(rawProbe)
+        needProbe = availProbe.slice(0, remaining)
+      }
 
       const totalBatch = needContacts.length + needEnrich.length + needProbe.length
       if (totalBatch === 0) {
@@ -106,6 +103,13 @@ export default defineEventHandler(async (event) => {
         }).where(eq(scrapeJobs.id, job.id))
         return
       }
+
+      // Lock all claimed IDs
+      allLockedIds = lockPublisherIds([
+        ...needContacts.map((p) => p.id),
+        ...needEnrich.map((p) => p.id),
+        ...needProbe.map((p) => p.id),
+      ])
 
       // === STAGE: Probe (only for needProbe set) ===
       const wordpressFromProbe: Array<{ id: number; domain: string }> = []
@@ -279,6 +283,9 @@ export default defineEventHandler(async (event) => {
         completedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       }).where(eq(scrapeJobs.id, job.id))
+    } finally {
+      // Always release locks
+      unlockPublisherIds(allLockedIds)
     }
   })
 
