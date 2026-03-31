@@ -295,7 +295,7 @@ function initLocalDb(sqlite: InstanceType<typeof Database>): void {
         ('mv-create', 'Create', 'recipe', 0, 0, 0, datetime('now')),
         ('zip-recipes', 'Zip Recipes', 'recipe', 1, 1, 1, datetime('now')),
         ('easy-recipe', 'Easy Recipe', 'recipe', 0, 1, 1, datetime('now')),
-        ('yoast', 'Yoast SEO', 'seo', 1, 0, 0, datetime('now')),
+        ('yoast', 'Yoast SEO', 'seo', 0, 0, 0, datetime('now')),
         ('rankmath', 'Rank Math', 'seo', 1, 0, 0, datetime('now')),
         ('aioseo', 'All in One SEO', 'seo', 1, 0, 0, datetime('now')),
         ('mediavine-control-panel', 'Mediavine Control Panel', 'ads', 0, 0, 0, datetime('now')),

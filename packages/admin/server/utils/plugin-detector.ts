@@ -39,7 +39,7 @@ const PREMIUM_DIRECTORIES = new Set([
   'advanced-custom-fields-pro',
   // Misc premium
   'shiftnav-pro', 'link-whisper', 'link-whisper-premium',
-  'wp-rocket', 'perfmatters', 'imagify',
+  'perfmatters', 'imagify',
   // mediavine-create: free by default, pro status determined later
   // WooCommerce paid extensions
   'woocommerce-subscriptions', 'woocommerce-memberships', 'woocommerce-bookings',
@@ -49,7 +49,7 @@ const PREMIUM_DIRECTORIES = new Set([
 // Known paid-only plugins (no free version exists)
 const PAID_ONLY_PLUGINS = new Set([
   'tasty-recipes', 'tasty-pins', 'tasty-links',
-  'feast-plugin', 'wp-rocket', 'perfmatters',
+  'feast-plugin', 'perfmatters',
   'link-whisper', 'link-whisper-premium',
   'elementor-pro', 'elementor-one', 'elementor-ai', 'beaver-builder',
   'wordpress-seo-premium', 'seo-by-rank-math-pro',
