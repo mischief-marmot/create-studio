@@ -37,8 +37,8 @@
 
       <!-- Sub Navigation -->
       <div class="flex gap-1 mb-6">
-        <NuxtLink to="/crm/leads" class="btn btn-sm" :class="'btn-primary'">Leads</NuxtLink>
         <NuxtLink to="/crm/outreach" class="btn btn-sm btn-ghost">Outreach</NuxtLink>
+        <NuxtLink to="/crm/leads" class="btn btn-sm" :class="'btn-primary'">Leads</NuxtLink>
         <NuxtLink to="/crm/pipeline" class="btn btn-sm btn-ghost">Pipeline</NuxtLink>
       </div>
 

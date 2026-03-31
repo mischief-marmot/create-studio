@@ -3,6 +3,6 @@ definePageMeta({
   layout: 'admin'
 })
 
-// Redirect to leads tab by default
-navigateTo('/crm/leads', { replace: true })
+// Redirect to outreach tab by default
+navigateTo('/crm/outreach', { replace: true })
 </script>
