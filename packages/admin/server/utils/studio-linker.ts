@@ -15,9 +15,8 @@
  *     | python3 -c "import sys,json; json.dump(json.load(sys.stdin)[0]['results'], open('packages/admin/server/data/studio-users.json','w'))"
  */
 
-import { readFileSync } from 'node:fs'
-import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync, existsSync } from 'node:fs'
+import { join } from 'node:path'
 import type { StudioData } from '../db/admin-schema'
 
 interface StudioSite {
@@ -35,9 +34,15 @@ interface StudioUser {
 }
 
 function getDataDir(): string {
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = dirname(__filename)
-  return join(__dirname, '../data')
+  // Try multiple possible locations since import.meta.url resolves to .nuxt at runtime
+  const candidates = [
+    join(process.cwd(), 'server/data'),
+    join(process.cwd(), 'packages/admin/server/data'),
+  ]
+  for (const dir of candidates) {
+    if (existsSync(dir)) return dir
+  }
+  return candidates[0]!
 }
 
 /**
