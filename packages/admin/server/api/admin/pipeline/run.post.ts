@@ -336,37 +336,44 @@ export default defineEventHandler(async (event) => {
       // ================================================================
       // STAGE 5: Enrich newly discovered plugins on wordpress.org
       // ================================================================
-      const unenrichedPlugins = await db.select({ id: plugins.id, namespace: plugins.namespace })
+      const rawUnenriched = await db.select({ id: plugins.id, namespace: plugins.namespace })
         .from(plugins)
         .where(isNull(plugins.enrichedAt))
-        .limit(100)
+        .limit(200)
+
+      const unenrichedPlugins = filterUnlockedPlugins(rawUnenriched).slice(0, 100)
+      const lockedPluginIds = lockPluginIds(unenrichedPlugins.map((p) => p.id))
 
       if (unenrichedPlugins.length > 0) {
-        await updateJob('enrich_plugins', 0, unenrichedPlugins.length)
+        try {
+          await updateJob('enrich_plugins', 0, unenrichedPlugins.length)
 
-        const enrichResults = await enrichPluginBatch(
-          unenrichedPlugins.map((p) => p.namespace),
-          async (completed, total) => { await updateJob('enrich_plugins', completed, total) },
-        )
+          const enrichResults = await enrichPluginBatch(
+            unenrichedPlugins.map((p) => p.namespace),
+            async (completed, total) => { await updateJob('enrich_plugins', completed, total) },
+          )
 
-        const nsToId = new Map(unenrichedPlugins.map((p) => [p.namespace, p.id]))
+          const nsToId = new Map(unenrichedPlugins.map((p) => [p.namespace, p.id]))
 
-        for (const result of enrichResults) {
-          const pluginId = nsToId.get(result.namespace)
-          if (!pluginId) continue
+          for (const result of enrichResults) {
+            const pluginId = nsToId.get(result.namespace)
+            if (!pluginId) continue
 
-          if (result.found) {
-            await db.update(plugins).set({
-              name: result.name, wpSlug: result.wpSlug, wpUrl: result.wpUrl,
-              homepageUrl: result.homepageUrl, description: result.description,
-              activeInstalls: result.activeInstalls, rating: result.rating,
-              enrichedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-            }).where(eq(plugins.id, pluginId))
-          } else {
-            await db.update(plugins).set({
-              enrichedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-            }).where(eq(plugins.id, pluginId))
+            if (result.found) {
+              await db.update(plugins).set({
+                name: result.name, wpSlug: result.wpSlug, wpUrl: result.wpUrl,
+                homepageUrl: result.homepageUrl, description: result.description,
+                activeInstalls: result.activeInstalls, rating: result.rating,
+                enrichedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+              }).where(eq(plugins.id, pluginId))
+            } else {
+              await db.update(plugins).set({
+                enrichedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+              }).where(eq(plugins.id, pluginId))
+            }
           }
+        } finally {
+          unlockPluginIds(lockedPluginIds)
         }
       }
 
