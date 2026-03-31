@@ -1,14 +1,19 @@
 /**
  * POST /api/admin/pipeline/run
  *
- * Runs the full pipeline: probe → enrich → contacts
- * Each stage processes publishers that are ready for it.
+ * Runs the full pipeline, prioritizing publishers furthest along.
+ * Fills the batch from the bottom up:
+ *   1. enriched → scrape contacts
+ *   2. plugins_scraped → enrich → scrape contacts
+ *   3. pending → probe → enrich → scrape contacts
+ *
+ * Each publisher flows through all remaining stages in one run.
  * Non-blocking — returns immediately, runs in background.
  *
  * Query params:
- *   limit: publishers per stage (default 500, max 2000)
+ *   limit: batch size (default 50, max 2000)
  */
-import { eq, and, inArray, sql } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { useAdminOpsDb, publishers, plugins, publisherPlugins, contacts, scrapeJobs } from '~~/server/utils/admin-ops-db'
 
 export default defineEventHandler(async (event) => {
@@ -18,23 +23,22 @@ export default defineEventHandler(async (event) => {
   }
 
   const query = getQuery(event)
-  const limit = Math.min(2000, Math.max(1, Number(query.limit) || 500))
+  const limit = Math.min(2000, Math.max(1, Number(query.limit) || 50))
 
   const db = useAdminOpsDb(event)
   const now = new Date().toISOString()
-  const adminId = (session.user as any).id
 
-  // Create a parent job to track the full pipeline
-  const [parentJob] = await db.insert(scrapeJobs).values({
+  // Create job
+  const [job] = await db.insert(scrapeJobs).values({
     type: 'full_pipeline',
     status: 'running',
     startedAt: now,
-    startedBy: adminId,
+    startedBy: (session.user as any).id,
     createdAt: now,
     updatedAt: now,
   }).returning()
 
-  if (!parentJob) {
+  if (!job) {
     throw createError({ statusCode: 500, message: 'Failed to create pipeline job' })
   }
 
@@ -42,35 +46,68 @@ export default defineEventHandler(async (event) => {
     let totalProcessed = 0
     let totalFailed = 0
 
-    /** Helper to update job stage + progress */
     const updateJob = async (stage: string, completed: number, total: number) => {
       await db.update(scrapeJobs).set({
         status: `running:${stage}`,
         completedCount: completed,
         totalCount: total,
         updatedAt: new Date().toISOString(),
-      }).where(eq(scrapeJobs.id, parentJob.id))
+      }).where(eq(scrapeJobs.id, job.id))
     }
 
     try {
-      // === STAGE 1: Probe WordPress ===
-      const pendingProbe = await db.select({ id: publishers.id, domain: publishers.domain })
-        .from(publishers)
-        .where(eq(publishers.scrapeStatus, 'pending'))
-        .limit(limit)
+      // === Gather batch, filling from bottom up ===
+      let remaining = limit
 
-      if (pendingProbe.length > 0) {
-        await updateJob('probe', 0, pendingProbe.length)
+      // 1. Enriched publishers → need contact scraping only
+      const needContacts = remaining > 0
+        ? await db.select({ id: publishers.id, domain: publishers.domain })
+            .from(publishers)
+            .where(and(eq(publishers.scrapeStatus, 'enriched'), eq(publishers.isWordpress, true)))
+            .limit(remaining)
+        : []
+      remaining -= needContacts.length
+
+      // 2. Plugins-scraped publishers → need enrich + contacts
+      const needEnrich = remaining > 0
+        ? await db.select({ id: publishers.id, domain: publishers.domain })
+            .from(publishers)
+            .where(and(eq(publishers.scrapeStatus, 'plugins_scraped'), eq(publishers.isWordpress, true)))
+            .limit(remaining)
+        : []
+      remaining -= needEnrich.length
+
+      // 3. Pending publishers → need probe + enrich + contacts
+      const needProbe = remaining > 0
+        ? await db.select({ id: publishers.id, domain: publishers.domain })
+            .from(publishers)
+            .where(eq(publishers.scrapeStatus, 'pending'))
+            .limit(remaining)
+        : []
+
+      const totalBatch = needContacts.length + needEnrich.length + needProbe.length
+      if (totalBatch === 0) {
+        await db.update(scrapeJobs).set({
+          status: 'completed', completedCount: 0, totalCount: 0,
+          completedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        }).where(eq(scrapeJobs.id, job.id))
+        return
+      }
+
+      // === STAGE: Probe (only for needProbe set) ===
+      const wordpressFromProbe: Array<{ id: number; domain: string }> = []
+
+      if (needProbe.length > 0) {
+        await updateJob('probe', 0, needProbe.length)
 
         const knownPlugins = await db.select().from(plugins)
         const pluginMap = new Map(knownPlugins.map((p) => [p.namespace, p]))
         const probeResults = await probeBatch(
-          pendingProbe.map((p) => p.domain),
-          15,
-          async (completed) => { await updateJob('probe', completed, pendingProbe.length) },
+          needProbe.map((p) => p.domain), 15,
+          async (completed) => { await updateJob('probe', completed, needProbe.length) },
         )
 
-        const domainToId = new Map(pendingProbe.map((p) => [p.domain, p.id]))
+        const domainToId = new Map(needProbe.map((p) => [p.domain, p.id]))
 
         for (const result of probeResults) {
           const publisherId = domainToId.get(result.domain)
@@ -84,12 +121,16 @@ export default defineEventHandler(async (event) => {
             continue
           }
 
-          totalProcessed++
           await db.update(publishers).set({
             isWordpress: result.isWordpress, restApiAvailable: result.restApiAvailable,
             siteName: result.siteName || undefined,
             scrapeStatus: 'plugins_scraped', scrapeError: null, lastScrapedAt: now, updatedAt: now,
           }).where(eq(publishers.id, publisherId))
+
+          // Track WordPress sites for next stage
+          if (result.isWordpress) {
+            wordpressFromProbe.push({ id: publisherId, domain: result.domain })
+          }
 
           for (const namespace of result.namespaces) {
             let plugin = pluginMap.get(namespace)
@@ -109,22 +150,20 @@ export default defineEventHandler(async (event) => {
         }
       }
 
-      // === STAGE 2: Enrich ===
-      const pendingEnrich = await db.select({ id: publishers.id, domain: publishers.domain })
-        .from(publishers)
-        .where(and(eq(publishers.scrapeStatus, 'plugins_scraped'), eq(publishers.isWordpress, true)))
-        .limit(limit)
+      // === STAGE: Enrich (needEnrich + WordPress from probe) ===
+      const toEnrich = [...needEnrich, ...wordpressFromProbe]
 
-      if (pendingEnrich.length > 0) {
-        await updateJob('enrich', 0, pendingEnrich.length)
+      const enrichedIds: Array<{ id: number; domain: string }> = []
+
+      if (toEnrich.length > 0) {
+        await updateJob('enrich', 0, toEnrich.length)
 
         const enrichResults = await enrichBatch(
-          pendingEnrich.map((p) => p.domain),
-          10,
-          async (completed) => { await updateJob('enrich', completed, pendingEnrich.length) },
+          toEnrich.map((p) => p.domain), 10,
+          async (completed) => { await updateJob('enrich', completed, toEnrich.length) },
         )
 
-        const domainToId = new Map(pendingEnrich.map((p) => [p.domain, p.id]))
+        const domainToId = new Map(toEnrich.map((p) => [p.domain, p.id]))
 
         for (const result of enrichResults) {
           const publisherId = domainToId.get(result.domain)
@@ -144,25 +183,23 @@ export default defineEventHandler(async (event) => {
             topContent: result.topContent, scrapeStatus: 'enriched',
             scrapeError: null, lastScrapedAt: now, updatedAt: now,
           }).where(eq(publishers.id, publisherId))
+
+          enrichedIds.push({ id: publisherId, domain: result.domain })
         }
       }
 
-      // === STAGE 3: Contact Scrape ===
-      const pendingContacts = await db.select({ id: publishers.id, domain: publishers.domain })
-        .from(publishers)
-        .where(and(eq(publishers.scrapeStatus, 'enriched'), eq(publishers.isWordpress, true)))
-        .limit(limit)
+      // === STAGE: Contacts (needContacts + newly enriched) ===
+      const toScrapeContacts = [...needContacts, ...enrichedIds]
 
-      if (pendingContacts.length > 0) {
-        await updateJob('contacts', 0, pendingContacts.length)
+      if (toScrapeContacts.length > 0) {
+        await updateJob('contacts', 0, toScrapeContacts.length)
 
         const contactResults = await scrapeBatch(
-          pendingContacts.map((p) => p.domain),
-          8,
-          async (completed) => { await updateJob('contacts', completed, pendingContacts.length) },
+          toScrapeContacts.map((p) => p.domain), 8,
+          async (completed) => { await updateJob('contacts', completed, toScrapeContacts.length) },
         )
 
-        const domainToId = new Map(pendingContacts.map((p) => [p.domain, p.id]))
+        const domainToId = new Map(toScrapeContacts.map((p) => [p.domain, p.id]))
 
         for (const result of contactResults) {
           const publisherId = domainToId.get(result.domain)
@@ -220,7 +257,7 @@ export default defineEventHandler(async (event) => {
         failedCount: totalFailed,
         completedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      }).where(eq(scrapeJobs.id, parentJob.id))
+      }).where(eq(scrapeJobs.id, job.id))
 
     } catch (err: any) {
       await db.update(scrapeJobs).set({
@@ -228,13 +265,13 @@ export default defineEventHandler(async (event) => {
         errorLog: [{ error: err.message || String(err), timestamp: new Date().toISOString() }],
         completedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-      }).where(eq(scrapeJobs.id, parentJob.id))
+      }).where(eq(scrapeJobs.id, job.id))
     }
   })
 
   return {
     success: true,
-    jobId: parentJob.id,
+    jobId: job.id,
     status: 'started',
     limit,
   }
