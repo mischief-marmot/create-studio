@@ -91,6 +91,14 @@
             <span v-if="enrichingPlugins" class="loading loading-spinner loading-xs"></span>
             {{ enrichingPlugins ? 'Enriching...' : 'Enrich Plugins (100)' }}
           </button>
+          <button
+            class="btn btn-outline btn-xs"
+            :disabled="detectingPlugins"
+            @click="detectPluginsAction"
+          >
+            <span v-if="detectingPlugins" class="loading loading-spinner loading-xs"></span>
+            {{ detectingPlugins ? 'Detecting...' : 'Detect Plugins (50)' }}
+          </button>
         </div>
         <div class="p-6">
           <div v-if="pluginStats" class="grid grid-cols-3 gap-4">
@@ -230,6 +238,7 @@ const stats = ref<Stats | null>(null)
 const jobs = ref<ScrapeJob[]>([])
 const jobsLoading = ref(false)
 const enrichingPlugins = ref(false)
+const detectingPlugins = ref(false)
 const pluginStats = ref<{ total: number; enriched: number; unenriched: number } | null>(null)
 let pollInterval: ReturnType<typeof setInterval> | null = null
 
@@ -267,6 +276,18 @@ const enrichPlugins = async () => {
     // ignore
   } finally {
     enrichingPlugins.value = false
+  }
+}
+
+const detectPluginsAction = async () => {
+  detectingPlugins.value = true
+  try {
+    await $fetch('/api/admin/pipeline/detect-plugins?limit=50', { method: 'POST' })
+    await fetchJobs()
+  } catch {
+    // ignore
+  } finally {
+    detectingPlugins.value = false
   }
 }
 
