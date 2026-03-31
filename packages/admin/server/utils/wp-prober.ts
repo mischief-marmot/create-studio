@@ -23,12 +23,12 @@ interface WpJsonResponse {
 /**
  * Normalize a REST API namespace to a base plugin name.
  * e.g. "rank-math/v1/ca" → "rankmath", "wc/v2" → "wc", "elementor/v1/documents" → "elementor"
+ * Keeps hyphens intact so namespaces can match wordpress.org slugs.
  */
 function normalizeNamespace(ns: string): string {
-  // Take the first path segment (before any /)
+  // Take the first path segment (before any /) to strip version/sub-paths
   const base = ns.split('/')[0] || ns
-  // Normalize: lowercase, strip hyphens/underscores, strip trailing version numbers
-  return base.toLowerCase().replace(/[-_]/g, '').replace(/v\d+$/, '')
+  return base.toLowerCase()
 }
 
 /**

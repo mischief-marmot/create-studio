@@ -91,11 +91,21 @@ async function trySearch(namespace: string): Promise<PluginEnrichmentResult | nu
 
     if (!data?.plugins?.length) return null
 
-    // Find best match — prefer exact slug match, then name containing namespace
+    // Strict matching — only accept results where the slug clearly relates to our namespace
     const nsLower = namespace.toLowerCase()
-    const match = data.plugins.find((p) => p.slug === nsLower)
-      || data.plugins.find((p) => p.slug?.includes(nsLower) || nsLower.includes(p.slug || ''))
-      || data.plugins[0]
+    const nsClean = nsLower.replace(/-/g, '')
+
+    const match = data.plugins.find((p) => {
+      if (!p.slug) return false
+      const slugClean = p.slug.replace(/-/g, '')
+      // Exact match
+      if (p.slug === nsLower) return true
+      // Slug contains our namespace (e.g., "seo-by-rank-math" contains "rankmath")
+      if (slugClean.includes(nsClean)) return true
+      // Our namespace contains the slug (e.g., "contactform7" contains "contact-form-7")
+      if (nsClean.includes(slugClean) && slugClean.length >= 4) return true
+      return false
+    })
 
     if (!match?.slug) return null
 
