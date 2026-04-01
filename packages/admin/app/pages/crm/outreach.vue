@@ -57,14 +57,27 @@
       <div class="flex gap-6">
         <!-- Left: Table -->
         <div class="flex-1 min-w-0">
-          <!-- Search -->
-          <div class="mb-4">
-            <AdminSearchInput
-              v-model="searchQuery"
-              placeholder="Search by name, email, or domain..."
-              :debounce="300"
-              @search="handleSearch"
-            />
+          <!-- Search + Sort -->
+          <div class="mb-4 flex gap-2">
+            <div class="flex-1">
+              <AdminSearchInput
+                v-model="searchQuery"
+                placeholder="Search by name, email, or domain..."
+                :debounce="300"
+                @search="handleSearch"
+              />
+            </div>
+            <button
+              class="btn btn-sm btn-outline gap-1"
+              :class="sortBy === 'paidPlugins' ? 'btn-active' : ''"
+              @click="toggleSort"
+              title="Sort by paid plugin count"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+              </svg>
+              Paid Plugins
+            </button>
           </div>
 
           <!-- Outreach Table -->
@@ -129,10 +142,15 @@
 
                       <!-- Segment -->
                       <td class="py-3 px-6">
-                        <span v-if="record.segment" class="badge badge-sm" :class="segmentBadgeClass(record.segment)">
-                          {{ segmentLabel(record.segment) }}
-                        </span>
-                        <span v-else class="text-sm text-base-content/40">&mdash;</span>
+                        <div class="flex items-center gap-1.5">
+                          <span v-if="record.segment" class="badge badge-sm" :class="segmentBadgeClass(record.segment)">
+                            {{ segmentLabel(record.segment) }}
+                          </span>
+                          <span v-else class="text-sm text-base-content/40">&mdash;</span>
+                          <span v-if="record.paidPluginCount" class="text-[10px] text-base-content/40" :title="`${record.paidPluginCount} paid plugins`">
+                            {{ record.paidPluginCount }}$
+                          </span>
+                        </div>
                       </td>
 
                       <!-- Stage (pipeline dots) -->
@@ -584,6 +602,7 @@ interface OutreachRecord {
   status: string
   stage: string
   rating: number | null
+  paidPluginCount: number | null
   notes: string | null
   lastContactedAt: string | null
   createdAt: string
@@ -664,6 +683,7 @@ const segmentTabs = [
   { value: 'inactive', label: 'Inactive' },
   { value: 'wprm', label: 'WPRM' },
   { value: 'competitor', label: 'Competitor' },
+  { value: 'paid_plugins', label: 'Paid Plugins' },
   { value: 'no_recipe_plugin', label: 'No Recipe' },
   { value: 'other', label: 'Other' },
 ]
@@ -680,6 +700,7 @@ const toastMessage = ref<{ success: boolean; message: string } | null>(null)
 // Filters — initialized from URL
 const segmentFilter = ref<string | null>((route.query.segment as string) || null)
 const searchQuery = ref((route.query.search as string) || '')
+const sortBy = ref<string>((route.query.sort as string) || 'createdAt')
 
 // Detail panel
 const selectedRecord = ref<OutreachRecord | null>(null)
@@ -753,6 +774,7 @@ const updateUrl = () => {
   const query: Record<string, string> = {}
   if (segmentFilter.value) query.segment = segmentFilter.value
   if (searchQuery.value) query.search = searchQuery.value
+  if (sortBy.value !== 'createdAt') query.sort = sortBy.value
   if (selectedRecord.value) query.id = String(selectedRecord.value.id)
   router.replace({ query })
 }
@@ -766,6 +788,7 @@ const segmentBadgeClass = (segment: string): string => {
     inactive: 'badge-ghost',
     wprm: 'badge-success',
     competitor: 'badge-warning',
+    paid_plugins: 'badge-secondary',
     no_recipe_plugin: 'badge-accent',
     other: 'badge-ghost',
   }
@@ -780,6 +803,7 @@ const segmentLabel = (segment: string): string => {
     inactive: 'Inactive',
     wprm: 'WPRM',
     competitor: 'Competitor',
+    paid_plugins: 'Paid Plugins',
     no_recipe_plugin: 'No Recipe',
     other: 'Other',
   }
@@ -851,6 +875,7 @@ const fetchOutreach = async () => {
     params.append('limit', '50')
     if (segmentFilter.value) params.append('segment', segmentFilter.value)
     if (searchQuery.value) params.append('search', searchQuery.value)
+    if (sortBy.value !== 'createdAt') params.append('sort', sortBy.value)
 
     const response = await $fetch<{
       data: OutreachRecord[]
@@ -949,6 +974,13 @@ const saveNotes = () => {
 
 // Handlers
 const handleSearch = () => {
+  pagination.value.page = 1
+  fetchOutreach()
+  updateUrl()
+}
+
+const toggleSort = () => {
+  sortBy.value = sortBy.value === 'paidPlugins' ? 'createdAt' : 'paidPlugins'
   pagination.value.page = 1
   fetchOutreach()
   updateUrl()

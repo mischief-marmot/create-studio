@@ -99,23 +99,23 @@ export default defineEventHandler(async (event) => {
         publisherId: publisherPlugins.publisherId,
         namespace: plugins.namespace,
         isCompetitor: plugins.isCompetitor,
+        isPaid: plugins.isPaid,
       })
         .from(publisherPlugins)
         .innerJoin(plugins, eq(publisherPlugins.pluginId, plugins.id))
         .where(inArray(publisherPlugins.publisherId, eligibleIds))
 
-      // Build lookup: publisherId -> { namespaces, hasCompetitor }
-      const pluginMap = new Map<number, { namespaces: Set<string>; hasCompetitor: boolean }>()
+      // Build lookup: publisherId -> { namespaces, hasCompetitor, paidCount }
+      const pluginMap = new Map<number, { namespaces: Set<string>; hasCompetitor: boolean; paidCount: number }>()
       for (const row of pluginRows) {
         let entry = pluginMap.get(row.publisherId)
         if (!entry) {
-          entry = { namespaces: new Set(), hasCompetitor: false }
+          entry = { namespaces: new Set(), hasCompetitor: false, paidCount: 0 }
           pluginMap.set(row.publisherId, entry)
         }
         entry.namespaces.add(row.namespace)
-        if (row.isCompetitor) {
-          entry.hasCompetitor = true
-        }
+        if (row.isCompetitor) entry.hasCompetitor = true
+        if (row.isPaid) entry.paidCount++
       }
 
       // Generate outreach records in batches
@@ -128,6 +128,7 @@ export default defineEventHandler(async (event) => {
           const pluginInfo = pluginMap.get(pub.id)
           const namespaces = pluginInfo?.namespaces ?? new Set<string>()
           const hasCompetitor = pluginInfo?.hasCompetitor ?? false
+          const paidCount = pluginInfo?.paidCount ?? 0
           const hasMvCreate = namespaces.has('mv-create')
           const hasWprm = namespaces.has('wp-recipe-maker')
 
@@ -147,6 +148,8 @@ export default defineEventHandler(async (event) => {
             segment = 'wprm'
           } else if (hasCompetitor && !hasMvCreate) {
             segment = 'competitor'
+          } else if (paidCount >= 2 && !hasMvCreate) {
+            segment = 'paid_plugins'
           } else if (pub.siteCategory === 'food' && !hasMvCreate && !hasWprm && !hasCompetitor) {
             segment = 'no_recipe_plugin'
           }
@@ -156,6 +159,7 @@ export default defineEventHandler(async (event) => {
             publisherId: pub.id,
             userId: sd ? pub.createStudioSiteId : null,
             segment,
+            paidPluginCount: paidCount,
             status: 'queued' as const,
             stage: 'queued' as const,
             createdAt: now,

@@ -4,7 +4,7 @@
  * List outreach records with filtering and pagination.
  * Joins with publishers and contacts to return full context.
  *
- * Query params: page, limit, segment, stage, search
+ * Query params: page, limit, segment, stage, search, sort (createdAt|paidPlugins)
  */
 import { eq, like, sql, and, or, desc } from 'drizzle-orm'
 import { useAdminOpsDb, outreach, publishers, contacts } from '~~/server/utils/admin-ops-db'
@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
       status: outreach.status,
       stage: outreach.stage,
       rating: outreach.rating,
+      paidPluginCount: outreach.paidPluginCount,
       notes: outreach.notes,
       lastContactedAt: outreach.lastContactedAt,
       createdAt: outreach.createdAt,
@@ -76,7 +77,11 @@ export default defineEventHandler(async (event) => {
       .leftJoin(publishers, eq(outreach.publisherId, publishers.id))
       .leftJoin(contacts, eq(publishers.contactId, contacts.id))
       .where(whereClause)
-      .orderBy(desc(outreach.createdAt))
+      .orderBy(
+        query.sort === 'paidPlugins'
+          ? desc(outreach.paidPluginCount)
+          : desc(outreach.createdAt)
+      )
       .limit(limit)
       .offset(offset),
 

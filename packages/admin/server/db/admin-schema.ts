@@ -234,6 +234,7 @@ export const outreach = sqliteTable('Outreach', {
   status: text('status').notNull().default('queued'), // queued, contacted, responded, engaged
   stage: text('stage').notNull().default('queued'), // queued → contacted → responded → engaged
   rating: integer('rating'), // 1-5
+  paidPluginCount: integer('paid_plugin_count').default(0), // number of paid plugins detected
   notes: text('notes'),
   lastContactedAt: text('last_contacted_at'),
   createdAt: text('createdAt'),
