@@ -28,6 +28,7 @@
 
 @plugin "daisyui" {
   themes: false;
+  exclude: rootcolor, rootscrolllock, rootscrollgutter, scrollbar;
 }
 
 @theme {
@@ -63,6 +64,7 @@
   default: false;
   prefersdark: true;
   color-scheme: "dark";
+  root: "#create-studio-interactive-mode";
 
   /* Base colors - Dark backgrounds */
   --color-base-100: oklch(0.2282 0.0018 98.5);
@@ -126,6 +128,7 @@
   default: true;
   prefersdark: false;
   color-scheme: "light";
+  root: "#create-studio-interactive-mode";
 
   /* Base colors for backgrounds */
   --color-base-100: oklch(0.9741 0.0074 80.72);
