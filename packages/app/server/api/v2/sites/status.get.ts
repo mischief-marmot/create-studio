@@ -59,11 +59,14 @@ export default defineEventHandler(async (event) => {
       await siteRepo.touch(canonicalSiteId)
     }
 
-    // Look up subscription tier, trial info, and trial eligibility
     const subscriptionRepo = new SubscriptionRepository()
-    const subscriptionTier = await subscriptionRepo.getActiveTier(siteId)
-    const trialInfo = await subscriptionRepo.getTrialInfo(siteId)
-    const trialEligibility = await subscriptionRepo.isTrialEligible(siteId)
+    await subscriptionRepo.reconcileExpiredTrial(siteId, site.url)
+
+    // Single fetch — derive tier, trial info, and eligibility from the record
+    const subscription = await subscriptionRepo.getBySiteId(siteId)
+    const subscriptionTier = subscriptionRepo.getActiveTierFromRecord(subscription)
+    const trialInfo = subscriptionRepo.getTrialInfoFromRecord(subscription)
+    const trialEligibility = subscriptionRepo.isTrialEligibleFromRecord(subscription)
 
     // Look up active paid subscription count and total site count for the site owner (for multi-site discount messaging)
     let activePaidCount = 0

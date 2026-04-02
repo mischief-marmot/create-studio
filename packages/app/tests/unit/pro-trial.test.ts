@@ -24,18 +24,18 @@ interface SubscriptionRecord {
 
 // ── Pure functions extracted for testability ────────────────────────────────
 
-/** Determines the effective tier for a subscription (mirrors getActiveTier logic) */
+/** Mirrors SubscriptionRepository.isTrialExpired */
+function isTrialExpired(trialEnd: string | null): boolean {
+  return !!trialEnd && new Date(trialEnd) <= new Date()
+}
+
+/** Determines the effective tier for a subscription (mirrors getActiveTierFromRecord logic) */
 function getEffectiveTier(subscription: SubscriptionRecord | null): string {
   if (!subscription) return 'free'
-
-  if (subscription.status === 'active') {
-    return subscription.tier
-  }
-
+  if (subscription.status === 'active') return subscription.tier
   if (subscription.status === 'trialing') {
-    return 'trial'
+    return isTrialExpired(subscription.trial_end) ? 'free' : 'trial'
   }
-
   return 'free'
 }
 
@@ -116,8 +116,11 @@ function getTrialInfo(subscription: SubscriptionRecord | null) {
   const trialEnd = new Date(subscription.trial_end)
   const daysRemaining = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
 
+  // If status is trialing but trial_end has passed, treat as not trialing
+  const isTrialing = subscription.status === 'trialing' && daysRemaining > 0
+
   return {
-    isTrialing: subscription.status === 'trialing',
+    isTrialing,
     daysRemaining,
     trialEnd: subscription.trial_end,
     extensionsUsed: Object.keys(subscription.trial_extensions || {}).length,
@@ -132,11 +135,13 @@ describe('Pro Trial: getEffectiveTier', () => {
   })
 
   it('returns "trial" when status is trialing (regardless of stored tier)', () => {
+    const futureDate = new Date()
+    futureDate.setDate(futureDate.getDate() + 7)
     const sub: SubscriptionRecord = {
       status: 'trialing',
       tier: 'pro',
       has_trialed: true,
-      trial_end: '2026-03-23T00:00:00.000Z',
+      trial_end: futureDate.toISOString(),
       metadata: null,
       trial_extensions: null,
     }
@@ -173,6 +178,46 @@ describe('Pro Trial: getEffectiveTier', () => {
       tier: 'pro',
       has_trialed: false,
       trial_end: null,
+      metadata: null,
+      trial_extensions: null,
+    }
+    expect(getEffectiveTier(sub)).toBe('free')
+  })
+
+  it('returns "free" when status is trialing but trial_end has passed', () => {
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: yesterday.toISOString(),
+      metadata: null,
+      trial_extensions: null,
+    }
+    expect(getEffectiveTier(sub)).toBe('free')
+  })
+
+  it('returns "trial" when status is trialing and trial_end is in the future', () => {
+    const tomorrow = new Date()
+    tomorrow.setDate(tomorrow.getDate() + 7)
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: tomorrow.toISOString(),
+      metadata: null,
+      trial_extensions: null,
+    }
+    expect(getEffectiveTier(sub)).toBe('trial')
+  })
+
+  it('returns "free" when status is trialing and trial_end is exactly now', () => {
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: new Date().toISOString(),
       metadata: null,
       trial_extensions: null,
     }
@@ -381,6 +426,24 @@ describe('Pro Trial: getTrialInfo', () => {
     const info = getTrialInfo(sub)
     expect(info.daysRemaining).toBe(0)
   })
+
+  it('returns isTrialing=false when trial_end has passed even if status is trialing', () => {
+    const pastDate = new Date()
+    pastDate.setDate(pastDate.getDate() - 2)
+
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: pastDate.toISOString(),
+      metadata: null,
+      trial_extensions: null,
+    }
+
+    const info = getTrialInfo(sub)
+    expect(info.isTrialing).toBe(false)
+    expect(info.daysRemaining).toBe(0)
+  })
 })
 
 describe('Pro Trial: Metadata column for cohorts', () => {
@@ -524,5 +587,99 @@ describe('Pro Trial: Webhook payload enhancement', () => {
     expect(payload.data.tier).toBe('pro')
     expect(payload.data.is_trialing).toBe(false)
     expect(payload.data.trial_days_remaining).toBe(0)
+  })
+})
+
+// ── Reconciliation logic ─────────────────────────────────────────────────
+
+/** Determines whether a subscription needs trial reconciliation (mirrors reconcileExpiredTrial logic) */
+function shouldReconcileExpiredTrial(subscription: SubscriptionRecord | null): boolean {
+  return !!subscription
+    && subscription.status === 'trialing'
+    && isTrialExpired(subscription.trial_end)
+}
+
+describe('Pro Trial: reconcileExpiredTrial', () => {
+  it('returns false when no subscription', () => {
+    expect(shouldReconcileExpiredTrial(null)).toBe(false)
+  })
+
+  it('returns false when subscription is active (not trialing)', () => {
+    const sub: SubscriptionRecord = {
+      status: 'active',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: null,
+      metadata: null,
+      trial_extensions: null,
+    }
+    expect(shouldReconcileExpiredTrial(sub)).toBe(false)
+  })
+
+  it('returns false when trialing but trial_end is in the future', () => {
+    const future = new Date()
+    future.setDate(future.getDate() + 5)
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: future.toISOString(),
+      metadata: null,
+      trial_extensions: null,
+    }
+    expect(shouldReconcileExpiredTrial(sub)).toBe(false)
+  })
+
+  it('returns true when trialing and trial_end has passed', () => {
+    const past = new Date()
+    past.setDate(past.getDate() - 1)
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: past.toISOString(),
+      metadata: null,
+      trial_extensions: null,
+    }
+    expect(shouldReconcileExpiredTrial(sub)).toBe(true)
+  })
+
+  it('returns false when trialing with no trial_end set', () => {
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: null,
+      metadata: null,
+      trial_extensions: null,
+    }
+    expect(shouldReconcileExpiredTrial(sub)).toBe(false)
+  })
+
+  it('after reconciliation, getEffectiveTier returns free', () => {
+    const past = new Date()
+    past.setDate(past.getDate() - 1)
+    const sub: SubscriptionRecord = {
+      status: 'trialing',
+      tier: 'pro',
+      has_trialed: true,
+      trial_end: past.toISOString(),
+      metadata: null,
+      trial_extensions: null,
+    }
+
+    // Before reconciliation, getEffectiveTier already returns 'free' defensively
+    expect(getEffectiveTier(sub)).toBe('free')
+
+    // Simulate what reconcileExpiredTrial does to the DB record
+    if (shouldReconcileExpiredTrial(sub)) {
+      sub.status = 'expired'
+      sub.tier = 'free'
+    }
+
+    // After reconciliation, the DB record itself now says expired
+    expect(sub.status).toBe('expired')
+    expect(sub.tier).toBe('free')
+    expect(getEffectiveTier(sub)).toBe('free')
   })
 })
