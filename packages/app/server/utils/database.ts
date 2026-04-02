@@ -536,23 +536,68 @@ export class SubscriptionRepository {
     return result?.count ?? 0
   }
 
-  async getActiveTier(siteId: number): Promise<string> {
-    const subscription = await this.getBySiteId(siteId)
+  static isTrialExpired(trialEnd: string | null | undefined): boolean {
+    return !!trialEnd && new Date(trialEnd) <= new Date()
+  }
 
-    if (!subscription) {
+  getActiveTierFromRecord(subscription: Subscription | null | undefined): string {
+    if (!subscription) return 'free'
+    if (subscription.status === 'active') return subscription.tier
+    if (subscription.status === 'trialing') {
+      return SubscriptionRepository.isTrialExpired(subscription.trial_end) ? 'free' : 'trial'
+    }
+    return 'free'
+  }
+
+  async getActiveTier(siteId: number, siteUrl?: string): Promise<string> {
+    const subscription = await this.getBySiteId(siteId)
+    if (
+      subscription?.status === 'trialing' &&
+      SubscriptionRepository.isTrialExpired(subscription.trial_end)
+    ) {
+      await this._expireTrial(siteId, siteUrl)
       return 'free'
     }
+    return this.getActiveTierFromRecord(subscription)
+  }
 
-    if (subscription.status === 'active') {
-      return subscription.tier
+  /**
+   * Detect and fix expired trials: if the subscription is still marked as
+   * 'trialing' but trial_end has passed, update the DB to 'expired'/'free'
+   * and push a webhook to the WordPress site so the plugin downgrades.
+   *
+   * Returns true if a reconciliation was performed.
+   */
+  async reconcileExpiredTrial(siteId: number, siteUrl?: string): Promise<boolean> {
+    const subscription = await this.getBySiteId(siteId)
+
+    if (
+      !subscription ||
+      subscription.status !== 'trialing' ||
+      !SubscriptionRepository.isTrialExpired(subscription.trial_end)
+    ) {
+      return false
     }
 
-    // Trialing users get trial tier (same features as free-plus, different labeling)
-    if (subscription.status === 'trialing') {
-      return 'trial'
-    }
+    await this._expireTrial(siteId, siteUrl)
+    return true
+  }
 
-    return 'free'
+  /** Write the trial-expired state to DB and fire a webhook to the WP site. */
+  private async _expireTrial(siteId: number, siteUrl?: string): Promise<void> {
+    await this.update(siteId, {
+      status: 'expired',
+      tier: 'free',
+    })
+
+    const url = siteUrl ?? (await new SiteRepository().findById(siteId))?.url
+    if (url) {
+      const { sendWebhook } = await import('./webhooks')
+      sendWebhook(url, {
+        type: 'subscription_change',
+        data: { tier: 'free', is_trialing: false, trial_days_remaining: 0 },
+      }).catch(() => {})
+    }
   }
 
   async hasTrialed(siteId: number): Promise<boolean> {
@@ -560,9 +605,7 @@ export class SubscriptionRepository {
     return subscription?.has_trialed === true
   }
 
-  async getTrialInfo(siteId: number) {
-    const subscription = await this.getBySiteId(siteId)
-
+  getTrialInfoFromRecord(subscription: Subscription | null | undefined) {
     if (!subscription || !subscription.trial_end) {
       return { isTrialing: false, daysRemaining: 0, trialEnd: null, extensionsUsed: 0, extensions: null }
     }
@@ -572,12 +615,17 @@ export class SubscriptionRepository {
     const daysRemaining = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
 
     return {
-      isTrialing: subscription.status === 'trialing',
+      isTrialing: subscription.status === 'trialing' && daysRemaining > 0,
       daysRemaining,
       trialEnd: subscription.trial_end,
       extensionsUsed: Object.keys(subscription.trial_extensions || {}).length,
       extensions: subscription.trial_extensions,
     }
+  }
+
+  async getTrialInfo(siteId: number) {
+    const subscription = await this.getBySiteId(siteId)
+    return this.getTrialInfoFromRecord(subscription)
   }
 
   async recordTrialExtension(siteId: number, step: TrialStep, newTrialEnd: string) {
@@ -597,22 +645,18 @@ export class SubscriptionRepository {
     return { extensions, trialEnd: newTrialEnd }
   }
 
-  async isTrialEligible(siteId: number): Promise<{ eligible: boolean; reason?: string }> {
-    const subscription = await this.getBySiteId(siteId)
-
-    if (!subscription) {
-      return { eligible: true }
-    }
-
-    if (subscription.has_trialed) {
-      return { eligible: false, reason: 'Site has already used a trial' }
-    }
-
+  isTrialEligibleFromRecord(subscription: Subscription | null | undefined): { eligible: boolean; reason?: string } {
+    if (!subscription) return { eligible: true }
+    if (subscription.has_trialed) return { eligible: false, reason: 'Site has already used a trial' }
     if (subscription.status === 'active' || subscription.status === 'trialing') {
       return { eligible: false, reason: 'Site already has an active subscription' }
     }
-
     return { eligible: true }
+  }
+
+  async isTrialEligible(siteId: number): Promise<{ eligible: boolean; reason?: string }> {
+    const subscription = await this.getBySiteId(siteId)
+    return this.isTrialEligibleFromRecord(subscription)
   }
 }
 

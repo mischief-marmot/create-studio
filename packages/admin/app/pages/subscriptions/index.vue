@@ -267,6 +267,7 @@ const statusOptions = [
   { value: 'canceled', label: 'Canceled' },
   { value: 'past_due', label: 'Past Due' },
   { value: 'trialing', label: 'Trialing' },
+  { value: 'expired', label: 'Trial Expired' },
   { value: 'unpaid', label: 'Unpaid' },
 ]
 
@@ -438,6 +439,7 @@ const formatStatus = (status: string): string => {
     canceled: 'Canceled',
     cancelled: 'Canceled',
     unpaid: 'Unpaid',
+    expired: 'Trial Expired',
     free: 'Free',
   }
   return statusMap[status.toLowerCase()] || status.charAt(0).toUpperCase() + status.slice(1)
@@ -448,7 +450,7 @@ const getStatusClass = (status: string): string => {
   if (statusLower === 'active' || statusLower === 'trialing') {
     return 'font-medium text-base-content'
   }
-  if (statusLower === 'past_due' || statusLower === 'unpaid') {
+  if (statusLower === 'past_due' || statusLower === 'unpaid' || statusLower === 'expired') {
     return 'text-warning'
   }
   if (statusLower === 'canceled' || statusLower === 'cancelled') {

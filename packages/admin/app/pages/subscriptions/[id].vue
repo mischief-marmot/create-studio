@@ -1032,6 +1032,7 @@ const formatStatus = (status: string): string => {
     'unpaid': 'Unpaid',
     'incomplete': 'Incomplete',
     'incomplete_expired': 'Expired',
+    'expired': 'Trial Expired',
     'paused': 'Paused'
   }
   return statusMap[status] || status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')
@@ -1040,7 +1041,7 @@ const formatStatus = (status: string): string => {
 const getStatusClass = (status: string): string => {
   const positiveStatuses = ['active', 'trialing']
   const negativeStatuses = ['canceled', 'incomplete', 'incomplete_expired', 'unpaid']
-  const warningStatuses = ['past_due', 'paused']
+  const warningStatuses = ['past_due', 'paused', 'expired']
   const neutralStatuses = ['free']
 
   if (positiveStatuses.includes(status)) {
