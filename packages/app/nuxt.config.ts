@@ -111,7 +111,7 @@ export default defineNuxtConfig({
       },
     ],
     server: {
-      allowedHosts: 'all',
+      allowedHosts: true,
       middlewareMode: true,
       hmr: {
         host: "localhost",
