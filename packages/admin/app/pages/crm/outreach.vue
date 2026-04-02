@@ -3,13 +3,13 @@
     <div class="px-6 py-8 max-w-[1800px] mx-auto">
       <!-- Page Header -->
       <div class="mb-8">
-        <div class="flex items-center gap-2 text-xs font-medium tracking-widest uppercase mb-2">
+        <div class="flex items-center gap-2 mb-2 text-xs font-medium tracking-widest uppercase">
           <span class="text-base-content/50">CRM</span>
           <span class="text-base-content/30">&middot;</span>
-          <span class="text-base-content/40">Contact Management</span>
+          <span class="text-base-content/70">Contact Management</span>
         </div>
         <div class="flex items-center justify-between">
-          <h1 class="text-4xl text-base-content" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
+          <h1 class="text-base-content text-4xl" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;">
             Outreach
           </h1>
           <button
@@ -39,7 +39,7 @@
           @click="setSegmentFilter(null)"
         >
           All
-          <span v-if="segmentCounts" class="ml-1 text-xs opacity-60">({{ totalCount }})</span>
+          <span v-if="segmentCounts" class="opacity-60 ml-1 text-xs">({{ totalCount }})</span>
         </button>
         <button
           v-for="seg in segmentTabs"
@@ -49,7 +49,7 @@
           @click="setSegmentFilter(seg.value)"
         >
           {{ seg.label }}
-          <span v-if="segmentCounts" class="ml-1 text-xs opacity-60">({{ segmentCounts[seg.value] || 0 }})</span>
+          <span v-if="segmentCounts" class="opacity-60 ml-1 text-xs">({{ segmentCounts[seg.value] || 0 }})</span>
         </button>
       </div>
 
@@ -58,7 +58,7 @@
         <!-- Left: Table -->
         <div class="flex-1 min-w-0">
           <!-- Search + Sort -->
-          <div class="mb-4 flex gap-2">
+          <div class="flex gap-2 mb-4">
             <div class="flex-1">
               <AdminSearchInput
                 v-model="searchQuery"
@@ -81,22 +81,22 @@
           </div>
 
           <!-- Outreach Table -->
-          <div class="bg-base-100 rounded-xl border border-base-300/50 shadow-sm hover:shadow-md hover:border-base-300 transition-all duration-300">
+          <div class="bg-base-100 rounded-xl border-base-300/50 hover:shadow-md hover:border-base-300 transition-all duration-300 border shadow-sm">
             <!-- Loading -->
             <div v-if="loading" class="flex items-center justify-center py-16">
               <div class="flex flex-col items-center gap-4">
                 <span class="loading loading-spinner loading-lg text-primary"></span>
-                <p class="text-sm text-base-content/50 font-light tracking-wide">Loading outreach records...</p>
+                <p class="text-base-content/50 text-sm font-light tracking-wide">Loading outreach records...</p>
               </div>
             </div>
 
             <!-- Error -->
-            <div v-else-if="error" class="flex flex-col items-center justify-center py-16 text-center px-6">
-              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-error/10 border border-error/20 mb-4">
-                <ExclamationCircleIcon class="w-8 h-8 text-error" />
+            <div v-else-if="error" class="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <div class="bg-error/10 border-error/20 inline-flex items-center justify-center w-16 h-16 mb-4 border rounded-full">
+                <ExclamationCircleIcon class="text-error w-8 h-8" />
               </div>
-              <h3 class="text-xl text-base-content mb-2" style="font-family: 'Instrument Serif', serif;">Unable to Load Outreach</h3>
-              <p class="text-sm text-base-content/60 mb-4">{{ error }}</p>
+              <h3 class="text-base-content mb-2 text-xl" style="font-family: 'Instrument Serif', serif;">Unable to Load Outreach</h3>
+              <p class="text-base-content/60 mb-4 text-sm">{{ error }}</p>
               <button class="btn btn-outline btn-sm" @click="fetchOutreach">Try Again</button>
             </div>
 
@@ -105,56 +105,56 @@
               <div class="overflow-x-auto">
                 <table class="w-full">
                   <thead>
-                    <tr class="border-b border-base-300/50">
-                      <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Contact</th>
-                      <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Segment</th>
-                      <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Stage</th>
-                      <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Rating</th>
-                      <th class="text-left py-4 px-6 text-xs font-medium text-base-content/50 uppercase tracking-wider">Updated</th>
+                    <tr class="border-base-300/50 border-b">
+                      <th class="text-base-content/50 px-6 py-4 text-xs font-medium tracking-wider text-left uppercase">Contact</th>
+                      <th class="text-base-content/50 px-6 py-4 text-xs font-medium tracking-wider text-left uppercase">Segment</th>
+                      <th class="text-base-content/50 px-6 py-4 text-xs font-medium tracking-wider text-left uppercase">Stage</th>
+                      <th class="text-base-content/50 px-6 py-4 text-xs font-medium tracking-wider text-left uppercase">Rating</th>
+                      <th class="text-base-content/50 px-6 py-4 text-xs font-medium tracking-wider text-left uppercase">Updated</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr
                       v-for="record in outreachRecords"
                       :key="record.id"
-                      class="border-b border-base-300/30 last:border-b-0 transition-colors cursor-pointer"
+                      class="border-base-300/30 last:border-b-0 transition-colors border-b cursor-pointer"
                       :class="selectedRecord?.id === record.id ? 'bg-primary/5' : 'hover:bg-base-50'"
                       @click="selectRecord(record)"
                     >
                       <!-- Contact -->
-                      <td class="py-3 px-6">
+                      <td class="px-6 py-3">
                         <div class="flex items-center gap-2.5">
                           <img
                             v-if="record.contactEmail"
                             :src="getGravatarUrl(record.contactEmail, 24)"
-                            class="w-6 h-6 rounded-full flex-shrink-0"
+                            class="flex-shrink-0 w-6 h-6 rounded-full"
                             alt=""
                           />
-                          <div class="w-6 h-6 rounded-full bg-base-200 flex items-center justify-center flex-shrink-0" v-else>
-                            <UserIcon class="w-3 h-3 text-base-content/30" />
+                          <div class="bg-base-200 flex items-center justify-center flex-shrink-0 w-6 h-6 rounded-full" v-else>
+                            <UserIcon class="text-base-content/30 w-3 h-3" />
                           </div>
                           <div class="min-w-0">
-                            <div class="font-medium text-sm text-base-content truncate">{{ record.contactName || 'Unknown' }}</div>
-                            <div class="text-xs text-base-content/50 truncate">{{ record.contactEmail || record.publisherDomain || '' }}</div>
+                            <div class="text-base-content text-sm font-medium truncate">{{ record.contactName || 'Unknown' }}</div>
+                            <div class="text-base-content/50 text-xs truncate">{{ record.contactEmail || record.publisherDomain || '' }}</div>
                           </div>
                         </div>
                       </td>
 
                       <!-- Segment -->
-                      <td class="py-3 px-6">
+                      <td class="px-6 py-3">
                         <div class="flex items-center gap-1.5">
                           <span v-if="record.segment" class="badge badge-sm" :class="segmentBadgeClass(record.segment)">
                             {{ segmentLabel(record.segment) }}
                           </span>
-                          <span v-else class="text-sm text-base-content/40">&mdash;</span>
-                          <span v-if="record.paidPluginCount" class="text-[10px] text-base-content/40" :title="`${record.paidPluginCount} paid plugins`">
+                          <span v-else class="text-base-content/70 text-sm">&mdash;</span>
+                          <span v-if="record.paidPluginCount" class="text-[10px] text-base-content/70" :title="`${record.paidPluginCount} paid plugins`">
                             {{ record.paidPluginCount }}$
                           </span>
                         </div>
                       </td>
 
                       <!-- Stage (pipeline dots) -->
-                      <td class="py-3 px-6">
+                      <td class="px-6 py-3">
                         <div class="flex items-center gap-0">
                           <template v-for="(s, idx) in stages" :key="s">
                             <div
@@ -172,17 +172,17 @@
                       </td>
 
                       <!-- Rating -->
-                      <td class="py-3 px-6">
-                        <div v-if="record.rating" class="text-sm text-amber-500 tracking-tight">
+                      <td class="px-6 py-3">
+                        <div v-if="record.rating" class="text-amber-500 text-sm tracking-tight">
                           <span v-for="i in 5" :key="i">{{ i <= record.rating ? '\u2605' : '\u2606' }}</span>
                         </div>
-                        <span v-else class="text-sm text-base-content/40">&mdash;</span>
+                        <span v-else class="text-base-content/70 text-sm">&mdash;</span>
                       </td>
 
                       <!-- Updated -->
-                      <td class="py-3 px-6">
-                        <span v-if="record.updatedAt" class="text-sm text-base-content/70">{{ relativeDate(record.updatedAt) }}</span>
-                        <span v-else class="text-sm text-base-content/40">&mdash;</span>
+                      <td class="px-6 py-3">
+                        <span v-if="record.updatedAt" class="text-base-content/70 text-sm">{{ relativeDate(record.updatedAt) }}</span>
+                        <span v-else class="text-base-content/70 text-sm">&mdash;</span>
                       </td>
                     </tr>
                   </tbody>
@@ -192,7 +192,7 @@
               <!-- Pagination -->
               <div
                 v-if="pagination.totalPages > 1"
-                class="border-t border-base-300/50 px-6 py-4 flex items-center justify-between"
+                class="border-base-300/50 flex items-center justify-between px-6 py-4 border-t"
               >
                 <div class="text-base-content/60 text-sm">
                   Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, pagination.total) }} of {{ pagination.total.toLocaleString() }} records
@@ -230,12 +230,12 @@
             </div>
 
             <!-- Empty State -->
-            <div v-else class="flex flex-col items-center justify-center py-16 text-center px-6">
-              <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-base-200 text-base-content/30 mb-4">
+            <div v-else class="flex flex-col items-center justify-center px-6 py-16 text-center">
+              <div class="bg-base-200 text-base-content/30 inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full">
                 <EnvelopeIcon class="w-8 h-8" />
               </div>
-              <h3 class="text-xl text-base-content mb-2" style="font-family: 'Instrument Serif', serif;">No Outreach Records</h3>
-              <p class="text-sm text-base-content/50 mb-4">Generate outreach records from your enriched leads to start tracking contact stages.</p>
+              <h3 class="text-base-content mb-2 text-xl" style="font-family: 'Instrument Serif', serif;">No Outreach Records</h3>
+              <p class="text-base-content/50 mb-4 text-sm">Generate outreach records from your enriched leads to start tracking contact stages.</p>
               <button class="btn btn-primary btn-sm" :disabled="generating" @click="generateOutreach">
                 Generate Outreach
               </button>
@@ -245,7 +245,7 @@
 
         <!-- Right: Detail Panel -->
         <div v-if="selectedRecord" class="w-[420px] flex-shrink-0">
-          <div class="sticky top-8">
+          <div class="top-8 sticky">
             <div class="bg-base-100 rounded-xl border-l-2 border border-base-300/50 shadow-sm overflow-y-auto max-h-[calc(100vh-8rem)]">
               <!-- Detail Loading -->
               <div v-if="detailLoading" class="flex items-center justify-center py-16">
@@ -255,32 +255,32 @@
               <div v-else class="p-5 space-y-5">
                 <!-- Contact -->
                 <div>
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Contact</div>
-                  <div class="bg-base-200/50 rounded-lg p-3 flex items-start gap-3">
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Contact</div>
+                  <div class="bg-base-200/50 flex items-start gap-3 p-3 rounded-lg">
                     <img
                       v-if="selectedRecord.contactEmail"
                       :src="getGravatarUrl(selectedRecord.contactEmail, 48)"
-                      class="w-12 h-12 rounded-full flex-shrink-0"
+                      class="flex-shrink-0 w-12 h-12 rounded-full"
                       alt=""
                     />
-                    <div class="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center flex-shrink-0" v-else>
-                      <UserIcon class="w-6 h-6 text-base-content/30" />
+                    <div class="bg-base-200 flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full" v-else>
+                      <UserIcon class="text-base-content/30 w-6 h-6" />
                     </div>
-                    <div class="space-y-1 min-w-0">
-                      <div class="font-medium text-base-content text-sm">
+                    <div class="min-w-0 space-y-1">
+                      <div class="text-base-content text-sm font-medium">
                         {{ selectedRecord.contactName || 'Unknown' }}
                       </div>
                       <div v-if="selectedRecord.contactEmail" class="flex items-center gap-2">
-                        <EnvelopeIcon class="w-3.5 h-3.5 text-base-content/40 flex-shrink-0" />
-                        <a :href="`mailto:${selectedRecord.contactEmail}`" class="text-sm text-primary hover:underline truncate">
+                        <EnvelopeIcon class="w-3.5 h-3.5 text-base-content/70 flex-shrink-0" />
+                        <a :href="`mailto:${selectedRecord.contactEmail}`" class="text-primary hover:underline text-sm truncate">
                           {{ selectedRecord.contactEmail }}
                         </a>
                       </div>
                       <div v-if="selectedRecord.publisherDomain" class="flex items-center gap-2">
-                        <GlobeAltIcon class="w-3.5 h-3.5 text-base-content/40 flex-shrink-0" />
-                        <a :href="`https://${selectedRecord.publisherDomain}`" target="_blank" rel="noopener noreferrer" class="text-sm text-primary hover:underline flex items-center gap-1">
+                        <GlobeAltIcon class="w-3.5 h-3.5 text-base-content/70 flex-shrink-0" />
+                        <a :href="`https://${selectedRecord.publisherDomain}`" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline flex items-center gap-1 text-sm">
                           {{ selectedRecord.publisherDomain }}
-                          <LinkIcon class="w-3 h-3 text-base-content/30" />
+                          <LinkIcon class="text-base-content/30 w-3 h-3" />
                         </a>
                       </div>
                       <div class="flex items-center gap-2 mt-1">
@@ -297,16 +297,16 @@
 
                 <!-- Stage Selector -->
                 <div>
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-3">Stage</div>
+                  <div class="text-base-content/50 mb-3 text-xs font-medium tracking-wider uppercase">Stage</div>
                   <div class="flex items-center gap-0">
                     <template v-for="(s, idx) in stages" :key="s">
                       <button
-                        class="flex flex-col items-center gap-1 group"
+                        class="group flex flex-col items-center gap-1"
                         @click="updateStage(s)"
                         :title="s"
                       >
                         <div
-                          class="w-4 h-4 rounded-full border-2 transition-colors cursor-pointer"
+                          class="w-4 h-4 transition-colors border-2 rounded-full cursor-pointer"
                           :class="stageIndex(selectedRecord.stage) >= idx
                             ? 'bg-primary border-primary'
                             : 'bg-base-100 border-base-300 group-hover:border-primary/50'"
@@ -324,12 +324,12 @@
 
                 <!-- Rating -->
                 <div>
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Rating</div>
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Rating</div>
                   <div class="flex items-center gap-1">
                     <button
                       v-for="i in 5"
                       :key="i"
-                      class="text-2xl transition-colors cursor-pointer hover:scale-110"
+                      class="hover:scale-110 text-2xl transition-colors cursor-pointer"
                       :class="i <= (selectedRecord.rating || 0) ? 'text-amber-500' : 'text-base-300 hover:text-amber-300'"
                       @click="updateRating(i)"
                     >
@@ -340,7 +340,7 @@
 
                 <!-- Notes -->
                 <div>
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Notes</div>
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Notes</div>
                   <textarea
                     v-model="panelNotes"
                     class="textarea textarea-bordered w-full min-h-[100px] text-sm"
@@ -351,10 +351,10 @@
 
                 <!-- Create Studio -->
                 <div v-if="publisherDetail?.publisher.studioData">
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Create Studio</div>
-                  <div class="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Create Studio</div>
+                  <div class="bg-primary/5 border-primary/20 p-3 space-y-2 border rounded-lg">
                     <div class="flex items-center justify-between">
-                      <span class="text-sm font-medium text-base-content">Create User</span>
+                      <span class="text-base-content text-sm font-medium">Create User</span>
                       <div class="flex gap-1.5">
                         <span v-if="publisherDetail.publisher.studioData.isActive" class="badge badge-xs badge-success">Active</span>
                         <span v-else class="badge badge-xs badge-ghost">Inactive</span>
@@ -364,36 +364,36 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span class="text-base-content/40">Version</span>
-                        <div class="font-medium text-base-content">{{ publisherDetail.publisher.studioData.createVersion || 'Unknown' }}</div>
+                        <span class="text-base-content/70">Version</span>
+                        <div class="text-base-content font-medium">{{ publisherDetail.publisher.studioData.createVersion || 'Unknown' }}</div>
                       </div>
                       <div>
-                        <span class="text-base-content/40">Subscription</span>
-                        <div class="font-medium text-base-content capitalize">{{ publisherDetail.publisher.studioData.subscriptionTier || 'Free' }}</div>
+                        <span class="text-base-content/70">Subscription</span>
+                        <div class="text-base-content font-medium capitalize">{{ publisherDetail.publisher.studioData.subscriptionTier || 'Free' }}</div>
                       </div>
                       <div>
-                        <span class="text-base-content/40">Last Active</span>
-                        <div class="font-medium text-base-content">
+                        <span class="text-base-content/70">Last Active</span>
+                        <div class="text-base-content font-medium">
                           {{ publisherDetail.publisher.studioData.lastActiveAt ? relativeDate(publisherDetail.publisher.studioData.lastActiveAt) : 'Never' }}
                         </div>
                       </div>
                       <div>
-                        <span class="text-base-content/40">Status</span>
-                        <div class="font-medium text-base-content capitalize">{{ publisherDetail.publisher.studioData.subscriptionStatus || 'Free' }}</div>
+                        <span class="text-base-content/70">Status</span>
+                        <div class="text-base-content font-medium capitalize">{{ publisherDetail.publisher.studioData.subscriptionStatus || 'Free' }}</div>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div v-else-if="publisherDetail?.publisher.createStudioSiteId">
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Create Studio</div>
-                  <div class="text-sm text-base-content/60">Linked (Site #{{ publisherDetail.publisher.createStudioSiteId }})</div>
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Create Studio</div>
+                  <div class="text-base-content/60 text-sm">Linked (Site #{{ publisherDetail.publisher.createStudioSiteId }})</div>
                 </div>
                 <!-- Fallback: show outreach-level studioData when no publisherDetail -->
                 <div v-else-if="!publisherDetail && selectedRecord.publisherStudioData">
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Create Studio</div>
-                  <div class="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Create Studio</div>
+                  <div class="bg-primary/5 border-primary/20 p-3 space-y-2 border rounded-lg">
                     <div class="flex items-center justify-between">
-                      <span class="text-sm font-medium text-base-content">Create User</span>
+                      <span class="text-base-content text-sm font-medium">Create User</span>
                       <div class="flex gap-1.5">
                         <span v-if="selectedRecord.publisherStudioData.isActive" class="badge badge-xs badge-success">Active</span>
                         <span v-else class="badge badge-xs badge-ghost">Inactive</span>
@@ -403,12 +403,12 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span class="text-base-content/40">Version</span>
-                        <div class="font-medium text-base-content">{{ selectedRecord.publisherStudioData.createVersion || 'Unknown' }}</div>
+                        <span class="text-base-content/70">Version</span>
+                        <div class="text-base-content font-medium">{{ selectedRecord.publisherStudioData.createVersion || 'Unknown' }}</div>
                       </div>
                       <div>
-                        <span class="text-base-content/40">Subscription</span>
-                        <div class="font-medium text-base-content capitalize">{{ selectedRecord.publisherStudioData.subscriptionTier || 'Free' }}</div>
+                        <span class="text-base-content/70">Subscription</span>
+                        <div class="text-base-content font-medium capitalize">{{ selectedRecord.publisherStudioData.subscriptionTier || 'Free' }}</div>
                       </div>
                     </div>
                   </div>
@@ -416,18 +416,18 @@
 
                 <!-- Publishing Stats -->
                 <div v-if="publisherDetail">
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Publishing Stats</div>
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Publishing Stats</div>
                   <div class="grid grid-cols-3 gap-3">
-                    <div class="bg-base-200/50 rounded-lg p-3 text-center">
-                      <div class="text-lg font-bold text-base-content">{{ publisherDetail.publisher.postCount?.toLocaleString() || '&mdash;' }}</div>
+                    <div class="bg-base-200/50 p-3 text-center rounded-lg">
+                      <div class="text-base-content text-lg font-bold">{{ publisherDetail.publisher.postCount?.toLocaleString() || '&mdash;' }}</div>
                       <div class="text-[10px] text-base-content/50 uppercase tracking-wider">Posts</div>
                     </div>
-                    <div class="bg-base-200/50 rounded-lg p-3 text-center">
-                      <div class="text-lg font-bold text-base-content">{{ detailYearsPublishing || '&mdash;' }}</div>
+                    <div class="bg-base-200/50 p-3 text-center rounded-lg">
+                      <div class="text-base-content text-lg font-bold">{{ detailYearsPublishing || '&mdash;' }}</div>
                       <div class="text-[10px] text-base-content/50 uppercase tracking-wider">Years</div>
                     </div>
-                    <div class="bg-base-200/50 rounded-lg p-3 text-center">
-                      <div class="text-lg font-bold text-base-content">{{ detailPostsPerMonth || '&mdash;' }}</div>
+                    <div class="bg-base-200/50 p-3 text-center rounded-lg">
+                      <div class="text-base-content text-lg font-bold">{{ detailPostsPerMonth || '&mdash;' }}</div>
                       <div class="text-[10px] text-base-content/50 uppercase tracking-wider">Posts/Mo</div>
                     </div>
                   </div>
@@ -435,9 +435,9 @@
 
                 <!-- Plugin Stack -->
                 <div v-if="publisherDetail?.plugins?.length">
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">
                     Plugin Stack
-                    <span class="text-base-content/30 normal-case tracking-normal font-normal ml-1">{{ publisherDetail.plugins.length }} plugins</span>
+                    <span class="text-base-content/30 ml-1 font-normal tracking-normal normal-case">{{ publisherDetail.plugins.length }} plugins</span>
                   </div>
 
                   <!-- Summary badges -->
@@ -456,36 +456,36 @@
                   <!-- Plugin list -->
                   <div class="space-y-1.5">
                     <div v-for="plugin in publisherDetail.plugins" :key="plugin.namespace"
-                      class="py-2 px-3 rounded-lg bg-base-200/30 hover:bg-base-200/60 transition-colors">
+                      class="bg-base-200/30 hover:bg-base-200/60 px-3 py-2 transition-colors rounded-lg">
                       <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0">
                           <div class="flex items-center gap-1.5">
                             <a v-if="plugin.wpUrl || plugin.homepageUrl"
                               :href="plugin.wpUrl || plugin.homepageUrl"
                               target="_blank" rel="noopener noreferrer"
-                              class="text-sm font-medium text-base-content hover:text-primary transition-colors"
+                              class="text-base-content hover:text-primary text-sm font-medium transition-colors"
                             >
                               {{ plugin.name || plugin.namespace }}
                             </a>
-                            <span v-else class="text-sm font-medium text-base-content">{{ plugin.name || plugin.namespace }}</span>
-                            <LinkIcon v-if="plugin.wpUrl || plugin.homepageUrl" class="w-3 h-3 text-base-content/30 flex-shrink-0" />
+                            <span v-else class="text-base-content text-sm font-medium">{{ plugin.name || plugin.namespace }}</span>
+                            <LinkIcon v-if="plugin.wpUrl || plugin.homepageUrl" class="text-base-content/30 flex-shrink-0 w-3 h-3" />
                           </div>
                           <div v-if="plugin.description" class="text-xs text-base-content/50 mt-0.5 line-clamp-1">
                             {{ plugin.description }}
                           </div>
                           <div class="flex items-center gap-3 mt-1">
-                            <span v-if="plugin.activeInstalls" class="text-[10px] text-base-content/40">
+                            <span v-if="plugin.activeInstalls" class="text-[10px] text-base-content/70">
                               {{ formatInstalls(plugin.activeInstalls) }} installs
                             </span>
-                            <span v-if="plugin.rating" class="text-[10px] text-base-content/40">
+                            <span v-if="plugin.rating" class="text-[10px] text-base-content/70">
                               {{ (plugin.rating / 20).toFixed(1) }}/5 rating
                             </span>
-                            <span v-if="plugin.category" class="text-[10px] text-base-content/40 uppercase">
+                            <span v-if="plugin.category" class="text-[10px] text-base-content/70 uppercase">
                               {{ plugin.category }}
                             </span>
                           </div>
                         </div>
-                        <div class="flex flex-col gap-1 flex-shrink-0 items-end">
+                        <div class="flex flex-col items-end flex-shrink-0 gap-1">
                           <span v-if="plugin.isCompetitor" class="badge badge-xs badge-error badge-outline">competitor</span>
                           <span v-if="plugin.isPaid" class="badge badge-xs badge-primary badge-outline">paid</span>
                           <span v-if="plugin.replaceableByCreate" class="badge badge-xs badge-warning badge-outline">replaceable</span>
@@ -498,7 +498,7 @@
 
                 <!-- Social Links -->
                 <div v-if="hasSocialLinks">
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Social Links</div>
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Social Links</div>
                   <div class="flex flex-wrap gap-2">
                     <a
                       v-for="(url, platform) in activeSocialLinks"
@@ -517,15 +517,15 @@
 
                 <!-- Top Content -->
                 <div v-if="publisherDetail?.publisher.topContent?.length">
-                  <div class="text-xs font-medium text-base-content/50 uppercase tracking-wider mb-2">Top Content</div>
+                  <div class="text-base-content/50 mb-2 text-xs font-medium tracking-wider uppercase">Top Content</div>
                   <div class="space-y-1.5">
                     <div
                       v-for="(item, idx) in (publisherDetail.publisher.topContent as TopContentEntry[])"
                       :key="idx"
                       class="flex items-center justify-between gap-2 py-1.5 px-2 rounded-md hover:bg-base-200/50 transition-colors"
                     >
-                      <span class="text-sm text-base-content truncate">{{ item.title }}</span>
-                      <span v-if="item.comments" class="text-xs text-base-content/40 flex-shrink-0">{{ item.comments }} comments</span>
+                      <span class="text-base-content text-sm truncate">{{ item.title }}</span>
+                      <span v-if="item.comments" class="text-base-content/70 flex-shrink-0 text-xs">{{ item.comments }} comments</span>
                     </div>
                   </div>
                 </div>
@@ -534,7 +534,7 @@
                 <div v-if="selectedRecord.publisherId">
                   <NuxtLink
                     :to="`/crm/leads?publisher=${selectedRecord.publisherId}`"
-                    class="text-sm text-primary hover:underline flex items-center gap-1"
+                    class="text-primary hover:underline flex items-center gap-1 text-sm"
                   >
                     View in Leads
                     <ChevronRightIcon class="w-4 h-4" />
@@ -786,9 +786,9 @@ const segmentBadgeClass = (segment: string): string => {
     current: 'badge-info',
     pro: 'badge-primary',
     inactive: 'badge-ghost',
-    wprm: 'badge-success',
+    wprm: 'badge-accent',
     competitor: 'badge-warning',
-    paid_plugins: 'badge-secondary',
+    paid_plugins: 'badge-success',
     no_recipe_plugin: 'badge-accent',
     other: 'badge-ghost',
   }
