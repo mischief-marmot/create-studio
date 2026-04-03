@@ -53,6 +53,10 @@ function isTrialEligible(subscription: SubscriptionRecord | null): { eligible: b
     return { eligible: false, reason: 'Site already has an active subscription' }
   }
 
+  if (subscription.status === 'expired') {
+    return { eligible: false, reason: 'Site has an expired subscription' }
+  }
+
   return { eligible: true }
 }
 
@@ -293,6 +297,20 @@ describe('Pro Trial: isTrialEligible', () => {
       trial_extensions: null,
     }
     expect(isTrialEligible(sub)).toEqual({ eligible: true })
+  })
+
+  it('returns ineligible for expired subscription (post-trial downgrade)', () => {
+    const sub: SubscriptionRecord = {
+      status: 'expired',
+      tier: 'free',
+      has_trialed: false,
+      trial_end: null,
+      metadata: null,
+      trial_extensions: null,
+    }
+    const result = isTrialEligible(sub)
+    expect(result.eligible).toBe(false)
+    expect(result.reason).toContain('expired')
   })
 })
 
@@ -675,11 +693,16 @@ describe('Pro Trial: reconcileExpiredTrial', () => {
     if (shouldReconcileExpiredTrial(sub)) {
       sub.status = 'expired'
       sub.tier = 'free'
+      sub.has_trialed = true
     }
 
     // After reconciliation, the DB record itself now says expired
     expect(sub.status).toBe('expired')
     expect(sub.tier).toBe('free')
+    expect(sub.has_trialed).toBe(true)
     expect(getEffectiveTier(sub)).toBe('free')
+
+    // After reconciliation, site should NOT be trial-eligible
+    expect(isTrialEligible(sub).eligible).toBe(false)
   })
 })
