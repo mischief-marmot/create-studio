@@ -588,6 +588,7 @@ export class SubscriptionRepository {
     await this.update(siteId, {
       status: 'expired',
       tier: 'free',
+      has_trialed: true,
     })
 
     const url = siteUrl ?? (await new SiteRepository().findById(siteId))?.url
@@ -650,6 +651,9 @@ export class SubscriptionRepository {
     if (subscription.has_trialed) return { eligible: false, reason: 'Site has already used a trial' }
     if (subscription.status === 'active' || subscription.status === 'trialing') {
       return { eligible: false, reason: 'Site already has an active subscription' }
+    }
+    if (subscription.status === 'expired') {
+      return { eligible: false, reason: 'Site has an expired subscription' }
     }
     return { eligible: true }
   }
