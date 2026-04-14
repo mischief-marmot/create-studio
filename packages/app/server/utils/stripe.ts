@@ -40,7 +40,6 @@ export async function createCheckoutSession(params: {
   cancelUrl: string
   couponId?: string
   trial?: boolean
-  trialCohort?: string
 }): Promise<string> {
   const stripe = getStripeClient()
 
@@ -48,18 +47,10 @@ export async function createCheckoutSession(params: {
     ? { discounts: [{ coupon: params.couponId }] }
     : { allow_promotion_codes: true as const }
 
-  // Build trial-specific params
-  const trialConfig: Record<string, any> = {}
   const subscriptionMetadata: Record<string, string> = {
     site_id: params.siteId.toString(),
     user_id: params.userId.toString(),
     site_name: params.siteName || '',
-  }
-
-  if (params.trial) {
-    const cohort = params.trialCohort || (Math.random() < 0.5 ? 'a' : 'b')
-    subscriptionMetadata.trial_cohort = cohort
-    trialConfig.payment_method_collection = cohort === 'a' ? 'always' : 'if_required'
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -72,7 +63,8 @@ export async function createCheckoutSession(params: {
     success_url: params.successUrl,
     cancel_url: params.cancelUrl,
     ...discountConfig,
-    ...trialConfig,
+    // Always collect payment method — required for both trials and paid subscriptions
+    payment_method_collection: 'always',
     metadata: {
       site_id: params.siteId.toString(),
       user_id: params.userId.toString(),
@@ -126,7 +118,7 @@ export async function extendTrialEnd(stripeSubscriptionId: string, newTrialEnd: 
 /**
  * Handle Stripe webhook events
  */
-export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
+export async function handleWebhookEvent(event: Stripe.Event): Promise<{ backgroundWork?: Promise<void> }> {
   const subscriptionRepo = new SubscriptionRepository()
 
   switch (event.type) {
@@ -213,13 +205,13 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
         ? Math.max(0, Math.floor((new Date(trialEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
         : 0
 
-      // Notify the WordPress site of the subscription change via webhook.
-      try {
-        const siteRepo = new SiteRepository()
-        const site = await siteRepo.findById(siteId)
-        if (site?.url) {
-          const { sendWebhook } = await import('./webhooks')
-          sendWebhook(site.url, {
+      // Notify the WordPress site — returned as background work for waitUntil().
+      const { sendWebhookWithRetry } = await import('./webhooks')
+      const siteRepo = new SiteRepository()
+      const site = await siteRepo.findById(siteId)
+      if (site?.url) {
+        return {
+          backgroundWork: sendWebhookWithRetry(site.url, {
             type: 'subscription_change',
             data: {
               tier: effectiveTier,
@@ -227,10 +219,8 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
               trial_days_remaining: trialDaysRemaining,
               trial_end: trialEnd,
             },
-          })
+          }),
         }
-      } catch (_) {
-        // Fire-and-forget — don't block Stripe webhook processing.
       }
 
       break
@@ -246,16 +236,14 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
           tier: 'free',
         })
 
-        // Notify the WordPress site that subscription was canceled.
-        try {
-          const siteRepo = new SiteRepository()
-          const site = await siteRepo.findById(siteId)
-          if (site?.url) {
-            const { sendWebhook } = await import('./webhooks')
-            sendWebhook(site.url, { type: 'subscription_change', data: { tier: 'free' } })
+        // Notify the WordPress site — returned as background work for waitUntil().
+        const { sendWebhookWithRetry } = await import('./webhooks')
+        const siteRepo = new SiteRepository()
+        const site = await siteRepo.findById(siteId)
+        if (site?.url) {
+          return {
+            backgroundWork: sendWebhookWithRetry(site.url, { type: 'subscription_change', data: { tier: 'free' } }),
           }
-        } catch (_) {
-          // Fire-and-forget — don't block Stripe webhook processing.
         }
       }
 
@@ -334,6 +322,8 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
       // Unhandled event type
       break
   }
+
+  return {}
 }
 
 /**
