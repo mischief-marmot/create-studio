@@ -47,8 +47,20 @@ export default defineEventHandler(async (event) => {
 
     logger.debug('Webhook event received:', stripeEvent.type)
 
-    // Handle the event
-    await handleWebhookEvent(stripeEvent)
+    // Handle the event — may return background work for WordPress notification
+    const { backgroundWork } = await handleWebhookEvent(stripeEvent)
+
+    // Run webhook delivery with retries in the background via waitUntil,
+    // so we respond to Stripe immediately without blocking on WordPress.
+    if (backgroundWork) {
+      const ctx = (event.context.cloudflare as any)?.context
+      if (ctx?.waitUntil) {
+        ctx.waitUntil(backgroundWork)
+      } else {
+        // Local dev / non-Cloudflare: just await it
+        await backgroundWork
+      }
+    }
 
     // Return success response
     return { received: true }

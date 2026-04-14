@@ -305,8 +305,33 @@
 
             <!-- CTA -->
             <div class="flex flex-col items-center gap-3">
+              <div v-if="trialEligible" class="grid grid-cols-2 gap-3 w-full">
+                <button
+                  @click="handleUpgrade(true)"
+                  :disabled="upgrading || !selectedPriceId"
+                  class="btn btn-primary btn-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span
+                    v-if="upgrading === 'trial'"
+                    class="border-primary-content/30 border-t-primary-content animate-spin w-5 h-5 border-2 rounded-full"
+                  ></span>
+                  {{ upgrading === 'trial' ? 'Processing...' : 'Start 14-Day Free Trial' }}
+                </button>
+                <button
+                  @click="handleUpgrade(false)"
+                  :disabled="upgrading || !selectedPriceId"
+                  class="btn btn-outline btn-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span
+                    v-if="upgrading === 'paid'"
+                    class="border-base-content/30 border-t-base-content animate-spin w-5 h-5 border-2 rounded-full"
+                  ></span>
+                  {{ upgrading === 'paid' ? 'Processing...' : 'Upgrade Now' }}
+                </button>
+              </div>
               <button
-                @click="handleUpgrade"
+                v-else
+                @click="handleUpgrade(false)"
                 :disabled="upgrading || !selectedPriceId"
                 class="btn btn-primary btn-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed w-full"
               >
@@ -314,12 +339,12 @@
                   v-if="upgrading"
                   class="border-primary-content/30 border-t-primary-content animate-spin w-5 h-5 border-2 rounded-full"
                 ></span>
-                {{ upgrading ? 'Processing...' : trialEligible ? 'Start 14-Day Free Trial' : 'Continue to Checkout' }}
+                {{ upgrading ? 'Processing...' : 'Continue to Checkout' }}
               </button>
 
               <p class="text-base-content/40 flex items-center gap-1.5 text-xs">
                 <LockClosedIcon class="size-3 flex-shrink-0" />
-                {{ trialEligible ? 'No commitment required' : 'Secure checkout via Stripe' }}
+                {{ trialEligible ? 'Cancel anytime during your trial' : 'Secure checkout via Stripe' }}
               </p>
             </div>
           </div>
@@ -372,7 +397,7 @@ const { selectedSiteId, selectedSite, sites, loadSites } = useSiteContext()
 const config = useRuntimeConfig()
 
 const selectedPriceId = ref<string | null>(null)
-const upgrading = ref(false)
+const upgrading = ref<false | 'trial' | 'paid'>(false)
 const error = ref('')
 const activePaidCount = ref(0)
 const trialEligible = ref(false)
@@ -522,13 +547,13 @@ const pricingPlans = computed(() => {
   ]
 })
 
-const handleUpgrade = async () => {
+const handleUpgrade = async (withTrial: boolean) => {
   if (!selectedPriceId.value) {
     error.value = 'Please select a billing period'
     return
   }
 
-  upgrading.value = true
+  upgrading.value = withTrial ? 'trial' : 'paid'
   error.value = ''
 
   try {
@@ -537,7 +562,7 @@ const handleUpgrade = async () => {
       body: {
         siteId: selectedSiteId.value,
         priceId: selectedPriceId.value,
-        ...(trialEligible.value ? { trial: true } : {}),
+        ...(withTrial && trialEligible.value ? { trial: true } : {}),
       },
     })
 

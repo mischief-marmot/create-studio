@@ -84,7 +84,6 @@ export default defineEventHandler(async (event) => {
     const couponId = getMultiSiteCouponId(activePaidCount, config.stripeMultiSiteCouponId)
 
     // If trial requested, check eligibility
-    let trialCohort: string | undefined
     if (trial) {
       const eligibility = await subscriptionRepo.isTrialEligible(siteId)
       if (!eligibility.eligible) {
@@ -94,7 +93,6 @@ export default defineEventHandler(async (event) => {
           error: eligibility.reason || 'Not eligible for trial',
         }
       }
-      trialCohort = Math.random() < 0.5 ? 'a' : 'b'
     }
 
     // Create Stripe Checkout session with selected price
@@ -108,7 +106,6 @@ export default defineEventHandler(async (event) => {
       cancelUrl: `${baseUrl}/admin/settings?canceled=true`,
       couponId,
       trial: !!trial,
-      trialCohort,
     })
 
     logger.debug('Checkout session created for site', siteId)
