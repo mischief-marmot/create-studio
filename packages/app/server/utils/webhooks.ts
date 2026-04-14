@@ -95,8 +95,38 @@ export async function sendWebhook(siteUrl: string, payload: WebhookPayload): Pro
 
   if (!response.ok) {
     logger.warn(`Webhook delivery failed: ${response.status} ${response.statusText} for ${url}`)
+    throw new Error(`Webhook delivery failed: ${response.status} ${response.statusText}`)
   } else {
     logger.debug(`Webhook delivered successfully to ${url}`)
+  }
+}
+
+/**
+ * Send a webhook with retry logic and exponential backoff.
+ *
+ * Retries up to `maxRetries` times with delays of 2s, 4s, 8s, etc.
+ * Designed to be used with waitUntil() for background execution.
+ */
+export async function sendWebhookWithRetry(
+  siteUrl: string,
+  payload: WebhookPayload,
+  maxRetries = 3,
+): Promise<void> {
+  const logger = useLogger('Webhooks', useRuntimeConfig().debug)
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await sendWebhook(siteUrl, payload)
+      return
+    } catch (err: any) {
+      if (attempt === maxRetries) {
+        logger.error(`Webhook delivery to ${siteUrl} failed after ${maxRetries + 1} attempts: ${err.message}`)
+        return
+      }
+      const delay = 2000 * Math.pow(2, attempt) // 2s, 4s, 8s
+      logger.warn(`Webhook attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
   }
 }
 
