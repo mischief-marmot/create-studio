@@ -308,7 +308,7 @@
               <div v-if="trialEligible" class="grid grid-cols-2 gap-3 w-full">
                 <button
                   @click="handleUpgrade(true)"
-                  :disabled="upgrading"
+                  :disabled="upgrading || !selectedPriceId"
                   class="btn btn-primary btn-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span
@@ -319,7 +319,7 @@
                 </button>
                 <button
                   @click="handleUpgrade(false)"
-                  :disabled="upgrading"
+                  :disabled="upgrading || !selectedPriceId"
                   class="btn btn-outline btn-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span
@@ -332,7 +332,7 @@
               <button
                 v-else
                 @click="handleUpgrade(false)"
-                :disabled="upgrading"
+                :disabled="upgrading || !selectedPriceId"
                 class="btn btn-primary btn-lg rounded-xl disabled:opacity-50 disabled:cursor-not-allowed w-full"
               >
                 <span

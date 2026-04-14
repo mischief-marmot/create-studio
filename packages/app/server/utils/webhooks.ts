@@ -102,9 +102,42 @@ export async function sendWebhook(siteUrl: string, payload: WebhookPayload): Pro
 }
 
 /**
+ * Generic retry with exponential backoff.
+ *
+ * Extracted as a pure utility so it can be tested directly without
+ * Nuxt runtime dependencies.
+ */
+export async function retryWithBackoff(
+  fn: () => Promise<void>,
+  options: {
+    maxRetries?: number
+    baseDelayMs?: number
+    onRetry?: (attempt: number, delay: number, error: Error) => void
+    onGiveUp?: (attempts: number, error: Error) => void
+  } = {},
+): Promise<void> {
+  const { maxRetries = 3, baseDelayMs = 2000, onRetry, onGiveUp } = options
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      await fn()
+      return
+    } catch (err: any) {
+      if (attempt === maxRetries) {
+        onGiveUp?.(attempt + 1, err)
+        return
+      }
+      const delay = baseDelayMs * Math.pow(2, attempt)
+      onRetry?.(attempt + 1, delay, err)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+}
+
+/**
  * Send a webhook with retry logic and exponential backoff.
  *
- * Retries up to `maxRetries` times with delays of 2s, 4s, 8s, etc.
+ * Retries up to 3 times with delays of 2s, 4s, 8s.
  * Designed to be used with waitUntil() for background execution.
  */
 export async function sendWebhookWithRetry(
@@ -114,20 +147,18 @@ export async function sendWebhookWithRetry(
 ): Promise<void> {
   const logger = useLogger('Webhooks', useRuntimeConfig().debug)
 
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      await sendWebhook(siteUrl, payload)
-      return
-    } catch (err: any) {
-      if (attempt === maxRetries) {
-        logger.error(`Webhook delivery to ${siteUrl} failed after ${maxRetries + 1} attempts: ${err.message}`)
-        return
-      }
-      const delay = 2000 * Math.pow(2, attempt) // 2s, 4s, 8s
-      logger.warn(`Webhook attempt ${attempt + 1} failed, retrying in ${delay}ms...`)
-      await new Promise((resolve) => setTimeout(resolve, delay))
-    }
-  }
+  await retryWithBackoff(
+    () => sendWebhook(siteUrl, payload),
+    {
+      maxRetries,
+      onRetry: (attempt, delay) => {
+        logger.warn(`Webhook attempt ${attempt} failed, retrying in ${delay}ms...`)
+      },
+      onGiveUp: (attempts, err) => {
+        logger.error(`Webhook delivery to ${siteUrl} failed after ${attempts} attempts: ${err.message}`)
+      },
+    },
+  )
 }
 
 /**
