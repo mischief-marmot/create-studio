@@ -11,6 +11,7 @@ import { drizzle as drizzleSqlite } from 'drizzle-orm/better-sqlite3'
 import Database from 'better-sqlite3'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { readdirSync } from 'node:fs'
 import * as schema from '../../../app/server/db/schema'
 import { useAdminEnv } from './admin-env'
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
@@ -30,14 +31,47 @@ type DrizzleDb = DrizzleD1Database
 let localAppDbInstance: ReturnType<typeof drizzleSqlite> | null = null
 
 /**
+ * Find the miniflare D1 SQLite file that contains the app's tables.
+ * NuxtHub uses miniflare D1 in local dev, which stores data at
+ * .wrangler/state/v3/d1/miniflare-D1DatabaseObject/<hash>.sqlite
+ */
+function findMiniflareD1Path(appDir: string): string | null {
+  const d1Dir = join(appDir, '.wrangler/state/v3/d1/miniflare-D1DatabaseObject')
+  try {
+    const files = readdirSync(d1Dir).filter(f => f.endsWith('.sqlite'))
+    for (const file of files) {
+      const dbPath = join(d1Dir, file)
+      try {
+        const testDb = new Database(dbPath, { readonly: true })
+        const result = testDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='_hub_migrations'").get()
+        testDb.close()
+        if (result) return dbPath
+      } catch {
+        // Skip unreadable files
+      }
+    }
+  } catch {
+    // Directory doesn't exist
+  }
+  return null
+}
+
+/**
  * Get the local app Drizzle instance pointing at the main app's SQLite DB (cached singleton)
+ *
+ * Connects to the miniflare D1 database that NuxtHub uses in local dev.
+ * Falls back to the legacy .data/db/sqlite.db path if miniflare is not found.
  */
 function getLocalAppDb(): ReturnType<typeof drizzleSqlite> {
   if (!localAppDbInstance) {
     const __filename = fileURLToPath(import.meta.url)
     const __dirname = dirname(__filename)
-    // Navigate from admin/server/utils/ → app/.data/db/sqlite.db
-    const appDbPath = join(__dirname, '../../../app/.data/db/sqlite.db')
+    const appDir = join(__dirname, '../../../app')
+
+    // Prefer the miniflare D1 database (what NuxtHub actually uses in local dev)
+    const miniflareDbPath = findMiniflareD1Path(appDir)
+    const appDbPath = miniflareDbPath || join(appDir, '.data/db/sqlite.db')
+
     const sqlite = new Database(appDbPath)
     localAppDbInstance = drizzleSqlite(sqlite, { schema })
   }
