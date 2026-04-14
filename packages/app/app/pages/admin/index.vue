@@ -96,7 +96,7 @@
       </section>
 
       <!-- Trial CTA (shown first for eligible users) -->
-      <section v-if="!loading && anyTrialEligible && premiumSitesCount === 0" class="w-full">
+      <section v-if="!loading && selectedSiteTrialEligible && premiumSitesCount === 0" class="w-full">
         <div class="bg-gradient-to-r from-primary/10 via-primary/5 to-secondary/10 border border-primary/20 rounded-2xl px-6 py-6 flex items-center justify-between gap-4">
           <div class="flex items-start gap-4">
             <div class="bg-primary/15 rounded-xl p-2.5 flex-shrink-0">
@@ -433,7 +433,7 @@ const siteTiers = ref<Record<number, string>>({})
 const siteTeamCounts = ref<Record<number, number>>({})
 const scrollPosition = ref(0)
 const togglingTier = ref(false)
-const anyTrialEligible = ref(false)
+const siteTrialEligible = ref<Record<number, boolean>>({})
 const trialingSiteId = ref<number | null>(null)
 const trialDaysRemaining = ref(0)
 
@@ -473,6 +473,11 @@ const premiumSitesCount = computed(() => {
 // Paid premium sites (excludes trial — used for multi-site discount messaging)
 const paidPremiumSitesCount = computed(() => {
   return Object.values(siteTiers.value).filter(tier => tier === 'pro' || tier === 'free-plus').length
+})
+
+const selectedSiteTrialEligible = computed(() => {
+  if (!selectedSiteId.value) return false
+  return siteTrialEligible.value[selectedSiteId.value] ?? false
 })
 
 const nonProSitesCount = computed(() => {
@@ -522,7 +527,7 @@ const loadDashboardData = async () => {
         if (response.success) {
           siteTiers.value[site.id] = response.tier || 'free'
           if (response.trial_eligible && !response.is_trialing) {
-            anyTrialEligible.value = true
+            siteTrialEligible.value[site.id] = true
           }
           if (response.is_trialing) {
             trialingSiteId.value = site.id
