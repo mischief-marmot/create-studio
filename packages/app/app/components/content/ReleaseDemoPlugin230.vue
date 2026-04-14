@@ -448,16 +448,21 @@ const togglePane = (id: string) => {
   if (pane) pane.active = !pane.active
 }
 
+let resizeObserver: ResizeObserver | null = null
+
 onMounted(() => {
   if (!panesRef.value) return
-  const observer = new ResizeObserver((entries) => {
+  resizeObserver = new ResizeObserver((entries) => {
     for (const entry of entries) {
       containerWidth.value = entry.contentRect.width
     }
   })
-  observer.observe(panesRef.value)
+  resizeObserver.observe(panesRef.value)
   containerWidth.value = panesRef.value.clientWidth
-  onUnmounted(() => observer.disconnect())
+})
+
+onUnmounted(() => {
+  resizeObserver?.disconnect()
 })
 
 // === Sticky Toolbar ===
