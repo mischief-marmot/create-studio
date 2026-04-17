@@ -1199,6 +1199,25 @@ export class SurveyRepository {
   }
 
   /**
+   * Find the most recent COMPLETED response for this user + survey (+ optional site).
+   * Used to lock the survey page into "already completed" state on return visits.
+   */
+  async findCompletedForUser(surveyId: number, userId: number, siteId?: number) {
+    const conditions = [
+      eq(schema.surveyResponses.survey_id, surveyId),
+      eq(schema.surveyResponses.user_id, userId),
+      eq(schema.surveyResponses.completed, true),
+    ]
+    if (siteId != null) {
+      conditions.push(eq(schema.surveyResponses.site_id, siteId))
+    }
+    return await db.select().from(schema.surveyResponses)
+      .where(and(...conditions))
+      .orderBy(sql`${schema.surveyResponses.createdAt} DESC`)
+      .get()
+  }
+
+  /**
    * Update an existing response's data + optional completion flag.
    */
   async updateResponse(id: number, data: {

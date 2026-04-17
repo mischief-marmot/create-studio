@@ -26,8 +26,41 @@ const sitesLoaded = ref(false)
 const hasStarted = ref(false)
 const responseId = ref<number | null>(null)
 const draftResponse = ref<any>(null) // existing incomplete response (if any)
+const completedResponse = ref<any>(null) // existing completed response (if any)
 const draftLookupDone = ref(false)
 const isStarting = ref(false)
+const isUpgrading = ref(false)
+const upgradeError = ref<string>('')
+const codeCopied = ref(false)
+
+async function copyCode() {
+  if (!promotion.value?.code) return
+  try {
+    await navigator.clipboard.writeText(promotion.value.code)
+    codeCopied.value = true
+    setTimeout(() => { codeCopied.value = false }, 2000)
+  } catch {
+    // Clipboard API failed silently — user can still see the code
+  }
+}
+
+async function startUpgrade() {
+  if (isUpgrading.value) return
+  const s = survey.value
+  if (!s || !selectedSiteId.value) return
+  isUpgrading.value = true
+  upgradeError.value = ''
+  try {
+    const res = await $fetch<{ url: string }>(`/api/v2/surveys/${s.id}/checkout`, {
+      method: 'POST',
+      body: { site_id: selectedSiteId.value },
+    })
+    if (res.url) window.location.href = res.url
+  } catch (err: any) {
+    upgradeError.value = err?.data?.error || 'Could not start checkout. Please try again.'
+    isUpgrading.value = false
+  }
+}
 
 const survey = computed(() => surveyData.value?.survey)
 const authenticated = computed(() => surveyData.value?.authenticated ?? false)
@@ -384,17 +417,23 @@ watch([requiresAuth, loggedIn], async ([needsAuth, isLogged]) => {
   }
 }, { immediate: true })
 
-// For authed surveys: look up any existing draft response for this user+site
-// so the welcome screen can offer "Resume" with progress.
+// For authed surveys: look up any existing response state for this user+site.
+// Completed → lock to success screen. Draft → offer Resume on welcome.
 watch([survey, authGateReady, selectedSiteId], async ([s, ready, siteId]) => {
   if (!s || !ready || !import.meta.client || draftLookupDone.value) return
   if (!requiresAuth.value) { draftLookupDone.value = true; return }
   try {
     const url = `/api/v2/surveys/${s.id}/responses/draft${siteId ? `?site_id=${siteId}` : ''}`
-    const res = await $fetch<{ draft: any }>(url)
+    const res = await $fetch<{ draft: any; completed: any; promotion: any }>(url)
     draftResponse.value = res.draft || null
+    completedResponse.value = res.completed || null
+    if (res.completed) {
+      isCompleted.value = true
+      if (res.promotion) promotion.value = res.promotion
+    }
   } catch {
     draftResponse.value = null
+    completedResponse.value = null
   } finally {
     draftLookupDone.value = true
   }
@@ -506,18 +545,47 @@ useHead({
         <p class="text-base-content/70">This survey is no longer active or doesn't exist.</p>
       </div>
 
-      <!-- Completed: thank you -->
-      <div v-else-if="isCompleted" class="text-center py-20">
-        <div class="mb-6 text-6xl">🎉</div>
-        <h1 class="text-3xl font-bold mb-4">Thank you!</h1>
-        <p class="text-lg text-base-content/80 mb-8">
+      <!-- Completed: thank you + discount code + Upgrade now -->
+      <div v-else-if="isCompleted" class="survey-success">
+        <div class="survey-success__emoji">🎉</div>
+        <h1 class="survey-success__title">Thank you!</h1>
+        <p class="survey-success__subtitle">
           This genuinely shapes what I build next.
         </p>
-        <div v-if="promotion" class="card bg-base-200 shadow-lg mx-auto max-w-md">
-          <div class="card-body text-center">
-            <h2 class="card-title justify-center text-xl">{{ promotion.discount }}</h2>
-            <p class="text-base-content/70 text-sm">{{ promotion.delivery }}</p>
+
+        <div v-if="promotion" class="survey-success__card">
+          <h2 class="survey-success__offer">{{ promotion.discount }}</h2>
+          <p v-if="promotion.code" class="survey-success__code-label">Your code:</p>
+          <div v-if="promotion.code" class="survey-success__code-row">
+            <code class="survey-success__code">{{ promotion.code }}</code>
+            <button
+              class="survey-success__copy"
+              :title="codeCopied ? 'Copied!' : 'Copy code'"
+              @click="copyCode"
+            >
+              <svg v-if="!codeCopied" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <svg v-else class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              {{ codeCopied ? 'Copied' : 'Copy' }}
+            </button>
           </div>
+
+          <button
+            v-if="promotion.code && requiresAuth"
+            class="survey-success__upgrade"
+            :disabled="isUpgrading"
+            @click="startUpgrade"
+          >
+            <span v-if="isUpgrading" class="loading loading-spinner loading-sm"></span>
+            {{ isUpgrading ? 'Redirecting…' : 'Upgrade now' }}
+            <span v-if="!isUpgrading">→</span>
+          </button>
+
+          <p v-if="upgradeError" class="survey-success__error">{{ upgradeError }}</p>
+          <p v-else-if="promotion.code_instructions" class="survey-success__hint">{{ promotion.code_instructions }}</p>
         </div>
       </div>
 
@@ -1283,6 +1351,120 @@ useHead({
   background: var(--color-primary-content);
   border-color: var(--color-primary-content);
   color: var(--color-primary);
+}
+
+/* ─────────────────────────────────────────────────────────
+   Success / thank-you screen
+   ───────────────────────────────────────────────────────── */
+.survey-success {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 4rem 1rem 3rem;
+  text-align: center;
+  animation: surveyFadeIn 0.4s ease;
+}
+.survey-success__emoji {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+.survey-success__title {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 3rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 0.75rem;
+  color: var(--color-base-content);
+}
+.survey-success__subtitle {
+  font-size: 1.0625rem;
+  color: color-mix(in oklab, var(--color-base-content) 65%, transparent);
+  margin-bottom: 2.5rem;
+}
+.survey-success__card {
+  background: color-mix(in oklab, var(--color-base-content) 4%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+}
+.survey-success__offer {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+  color: var(--color-base-content);
+}
+.survey-success__code-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+  margin-bottom: 0.5rem;
+}
+.survey-success__code-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.survey-success__code {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.625rem 1.125rem;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-primary) 15%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-primary) 40%, transparent);
+  font-family: ui-monospace, monospace;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--color-base-content);
+}
+.survey-success__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0 0.75rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
+  background: transparent;
+  color: color-mix(in oklab, var(--color-base-content) 75%, transparent);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.survey-success__copy:hover {
+  background: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+}
+.survey-success__upgrade {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+}
+.survey-success__upgrade:hover:not(:disabled) { filter: brightness(1.1); }
+.survey-success__upgrade:active:not(:disabled) { transform: scale(0.98); }
+.survey-success__upgrade:disabled { opacity: 0.7; cursor: default; }
+.survey-success__hint {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+  color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
+}
+.survey-success__error {
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: var(--color-error);
 }
 
 /* ─────────────────────────────────────────────────────────

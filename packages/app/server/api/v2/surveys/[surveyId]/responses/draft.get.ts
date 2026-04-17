@@ -1,7 +1,9 @@
 /**
  * GET /api/v2/surveys/:surveyId/responses/draft?site_id=X
- * Returns the authenticated user's most recent incomplete response for this
- * survey (+ optionally this site). Used on survey page load to enable Resume.
+ * Returns the authenticated user's existing survey state:
+ *   - `draft`: most recent INCOMPLETE response for resume (or null)
+ *   - `completed`: most recent COMPLETED response (or null) — with `promotion` attached
+ *     so the client can render the sticky success screen + Upgrade flow
  *
  * Only works for user-authed surveys (requires session). For public/anon surveys,
  * the client tracks drafts in localStorage.
@@ -23,10 +25,18 @@ export default defineEventHandler(async (event) => {
   const siteId = query.site_id ? Number(query.site_id) : undefined
 
   const surveyRepo = new SurveyRepository()
-  const draft = await surveyRepo.findDraftForUser(surveyId, session.user.id, siteId)
+  const [draft, completed, survey] = await Promise.all([
+    surveyRepo.findDraftForUser(surveyId, session.user.id, siteId),
+    surveyRepo.findCompletedForUser(surveyId, session.user.id, siteId),
+    surveyRepo.findById(surveyId),
+  ])
 
   return {
     success: true,
     draft: draft || null,
+    completed: completed || null,
+    // Promotion is only attached when the user has a completed response —
+    // they've earned the right to see the discount code.
+    promotion: completed && survey?.promotion ? survey.promotion : null,
   }
 })

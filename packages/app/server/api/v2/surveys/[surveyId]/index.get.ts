@@ -1,18 +1,24 @@
 /**
- * GET /api/v2/surveys/:slug
- * Public endpoint — fetch an active survey by slug.
+ * GET /api/v2/surveys/:surveyId
+ * Public endpoint — fetch an active survey by slug OR numeric id.
+ * The route param `:surveyId` is shared with sibling routes under this folder
+ * so Nitro's radix tree registers one dynamic child at this level (not two).
+ *
  * For user-authed surveys, also signals whether the caller is logged in.
  */
 export default defineEventHandler(async (event) => {
-  const slug = getRouterParam(event, 'slug')
-
-  if (!slug) {
+  const param = getRouterParam(event, 'surveyId')
+  if (!param) {
     setResponseStatus(event, 400)
-    return { error: 'Survey slug is required' }
+    return { error: 'Survey id or slug is required' }
   }
 
   const surveyRepo = new SurveyRepository()
-  const survey = await surveyRepo.findBySlug(slug)
+  // Accept either a numeric id or a slug
+  const asNumber = Number(param)
+  const survey = !isNaN(asNumber) && /^\d+$/.test(param)
+    ? await surveyRepo.findById(asNumber)
+    : await surveyRepo.findBySlug(param)
 
   if (!survey) {
     setResponseStatus(event, 404)
