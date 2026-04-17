@@ -22,6 +22,13 @@ const answeredCount = ref(0)
 const totalQuestions = ref(0)
 const sitesLoaded = ref(false)
 
+// Welcome / progress persistence state
+const hasStarted = ref(false)
+const responseId = ref<number | null>(null)
+const draftResponse = ref<any>(null) // existing incomplete response (if any)
+const draftLookupDone = ref(false)
+const isStarting = ref(false)
+
 const survey = computed(() => surveyData.value?.survey)
 const authenticated = computed(() => surveyData.value?.authenticated ?? false)
 const requiresAuth = computed(() => !!survey.value?.requires_auth)
@@ -58,14 +65,55 @@ const progressPercent = computed(() => {
   return Math.min(100, Math.round((answeredCount.value / totalQuestions.value) * 100))
 })
 
+let updateCurrentQuestionFn: (() => void) | null = null
+
+// Delegate to SurveyJS's own nav buttons — they trigger Vue's re-render pipeline
+// correctly for questionPerPage mode. Calling the model methods directly
+// mutates state without updating the rendered DOM.
+function goPrev() {
+  const btn = document.querySelector<HTMLElement>('.sd-navigation__prev-btn')
+  if (btn) btn.click()
+  setTimeout(() => updateCurrentQuestionFn?.(), 80)
+}
+function goNext() {
+  const btn = document.querySelector<HTMLElement>('.sd-navigation__next-btn, .sd-navigation__complete-btn')
+  if (btn) btn.click()
+  setTimeout(() => updateCurrentQuestionFn?.(), 80)
+}
+
 const currentQuestionType = ref('')
 const currentChoiceCount = ref(0)
+const currentRatingMin = ref(0)
+const currentRatingMax = ref(10)
+const isFirstPage = ref(true)
+const isLastPage = ref(false)
 
-function initSurvey(definition: Record<string, any>, surveyId: number) {
+function initSurvey(definition: Record<string, any>, surveyId: number, initialData?: Record<string, any>) {
   const model = new Model(definition)
 
   // Typeform mode: one question at a time
   model.questionsOnPageMode = 'questionPerPage'
+
+  // Hydrate from a saved draft if we have one, and jump to the first unanswered
+  // question before the Vue component mounts (no visible animation)
+  if (initialData && Object.keys(initialData).length > 0) {
+    model.data = initialData
+    const allQs = model.getAllQuestions().filter((q: any) => q.hasInput && q.isVisible)
+    const firstUnanswered = allQs.find((q: any) => q.isEmpty())
+    if (firstUnanswered) {
+      // Seek to the page containing the first unanswered question, then set it
+      // as the currentSingleQuestion so questionPerPage mode renders the right one.
+      try {
+        const targetPage = firstUnanswered.page
+        if (targetPage) model.currentPage = targetPage
+        if ('currentSingleQuestion' in model) {
+          ;(model as any).currentSingleQuestion = firstUnanswered
+        }
+      } catch {
+        // Fall back silently — user will start from the beginning
+      }
+    }
+  }
 
   const updateProgress = () => {
     const inputs = model.getAllQuestions().filter((q: any) => q.hasInput)
@@ -74,23 +122,114 @@ function initSurvey(definition: Record<string, any>, surveyId: number) {
   }
 
   const updateCurrentQuestion = () => {
-    const q = model.currentPage?.questions?.[0]
-    if (q) {
-      currentQuestionType.value = q.getType()
-      currentChoiceCount.value = q.visibleChoices?.length || 0
-    }
+    // In questionPerPage mode, track boundaries by the currently-displayed question.
+    // `currentSingleQuestion` is set by SurveyJS; fall back to first visible question on page.
+    const cur = (model as any).currentSingleQuestion || model.currentPage?.questions?.[0]
+    const allVisible = model.getAllQuestions().filter((q: any) => q.isVisible)
+    const idx = cur ? allVisible.findIndex((q: any) => q === cur) : -1
+    isFirstPage.value = idx <= 0
+    isLastPage.value = idx === allVisible.length - 1
+    nextTick(() => {
+      setTimeout(() => {
+        const hasRating = document.querySelectorAll('.sd-rating__item').length > 0
+        const selectItems = document.querySelectorAll<HTMLElement>('.sd-selectbase__item')
+        const hasRadio = selectItems.length > 0
+        const hasTextarea = !!document.querySelector('.sd-question textarea')
+        const hasTextInput = !!document.querySelector('.sd-question input[type="text"], .sd-question input[type="email"]')
+        const hasRanking = !!document.querySelector('.sd-ranking')
+
+        // Inject letter badge elements into radio/checkbox items
+        selectItems.forEach((item, i) => {
+          if (item.querySelector('.survey-letter-badge')) return
+          const badge = document.createElement('span')
+          badge.className = 'survey-letter-badge'
+          badge.textContent = String.fromCharCode(65 + i)
+          item.prepend(badge)
+        })
+
+        // Inject letter badges into rating items only when the scale exceeds what
+        // number keys can reach (e.g. NPS 0–10 needs 'K' for 10). For 1–9 scales
+        // the visible number IS the shortcut — skip badges to avoid redundancy.
+        const ratingItemsForBadges = document.querySelectorAll<HTMLElement>('.sd-rating__item')
+        const needsLetterBadges = ratingItemsForBadges.length > 9
+        ratingItemsForBadges.forEach((item, i) => {
+          // Clean up any stale badges if the scale changed pages
+          if (!needsLetterBadges) {
+            item.querySelector('.survey-letter-badge--rating')?.remove()
+            return
+          }
+          if (item.querySelector('.survey-letter-badge')) return
+          const badge = document.createElement('span')
+          badge.className = 'survey-letter-badge survey-letter-badge--rating'
+          badge.textContent = String.fromCharCode(65 + i)
+          item.prepend(badge)
+        })
+
+        if (hasRating) {
+          currentQuestionType.value = 'rating'
+          const ratingItems = document.querySelectorAll('.sd-rating__item')
+          currentChoiceCount.value = ratingItems.length
+          // Derive min/max from the rendered number buttons
+          const nums: number[] = []
+          ratingItems.forEach(el => {
+            const t = el.querySelector('.sd-rating__item-text')?.getAttribute('data-text')
+            if (t != null && /^-?\d+$/.test(t)) nums.push(parseInt(t))
+          })
+          if (nums.length) {
+            currentRatingMin.value = Math.min(...nums)
+            currentRatingMax.value = Math.max(...nums)
+          }
+        } else if (hasRadio) {
+          currentQuestionType.value = 'radiogroup'
+          currentChoiceCount.value = selectItems.length
+        } else if (hasTextarea) {
+          currentQuestionType.value = 'comment'
+          currentChoiceCount.value = 0
+        } else if (hasTextInput) {
+          currentQuestionType.value = 'text'
+          currentChoiceCount.value = 0
+        } else if (hasRanking) {
+          currentQuestionType.value = 'ranking'
+          currentChoiceCount.value = 0
+        } else {
+          currentQuestionType.value = ''
+          currentChoiceCount.value = 0
+        }
+      }, 150)
+    })
   }
 
   updateProgress()
+  updateCurrentQuestionFn = updateCurrentQuestion
 
   const AUTO_ADVANCE_TYPES = new Set(['radiogroup', 'rating', 'dropdown', 'boolean'])
 
+  // Debounced autosave — patches the draft response as the user answers
+  let saveTimer: ReturnType<typeof setTimeout> | null = null
+  const queueAutosave = (sender: any) => {
+    if (!responseId.value) return
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(async () => {
+      try {
+        await $fetch(`/api/v2/surveys/${surveyId}/responses/${responseId.value}`, {
+          method: 'PATCH',
+          body: { response_data: sender.data },
+        })
+      } catch {
+        // Silent fail — next value change will retry
+      }
+    }, 600)
+  }
+
   model.onValueChanged.add((sender: any, options: any) => {
     updateProgress()
+    queueAutosave(sender)
     const q = sender.getQuestionByName(options.name)
     if (q && AUTO_ADVANCE_TYPES.has(q.getType())) {
       setTimeout(() => {
-        if (!sender.isLastPage) sender.nextPage()
+        const btn = document.querySelector<HTMLElement>('.sd-navigation__next-btn, .sd-navigation__complete-btn')
+        if (btn) btn.click()
+        setTimeout(() => { updateProgress(); updateCurrentQuestion() }, 50)
       }, 350)
     }
   })
@@ -109,59 +248,85 @@ function initSurvey(definition: Record<string, any>, surveyId: number) {
     })
   })
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts — DOM-driven so they work regardless of SurveyJS type reporting
+  const isTextFocused = () => {
+    const ae = document.activeElement as HTMLInputElement | null
+    return ae?.tagName === 'TEXTAREA' || (ae?.tagName === 'INPUT' && ae.type !== 'radio' && ae.type !== 'checkbox')
+  }
+
   const handleKeyDown = (e: KeyboardEvent) => {
     if (!surveyModel.value || isCompleted.value) return
-    const page = model.currentPage
-    if (!page?.questions?.length) return
-    const q = page.questions[0]
-    const qType = q.getType()
+
+    // Up arrow → go back to previous question
+    // ← / → → navigate between questions
+    if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && !isTextFocused()) {
+      e.preventDefault()
+      goPrev()
+      return
+    }
+    if ((e.key === 'ArrowRight' || e.key === 'ArrowDown') && !isTextFocused()) {
+      e.preventDefault()
+      goNext()
+      return
+    }
 
     // Enter → advance (Shift+Enter → newline in text fields)
     if (e.key === 'Enter') {
-      if ((qType === 'comment' || qType === 'text') && document.activeElement?.tagName === 'TEXTAREA') {
+      if (document.activeElement?.tagName === 'TEXTAREA') {
         if (!e.shiftKey) {
           e.preventDefault()
-          if (!model.isLastPage) model.nextPage()
-          else model.completeLastPage()
+          goNext()
         }
         return
       }
       e.preventDefault()
-      if (!model.isLastPage) model.nextPage()
-      else model.completeLastPage()
+      goNext()
       return
     }
 
-    // Letter keys → radiogroup / checkbox selection
-    if ((qType === 'radiogroup' || qType === 'checkbox') && e.key.length === 1 && /^[a-z]$/i.test(e.key)) {
-      // Don't capture if user is typing in a text field
-      if (document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'INPUT') return
-      const idx = e.key.toLowerCase().charCodeAt(0) - 97
-      const choices = q.visibleChoices
-      if (idx >= 0 && idx < choices.length) {
-        if (qType === 'checkbox') {
-          const current = Array.isArray(q.value) ? [...q.value] : []
-          const val = choices[idx].value
-          const i = current.indexOf(val)
-          if (i >= 0) current.splice(i, 1)
-          else current.push(val)
-          q.value = current
-        } else {
-          q.value = choices[idx].value
+    // Don't capture keys if typing in a text field
+    if (isTextFocused()) return
+
+    // Number keys → try rating items first
+    if (/^[0-9]$/.test(e.key)) {
+      const ratingItems = document.querySelectorAll<HTMLElement>('.sd-rating__item')
+      if (ratingItems.length > 0) {
+        e.preventDefault()
+        e.stopPropagation()
+        const num = e.key
+        for (const item of ratingItems) {
+          const text = item.querySelector('.sd-rating__item-text')?.getAttribute('data-text')
+          if (text === num) {
+            item.querySelector<HTMLElement>('input')?.click()
+            break
+          }
         }
+        return
       }
-      return
     }
 
-    // Number keys → rating
-    if (qType === 'rating' && /^[0-9]$/.test(e.key)) {
-      if (document.activeElement?.tagName === 'TEXTAREA' || document.activeElement?.tagName === 'INPUT') return
-      const num = parseInt(e.key)
-      if (num >= (q.rateMin ?? 0) && num <= (q.rateMax ?? 10)) {
-        q.value = num
+    // Letter keys → try radio/checkbox items first, then rating items
+    if (e.key.length === 1 && /^[a-z]$/i.test(e.key)) {
+      const idx = e.key.toLowerCase().charCodeAt(0) - 97
+      const selectItems = document.querySelectorAll<HTMLElement>('.sd-selectbase__item')
+      if (selectItems.length > 0) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (idx >= 0 && idx < selectItems.length) {
+          selectItems[idx].querySelector<HTMLElement>('input')?.click()
+        }
+        return
       }
-      return
+      // Fall back to rating items (A = first number, B = second, etc.)
+      const ratingItems = document.querySelectorAll<HTMLElement>('.sd-rating__item')
+      if (ratingItems.length > 0) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (idx >= 0 && idx < ratingItems.length) {
+          ratingItems[idx].querySelector<HTMLElement>('input')?.click()
+        }
+        return
+      }
     }
   }
 
@@ -179,15 +344,23 @@ function initSurvey(definition: Record<string, any>, surveyId: number) {
         respondent_email: sender.data.followup_email || undefined,
         completed: true,
       }
-      if (requiresAuth.value) {
-        body.site_id = selectedSiteId.value
+      let response: any
+      if (responseId.value) {
+        // Finalize the existing draft
+        response = await $fetch(`/api/v2/surveys/${surveyId}/responses/${responseId.value}`, {
+          method: 'PATCH',
+          body,
+        })
+      } else {
+        // Fallback (shouldn't happen once draft flow is wired): create a fresh response
+        if (requiresAuth.value) body.site_id = selectedSiteId.value
+        response = await $fetch(`/api/v2/surveys/${surveyId}/responses`, {
+          method: 'POST',
+          body,
+        })
       }
-      const response = await $fetch(`/api/v2/surveys/${surveyId}/responses`, {
-        method: 'POST',
-        body,
-      })
 
-      if (response.promotion) {
+      if (response?.promotion) {
         promotion.value = response.promotion
       }
       isCompleted.value = true
@@ -208,12 +381,78 @@ watch([requiresAuth, loggedIn], async ([needsAuth, isLogged]) => {
   }
 }, { immediate: true })
 
-// Initialize the SurveyJS model once we have everything we need
-watch([survey, authGateReady], ([s, ready]) => {
-  if (s?.definition && !surveyModel.value && ready && import.meta.client) {
-    initSurvey(s.definition, s.id)
+// For authed surveys: look up any existing draft response for this user+site
+// so the welcome screen can offer "Resume" with progress.
+watch([survey, authGateReady, selectedSiteId], async ([s, ready, siteId]) => {
+  if (!s || !ready || !import.meta.client || draftLookupDone.value) return
+  if (!requiresAuth.value) { draftLookupDone.value = true; return }
+  try {
+    const url = `/api/v2/surveys/${s.id}/responses/draft${siteId ? `?site_id=${siteId}` : ''}`
+    const res = await $fetch<{ draft: any }>(url)
+    draftResponse.value = res.draft || null
+  } catch {
+    draftResponse.value = null
+  } finally {
+    draftLookupDone.value = true
   }
 }, { immediate: true })
+
+// Percent complete for the draft — shown on welcome screen as "Resume"
+const draftProgressText = computed(() => {
+  const data = draftResponse.value?.response_data
+  if (!data) return ''
+  const n = Object.keys(data).length
+  return n > 0 ? `${n} answered` : ''
+})
+
+// Press Enter on the welcome screen to start
+if (import.meta.client) {
+  const welcomeKeyHandler = (e: KeyboardEvent) => {
+    if (hasStarted.value || isCompleted.value) return
+    if (authGateBlocker.value) return
+    if (e.key !== 'Enter') return
+    // Ignore Enter when a text field or select is focused
+    const ae = document.activeElement as HTMLElement | null
+    if (ae && ['INPUT', 'TEXTAREA', 'SELECT'].includes(ae.tagName)) return
+    e.preventDefault()
+    if (survey.value) startSurvey()
+  }
+  document.addEventListener('keydown', welcomeKeyHandler)
+  onUnmounted(() => document.removeEventListener('keydown', welcomeKeyHandler))
+}
+
+async function startSurvey() {
+  if (isStarting.value) return
+  isStarting.value = true
+  try {
+    const s = survey.value
+    if (!s) return
+    // Re-use draft if one exists, otherwise create a new one
+    if (draftResponse.value?.id) {
+      responseId.value = draftResponse.value.id
+    } else {
+      const body: Record<string, any> = {}
+      if (requiresAuth.value) body.site_id = selectedSiteId.value
+      const res = await $fetch<{ response: { id: number } }>(`/api/v2/surveys/${s.id}/responses/draft`, {
+        method: 'POST',
+        body,
+      })
+      responseId.value = res.response.id
+    }
+    hasStarted.value = true
+    // Initialize the SurveyJS model now that the user has committed to starting
+    if (!surveyModel.value) {
+      initSurvey(s.definition, s.id, draftResponse.value?.response_data || undefined)
+    }
+  } catch (err: any) {
+    submitError.value = err?.data?.error || 'Could not start survey'
+  } finally {
+    isStarting.value = false
+  }
+}
+
+// NOTE: the old `initSurvey` watcher ran automatically. We no longer auto-init;
+// the user clicks Start / Resume on the welcome screen to kick it off.
 
 useHead({
   title: survey.value?.title || 'Survey',
@@ -225,7 +464,7 @@ useHead({
     <!-- Sticky top progress bar — spans full viewport width -->
     <ClientOnly>
       <div
-        v-if="surveyModel && !isCompleted && totalQuestions > 0"
+        v-if="hasStarted && surveyModel && !isCompleted && totalQuestions > 0"
         class="survey-sticky-progress"
       >
         <div class="survey-sticky-progress__meta">
@@ -315,6 +554,62 @@ useHead({
         </div>
       </div>
 
+      <!-- Welcome screen -->
+      <div v-else-if="!hasStarted" class="survey-welcome">
+        <h1 class="survey-welcome__title">{{ survey?.title }}</h1>
+        <p v-if="survey?.description" class="survey-welcome__description">
+          {{ survey.description }}
+        </p>
+
+        <div class="survey-welcome__meta">
+          <span class="survey-welcome__chip">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            ~10 min
+          </span>
+          <span v-if="draftResponse" class="survey-welcome__chip survey-welcome__chip--progress">
+            {{ draftProgressText }} so far
+          </span>
+        </div>
+
+        <!-- Site picker (only for user-authed surveys with 2+ sites) -->
+        <div v-if="requiresAuth && loggedIn && sites.length >= 2" class="survey-welcome__site">
+          <label for="welcome-site" class="survey-welcome__label">Responding on behalf of</label>
+          <select
+            id="welcome-site"
+            class="survey-welcome__select"
+            :value="selectedSiteId"
+            @change="(e) => selectSite(Number((e.target as HTMLSelectElement).value))"
+          >
+            <option v-for="site in sites" :key="site.id" :value="site.id">
+              {{ site.name || site.url }}
+            </option>
+          </select>
+        </div>
+        <div v-else-if="requiresAuth && loggedIn && sites.length === 1" class="survey-welcome__site-note">
+          Responding as <strong>{{ sites[0].name || sites[0].url }}</strong>
+        </div>
+
+        <div v-if="submitError" class="alert alert-error my-4">
+          <span>{{ submitError }}</span>
+        </div>
+
+        <button
+          class="survey-welcome__start"
+          :disabled="isStarting"
+          @click="startSurvey"
+        >
+          <span v-if="isStarting" class="loading loading-spinner loading-xs"></span>
+          {{ draftResponse ? 'Resume survey' : 'Start survey' }}
+          <span class="survey-welcome__arrow">→</span>
+        </button>
+        <p class="survey-welcome__hint">
+          press <kbd>Enter ↵</kbd>
+        </p>
+      </div>
+
       <!-- Survey -->
       <template v-else>
         <div v-if="submitError" class="alert alert-error mb-4">
@@ -332,26 +627,70 @@ useHead({
           </template>
         </ClientOnly>
 
-        <!-- Keyboard hint bar -->
+        <!-- Bottom bar: counter · shortcuts · nav arrows -->
         <ClientOnly>
-          <div v-if="surveyModel && !isCompleted" class="survey-keyboard-hint">
-            <template v-if="currentQuestionType === 'radiogroup' || currentQuestionType === 'dropdown'">
-              <span><kbd>A</kbd>–<kbd>{{ String.fromCharCode(64 + Math.min(currentChoiceCount, 26)) }}</kbd> select</span>
-              <span class="survey-keyboard-hint__sep">&middot;</span>
-            </template>
-            <template v-else-if="currentQuestionType === 'checkbox'">
-              <span><kbd>A</kbd>–<kbd>{{ String.fromCharCode(64 + Math.min(currentChoiceCount, 26)) }}</kbd> toggle</span>
-              <span class="survey-keyboard-hint__sep">&middot;</span>
-            </template>
-            <template v-else-if="currentQuestionType === 'rating'">
-              <span>Press a <kbd>number</kbd> to rate</span>
-              <span class="survey-keyboard-hint__sep">&middot;</span>
-            </template>
-            <template v-else-if="currentQuestionType === 'comment' || currentQuestionType === 'text'">
-              <span><kbd>Shift</kbd>+<kbd>Enter</kbd> newline</span>
-              <span class="survey-keyboard-hint__sep">&middot;</span>
-            </template>
-            <span><kbd>Enter ↵</kbd> continue</span>
+          <div v-if="hasStarted && surveyModel && !isCompleted" class="survey-bottom-bar">
+            <span class="survey-bottom-bar__count">
+              {{ answeredCount }} of {{ totalQuestions }}
+            </span>
+
+            <div class="survey-shortcuts">
+              <!-- Radiogroup / Dropdown -->
+              <span v-if="currentQuestionType === 'radiogroup' || currentQuestionType === 'dropdown'" class="survey-shortcut">
+                <span class="survey-shortcut__group">
+                  <kbd>A</kbd><span class="survey-shortcut__dash">–</span><kbd>{{ String.fromCharCode(64 + Math.min(currentChoiceCount, 26)) }}</kbd>
+                </span>
+                select
+              </span>
+              <!-- Checkbox -->
+              <span v-else-if="currentQuestionType === 'checkbox'" class="survey-shortcut">
+                <span class="survey-shortcut__group">
+                  <kbd>A</kbd><span class="survey-shortcut__dash">–</span><kbd>{{ String.fromCharCode(64 + Math.min(currentChoiceCount, 26)) }}</kbd>
+                </span>
+                toggle
+              </span>
+              <!-- Rating — numbers when they fit on single keys, letters for NPS -->
+              <span v-else-if="currentQuestionType === 'rating'" class="survey-shortcut">
+                <span class="survey-shortcut__group">
+                  <template v-if="currentChoiceCount > 9">
+                    <kbd>A</kbd><span class="survey-shortcut__dash">–</span><kbd>{{ String.fromCharCode(64 + Math.min(currentChoiceCount, 26)) }}</kbd>
+                  </template>
+                  <template v-else>
+                    <kbd>{{ currentRatingMin }}</kbd><span class="survey-shortcut__dash">–</span><kbd>{{ currentRatingMax }}</kbd>
+                  </template>
+                </span>
+                rate
+              </span>
+              <!-- Text/comment -->
+              <span v-else-if="currentQuestionType === 'comment' || currentQuestionType === 'text'" class="survey-shortcut">
+                <span class="survey-shortcut__group"><kbd>Shift</kbd>+<kbd>↵</kbd></span>
+                new line
+              </span>
+
+              <span class="survey-shortcut">
+                <kbd>Enter ↵</kbd>
+                continue
+              </span>
+
+              <span class="survey-shortcut">
+                <span class="survey-shortcut__group"><kbd>←</kbd><kbd>→</kbd></span>
+                navigate
+              </span>
+            </div>
+
+            <div class="survey-nav-arrows">
+              <button
+                class="survey-nav-arrow"
+                :disabled="isFirstPage"
+                aria-label="Previous"
+                @click="goPrev"
+              >←</button>
+              <button
+                class="survey-nav-arrow"
+                aria-label="Next"
+                @click="goNext"
+              >→</button>
+            </div>
           </div>
         </ClientOnly>
       </template>
@@ -436,10 +775,11 @@ useHead({
   color: var(--color-base-content);
   margin: 0 0 0.75rem 0;
 }
-.survey-create-theme .sd-header__text .sd-description {
+.survey-create-theme .sd-header__text .sd-description,
+.survey-create-theme .sd-description span {
   font-family: "Satoshi", -apple-system, BlinkMacSystemFont, sans-serif;
-  color: color-mix(in oklab, var(--color-base-content) 65%, transparent);
-  font-size: 1rem;
+  color: color-mix(in oklab, var(--color-base-content) 85%, transparent);
+  font-size: 1.25rem;
   line-height: 1.5;
   max-width: 60ch;
 }
@@ -482,6 +822,14 @@ useHead({
   font-weight: 400;
   line-height: 1.3;
   margin-bottom: 1.5rem;
+}
+
+/* Error message — respect the question's container width */
+.survey-typeform-mode .sd-question__erbox,
+.survey-typeform-mode .sd-element__erbox {
+  margin: 0.75rem 0 0 0 !important;
+  border-radius: 8px;
+  position: static !important;
 }
 .survey-typeform-mode .sd-rating .sd-rating__item-text,
 .survey-typeform-mode .sd-item .sd-item__control-label,
@@ -690,13 +1038,37 @@ useHead({
 }
 
 /* Typeform mode — single-question view, vertically centered, fits viewport */
+.survey-typeform-mode {
+  padding-bottom: 5.5rem;
+}
+/* Fill the viewport minus top progress bar + bottom nav bar so we can center */
+.survey-typeform-mode,
+.survey-typeform-mode .sd-root-modern,
+.survey-typeform-mode .sd-container-modern {
+  min-height: calc(100vh - 9rem); /* top sticky + bottom bar */
+  display: flex;
+  flex-direction: column;
+}
+/* The intermediate SurveyJS wrappers need to be flex so the body can grow */
+.survey-typeform-mode .sd-root-modern__wrapper,
+.survey-typeform-mode .sd-container-modern > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.survey-typeform-mode .sv-components-row,
+.survey-typeform-mode .sv-components-column--expandable {
+  flex: 1;
+}
 .survey-typeform-mode .sd-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding: 0 !important;
 }
 .survey-typeform-mode .sd-body__page {
+  padding-top: 0 !important;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -708,8 +1080,11 @@ useHead({
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Hide survey header in typeform mode — title is redundant, progress bar identifies the survey */
-.survey-typeform-mode .sd-header {
+/* Hide survey-level title/header in typeform mode — shown on welcome screen only.
+   Scope to the container-level title to avoid hiding question titles. */
+.survey-typeform-mode .sd-header,
+.survey-typeform-mode .sd-container-modern__title,
+.survey-typeform-mode .sd-root-modern > .sd-title {
   display: none !important;
 }
 
@@ -723,17 +1098,26 @@ useHead({
   display: none;
 }
 
-/* Make the Next/Complete button compact and inline */
+/* Visually hide SurveyJS's own nav buttons but keep them in the DOM so our
+   bottom-bar arrows can delegate to them (simulated click). */
 .survey-typeform-mode .sd-navigation__next-btn,
+.survey-typeform-mode .sd-navigation__prev-btn,
 .survey-typeform-mode .sd-navigation__complete-btn {
-  margin-top: 1.5rem;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* Letter badges on radio/checkbox choices */
-.survey-typeform-mode .sd-selectbase__item {
-  position: relative;
-}
-.survey-typeform-mode .sd-selectbase__item .sd-selectbase__label::before {
+/* Letter badges on radio/checkbox choices — injected as DOM elements */
+.survey-typeform-mode .survey-letter-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -744,63 +1128,404 @@ useHead({
   background: var(--color-base-100);
   font-size: 0.75rem;
   font-weight: 600;
-  margin-right: 0.5rem;
   flex-shrink: 0;
   color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+  margin-right: 0.5rem;
+  pointer-events: none;
 }
-.survey-typeform-mode .sd-selectbase__item:nth-child(1) .sd-selectbase__label::before { content: 'A'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(2) .sd-selectbase__label::before { content: 'B'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(3) .sd-selectbase__label::before { content: 'C'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(4) .sd-selectbase__label::before { content: 'D'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(5) .sd-selectbase__label::before { content: 'E'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(6) .sd-selectbase__label::before { content: 'F'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(7) .sd-selectbase__label::before { content: 'G'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(8) .sd-selectbase__label::before { content: 'H'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(9) .sd-selectbase__label::before { content: 'I'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(10) .sd-selectbase__label::before { content: 'J'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(11) .sd-selectbase__label::before { content: 'K'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(12) .sd-selectbase__label::before { content: 'L'; }
-.survey-typeform-mode .sd-selectbase__item:nth-child(13) .sd-selectbase__label::before { content: 'M'; }
 
 /* Selected choice — letter badge highlighted */
-.survey-typeform-mode .sd-item--checked .sd-selectbase__label::before {
+.survey-typeform-mode .sd-item--checked .survey-letter-badge {
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: var(--color-primary-content);
 }
 
-/* Keyboard hint bar */
-.survey-keyboard-hint {
+/* ─────────────────────────────────────────────────────────
+   Typeform-mode: bordered choice cards + connected rating row
+   ───────────────────────────────────────────────────────── */
+
+/* Radio / checkbox — bordered card rows */
+.survey-typeform-mode .sd-selectbase {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.survey-typeform-mode .sd-selectbase__item {
+  display: flex !important;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border-radius: 8px;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  background: color-mix(in oklab, var(--color-base-content) 3%, transparent);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  margin: 0;
+}
+.survey-typeform-mode .sd-selectbase__item:hover {
+  border-color: color-mix(in oklab, var(--color-base-content) 25%, transparent);
+  background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+}
+.survey-typeform-mode .sd-selectbase__item.sd-item--checked {
+  border-color: var(--color-primary);
+  background: color-mix(in oklab, var(--color-primary) 10%, transparent);
+}
+/* Hide the default radio/checkbox decorator — the letter badge is the control */
+.survey-typeform-mode .sd-selectbase__item .sd-item__decorator {
+  display: none;
+}
+/* Let the label fill the rest of the row; no extra padding */
+.survey-typeform-mode .sd-selectbase__item .sd-selectbase__label,
+.survey-typeform-mode .sd-selectbase__item .sd-item__content {
+  padding: 0;
+  gap: 0;
+  flex: 1;
+}
+.survey-typeform-mode .sd-selectbase__item .sd-item__control-label {
+  font-size: 1.0625rem;
+  font-weight: 400;
+  padding: 0;
+}
+
+/* Rating — connected button row */
+.survey-typeform-mode .sd-rating fieldset {
+  display: flex !important;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 1.75rem 0 0 0 !important;
+  gap: 0;
+  min-height: 0;
+}
+.survey-typeform-mode .sd-rating .sd-rating__item--fixed-size,
+.survey-typeform-mode .sd-rating .sd-rating__item {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  height: 3.5rem;
+  width: auto !important;
+  margin: 0;
+  margin-left: -1px;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  background: color-mix(in oklab, var(--color-base-content) 3%, transparent);
+  border-radius: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  padding: 0;
+}
+.survey-typeform-mode .sd-rating fieldset > .sd-rating__item:first-of-type {
+  border-radius: 8px 0 0 8px;
+  margin-left: 0;
+}
+.survey-typeform-mode .sd-rating fieldset > .sd-rating__item:last-of-type {
+  border-radius: 0 8px 8px 0;
+}
+.survey-typeform-mode .sd-rating .sd-rating__item:hover {
+  background: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-base-content) 25%, transparent);
+  z-index: 1;
+}
+.survey-typeform-mode .sd-rating .sd-rating__item--selected {
+  background: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary-content) !important;
+  z-index: 2;
+}
+.survey-typeform-mode .sd-rating .sd-rating__item-text {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Rating letter badge — hovering BELOW the number button, same styling as hint-bar kbds */
+.survey-typeform-mode .sd-rating__item {
+  position: relative;
+  overflow: visible;
+}
+/* Reserve space below the row only when letter badges are present (NPS scale) */
+.survey-typeform-mode .sd-rating fieldset:has(.survey-letter-badge--rating) {
+  padding-bottom: 1rem !important;
+}
+.survey-typeform-mode .survey-letter-badge--rating {
+  position: absolute;
+  bottom: -0.6875rem; /* overlap bottom border, half the badge height */
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  z-index: 3;
+  /* Match hint-bar kbd styling */
+  min-width: 1.5rem;
+  height: 1.375rem;
+  padding: 0 0.375rem;
+  width: auto;
+  border-radius: 5px;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  /* Solid background so the button border doesn't show through */
+  background: color-mix(in oklab, var(--color-base-100) 100%, var(--color-base-content) 6%);
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.2);
+  pointer-events: none;
+}
+.survey-typeform-mode .sd-rating__item--selected .survey-letter-badge--rating {
+  background: var(--color-primary-content);
+  border-color: var(--color-primary-content);
+  color: var(--color-primary);
+}
+
+/* ─────────────────────────────────────────────────────────
+   Welcome / onboarding screen
+   ───────────────────────────────────────────────────────── */
+.survey-welcome {
+  min-height: calc(100vh - 4rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 0;
+  animation: surveyFadeIn 0.4s ease;
+}
+.survey-welcome__title {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--color-base-content);
+  margin: 0 0 1rem 0;
+}
+.survey-welcome__description {
+  font-size: 1.125rem;
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+  max-width: 36rem;
+}
+.survey-welcome__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+.survey-welcome__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-base-content) 5%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 10%, transparent);
+  font-size: 0.8125rem;
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+  font-weight: 500;
+}
+.survey-welcome__chip svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  opacity: 0.6;
+}
+.survey-welcome__chip--progress {
+  background: color-mix(in oklab, var(--color-primary) 15%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 30%, transparent);
+  color: var(--color-base-content);
+}
+.survey-welcome__site {
+  margin-bottom: 1.75rem;
+}
+.survey-welcome__label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
+  margin-bottom: 0.5rem;
+}
+.survey-welcome__select {
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--color-base-content) 5%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
+  color: var(--color-base-content);
+  font-size: 1rem;
+  font-family: inherit;
+  min-width: 16rem;
+  cursor: pointer;
+}
+.survey-welcome__site-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-base-content) 5%, transparent);
+  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+  font-size: 0.8125rem;
+  margin-bottom: 1.75rem;
+}
+.survey-welcome__start {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease;
+  align-self: flex-start;
+}
+.survey-welcome__start:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.survey-welcome__start:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.survey-welcome__start:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.survey-welcome__arrow {
+  font-size: 1.25rem;
+}
+.survey-welcome__hint {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.8125rem;
+  color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+.survey-welcome__hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.5rem;
+  padding: 0 0.375rem;
+  border-radius: 5px;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-base-content);
+  margin: 0 0.125rem;
+}
+
+/* Bottom bar — counter · shortcuts · nav arrows */
+.survey-bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: color-mix(in oklab, var(--color-base-100) 92%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.125rem 1.5rem;
+  background: color-mix(in oklab, var(--color-base-100) 95%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid color-mix(in oklab, var(--color-base-content) 8%, transparent);
-  font-size: 0.8125rem;
-  color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
   z-index: 40;
 }
-.survey-keyboard-hint kbd {
-  display: inline-block;
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
-  border: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
-  background: color-mix(in oklab, var(--color-base-content) 5%, transparent);
-  font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+.survey-bottom-bar__count {
+  font-size: 0.9375rem;
+  color: color-mix(in oklab, var(--color-base-content) 55%, transparent);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+  min-width: 90px;
 }
-.survey-keyboard-hint__sep {
-  opacity: 0.3;
+
+/* Shortcut hints in the middle */
+.survey-shortcuts {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.survey-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: color-mix(in oklab, var(--color-base-content) 75%, transparent);
+}
+.survey-shortcut kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.625rem;
+  padding: 0 0.4375rem;
+  border-radius: 5px;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-base-content);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.2);
+}
+.survey-shortcut__group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+.survey-shortcut__dash {
+  color: color-mix(in oklab, var(--color-base-content) 30%, transparent);
+  padding: 0 0.125rem;
+}
+
+/* Nav arrows on the right */
+.survey-nav-arrows {
+  display: flex;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  min-width: 90px;
+  justify-content: flex-end;
+}
+.survey-nav-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 6px;
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  background: transparent;
+  color: var(--color-base-content);
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.survey-nav-arrow:hover {
+  background: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-base-content) 30%, transparent);
+}
+.survey-nav-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+.survey-nav-arrow:disabled:hover {
+  background: transparent;
+  border-color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+}
+
+/* Mobile: hide shortcut hints + letter badges (no keyboard on phone) */
+@media (max-width: 640px) {
+  .survey-shortcuts { display: none; }
+  .survey-typeform-mode .survey-letter-badge,
+  .survey-typeform-mode .survey-letter-badge--rating { display: none !important; }
+  .survey-typeform-mode .sd-rating fieldset { padding-bottom: 0 !important; }
+  .survey-bottom-bar { padding: 0.875rem 1rem; }
+  .survey-bottom-bar__count { font-size: 0.875rem; min-width: auto; }
 }
 
 /* Buttons */

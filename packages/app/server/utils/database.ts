@@ -1173,6 +1173,49 @@ export class SurveyRepository {
     return result
   }
 
+  async findResponseById(id: number) {
+    return await db.select().from(schema.surveyResponses)
+      .where(eq(schema.surveyResponses.id, id))
+      .get()
+  }
+
+  /**
+   * Find an incomplete draft response for a given user + survey (+ optional site).
+   * Used to resume partial submissions.
+   */
+  async findDraftForUser(surveyId: number, userId: number, siteId?: number) {
+    const conditions = [
+      eq(schema.surveyResponses.survey_id, surveyId),
+      eq(schema.surveyResponses.user_id, userId),
+      eq(schema.surveyResponses.completed, false),
+    ]
+    if (siteId != null) {
+      conditions.push(eq(schema.surveyResponses.site_id, siteId))
+    }
+    return await db.select().from(schema.surveyResponses)
+      .where(and(...conditions))
+      .orderBy(sql`${schema.surveyResponses.createdAt} DESC`)
+      .get()
+  }
+
+  /**
+   * Update an existing response's data + optional completion flag.
+   */
+  async updateResponse(id: number, data: {
+    response_data?: Record<string, any>
+    completed?: boolean
+    respondent_email?: string
+  }) {
+    const updates: Record<string, any> = {}
+    if (data.response_data !== undefined) updates.response_data = data.response_data
+    if (data.completed !== undefined) updates.completed = data.completed
+    if (data.respondent_email !== undefined) updates.respondent_email = data.respondent_email
+    await db.update(schema.surveyResponses)
+      .set(updates)
+      .where(eq(schema.surveyResponses.id, id))
+    return this.findResponseById(id)
+  }
+
   async updateDefinition(id: number, definition: Record<string, any>) {
     const now = new Date().toISOString()
     await db.update(schema.surveys)
