@@ -19,8 +19,8 @@ import type { H3Event } from 'h3'
 // Re-export app schema tables for convenience in API routes
 // Note: admins/auditLogs/Admin/NewAdmin/AuditLog/NewAuditLog are intentionally
 // excluded here to avoid collisions with admin-ops-db.ts exports
-export { users, sites, siteUsers, subscriptions, broadcasts, feedbackReports, siteMeta } from '../../../app/server/db/schema'
-export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, Broadcast, NewBroadcast, FeedbackReport, NewFeedbackReport, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry } from '../../../app/server/db/schema'
+export { users, sites, siteUsers, subscriptions, broadcasts, feedbackReports, siteMeta, surveys, surveyResponses } from '../../../app/server/db/schema'
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, Broadcast, NewBroadcast, FeedbackReport, NewFeedbackReport, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry, Survey, SurveyResponse } from '../../../app/server/db/schema'
 
 // Use D1 database type as the common interface — both D1 (production) and
 // better-sqlite3 (local dev) share the same query API surface
