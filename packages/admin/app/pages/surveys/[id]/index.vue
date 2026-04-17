@@ -22,12 +22,14 @@
           <button
             v-if="responses.length"
             class="btn btn-sm btn-outline gap-2"
+            :disabled="exporting"
             @click="exportCsv"
           >
-            <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span v-if="exporting" class="loading loading-spinner loading-xs"></span>
+            <svg v-else class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            Export CSV
+            {{ exporting ? 'Exporting...' : 'Export CSV' }}
           </button>
         </div>
       </div>
@@ -327,41 +329,61 @@ function goToPage(page: number) {
   }
 }
 
-function exportCsv() {
-  if (!responses.value.length) return
+const exporting = ref(false)
 
-  const allKeys = new Set<string>()
-  responses.value.forEach(r => {
-    if (r.response_data) Object.keys(r.response_data).forEach(k => allKeys.add(k))
-  })
+async function exportCsv() {
+  if (exporting.value) return
+  exporting.value = true
 
-  const headers = ['id', 'email', 'completed', 'createdAt', ...Array.from(allKeys)]
-  const rows = responses.value.map(r => {
-    const row: string[] = [
-      String(r.id),
-      r.respondent_email || '',
-      String(r.completed),
-      r.createdAt || '',
-    ]
-    allKeys.forEach(k => {
-      const val = r.response_data?.[k]
-      row.push(Array.isArray(val) ? val.join('; ') : String(val ?? ''))
+  try {
+    // Fetch ALL responses (the table view is paginated — but export should cover everything)
+    const params = new URLSearchParams()
+    params.append('page', '1')
+    params.append('limit', '1000')
+    const res = await $fetch<{ responses: SurveyResponse[]; pagination: Pagination }>(
+      `/api/admin/surveys/${surveyId}?${params.toString()}`
+    )
+    const all = res.responses || []
+    if (!all.length) return
+
+    const allKeys = new Set<string>()
+    all.forEach(r => {
+      if (r.response_data) Object.keys(r.response_data).forEach(k => allKeys.add(k))
     })
-    return row
-  })
 
-  const csv = [
-    headers.join(','),
-    ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
-  ].join('\n')
+    const headers = ['id', 'email', 'site', 'completed', 'createdAt', ...Array.from(allKeys)]
+    const rows = all.map(r => {
+      const row: string[] = [
+        String(r.id),
+        r.respondent_email || '',
+        r.site_url || '',
+        String(r.completed),
+        r.createdAt || '',
+      ]
+      allKeys.forEach(k => {
+        const val = r.response_data?.[k]
+        row.push(Array.isArray(val) ? val.join('; ') : String(val ?? ''))
+      })
+      return row
+    })
 
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `survey-${surveyId}-responses-${new Date().toISOString().slice(0, 10)}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+    const csv = [
+      headers.join(','),
+      ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')),
+    ].join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `survey-${surveyId}-responses-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('CSV export failed:', err)
+  } finally {
+    exporting.value = false
+  }
 }
 
 onMounted(fetchSurvey)

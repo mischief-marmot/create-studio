@@ -75,8 +75,10 @@
                 type="text"
                 required
                 class="input input-bordered w-full font-mono text-sm"
+                :class="{ 'input-error': slugError }"
                 placeholder="publisher-feedback"
               />
+              <p v-if="slugError" class="text-xs text-error mt-1">{{ slugError }}</p>
             </div>
 
             <!-- Title -->
@@ -253,9 +255,22 @@ const deleteModalOpen = ref(false)
 const deleting = ref(false)
 const deleteError = ref<string | null>(null)
 
-const previewUrl = computed(() => `https://cs.test/survey/${form.value.slug}`)
+const runtimeConfig = useRuntimeConfig()
+const previewUrl = computed(() => {
+  const base = (runtimeConfig.public?.mainAppUrl as string) || 'https://create.studio'
+  return `${base.replace(/\/$/, '')}/survey/${form.value.slug}`
+})
 
+const SLUG_RE = /^[a-z0-9-]+$/
+const slugError = computed<string | null>(() => {
+  const s = form.value.slug.trim()
+  if (!s) return 'Slug is required'
+  if (!SLUG_RE.test(s)) return 'Slug can only contain lowercase letters, numbers, and hyphens'
+  return null
+})
 const canSave = computed(() => {
+  if (!form.value.title.trim()) return false
+  if (slugError.value) return false
   return !promotionError.value && !definitionError.value
 })
 

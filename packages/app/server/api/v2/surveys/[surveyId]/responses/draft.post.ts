@@ -28,8 +28,10 @@ export default defineEventHandler(async (event) => {
     }
 
     const body = await readBody(event)
+    // Never trust user_id/site_id from the body — derive from session for authed surveys,
+    // leave null for public surveys.
     let userId: number | undefined
-    let siteId: number | undefined = body?.site_id || undefined
+    let siteId: number | undefined
     let email: string | undefined
 
     if (survey.requires_auth) {
@@ -38,17 +40,19 @@ export default defineEventHandler(async (event) => {
         setResponseStatus(event, 401)
         return { error: 'Authentication required' }
       }
-      if (!siteId || typeof siteId !== 'number') {
+      const bodySiteId = Number(body?.site_id)
+      if (!bodySiteId || isNaN(bodySiteId)) {
         setResponseStatus(event, 400)
         return { error: 'site_id is required' }
       }
       const siteUserRepo = new SiteUserRepository()
-      const hasAccess = await siteUserRepo.isUserVerified(session.user.id, siteId)
+      const hasAccess = await siteUserRepo.isUserVerified(session.user.id, bodySiteId)
       if (!hasAccess) {
         setResponseStatus(event, 403)
         return { error: 'You do not have access to this site' }
       }
       userId = session.user.id
+      siteId = bodySiteId
       email = session.user.email
 
       // Reuse an existing draft if the user already started this survey for this site

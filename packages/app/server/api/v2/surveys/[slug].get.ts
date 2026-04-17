@@ -40,7 +40,8 @@ export default defineEventHandler(async (event) => {
       title: survey.title,
       description: survey.description,
       definition: survey.definition,
-      promotion: survey.promotion,
+      // NOTE: `survey.promotion` is intentionally omitted here — the discount code
+      // is only revealed by the completion PATCH so it can't be scraped pre-submit.
       requires_auth: !!survey.requires_auth,
     },
     authenticated,

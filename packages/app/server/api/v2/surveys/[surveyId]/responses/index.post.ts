@@ -32,9 +32,11 @@ export default defineEventHandler(async (event) => {
       return { error: 'response_data object is required' }
     }
 
-    let userId: number | undefined = body.user_id || undefined
-    let siteId: number | undefined = body.site_id || undefined
-    let respondentEmail: string | undefined = body.respondent_email || undefined
+    // NEVER trust user_id / site_id from the body on public surveys — they're
+    // attribution primitives. Only populate them from a verified session.
+    let userId: number | undefined
+    let siteId: number | undefined
+    let respondentEmail: string | undefined
 
     if (survey.requires_auth) {
       const session = await getUserSession(event)
@@ -43,20 +45,25 @@ export default defineEventHandler(async (event) => {
         return { error: 'Authentication required for this survey' }
       }
 
-      if (!siteId || typeof siteId !== 'number') {
+      const bodySiteId = Number(body.site_id)
+      if (!bodySiteId || isNaN(bodySiteId)) {
         setResponseStatus(event, 400)
         return { error: 'site_id is required for this survey' }
       }
 
       const siteUserRepo = new SiteUserRepository()
-      const hasAccess = await siteUserRepo.isUserVerified(session.user.id, siteId)
+      const hasAccess = await siteUserRepo.isUserVerified(session.user.id, bodySiteId)
       if (!hasAccess) {
         setResponseStatus(event, 403)
         return { error: 'You do not have access to this site' }
       }
 
       userId = session.user.id
-      respondentEmail = respondentEmail || session.user.email
+      siteId = bodySiteId
+      respondentEmail = session.user.email
+    } else if (typeof body.respondent_email === 'string') {
+      // Public surveys: accept a voluntarily-provided email but nothing else.
+      respondentEmail = body.respondent_email
     }
 
     const response = await surveyRepo.addResponse({

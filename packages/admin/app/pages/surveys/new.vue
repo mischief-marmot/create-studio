@@ -159,7 +159,16 @@ const definitionText = ref(JSON.stringify(STARTER_DEFINITION, null, 2))
 
 const submitting = ref(false)
 const submitError = ref<string | null>(null)
-const slugError = ref<string | null>(null)
+const slugConflictError = ref<string | null>(null)
+
+const SLUG_RE = /^[a-z0-9-]+$/
+const slugError = computed<string | null>(() => {
+  if (slugConflictError.value) return slugConflictError.value
+  const s = form.slug.trim()
+  if (!s) return null // Empty is OK until submit — don't nag immediately
+  if (!SLUG_RE.test(s)) return 'Slug can only contain lowercase letters, numbers, and hyphens'
+  return null
+})
 
 const parsedPromotion = computed(() => {
   try {
@@ -201,6 +210,7 @@ const definitionError = computed(() => {
 const canSubmit = computed(() => {
   return (
     form.slug.trim().length > 0 &&
+    SLUG_RE.test(form.slug.trim()) &&
     form.title.trim().length > 0 &&
     !promotionError.value &&
     !definitionError.value
@@ -211,7 +221,7 @@ async function submit() {
   if (!canSubmit.value || submitting.value) return
   submitting.value = true
   submitError.value = null
-  slugError.value = null
+  slugConflictError.value = null
 
   try {
     const body: Record<string, any> = {
@@ -235,7 +245,7 @@ async function submit() {
   } catch (err: any) {
     const status = err?.statusCode || err?.response?.status
     if (status === 409) {
-      slugError.value = 'This slug is already taken'
+      slugConflictError.value = 'This slug is already taken'
     } else {
       submitError.value = err?.data?.message || err?.message || 'Failed to create survey'
     }

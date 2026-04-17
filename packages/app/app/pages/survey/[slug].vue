@@ -138,13 +138,16 @@ function initSurvey(definition: Record<string, any>, surveyId: number, initialDa
         const hasTextInput = !!document.querySelector('.sd-question input[type="text"], .sd-question input[type="email"]')
         const hasRanking = !!document.querySelector('.sd-ranking')
 
-        // Inject letter badge elements into radio/checkbox items
+        // Inject letter badge elements INSIDE the label so clicks on the badge
+        // bubble through the native <label> → toggle the radio/checkbox input.
         selectItems.forEach((item, i) => {
           if (item.querySelector('.survey-letter-badge')) return
+          const label = item.querySelector<HTMLElement>('.sd-selectbase__label')
+          const target: HTMLElement = label || item
           const badge = document.createElement('span')
           badge.className = 'survey-letter-badge'
           badge.textContent = String.fromCharCode(65 + i)
-          item.prepend(badge)
+          target.prepend(badge)
         })
 
         // Inject letter badges into rating items only when the scale exceeds what
@@ -1153,14 +1156,16 @@ useHead({
 }
 .survey-typeform-mode .sd-selectbase__item {
   display: flex !important;
-  align-items: center;
-  gap: 0.875rem;
-  padding: 0.875rem 1rem;
+  align-items: stretch;
+  gap: 0;
+  /* Padding moved to the inner label so the entire bordered area is a click target */
+  padding: 0;
   border-radius: 8px;
   border: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
   background: color-mix(in oklab, var(--color-base-content) 3%, transparent);
   transition: background-color 0.15s ease, border-color 0.15s ease;
   margin: 0;
+  cursor: pointer;
 }
 .survey-typeform-mode .sd-selectbase__item:hover {
   border-color: color-mix(in oklab, var(--color-base-content) 25%, transparent);
@@ -1174,12 +1179,16 @@ useHead({
 .survey-typeform-mode .sd-selectbase__item .sd-item__decorator {
   display: none;
 }
-/* Let the label fill the rest of the row; no extra padding */
+/* Label fills the whole card so clicking anywhere inside toggles the input */
 .survey-typeform-mode .sd-selectbase__item .sd-selectbase__label,
 .survey-typeform-mode .sd-selectbase__item .sd-item__content {
-  padding: 0;
-  gap: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
   flex: 1;
+  cursor: pointer;
+  margin: 0;
 }
 .survey-typeform-mode .sd-selectbase__item .sd-item__control-label {
   font-size: 1.0625rem;

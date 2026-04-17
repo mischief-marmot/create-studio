@@ -16,6 +16,9 @@ export default defineEventHandler(async (event) => {
   if (!body?.slug || typeof body.slug !== 'string') {
     throw createError({ statusCode: 400, message: 'slug is required' })
   }
+  if (!/^[a-z0-9-]+$/.test(body.slug)) {
+    throw createError({ statusCode: 400, message: 'slug must contain only lowercase letters, numbers, and hyphens' })
+  }
   if (!body?.title || typeof body.title !== 'string') {
     throw createError({ statusCode: 400, message: 'title is required' })
   }

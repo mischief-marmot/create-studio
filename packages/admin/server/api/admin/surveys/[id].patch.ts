@@ -23,6 +23,9 @@ export default defineEventHandler(async (event) => {
     if (typeof body.slug !== 'string' || !body.slug.trim()) {
       throw createError({ statusCode: 400, message: 'slug must be a non-empty string' })
     }
+    if (!/^[a-z0-9-]+$/.test(body.slug)) {
+      throw createError({ statusCode: 400, message: 'slug must contain only lowercase letters, numbers, and hyphens' })
+    }
     updates.slug = body.slug
   }
   if (body.title !== undefined) {
