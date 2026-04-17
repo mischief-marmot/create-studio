@@ -583,7 +583,7 @@ export class SubscriptionRepository {
     return true
   }
 
-  /** Write the trial-expired state to DB and fire a webhook to the WP site. */
+  /** Write the trial-expired state to DB and enqueue a webhook to the WP site. */
   private async _expireTrial(siteId: number, siteUrl?: string): Promise<void> {
     await this.update(siteId, {
       status: 'expired',
@@ -593,11 +593,12 @@ export class SubscriptionRepository {
 
     const url = siteUrl ?? (await new SiteRepository().findById(siteId))?.url
     if (url) {
-      const { sendWebhook } = await import('./webhooks')
-      sendWebhook(url, {
-        type: 'subscription_change',
-        data: { tier: 'free', is_trialing: false, trial_days_remaining: 0 },
-      }).catch(() => {})
+      const { enqueueSubscriptionChange } = await import('./message-queue')
+      await enqueueSubscriptionChange(siteId, url, {
+        tier: 'free',
+        is_trialing: false,
+        trial_days_remaining: 0,
+      })
     }
   }
 

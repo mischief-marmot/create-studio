@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import type { H3Event } from 'h3'
 import { SubscriptionRepository, SiteRepository } from './database'
 
 /**
@@ -28,7 +29,32 @@ function getTrialEndTimestamp(days: number): number {
 }
 
 /**
- * Create Stripe Checkout Session for subscription
+ * Find or create a Stripe customer for the given email.
+ *
+ * Looks up existing customers by email — if one exists we reuse it so all
+ * subscriptions for a user live under a single Stripe customer record.
+ * Stripe returns customers newest-first by `created`.
+ */
+export async function findOrCreateCustomerByEmail(email: string, metadata?: Record<string, string>): Promise<string> {
+  const stripe = getStripeClient()
+
+  const existing = await stripe.customers.list({ email, limit: 1 })
+  if (existing.data[0]) {
+    return existing.data[0].id
+  }
+
+  const created = await stripe.customers.create({
+    email,
+    ...(metadata ? { metadata } : {}),
+  })
+  return created.id
+}
+
+/**
+ * Create Stripe Checkout Session for subscription.
+ *
+ * Reuses an existing Stripe customer if one is found for the user's email so
+ * multiple site subscriptions stay under a single customer record.
  */
 export async function createCheckoutSession(params: {
   siteId: number
@@ -40,6 +66,7 @@ export async function createCheckoutSession(params: {
   cancelUrl: string
   couponId?: string
   trial?: boolean
+  stripeCustomerId?: string | null
 }): Promise<string> {
   const stripe = getStripeClient()
 
@@ -53,9 +80,13 @@ export async function createCheckoutSession(params: {
     site_name: params.siteName || '',
   }
 
+  const customerId =
+    params.stripeCustomerId
+    ?? (await findOrCreateCustomerByEmail(params.userEmail, { user_id: params.userId.toString() }))
+
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
-    customer_email: params.userEmail,
+    customer: customerId,
     line_items: [{
       price: params.priceId,
       quantity: 1,
@@ -116,9 +147,78 @@ export async function extendTrialEnd(stripeSubscriptionId: string, newTrialEnd: 
 }
 
 /**
- * Handle Stripe webhook events
+ * Convert an existing trialing Stripe subscription to a paid subscription.
+ *
+ * Ends the trial immediately, swaps the price if different, and triggers an
+ * immediate charge to the customer's default payment method. Used when a user
+ * on trial clicks "Upgrade" — avoids creating a duplicate subscription.
+ *
+ * Returns the updated subscription.
  */
-export async function handleWebhookEvent(event: Stripe.Event): Promise<{ backgroundWork?: Promise<void> }> {
+export async function convertTrialToPaid(params: {
+  stripeSubscriptionId: string
+  priceId: string
+  couponId?: string
+}): Promise<Stripe.Subscription> {
+  const stripe = getStripeClient()
+
+  const current = await stripe.subscriptions.retrieve(params.stripeSubscriptionId)
+  const currentItem = current.items.data[0]
+  if (!currentItem) {
+    throw new Error('Subscription has no items')
+  }
+
+  const priceChanging = currentItem.price.id !== params.priceId
+
+  const updateParams: Stripe.SubscriptionUpdateParams = {
+    trial_end: 'now',
+    proration_behavior: 'none',
+    payment_behavior: 'error_if_incomplete',
+    ...(priceChanging
+      ? {
+          items: [{ id: currentItem.id, price: params.priceId }],
+        }
+      : {}),
+    ...(params.couponId ? { discounts: [{ coupon: params.couponId }] } : {}),
+  }
+
+  return stripe.subscriptions.update(params.stripeSubscriptionId, updateParams)
+}
+
+/**
+ * Create a Stripe Billing Portal session scoped to updating payment methods
+ * for a specific subscription. Used when we can't charge the card on file
+ * (e.g. expired card) and need the user to provide a new one before we
+ * convert their trial to a paid subscription.
+ */
+export async function createPaymentUpdatePortalSession(params: {
+  customerId: string
+  subscriptionId: string
+  returnUrl: string
+}): Promise<string> {
+  const stripe = getStripeClient()
+
+  const session = await stripe.billingPortal.sessions.create({
+    customer: params.customerId,
+    return_url: params.returnUrl,
+    flow_data: {
+      type: 'payment_method_update',
+      after_completion: {
+        type: 'redirect',
+        redirect: { return_url: params.returnUrl },
+      },
+    },
+  })
+
+  return session.url
+}
+
+/**
+ * Handle Stripe webhook events. WordPress site notifications are enqueued to
+ * the durable message queue and delivered immediately via waitUntil when
+ * possible; the drain worker is the retry safety net.
+ */
+export async function handleWebhookEvent(event: Stripe.Event, h3Event?: H3Event): Promise<void> {
   const subscriptionRepo = new SubscriptionRepository()
 
   switch (event.type) {
@@ -205,22 +305,21 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<{ backgro
         ? Math.max(0, Math.floor((new Date(trialEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
         : 0
 
-      // Notify the WordPress site — returned as background work for waitUntil().
-      const { sendWebhookWithRetry } = await import('./webhooks')
       const siteRepo = new SiteRepository()
       const site = await siteRepo.findById(siteId)
       if (site?.url) {
-        return {
-          backgroundWork: sendWebhookWithRetry(site.url, {
-            type: 'subscription_change',
-            data: {
-              tier: effectiveTier,
-              is_trialing: isTrialing,
-              trial_days_remaining: trialDaysRemaining,
-              trial_end: trialEnd,
-            },
-          }),
-        }
+        const { enqueueSubscriptionChange } = await import('./message-queue')
+        await enqueueSubscriptionChange(
+          siteId,
+          site.url,
+          {
+            tier: effectiveTier,
+            is_trialing: isTrialing,
+            trial_days_remaining: trialDaysRemaining,
+            trial_end: trialEnd,
+          },
+          h3Event,
+        )
       }
 
       break
@@ -236,14 +335,11 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<{ backgro
           tier: 'free',
         })
 
-        // Notify the WordPress site — returned as background work for waitUntil().
-        const { sendWebhookWithRetry } = await import('./webhooks')
         const siteRepo = new SiteRepository()
         const site = await siteRepo.findById(siteId)
         if (site?.url) {
-          return {
-            backgroundWork: sendWebhookWithRetry(site.url, { type: 'subscription_change', data: { tier: 'free' } }),
-          }
+          const { enqueueSubscriptionChange } = await import('./message-queue')
+          await enqueueSubscriptionChange(siteId, site.url, { tier: 'free' }, h3Event)
         }
       }
 
@@ -322,8 +418,6 @@ export async function handleWebhookEvent(event: Stripe.Event): Promise<{ backgro
       // Unhandled event type
       break
   }
-
-  return {}
 }
 
 /**

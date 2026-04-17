@@ -246,6 +246,27 @@ export const surveyResponses = sqliteTable('SurveyResponses', {
   index('idx_survey_responses_draft_token').on(table.draft_token),
 ])
 
+// MessageQueue — generic background message/dead-letter queue
+// Used for webhooks to WP sites, trial-expiry notifications, and any future
+// async work that should survive individual request failures.
+export const messageQueue = sqliteTable('MessageQueue', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  type: text('type').notNull(), // e.g. 'wordpress_webhook'
+  payload: text('payload', { mode: 'json' }).$type<Record<string, any>>().notNull(),
+  status: text('status').notNull().default('pending'), // pending, processing, failed, dead, completed
+  attempts: integer('attempts').notNull().default(0),
+  max_attempts: integer('max_attempts').notNull().default(8),
+  next_attempt_at: text('next_attempt_at').notNull(), // ISO8601 — worker picks rows where this <= now()
+  last_error: text('last_error'),
+  site_id: integer('site_id').references(() => sites.id, { onDelete: 'cascade' }),
+  created_at: text('created_at').notNull(),
+  updated_at: text('updated_at').notNull(),
+}, (table) => [
+  index('idx_message_queue_status_next_attempt').on(table.status, table.next_attempt_at),
+  index('idx_message_queue_type').on(table.type),
+  index('idx_message_queue_site_id').on(table.site_id),
+])
+
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
 
 // Type exports for use in application code
@@ -271,3 +292,5 @@ export type Survey = typeof surveys.$inferSelect
 export type NewSurvey = typeof surveys.$inferInsert
 export type SurveyResponse = typeof surveyResponses.$inferSelect
 export type NewSurveyResponse = typeof surveyResponses.$inferInsert
+export type MessageQueueRow = typeof messageQueue.$inferSelect
+export type NewMessageQueueRow = typeof messageQueue.$inferInsert

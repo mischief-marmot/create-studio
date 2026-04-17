@@ -7,8 +7,14 @@
  * Response: { success: boolean, url: string, error?: string }
  */
 
+import Stripe from 'stripe'
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { createCheckoutSession, getMultiSiteCouponId } from '~~/server/utils/stripe'
+import {
+  createCheckoutSession,
+  getMultiSiteCouponId,
+  convertTrialToPaid,
+  createPaymentUpdatePortalSession,
+} from '~~/server/utils/stripe'
 import { SiteRepository, SiteUserRepository, SubscriptionRepository } from '~~/server/utils/database'
 import type { TrialStep } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
@@ -78,14 +84,15 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig()
     const baseUrl = config.public.rootUrl || 'http://localhost:3001'
 
-    // Check if user qualifies for multi-site discount
     const subscriptionRepo = new SubscriptionRepository()
-    const activePaidCount = await subscriptionRepo.getActivePaidCountByUser(user.id)
+    const [activePaidCount, existingSub] = await Promise.all([
+      subscriptionRepo.getActivePaidCountByUser(user.id),
+      subscriptionRepo.getBySiteId(siteId),
+    ])
     const couponId = getMultiSiteCouponId(activePaidCount, config.stripeMultiSiteCouponId)
 
-    // If trial requested, check eligibility
     if (trial) {
-      const eligibility = await subscriptionRepo.isTrialEligible(siteId)
+      const eligibility = subscriptionRepo.isTrialEligibleFromRecord(existingSub)
       if (!eligibility.eligible) {
         setResponseStatus(event, 400)
         return {
@@ -95,7 +102,46 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Create Stripe Checkout session with selected price
+    // If the site is already on a trial and the user is upgrading to paid,
+    // convert the existing Stripe subscription in place rather than creating
+    // a second one (prevents duplicate billing).
+    if (!trial && existingSub?.status === 'trialing' && existingSub.stripe_subscription_id) {
+      try {
+        await convertTrialToPaid({
+          stripeSubscriptionId: existingSub.stripe_subscription_id,
+          priceId,
+          couponId,
+        })
+        logger.debug('Converted trial to paid for site', siteId)
+
+        return {
+          success: true,
+          url: `${baseUrl}/admin/settings?success=true`,
+          converted: true,
+        }
+      } catch (err: any) {
+        // Card/payment-method failures (declined, expired, 3DS required,
+        // etc.) all surface as StripeCardError — route the user to the
+        // Billing Portal to update payment, then they can retry.
+        if (err instanceof Stripe.errors.StripeCardError && existingSub.stripe_customer_id) {
+          logger.warn('Trial-to-paid conversion needs payment update for site', siteId)
+          const portalUrl = await createPaymentUpdatePortalSession({
+            customerId: existingSub.stripe_customer_id,
+            subscriptionId: existingSub.stripe_subscription_id,
+            returnUrl: `${baseUrl}/admin/settings?payment_updated=true`,
+          })
+          return {
+            success: true,
+            url: portalUrl,
+            requiresPaymentUpdate: true,
+          }
+        }
+
+        logger.error('Trial-to-paid conversion failed for site', siteId, err)
+        throw err
+      }
+    }
+
     const checkoutUrl = await createCheckoutSession({
       siteId,
       userId: user.id,
@@ -106,6 +152,7 @@ export default defineEventHandler(async (event) => {
       cancelUrl: `${baseUrl}/admin/settings?canceled=true`,
       couponId,
       trial: !!trial,
+      stripeCustomerId: existingSub?.stripe_customer_id,
     })
 
     logger.debug('Checkout session created for site', siteId)
