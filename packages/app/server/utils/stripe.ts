@@ -29,28 +29,33 @@ function getTrialEndTimestamp(days: number): number {
 }
 
 /**
- * Find or create a Stripe customer for the given email.
+ * Find or create a Stripe customer owned by the given user.
  *
- * Looks up existing customers by email — if one exists we reuse it so all
- * subscriptions for a user live under a single Stripe customer record.
- * Stripe returns customers newest-first by `created`.
+ * Reuse rule: a pre-existing Stripe customer is only reused if its
+ * `metadata.user_id` matches `userId`. This prevents a first-time purchaser
+ * from being billed on a stranger's customer record when emails collide
+ * (dashboard-imported customers, household-shared inboxes, QA leftovers,
+ * etc.). Stripe does NOT enforce email uniqueness, so the email lookup is
+ * inherently best-effort; the metadata guard makes it safe.
  *
- * NOTE: Stripe does not enforce email uniqueness server-side, so concurrent
- * first-time calls for the same email could briefly race and create two
- * customers. Rare in practice (checkout is a sync, user-initiated flow) and
- * manually cleanable.
+ * Always sets `metadata.user_id` on newly-created customers so future
+ * reuse is deterministic.
  */
-export async function findOrCreateCustomerByEmail(email: string, metadata?: Record<string, string>): Promise<string> {
+export async function findOrCreateCustomerByEmail(params: {
+  email: string
+  userId: number
+  extraMetadata?: Record<string, string>
+}): Promise<string> {
   const stripe = getStripeClient()
+  const userIdStr = params.userId.toString()
 
-  const existing = await stripe.customers.list({ email, limit: 1 })
-  if (existing.data[0]) {
-    return existing.data[0].id
-  }
+  const existing = await stripe.customers.list({ email: params.email, limit: 10 })
+  const owned = existing.data.find((c) => c.metadata?.user_id === userIdStr)
+  if (owned) return owned.id
 
   const created = await stripe.customers.create({
-    email,
-    ...(metadata ? { metadata } : {}),
+    email: params.email,
+    metadata: { user_id: userIdStr, ...(params.extraMetadata ?? {}) },
   })
   return created.id
 }
@@ -87,7 +92,7 @@ export async function createCheckoutSession(params: {
 
   const customerId =
     params.stripeCustomerId
-    ?? (await findOrCreateCustomerByEmail(params.userEmail, { user_id: params.userId.toString() }))
+    ?? (await findOrCreateCustomerByEmail({ email: params.userEmail, userId: params.userId }))
 
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',

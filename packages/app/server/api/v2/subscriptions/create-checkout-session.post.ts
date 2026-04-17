@@ -162,6 +162,15 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Prefer a customer id we already have on file for this user — first
+    // from this site's subscription, then from any other site they own.
+    // Only fall back to Stripe's email lookup (which requires metadata
+    // ownership check) when we have nothing stored.
+    const stripeCustomerId =
+      existingSub?.stripe_customer_id
+      ?? (await subscriptionRepo.getAnyStripeCustomerIdForUser(user.id))
+      ?? undefined
+
     const checkoutUrl = await createCheckoutSession({
       siteId,
       userId: user.id,
@@ -172,7 +181,7 @@ export default defineEventHandler(async (event) => {
       cancelUrl: `${baseUrl}/admin/settings?canceled=true`,
       couponId,
       trial: !!trial,
-      stripeCustomerId: existingSub?.stripe_customer_id,
+      stripeCustomerId,
     })
 
     logger.debug('Checkout session created for site', siteId)

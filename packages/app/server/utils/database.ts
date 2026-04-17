@@ -523,6 +523,24 @@ export class SubscriptionRepository {
     return this.getBySiteId(siteId)
   }
 
+  /**
+   * Find an existing Stripe customer id previously linked to any of this
+   * user's sites. Used to avoid rediscovering via Stripe's email lookup,
+   * which is vulnerable to collisions with legacy/unrelated customers.
+   */
+  async getAnyStripeCustomerIdForUser(userId: number): Promise<string | null> {
+    const row = await db.select({ id: schema.subscriptions.stripe_customer_id })
+      .from(schema.subscriptions)
+      .innerJoin(schema.siteUsers, eq(schema.subscriptions.site_id, schema.siteUsers.site_id))
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        isNotNull(schema.subscriptions.stripe_customer_id),
+      ))
+      .limit(1)
+      .get()
+    return row?.id ?? null
+  }
+
   async getActivePaidCountByUser(userId: number): Promise<number> {
     const result = await db.select({ count: sql<number>`count(*)` })
       .from(schema.subscriptions)

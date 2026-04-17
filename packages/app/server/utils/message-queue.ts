@@ -250,22 +250,22 @@ async function processOne(
 
   if (!claim) return 'skipped'
 
+  const attempt = row.attempts + 1
   const handler = handlers.get(row.type as MessageType)
+
+  // Missing handler is most likely a deploy/config issue (unreleased worker,
+  // renamed type, etc.) — treat as a transient failure so the message gets
+  // the normal backoff window instead of being destroyed on the first tick.
   if (!handler) {
-    logger.error(`No handler registered for message type "${row.type}" (id=${row.id})`)
-    await db
-      .update(schema.messageQueue)
-      .set({
-        status: 'dead',
-        last_error: `No handler registered for type "${row.type}"`,
-        updated_at: new Date().toISOString(),
-      })
-      .where(eq(schema.messageQueue.id, row.id))
-      .run()
-    return 'dead'
+    return recordFailure(
+      row,
+      attempt,
+      `No handler registered for type "${row.type}"`,
+      logger,
+      { severity: 'config' },
+    )
   }
 
-  const attempt = row.attempts + 1
   try {
     await handler(row.payload as Record<string, any>, { attempt, messageId: row.id })
     await db
@@ -281,28 +281,46 @@ async function processOne(
     return 'succeeded'
   } catch (err: any) {
     const errorMessage = err?.message || String(err)
-    const reachedMax = attempt >= row.max_attempts
-    const nextAttemptAt = new Date(Date.now() + computeBackoffMs(attempt)).toISOString()
-
-    await db
-      .update(schema.messageQueue)
-      .set({
-        status: reachedMax ? 'dead' : 'pending',
-        attempts: attempt,
-        last_error: errorMessage.slice(0, 2000),
-        next_attempt_at: nextAttemptAt,
-        updated_at: new Date().toISOString(),
-      })
-      .where(eq(schema.messageQueue.id, row.id))
-      .run()
-
-    if (reachedMax) {
-      logger.error(`Message ${row.id} (${row.type}) dead-lettered after ${attempt} attempts: ${errorMessage}`)
-      return 'dead'
-    }
-    logger.warn(`Message ${row.id} (${row.type}) attempt ${attempt} failed, next attempt at ${nextAttemptAt}: ${errorMessage}`)
-    return 'failed'
+    return recordFailure(row, attempt, errorMessage, logger)
   }
+}
+
+async function recordFailure(
+  row: typeof schema.messageQueue.$inferSelect,
+  attempt: number,
+  errorMessage: string,
+  logger: ReturnType<typeof useLogger>,
+  options: { severity?: 'transient' | 'config' } = {},
+): Promise<ProcessResult> {
+  const reachedMax = attempt >= row.max_attempts
+  const nextAttemptAt = new Date(Date.now() + computeBackoffMs(attempt)).toISOString()
+
+  await db
+    .update(schema.messageQueue)
+    .set({
+      status: reachedMax ? 'dead' : 'pending',
+      attempts: attempt,
+      last_error: errorMessage.slice(0, 2000),
+      next_attempt_at: nextAttemptAt,
+      updated_at: new Date().toISOString(),
+    })
+    .where(eq(schema.messageQueue.id, row.id))
+    .run()
+
+  if (reachedMax) {
+    logger.error(`Message ${row.id} (${row.type}) dead-lettered after ${attempt} attempts: ${errorMessage}`)
+    return 'dead'
+  }
+
+  // Config errors (missing handler, etc.) get louder logging so operators
+  // notice them; transient errors stay at warn.
+  const msg = `Message ${row.id} (${row.type}) attempt ${attempt} failed, next attempt at ${nextAttemptAt}: ${errorMessage}`
+  if (options.severity === 'config') {
+    logger.error(msg)
+  } else {
+    logger.warn(msg)
+  }
+  return 'failed'
 }
 
 /**
