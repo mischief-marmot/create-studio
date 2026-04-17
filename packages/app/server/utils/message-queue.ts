@@ -13,12 +13,23 @@
  *   registerHandler('wordpress_webhook', async (payload) => { ... })
  */
 
-import { and, eq, lte, asc } from 'drizzle-orm'
+import { and, eq, lte, asc, inArray } from 'drizzle-orm'
 import type { H3Event } from 'h3'
 import { useLogger } from '@create-studio/shared/utils/logger'
 
 export type MessageType =
   | 'wordpress_webhook'
+
+export const QUEUE_STATUSES = [
+  'pending',
+  'processing',
+  'failed',
+  'dead',
+  'completed',
+  'superseded',
+] as const
+
+export type QueueStatus = typeof QUEUE_STATUSES[number]
 
 export interface EnqueueOptions {
   siteId?: number | null
@@ -119,26 +130,32 @@ export function scheduleImmediateDelivery(event: H3Event, messageId: number): vo
   const ctx = (event.context.cloudflare as any)?.context
   if (ctx?.waitUntil) {
     ctx.waitUntil(deliver)
+    return
   }
-  // In non-Cloudflare environments (local dev) the promise continues on its
-  // own microtask — the cron drain is the safety net if the process exits.
+  // Non-Cloudflare environments (local dev): the promise runs on its own
+  // microtask with no lifetime guarantee — if the dev server restarts before
+  // it resolves the attempt is silently dropped. The cron drain is the
+  // durability backstop; local dev just sees a ~60s delay when that happens.
 }
 
 /**
- * Backoff schedule. Attempt N (zero-indexed) => delay before next attempt.
- * 1m, 5m, 30m, 2h, 6h, 12h, 24h. After max_attempts the message is marked dead.
+ * Backoff schedule keyed by the attempt number that just failed (1-based;
+ * processOne calls with attempt = row.attempts + 1, starting at 1).
+ *   failure #1 → wait 1m, #2 → 5m, #3 → 30m, #4 → 2h, #5 → 6h, #6 → 12h,
+ *   #7+ → 24h. After max_attempts the message is marked dead.
  */
 export function computeBackoffMs(attempt: number): number {
   const schedule = [
-    60_000,        // 1 min
-    5 * 60_000,    // 5 min
-    30 * 60_000,   // 30 min
-    2 * 3600_000,  // 2 hr
-    6 * 3600_000,  // 6 hr
-    12 * 3600_000, // 12 hr
-    24 * 3600_000, // 24 hr
+    60_000,        // after failure #1 → 1 min
+    5 * 60_000,    // #2 → 5 min
+    30 * 60_000,   // #3 → 30 min
+    2 * 3600_000,  // #4 → 2 hr
+    6 * 3600_000,  // #5 → 6 hr
+    12 * 3600_000, // #6 → 12 hr
+    24 * 3600_000, // #7+ → 24 hr
   ]
-  return schedule[Math.min(attempt, schedule.length - 1)]!
+  const idx = Math.max(0, Math.min(attempt - 1, schedule.length - 1))
+  return schedule[idx]!
 }
 
 /**
@@ -171,7 +188,33 @@ export async function processQueue(batchSize = 25): Promise<{
     .limit(batchSize)
     .all()
 
-  const results = await Promise.all(candidates.map((row) => processOne(row, logger)))
+  // Group by site so messages targeting the same WP host are delivered
+  // serially (avoids hammering one target + surprise WAF/rate-limit blocks),
+  // while distinct sites are processed in parallel.
+  const groups = new Map<string, typeof candidates>()
+  for (const row of candidates) {
+    const key = row.site_id?.toString() ?? `no-site:${row.id}`
+    const bucket = groups.get(key) ?? []
+    bucket.push(row)
+    groups.set(key, bucket)
+  }
+
+  const siteConcurrency = 5
+  const groupLists = [...groups.values()]
+  const results: ProcessResult[] = []
+  for (let i = 0; i < groupLists.length; i += siteConcurrency) {
+    const chunk = groupLists.slice(i, i + siteConcurrency)
+    const chunkResults = await Promise.all(
+      chunk.map(async (rows) => {
+        const perSite: ProcessResult[] = []
+        for (const row of rows) {
+          perSite.push(await processOne(row, logger))
+        }
+        return perSite
+      }),
+    )
+    for (const r of chunkResults) results.push(...r)
+  }
 
   const succeeded = results.filter((r) => r === 'succeeded').length
   const failed = results.filter((r) => r === 'failed').length
@@ -275,6 +318,50 @@ export async function reclaimStaleProcessing(staleAfterMs = 5 * 60_000): Promise
     .where(
       and(
         eq(schema.messageQueue.status, 'processing'),
+        lte(schema.messageQueue.updated_at, cutoff),
+      ),
+    )
+    .returning({ id: schema.messageQueue.id })
+    .all()
+  return result.length
+}
+
+/**
+ * Mark any pending/failed wordpress_webhook messages for a site as
+ * `superseded`. Called when the WP plugin pulls current subscription state
+ * via /sites/status — at that point any queued push-webhook for that site
+ * is obsolete because the plugin just got the authoritative answer over
+ * an outbound path (Wordfence-proof). Returns number of rows superseded.
+ */
+export async function supersedePendingWebhooksForSite(siteId: number): Promise<number> {
+  const now = new Date().toISOString()
+  const result = await db
+    .update(schema.messageQueue)
+    .set({ status: 'superseded', updated_at: now })
+    .where(
+      and(
+        eq(schema.messageQueue.site_id, siteId),
+        eq(schema.messageQueue.type, 'wordpress_webhook'),
+        inArray(schema.messageQueue.status, ['pending', 'failed']),
+      ),
+    )
+    .returning({ id: schema.messageQueue.id })
+    .all()
+  return result.length
+}
+
+/**
+ * Delete terminal rows (completed or superseded) older than `days`.
+ * Prevents unbounded MessageQueue growth. Dead rows are retained for admin
+ * inspection and manual retry.
+ */
+export async function pruneCompletedOlderThan(days: number): Promise<number> {
+  const cutoff = new Date(Date.now() - days * 24 * 3600_000).toISOString()
+  const result = await db
+    .delete(schema.messageQueue)
+    .where(
+      and(
+        inArray(schema.messageQueue.status, ['completed', 'superseded']),
         lte(schema.messageQueue.updated_at, cutoff),
       ),
     )

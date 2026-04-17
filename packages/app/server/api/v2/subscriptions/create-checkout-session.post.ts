@@ -107,11 +107,31 @@ export default defineEventHandler(async (event) => {
     // a second one (prevents duplicate billing).
     if (!trial && existingSub?.status === 'trialing' && existingSub.stripe_subscription_id) {
       try {
-        await convertTrialToPaid({
+        const updated = await convertTrialToPaid({
           stripeSubscriptionId: existingSub.stripe_subscription_id,
           priceId,
           couponId,
         })
+
+        // Optimistically sync local state so the user doesn't briefly see
+        // a trial tier after we redirect them to the success page. Stripe's
+        // subscription.updated webhook is the authoritative source and will
+        // reconcile any field we miss.
+        const item = updated.items.data[0]
+        const localUpdate: Parameters<typeof subscriptionRepo.update>[1] = {
+          status: updated.status,
+          tier: 'pro',
+          cancel_at_period_end: updated.cancel_at_period_end || false,
+          trial_end: null,
+        }
+        if (item?.current_period_start) {
+          localUpdate.current_period_start = new Date(item.current_period_start * 1000).toISOString()
+        }
+        if (item?.current_period_end) {
+          localUpdate.current_period_end = new Date(item.current_period_end * 1000).toISOString()
+        }
+        await subscriptionRepo.update(siteId, localUpdate)
+
         logger.debug('Converted trial to paid for site', siteId)
 
         return {

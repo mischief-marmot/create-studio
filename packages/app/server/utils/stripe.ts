@@ -34,6 +34,11 @@ function getTrialEndTimestamp(days: number): number {
  * Looks up existing customers by email — if one exists we reuse it so all
  * subscriptions for a user live under a single Stripe customer record.
  * Stripe returns customers newest-first by `created`.
+ *
+ * NOTE: Stripe does not enforce email uniqueness server-side, so concurrent
+ * first-time calls for the same email could briefly race and create two
+ * customers. Rare in practice (checkout is a sync, user-initiated flow) and
+ * manually cleanable.
  */
 export async function findOrCreateCustomerByEmail(email: string, metadata?: Record<string, string>): Promise<string> {
   const stripe = getStripeClient()

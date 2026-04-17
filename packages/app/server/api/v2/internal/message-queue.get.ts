@@ -5,7 +5,7 @@
  * Auth: X-Admin-Api-Key header (shared secret between admin and main app)
  *
  * Query params:
- *   status: 'pending' | 'processing' | 'failed' | 'dead' | 'completed' (optional)
+ *   status: one of QUEUE_STATUSES (optional)
  *   type:   message type filter (optional)
  *   siteId: number (optional)
  *   limit:  default 50, max 200
@@ -13,6 +13,7 @@
 
 import { and, eq, desc } from 'drizzle-orm'
 import { requireAdminApiKey } from '~~/server/utils/admin-auth'
+import { QUEUE_STATUSES } from '~~/server/utils/message-queue'
 
 export default defineEventHandler(async (event) => {
   requireAdminApiKey(event)
@@ -22,6 +23,13 @@ export default defineEventHandler(async (event) => {
   const type = query.type as string | undefined
   const siteId = query.siteId ? Number(query.siteId) : undefined
   const limit = Math.min(Number(query.limit) || 50, 200)
+
+  if (status && !QUEUE_STATUSES.includes(status as any)) {
+    throw createError({
+      statusCode: 400,
+      message: `Invalid status. Must be one of: ${QUEUE_STATUSES.join(', ')}`,
+    })
+  }
 
   const filters: any[] = []
   if (status) filters.push(eq(schema.messageQueue.status, status))

@@ -6,7 +6,9 @@
  * mismatch or missing config.
  */
 
-export function requireAdminApiKey(event: any): void {
+import type { H3Event } from 'h3'
+
+export function requireAdminApiKey(event: H3Event): void {
   const config = useRuntimeConfig()
   const provided = getHeader(event, 'X-Admin-Api-Key')
   if (!provided || !config.adminApiKey || provided !== config.adminApiKey) {
