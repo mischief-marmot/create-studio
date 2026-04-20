@@ -1155,6 +1155,9 @@ export class SurveyRepository {
     completed?: boolean
   }) {
     const now = new Date().toISOString()
+    // 128-bit opaque token (hex) so the response id alone can't be used as a
+    // bearer — callers must echo the token back on PATCH for public surveys.
+    const draftToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
 
     const result = await db.insert(schema.surveyResponses).values({
       survey_id: data.survey_id,
@@ -1163,6 +1166,7 @@ export class SurveyRepository {
       respondent_email: data.respondent_email || null,
       response_data: data.response_data,
       completed: data.completed ?? true,
+      draft_token: draftToken,
       createdAt: now,
     }).returning().get()
 

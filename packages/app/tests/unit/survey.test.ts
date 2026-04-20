@@ -15,8 +15,8 @@ import { aprilSurveyDefinition, aprilSurveyPromotion } from '../../server/db/see
 
 describe('April 2026 Survey Definition', () => {
   it('should have title and description', () => {
-    expect(aprilSurveyDefinition.title).toBe('Create Publisher Survey — April 2026')
-    expect(aprilSurveyDefinition.description).toContain('5–10 minutes')
+    expect(aprilSurveyDefinition.title).toBe('Create Publisher Survey')
+    expect(aprilSurveyDefinition.description).toContain('5-10 minute')
   })
 
   it('should have a progress bar configured', () => {
@@ -30,10 +30,10 @@ describe('April 2026 Survey Definition', () => {
   it('should have named pages matching blocks', () => {
     const pageNames = aprilSurveyDefinition.pages.map(p => p.name)
     expect(pageNames).toContain('nps')
-    expect(pageNames).toContain('who_you_are')
+    expect(pageNames).toContain('about_you')
     expect(pageNames).toContain('state_of_industry')
     expect(pageNames).toContain('positioning')
-    expect(pageNames).toContain('stack_and_spend')
+    expect(pageNames).toContain('tools_and_spend')
     expect(pageNames).toContain('create_specifically')
     expect(pageNames).toContain('bigger_bets')
     expect(pageNames).toContain('ai')
@@ -83,7 +83,7 @@ describe('Question Type Mappings', () => {
   })
 
   it('should map agree_scale to rating with 1-5 and agree/disagree labels', () => {
-    const q = findQuestion('agree_cited_by_humans_and_ai')
+    const q = findQuestion('agree_engagement_matters_more')
     expect(q).toBeDefined()
     expect(q!.type).toBe('rating')
     expect(q!.rateMin).toBe(1)
@@ -172,8 +172,8 @@ describe('Required Fields', () => {
 describe('Question Coverage', () => {
   const allElements = aprilSurveyDefinition.pages.flatMap(p => p.elements)
 
-  it('should have all 37 questions from the original spec', () => {
-    expect(allElements).toHaveLength(37)
+  it('should have all 39 questions from the current spec', () => {
+    expect(allElements).toHaveLength(39)
   })
 
   it('should have unique question names', () => {

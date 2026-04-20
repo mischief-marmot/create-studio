@@ -5,8 +5,10 @@
  *
  * Auth rules:
  *   - user-authed surveys: the session's user must match the response's user_id
- *   - public/anon surveys: no auth check — anyone holding the response_id can update it
- *     (the id acts as a bearer token; still protected by rate limit)
+ *   - public/anon surveys: require the opaque draft_token returned at draft
+ *     creation (in the `x-draft-token` header or the body). The response id
+ *     alone is auto-increment and therefore enumerable, so it can't be trusted
+ *     on its own.
  */
 export default defineEventHandler(async (event) => {
   try {
@@ -36,6 +38,8 @@ export default defineEventHandler(async (event) => {
       return { error: 'Response not found' }
     }
 
+    const body = await readBody(event)
+
     // For authed surveys, the caller must own this response
     if (survey.requires_auth) {
       const session = await getUserSession(event)
@@ -43,9 +47,16 @@ export default defineEventHandler(async (event) => {
         setResponseStatus(event, 403)
         return { error: 'You do not have access to this response' }
       }
+    } else {
+      // Public surveys: the caller must present the draft_token they received
+      // when the draft was created. Older drafts without a stored token can't
+      // be updated — they predate this hardening and would otherwise be a hole.
+      const providedToken = getRequestHeader(event, 'x-draft-token') || body?.draft_token
+      if (!existing.draft_token || !providedToken || providedToken !== existing.draft_token) {
+        setResponseStatus(event, 403)
+        return { error: 'Missing or invalid draft token' }
+      }
     }
-
-    const body = await readBody(event)
     const updates: { response_data?: Record<string, any>; completed?: boolean; respondent_email?: string } = {}
 
     if (body.response_data !== undefined) {

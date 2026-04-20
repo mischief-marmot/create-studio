@@ -76,10 +76,14 @@ export default defineEventHandler(async (event) => {
     })
 
     setResponseStatus(event, 201)
+    // Only hand back the promotion once the response is actually marked
+    // completed — otherwise anyone could POST { completed: false } and scrape
+    // the code without ever answering a question.
     return {
       success: true,
       response_id: response.id,
-      promotion: survey.promotion,
+      draft_token: response.draft_token,
+      ...(response.completed ? { promotion: survey.promotion } : {}),
     }
   } catch (error: any) {
     if (error.statusCode === 429) throw error

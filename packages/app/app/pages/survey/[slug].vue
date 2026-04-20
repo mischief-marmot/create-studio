@@ -25,6 +25,9 @@ const sitesLoaded = ref(false)
 // Welcome / progress persistence state
 const hasStarted = ref(false)
 const responseId = ref<number | null>(null)
+// Opaque per-response token required on PATCH for public surveys so the
+// auto-increment response id can't be used as a bearer token by attackers.
+const draftToken = ref<string | null>(null)
 const draftResponse = ref<any>(null) // existing incomplete response (if any)
 const completedResponse = ref<any>(null) // existing completed response (if any)
 const draftLookupDone = ref(false)
@@ -283,7 +286,7 @@ function initSurvey(definition: Record<string, any>, surveyId: number, initialDa
       try {
         await $fetch(`/api/v2/surveys/${surveyId}/responses/${responseId.value}`, {
           method: 'PATCH',
-          body: { response_data: sender.data },
+          body: { response_data: sender.data, draft_token: draftToken.value || undefined },
         })
       } catch {
         // Silent fail — next value change will retry
@@ -417,6 +420,7 @@ function initSurvey(definition: Record<string, any>, surveyId: number, initialDa
       let response: any
       if (responseId.value) {
         // Finalize the existing draft
+        if (draftToken.value) body.draft_token = draftToken.value
         response = await $fetch(`/api/v2/surveys/${surveyId}/responses/${responseId.value}`, {
           method: 'PATCH',
           body,
@@ -506,14 +510,16 @@ async function startSurvey() {
     // Re-use draft if one exists, otherwise create a new one
     if (draftResponse.value?.id) {
       responseId.value = draftResponse.value.id
+      draftToken.value = draftResponse.value.draft_token || null
     } else {
       const body: Record<string, any> = {}
       if (requiresAuth.value) body.site_id = selectedSiteId.value
-      const res = await $fetch<{ response: { id: number } }>(`/api/v2/surveys/${s.id}/responses/draft`, {
+      const res = await $fetch<{ response: { id: number; draft_token?: string } }>(`/api/v2/surveys/${s.id}/responses/draft`, {
         method: 'POST',
         body,
       })
       responseId.value = res.response.id
+      draftToken.value = res.response.draft_token || null
     }
     hasStarted.value = true
     // Initialize the SurveyJS model now that the user has committed to starting

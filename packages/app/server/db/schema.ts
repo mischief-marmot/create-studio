@@ -236,12 +236,14 @@ export const surveyResponses = sqliteTable('SurveyResponses', {
   respondent_email: text('respondent_email'),
   response_data: text('response_data', { mode: 'json' }).$type<Record<string, any>>(),
   completed: integer('completed', { mode: 'boolean' }).default(false),
+  draft_token: text('draft_token'),
   createdAt: text('createdAt'),
 }, (table) => [
   index('idx_survey_responses_survey_id').on(table.survey_id),
   index('idx_survey_responses_user_id').on(table.user_id),
   index('idx_survey_responses_site_id').on(table.site_id),
   index('idx_survey_responses_completed').on(table.completed),
+  index('idx_survey_responses_draft_token').on(table.draft_token),
 ])
 
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
