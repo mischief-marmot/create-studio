@@ -8,15 +8,15 @@
  */
 
 export const aprilSurveyDefinition = {
-  title: 'Create Publisher Survey — April 2026',
-  description: 'Help shape the next chapter of Create. 5–10 minutes. Finish to unlock 50% off your first year of Create Pro.',
+  title: 'Create Publisher Survey',
+  description: 'Help shape the next chapter of Create! Finish this 5-10 minute survey to unlock 50% off your first year of Create Pro.',
   closes_at: '2026-04-30T23:59:59-04:00',
+  questionsOnPageMode: 'singlePage',
   showProgressBar: 'top',
   progressBarType: 'questions',
   showQuestionNumbers: 'off',
   questionErrorLocation: 'bottom',
   pages: [
-    // Block 0: NPS
     {
       name: 'nps',
       title: 'NPS',
@@ -40,7 +40,6 @@ export const aprilSurveyDefinition = {
         },
       ],
     },
-    // Block 1: About you — categories first, money last
     {
       name: 'about_you',
       title: 'About you',
@@ -86,7 +85,6 @@ export const aprilSurveyDefinition = {
         },
       ],
     },
-    // Block 2: State of the industry — directional, then ratings, open last
     {
       name: 'state_of_industry',
       title: 'State of the industry',
@@ -139,7 +137,6 @@ export const aprilSurveyDefinition = {
         },
       ],
     },
-    // Block 3: Current stack and spend — factual checklists, money, then open
     {
       name: 'tools_and_spend',
       title: 'Current tools',
@@ -190,7 +187,6 @@ export const aprilSurveyDefinition = {
         },
       ],
     },
-    // Block 4: Create specifically — usage, dislikes, priorities, aspirations
     {
       name: 'create_specifically',
       title: 'Your Create experience',
@@ -200,7 +196,7 @@ export const aprilSurveyDefinition = {
           name: 'create_primary_use',
           title: 'What do you use Create primarily for?',
           isRequired: true,
-          choices: ['Recipe cards', 'How-to / tutorial cards', 'Lists / roundups', 'FAQs', 'All of the above'],
+          choices: ['Recipe cards', 'How-to / tutorial cards', 'Lists / roundups', 'All of the above'],
         },
         {
           type: 'checkbox',
@@ -209,7 +205,7 @@ export const aprilSurveyDefinition = {
           isRequired: true,
           choices: [
             'Feels slow or affects my site speed',
-            'Settings are confusing or hard to find',
+            'Features are confusing or hard to set up',
             'Limited theme / styling options',
             "Doesn't match my site's design well",
             'Compatibility issues with my WordPress theme',
@@ -237,9 +233,7 @@ export const aprilSurveyDefinition = {
           title: 'Which of these would you most want to see in Create next? Rank your top 3.',
           isRequired: true,
           choices: [
-            'Interactive cook mode',
-            'FAQ cards with schema',
-            'Author cards (authority / E-E-A-T signals)',
+            'Author cards (highlight *you*!)',
             'Browser extension for saving links / products while browsing',
             'Mobile app for readers',
             'Community / network of Create publishers',
@@ -247,10 +241,9 @@ export const aprilSurveyDefinition = {
             'Built-in AI recipe / content importer',
             'Built-in email capture / list features',
             'Speed & performance optimizations',
-            'Better Pinterest integration',
           ],
           showOtherItem: true,
-          otherText: 'Something else',
+          otherText: 'Integrations with other platforms and tools',
           selectToRankEnabled: true,
           selectToRankAreasLayout: 'horizontal',
           maxSelectedChoices: 3,
@@ -261,13 +254,57 @@ export const aprilSurveyDefinition = {
           title: "What's missing from Create that would make it indispensable to you?",
           isRequired: false,
         },
+        {
+          type: 'ranking',
+          name: 'pro_feature_excitement',
+          title: 'Which existing Pro features are you most excited to use or curious to try? Rank your top 3.',
+          isRequired: true,
+          choices: [
+            'Interactive cook mode (step-by-step with timers and progress)',
+            'Premium card themes',
+            'Servings adjustment',
+            'Unit conversion (metric / imperial)',
+            'Interactive checklists (check off ingredients and steps)',
+            'Review management (reply to and feature reader reviews)',
+            'Featured reviews block',
+            'Custom CSS',
+            'Custom ad network in Interactive Mode',
+            'Customize Interactive Mode (via Create Studio)',
+          ],
+          selectToRankEnabled: true,
+          selectToRankAreasLayout: 'horizontal',
+          maxSelectedChoices: 3,
+        },
       ],
     },
-    // Block 5: AI — factual tools first, then comfort, then reflective features
     {
       name: 'ai',
       title: 'AI',
       elements: [
+        {
+          type: 'rating',
+          displayMode: 'buttons',
+          name: 'agree_known_by_name_as_expert',
+          title: 'I want to be known by name as a go-to expert in my niche — not just run a site that gets traffic.',
+          isRequired: true,
+          rateMin: 1,
+          rateMax: 5,
+          minRateDescription: 'Strongly disagree',
+          maxRateDescription: 'Strongly agree',
+        },
+        {
+          type: 'radiogroup',
+          name: 'biggest_win',
+          title: 'Which of these would feel like the biggest win?',
+          isRequired: true,
+          choices: [
+            'Someone recommends me by name to a friend',
+            'An AI assistant recommends my content by name',
+            'A brand reaches out for a paid partnership',
+            'My site earns enough to replace a full-time income',
+            'A reader tells me my content became their household go-to',
+          ],
+        },
         {
           type: 'checkbox',
           name: 'ai_tools_used',
@@ -289,24 +326,23 @@ export const aprilSurveyDefinition = {
           maxRateDescription: 'Very comfortable',
         },
         {
-          type: "checkbox",
-          name: "ai_features_wanted",
-          title: "Which AI-powered features would you actually use?",
+          type: 'checkbox',
+          name: 'ai_features_wanted',
+          title: 'Which AI-powered features would you actually use?',
           isRequired: false,
           choices: [
-            "Recipe import from text / post content / etc.",
-            "Auto-generate FAQs from existing content",
-            "SEO metadata suggestions / Create card SEO enhancement (keywords, etc.)",
-            "Content ideas based on my existing library",
-            "Answering reader questions on-site",
-            "None of these"
+            'Recipe import from text / post content / etc.',
+            'Auto-generate post draft from card content',
+            'SEO metadata suggestions / Create card SEO enhancement (keywords, etc.)',
+            'Content ideas based on my existing library',
+            'Answering reader questions on-site',
+            'None',
           ],
           showOtherItem: true,
-          otherText: "Other"
-        }
+          otherText: 'Other',
+        },
       ],
     },
-    // Block 6: Positioning statements — concrete agreements first, abstract last
     {
       name: 'positioning',
       title: 'What matters most',
@@ -346,17 +382,6 @@ export const aprilSurveyDefinition = {
           maxRateDescription: 'Strongly agree',
         },
         {
-          type: "rating",
-          displayMode: "buttons",
-          name: "agree_my_version_not_ai_summary",
-          title: "When someone searches for something I've published, I want them to find my version, not an AI-generated summary of it.",
-          isRequired: true,
-          rateMin: 1,
-          rateMax: 5,
-          minRateDescription: "Strongly disagree",
-          maxRateDescription: "Strongly agree"
-        },
-        {
           type: 'rating',
           displayMode: 'buttons',
           name: 'agree_pay_more_to_compete_with_ai',
@@ -369,16 +394,15 @@ export const aprilSurveyDefinition = {
         },
       ],
     },
-    // Block 7: Bigger bets — simple interest ratings first, complex hypotheticals last
     {
       name: 'bigger_bets',
-      title: 'Bigger bets — platform, community, extension',
+      title: 'Big ideas: platform, community, extension',
       elements: [
         {
           type: 'rating',
           displayMode: 'buttons',
           name: 'browser_extension_interest',
-          title: 'A browser extension for saving links and products to Create lists while you browse — how interested are you?',
+          title: 'How interested would you be in a browser extension for saving links and products to Create Lists while you browse?',
           isRequired: true,
           rateMin: 1,
           rateMax: 5,
@@ -389,7 +413,18 @@ export const aprilSurveyDefinition = {
           type: 'rating',
           displayMode: 'buttons',
           name: 'publisher_community_interest',
-          title: "A private community of Create publishers where you could peer-review each other's content and cross-reference each other's lists/roundups — how interested are you?",
+          title: "How interested would you be in a private community of Create publishers where you could rate & review each other's cards and find relevant links for each other's lists/roundups?",
+          isRequired: true,
+          rateMin: 1,
+          rateMax: 5,
+          minRateDescription: 'Not interested',
+          maxRateDescription: 'Very interested',
+        },
+        {
+          type: 'rating',
+          displayMode: 'buttons',
+          name: 'discovery_app_interest',
+          title: 'Imagine a reader-facing mobile app where people discover recipes and guides from Create publishers: users could follow topics, rate content, and get recommendations. Your content could be included (opt-in), with monetization. How would you feel about this?',
           isRequired: true,
           rateMin: 1,
           rateMax: 5,
@@ -398,32 +433,20 @@ export const aprilSurveyDefinition = {
         },
         {
           type: 'radiogroup',
-          name: 'discovery_app_interest',
-          title: 'Imagine a reader-facing mobile app where people discover recipes and guides from Create publishers — they follow topics, rate content, and get recommendations. Your content could be included (opt-in). How do you feel about this?',
-          isRequired: true,
-          choices: [
-            'Very interested — want in early',
-            'Interested if I keep control and get paid',
-            'Neutral — need more info',
-            'Skeptical but open',
-            'Not for me',
-          ],
-        },
-        {
-          type: 'radiogroup',
           name: 'discovery_app_model_pref',
           title: 'If such an app existed, which monetization model would you prefer?',
           isRequired: false,
           choices: [
-            'Revenue share — app monetizes (ads / affiliates / subscriptions), we split',
-            'Pro-only perk — my content, my monetization, Create takes nothing',
+            'Revenue share: app monetizes (ads / affiliates / subscriptions), we split',
+            'Pro-only perk: A Pro-subscriber benefit, in-app monetization is yours',
             'Flat licensing fee paid to me',
             "I wouldn't participate",
           ],
+          showOtherItem: true,
+          otherText: 'Another idea',
         },
       ],
     },
-    // Block 8: Services and partnerships — interest then money
     {
       name: 'services',
       title: 'Services and partnerships',
@@ -434,29 +457,19 @@ export const aprilSurveyDefinition = {
           title: 'Would you pay for any of these as a service from Create or a trusted partner?',
           isRequired: false,
           choices: [
-            'Site speed audit',
+            'Site speed audit & fixes',
             'WordPress maintenance',
-            'Recipe schema / SEO audit',
-            'Pinterest pin design',
-            'Custom site design',
-            'Content strategy consulting',
-            'AI workflow setup',
-            'Migration from another recipe plugin',
+            'Schema / SEO audit & fixes',
+            'Custom Create theme design to match your site',
+            'AI workflow consulting',
+            'Migration help from another plugin',
             'None right now',
           ],
           showOtherItem: true,
           otherText: 'Other',
         },
-        {
-          type: 'radiogroup',
-          name: 'services_budget',
-          title: 'What would you expect to pay annually for the services you checked?',
-          isRequired: false,
-          choices: ['Under $500', '$500–$1,500', '$1,500–$5,000', '$5,000+', 'Depends entirely on scope'],
-        },
       ],
     },
-    // Block 9: Final
     {
       name: 'final',
       title: 'Final',
@@ -464,13 +477,13 @@ export const aprilSurveyDefinition = {
         {
           type: 'comment',
           name: 'open_feedback',
-          title: 'Anything else you want me to know? Wishes, complaints, ideas — I read every response.',
+          title: 'Anything else you want me to know? Ideas, dreams, complaints?',
           isRequired: false,
         },
         {
           type: 'radiogroup',
           name: 'followup_call_optin',
-          title: 'Can I follow up with you for a 20-minute call about your answers?',
+          title: 'Can I follow up with you for a short call about your answers?',
           isRequired: true,
           choices: ['Yes', 'No'],
         },
