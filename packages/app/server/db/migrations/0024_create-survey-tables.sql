@@ -1,4 +1,4 @@
--- Migration number: 0024
+-- Migration: 0024
 -- Create survey tables for publisher surveys. Surveys stores SurveyJS JSON
 -- definitions; SurveyResponses stores flat JSON answers.
 

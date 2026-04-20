@@ -1,4 +1,4 @@
--- Migration number: 0026
+-- Migration: 0026
 -- Add an opaque draft_token to SurveyResponses so public-survey PATCHes can
 -- prove ownership of the response they're updating — otherwise the auto-
 -- increment id acts as a bearer token that attackers can enumerate to harvest

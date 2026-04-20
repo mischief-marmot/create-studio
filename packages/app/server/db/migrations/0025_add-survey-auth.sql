@@ -1,4 +1,4 @@
--- Migration number: 0025
+-- Migration: 0025
 -- Add user-only survey support.
 -- Surveys.requires_auth: when true, only logged-in users can submit and responses are tied to user/site.
 -- SurveyResponses.site_id: nullable FK to Sites for attributing responses to a specific publisher site.
