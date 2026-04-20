@@ -10,7 +10,7 @@ import { eq, and, or, isNull, isNotNull, sql } from 'drizzle-orm'
 import type { SiteUser, SiteSettings, VersionLogEntry } from '../db/schema'
 
 // Re-export types from schema for convenience
-export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry } from '../db/schema'
+export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry, Survey, NewSurvey, SurveyResponse, NewSurveyResponse } from '../db/schema'
 
 // Legacy interface types for backwards compatibility
 export interface CreateUserData {
@@ -1096,5 +1096,192 @@ export class LinkSessionRepository {
     const now = new Date().toISOString()
     await db.delete(schema.linkSessions)
       .where(sql`${schema.linkSessions.expires_at} <= ${now}`)
+  }
+}
+
+/**
+ * Survey database operations
+ * Manages survey definitions and response collection
+ */
+export class SurveyRepository {
+  async findBySlug(slug: string) {
+    return await db.select().from(schema.surveys)
+      .where(eq(schema.surveys.slug, slug))
+      .get()
+  }
+
+  async findById(id: number) {
+    return await db.select().from(schema.surveys)
+      .where(eq(schema.surveys.id, id))
+      .get()
+  }
+
+  async create(data: {
+    slug: string
+    title: string
+    description?: string
+    definition: Record<string, any>
+    status?: string
+    promotion?: Record<string, any>
+    requires_auth?: boolean
+  }) {
+    const now = new Date().toISOString()
+
+    const result = await db.insert(schema.surveys).values({
+      slug: data.slug,
+      title: data.title,
+      description: data.description || null,
+      definition: data.definition,
+      status: data.status || 'draft',
+      promotion: data.promotion || null,
+      requires_auth: data.requires_auth ?? false,
+      createdAt: now,
+      updatedAt: now,
+    }).returning().get()
+
+    if (!result) {
+      throw new Error('Failed to create survey')
+    }
+
+    return result
+  }
+
+  async addResponse(data: {
+    survey_id: number
+    user_id?: number
+    site_id?: number
+    respondent_email?: string
+    response_data: Record<string, any>
+    completed?: boolean
+  }) {
+    const now = new Date().toISOString()
+    // 128-bit opaque token (hex) so the response id alone can't be used as a
+    // bearer — callers must echo the token back on PATCH for public surveys.
+    const draftToken = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '')
+
+    const result = await db.insert(schema.surveyResponses).values({
+      survey_id: data.survey_id,
+      user_id: data.user_id || null,
+      site_id: data.site_id || null,
+      respondent_email: data.respondent_email || null,
+      response_data: data.response_data,
+      completed: data.completed ?? true,
+      draft_token: draftToken,
+      createdAt: now,
+    }).returning().get()
+
+    if (!result) {
+      throw new Error('Failed to save survey response')
+    }
+
+    return result
+  }
+
+  async findResponseById(id: number) {
+    return await db.select().from(schema.surveyResponses)
+      .where(eq(schema.surveyResponses.id, id))
+      .get()
+  }
+
+  /**
+   * Find an incomplete draft response for a given user + survey (+ optional site).
+   * Used to resume partial submissions.
+   */
+  async findDraftForUser(surveyId: number, userId: number, siteId?: number) {
+    const conditions = [
+      eq(schema.surveyResponses.survey_id, surveyId),
+      eq(schema.surveyResponses.user_id, userId),
+      eq(schema.surveyResponses.completed, false),
+    ]
+    if (siteId != null) {
+      conditions.push(eq(schema.surveyResponses.site_id, siteId))
+    }
+    return await db.select().from(schema.surveyResponses)
+      .where(and(...conditions))
+      .orderBy(sql`${schema.surveyResponses.createdAt} DESC`)
+      .get()
+  }
+
+  /**
+   * Find the most recent COMPLETED response for this user + survey (+ optional site).
+   * Used to lock the survey page into "already completed" state on return visits.
+   */
+  async findCompletedForUser(surveyId: number, userId: number, siteId?: number) {
+    const conditions = [
+      eq(schema.surveyResponses.survey_id, surveyId),
+      eq(schema.surveyResponses.user_id, userId),
+      eq(schema.surveyResponses.completed, true),
+    ]
+    if (siteId != null) {
+      conditions.push(eq(schema.surveyResponses.site_id, siteId))
+    }
+    return await db.select().from(schema.surveyResponses)
+      .where(and(...conditions))
+      .orderBy(sql`${schema.surveyResponses.createdAt} DESC`)
+      .get()
+  }
+
+  /**
+   * Update an existing response's data + optional completion flag.
+   */
+  async updateResponse(id: number, data: {
+    response_data?: Record<string, any>
+    completed?: boolean
+    respondent_email?: string
+  }) {
+    const updates: Record<string, any> = {}
+    if (data.response_data !== undefined) updates.response_data = data.response_data
+    if (data.completed !== undefined) updates.completed = data.completed
+    if (data.respondent_email !== undefined) updates.respondent_email = data.respondent_email
+    await db.update(schema.surveyResponses)
+      .set(updates)
+      .where(eq(schema.surveyResponses.id, id))
+    return this.findResponseById(id)
+  }
+
+  async updateDefinition(id: number, definition: Record<string, any>) {
+    const now = new Date().toISOString()
+    await db.update(schema.surveys)
+      .set({ definition, updatedAt: now })
+      .where(eq(schema.surveys.id, id))
+    return this.findById(id)
+  }
+
+  async update(id: number, data: {
+    slug?: string
+    title?: string
+    description?: string | null
+    definition?: Record<string, any>
+    status?: string
+    promotion?: Record<string, any> | null
+    requires_auth?: boolean
+  }) {
+    const now = new Date().toISOString()
+    await db.update(schema.surveys)
+      .set({ ...data, updatedAt: now })
+      .where(eq(schema.surveys.id, id))
+    return this.findById(id)
+  }
+
+  async delete(id: number) {
+    await db.delete(schema.surveys).where(eq(schema.surveys.id, id))
+  }
+
+  async getResponses(surveyId: number) {
+    return await db.select().from(schema.surveyResponses)
+      .where(eq(schema.surveyResponses.survey_id, surveyId))
+      .orderBy(sql`${schema.surveyResponses.createdAt} DESC`)
+      .all()
+  }
+
+  async getResponseCount(surveyId: number) {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(schema.surveyResponses)
+      .where(and(
+        eq(schema.surveyResponses.survey_id, surveyId),
+        eq(schema.surveyResponses.completed, true)
+      ))
+      .get()
+    return result?.count ?? 0
   }
 }

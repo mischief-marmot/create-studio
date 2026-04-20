@@ -210,6 +210,42 @@ export const usdaAliases = sqliteTable('usda_aliases', {
   uniqueIndex('idx_usda_aliases_alias').on(table.alias),
 ])
 
+// Surveys table (survey definitions with SurveyJS JSON)
+export const surveys = sqliteTable('Surveys', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  description: text('description'),
+  definition: text('definition', { mode: 'json' }).$type<Record<string, any>>(),
+  status: text('status').notNull().default('draft'), // draft, active, closed
+  promotion: text('promotion', { mode: 'json' }).$type<Record<string, any>>(),
+  requires_auth: integer('requires_auth', { mode: 'boolean' }).default(false),
+  createdAt: text('createdAt'),
+  updatedAt: text('updatedAt'),
+}, (table) => [
+  index('idx_surveys_slug').on(table.slug),
+  index('idx_surveys_status').on(table.status),
+])
+
+// SurveyResponses table (individual submissions)
+export const surveyResponses = sqliteTable('SurveyResponses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  survey_id: integer('survey_id').notNull().references(() => surveys.id, { onDelete: 'cascade' }),
+  user_id: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+  site_id: integer('site_id').references(() => sites.id, { onDelete: 'set null' }),
+  respondent_email: text('respondent_email'),
+  response_data: text('response_data', { mode: 'json' }).$type<Record<string, any>>(),
+  completed: integer('completed', { mode: 'boolean' }).default(false),
+  draft_token: text('draft_token'),
+  createdAt: text('createdAt'),
+}, (table) => [
+  index('idx_survey_responses_survey_id').on(table.survey_id),
+  index('idx_survey_responses_user_id').on(table.user_id),
+  index('idx_survey_responses_site_id').on(table.site_id),
+  index('idx_survey_responses_completed').on(table.completed),
+  index('idx_survey_responses_draft_token').on(table.draft_token),
+])
+
 // Note: Admins and AuditLogs tables are defined in the admin package's own database
 
 // Type exports for use in application code
@@ -231,3 +267,7 @@ export type SiteMeta = typeof siteMeta.$inferSelect
 export type NewSiteMeta = typeof siteMeta.$inferInsert
 export type UsdaFood = typeof usdaFoods.$inferSelect
 export type UsdaAlias = typeof usdaAliases.$inferSelect
+export type Survey = typeof surveys.$inferSelect
+export type NewSurvey = typeof surveys.$inferInsert
+export type SurveyResponse = typeof surveyResponses.$inferSelect
+export type NewSurveyResponse = typeof surveyResponses.$inferInsert
