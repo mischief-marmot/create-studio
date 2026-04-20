@@ -14,8 +14,11 @@ export default defineEventHandler(async (event) => {
 
   const existing = await surveyRepo.findBySlug('april-2026')
   if (existing) {
-    await surveyRepo.updateDefinition(existing.id, aprilSurveyDefinition)
-    return { success: true, message: 'Survey definition updated', survey_id: existing.id }
+    await surveyRepo.update(existing.id, {
+      definition: aprilSurveyDefinition,
+      promotion: aprilSurveyPromotion,
+    })
+    return { success: true, message: 'Survey definition + promotion updated', survey_id: existing.id }
   }
 
   const survey = await surveyRepo.create({

@@ -66,6 +66,40 @@ const survey = computed(() => surveyData.value?.survey)
 const authenticated = computed(() => surveyData.value?.authenticated ?? false)
 const requiresAuth = computed(() => !!survey.value?.requires_auth)
 
+// Ticks every minute so countdowns drift smoothly across hour/day boundaries
+// without blasting re-renders. Only mounts on client.
+const now = ref(Date.now())
+let nowTimer: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  now.value = Date.now()
+  nowTimer = setInterval(() => { now.value = Date.now() }, 60_000)
+})
+onUnmounted(() => {
+  if (nowTimer) clearInterval(nowTimer)
+})
+
+function formatCountdown(target: string | null | undefined, verb: 'Closes' | 'Expires'): { text: string; urgent: boolean; past: boolean } | null {
+  if (!target) return null
+  const end = Date.parse(target)
+  if (isNaN(end)) return null
+  const diff = end - now.value
+  if (diff <= 0) {
+    return { text: verb === 'Closes' ? 'Closed' : 'Expired', urgent: false, past: true }
+  }
+  const mins = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  const urgent = hours < 48
+  if (days >= 2) return { text: `${verb} in ${days} days`, urgent, past: false }
+  if (hours >= 24) return { text: `${verb} tomorrow`, urgent, past: false }
+  if (hours >= 2) return { text: `${verb} in ${hours} hours`, urgent, past: false }
+  if (mins >= 2) return { text: `${verb} in ${mins} min`, urgent, past: false }
+  return { text: `${verb} soon`, urgent, past: false }
+}
+
+const surveyCloseCountdown = computed(() => formatCountdown((survey.value?.definition as any)?.closes_at, 'Closes'))
+const discountExpiryCountdown = computed(() => formatCountdown((promotion.value as any)?.expires_at, 'Expires'))
+
 // Readiness check: for requires_auth surveys we need a logged-in user with a selected site
 const authGateReady = computed(() => {
   if (!requiresAuth.value) return true
@@ -547,10 +581,9 @@ useHead({
 
       <!-- Completed: thank you + discount code + Upgrade now -->
       <div v-else-if="isCompleted" class="survey-success">
-        <div class="survey-success__emoji">🎉</div>
         <h1 class="survey-success__title">Thank you!</h1>
         <p class="survey-success__subtitle">
-          This genuinely shapes what I build next.
+          Your responses have been sent
         </p>
 
         <div v-if="promotion" class="survey-success__card">
@@ -572,6 +605,18 @@ useHead({
               {{ codeCopied ? 'Copied' : 'Copy' }}
             </button>
           </div>
+
+          <p
+            v-if="discountExpiryCountdown"
+            class="survey-success__expiry"
+            :class="{ 'survey-success__expiry--urgent': discountExpiryCountdown.urgent }"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {{ discountExpiryCountdown.text }}
+          </p>
 
           <button
             v-if="promotion.code && requiresAuth"
@@ -639,6 +684,19 @@ useHead({
               <polyline points="12 6 12 12 16 14" />
             </svg>
             ~10 min
+          </span>
+          <span
+            v-if="surveyCloseCountdown"
+            class="survey-welcome__chip survey-welcome__chip--countdown"
+            :class="{ 'survey-welcome__chip--urgent': surveyCloseCountdown.urgent }"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            {{ surveyCloseCountdown.text }}
           </span>
           <span v-if="draftResponse" class="survey-welcome__chip survey-welcome__chip--progress">
             {{ draftProgressText }} so far
@@ -1461,6 +1519,34 @@ useHead({
   font-size: 0.8125rem;
   color: color-mix(in oklab, var(--color-base-content) 50%, transparent);
 }
+.survey-success__expiry {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.4375rem;
+  margin: 0 auto 1.25rem auto;
+  padding: 0.3125rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-base-content) 6%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-base-content) 12%, transparent);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: color-mix(in oklab, var(--color-base-content) 75%, transparent);
+}
+.survey-success__expiry svg {
+  width: 0.9375rem;
+  height: 0.9375rem;
+  opacity: 0.85;
+}
+.survey-success__expiry--urgent {
+  background: color-mix(in oklab, var(--color-warning) 18%, transparent);
+  border-color: color-mix(in oklab, var(--color-warning) 45%, transparent);
+  color: var(--color-base-content);
+}
+.survey-success__expiry--urgent svg {
+  opacity: 1;
+  color: var(--color-warning);
+}
 .survey-success__error {
   margin-top: 1rem;
   font-size: 0.875rem;
@@ -1523,6 +1609,25 @@ useHead({
   background: color-mix(in oklab, var(--color-primary) 15%, transparent);
   border-color: color-mix(in oklab, var(--color-primary) 30%, transparent);
   color: var(--color-base-content);
+}
+.survey-welcome__chip--countdown {
+  background: color-mix(in oklab, var(--color-base-content) 8%, transparent);
+  border-color: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+  color: color-mix(in oklab, var(--color-base-content) 90%, transparent);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.survey-welcome__chip--countdown svg {
+  opacity: 0.85;
+}
+.survey-welcome__chip--urgent {
+  background: color-mix(in oklab, var(--color-warning) 18%, transparent);
+  border-color: color-mix(in oklab, var(--color-warning) 45%, transparent);
+  color: var(--color-base-content);
+}
+.survey-welcome__chip--urgent svg {
+  opacity: 1;
+  color: var(--color-warning);
 }
 .survey-welcome__site {
   margin-bottom: 1.75rem;
