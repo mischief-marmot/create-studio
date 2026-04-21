@@ -49,6 +49,17 @@ export default defineEventHandler(async (event) => {
   if (body.requires_auth !== undefined) {
     updates.requires_auth = !!body.requires_auth
   }
+  if (body.max_completions !== undefined) {
+    if (body.max_completions === null || body.max_completions === '') {
+      updates.max_completions = null
+    } else {
+      const n = Number(body.max_completions)
+      if (!Number.isInteger(n) || n < 1) {
+        throw createError({ statusCode: 400, message: 'max_completions must be a positive integer or null' })
+      }
+      updates.max_completions = n
+    }
+  }
   if (body.definition !== undefined) {
     if (!body.definition || typeof body.definition !== 'object' || Array.isArray(body.definition)) {
       throw createError({ statusCode: 400, message: 'definition must be a JSON object' })

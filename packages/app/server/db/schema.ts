@@ -220,6 +220,7 @@ export const surveys = sqliteTable('Surveys', {
   status: text('status').notNull().default('draft'), // draft, active, closed
   promotion: text('promotion', { mode: 'json' }).$type<Record<string, any>>(),
   requires_auth: integer('requires_auth', { mode: 'boolean' }).default(false),
+  max_completions: integer('max_completions'),
   createdAt: text('createdAt'),
   updatedAt: text('updatedAt'),
 }, (table) => [

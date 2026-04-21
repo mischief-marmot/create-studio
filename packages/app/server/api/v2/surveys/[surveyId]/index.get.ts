@@ -38,6 +38,14 @@ export default defineEventHandler(async (event) => {
     authenticated = !!session?.user?.id
   }
 
+  let max_completions: number | null = null
+  let spots_remaining: number | null = null
+  if (survey.max_completions != null) {
+    max_completions = survey.max_completions
+    const completed = await surveyRepo.getResponseCount(survey.id)
+    spots_remaining = Math.max(0, max_completions - completed)
+  }
+
   return {
     success: true,
     survey: {
@@ -49,6 +57,8 @@ export default defineEventHandler(async (event) => {
       // NOTE: `survey.promotion` is intentionally omitted here — the discount code
       // is only revealed by the completion PATCH so it can't be scraped pre-submit.
       requires_auth: !!survey.requires_auth,
+      max_completions,
+      spots_remaining,
     },
     authenticated,
   }

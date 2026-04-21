@@ -63,6 +63,14 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Block new drafts once the cap is hit so a respondent doesn't start
+    // something they'll never be able to finalize. Returning users with an
+    // existing draft are already handled above and can still resume.
+    if (await surveyRepo.isCapReached(surveyId, survey.max_completions)) {
+      setResponseStatus(event, 409)
+      return SURVEY_CAP_EXHAUSTED_ERROR
+    }
+
     const created = await surveyRepo.addResponse({
       survey_id: surveyId,
       user_id: userId,

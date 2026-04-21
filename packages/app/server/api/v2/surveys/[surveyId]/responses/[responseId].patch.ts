@@ -73,6 +73,17 @@ export default defineEventHandler(async (event) => {
       updates.respondent_email = body.respondent_email
     }
 
+    // Only block the transition from draft → completed; re-saving an
+    // already-completed response must not count twice.
+    if (
+      updates.completed === true
+      && !existing.completed
+      && await surveyRepo.isCapReached(surveyId, survey.max_completions)
+    ) {
+      setResponseStatus(event, 409)
+      return SURVEY_CAP_EXHAUSTED_ERROR
+    }
+
     const updated = await surveyRepo.updateResponse(responseId, updates)
 
     // If the caller asked to finalize, return the promotion info (for the thank-you screen)

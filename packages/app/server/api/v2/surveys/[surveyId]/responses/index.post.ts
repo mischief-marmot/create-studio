@@ -66,6 +66,15 @@ export default defineEventHandler(async (event) => {
       respondentEmail = body.respondent_email
     }
 
+    // Drafts don't consume a spot — only finalizations do. Read-then-write
+    // means concurrent submits can overshoot by a handful; acceptable for
+    // "first N get the shared promo" use cases, not for unique single-use codes.
+    const willComplete = body.completed ?? true
+    if (willComplete && await surveyRepo.isCapReached(surveyId, survey.max_completions)) {
+      setResponseStatus(event, 409)
+      return SURVEY_CAP_EXHAUSTED_ERROR
+    }
+
     const response = await surveyRepo.addResponse({
       survey_id: surveyId,
       user_id: userId,
