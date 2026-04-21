@@ -55,9 +55,13 @@ export default defineEventHandler(async (event) => {
   const dryRun = !!body.dry_run
 
   // 1. Fetch sites joined with subscription info so we can derive tier.
+  //    Include canonical_site_id so we can store canonical IDs in the cohort
+  //    (the pull endpoint resolves polls to `canonical_site_id ?? id`, so
+  //    storing raw non-canonical IDs would silently miss all traffic).
   const siteRows = await db
     .select({
       id: sites.id,
+      canonical_site_id: sites.canonical_site_id,
       url: sites.url,
       name: sites.name,
       create_version: sites.create_version,
@@ -82,9 +86,9 @@ export default defineEventHandler(async (event) => {
   }
 
   const tierAllowed = tiersIn.length === 0 || tiersIn.includes('all')
-  let eligible = siteRows
+  const mapped = siteRows
     .map(r => ({
-      id: r.id,
+      id: r.canonical_site_id ?? r.id,
       url: r.url,
       name: r.name,
       create_version: r.create_version,
@@ -97,6 +101,15 @@ export default defineEventHandler(async (event) => {
       if (versionMax && (!s.create_version || compareSemver(s.create_version, versionMax) > 0)) return false
       return true
     })
+
+  // Dedupe by canonical id — a single canonical site may appear multiple
+  // times here if it has duplicate rows that each match the criteria.
+  const seen = new Set<number>()
+  let eligible = mapped.filter(s => {
+    if (seen.has(s.id)) return false
+    seen.add(s.id)
+    return true
+  })
 
   // 3. Build exclusion set from peer broadcasts sharing this campaign_key.
   const peers = await db

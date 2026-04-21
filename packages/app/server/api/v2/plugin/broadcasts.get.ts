@@ -15,9 +15,12 @@ import { SiteUserRepository } from '~~/server/utils/database'
  *   Without either, cohort-targeted broadcasts are excluded.
  */
 export default defineEventHandler(async (event) => {
+  // Response varies per polling site (cohort filter + UA-based resolution),
+  // so it must NOT be shared across CDN/proxy caches. Keep a short private
+  // cache so a single plugin can't hammer the origin. The plugin already
+  // wraps this call in a 5-minute WordPress transient.
   setResponseHeaders(event, {
-    'Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
-    'CDN-Cache-Control': 'public, max-age=300, stale-while-revalidate=60',
+    'Cache-Control': 'private, max-age=60',
   })
 
   const query = getQuery(event)

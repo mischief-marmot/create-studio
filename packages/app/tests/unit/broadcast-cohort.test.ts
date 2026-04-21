@@ -130,6 +130,21 @@ function pullFilter(params: {
   return true
 }
 
+/**
+ * Mirror of the cohort builder's canonical-mapping + dedupe step. The pull
+ * endpoint resolves polling sites to `canonical_site_id ?? id`, so the
+ * cohort must store canonical IDs or targeting silently misses.
+ */
+function canonicalizeAndDedupe<T extends { id: number; canonical_site_id: number | null }>(rows: T[]): Array<T & { id: number }> {
+  const mapped = rows.map(r => ({ ...r, id: r.canonical_site_id ?? r.id }))
+  const seen = new Set<number>()
+  return mapped.filter(s => {
+    if (seen.has(s.id)) return false
+    seen.add(s.id)
+    return true
+  })
+}
+
 function extractSiteUrlFromUA(ua: string | undefined): string | null {
   if (!ua) return null
   const match = /WordPress\/[^;]+;\s*(https?:\/\/[^\s,;]+)/i.exec(ua)
@@ -377,6 +392,47 @@ describe('pullFilter — legacy tier/version behavior unchanged', () => {
     expect(pullFilter({ broadcast: b, tier: 'pro', createVersion: '1.9.0', resolvedSiteId: null })).toBe(false)
     expect(pullFilter({ broadcast: b, tier: 'pro', createVersion: '2.1.0', resolvedSiteId: null })).toBe(true)
     expect(pullFilter({ broadcast: b, tier: 'pro', createVersion: '3.5.0', resolvedSiteId: null })).toBe(false)
+  })
+})
+
+// ── Canonical-site handling ─────────────────────────────────────────────────
+
+describe('canonicalizeAndDedupe', () => {
+  it('maps non-canonical rows to their canonical id', () => {
+    const out = canonicalizeAndDedupe([
+      { id: 5, canonical_site_id: 1 },  // dup of canonical 1
+      { id: 6, canonical_site_id: 2 },
+      { id: 7, canonical_site_id: null }, // self-canonical
+    ])
+    expect(out.map(r => r.id)).toEqual([1, 2, 7])
+  })
+
+  it('dedupes multiple non-canonical rows pointing to the same canonical', () => {
+    const out = canonicalizeAndDedupe([
+      { id: 5, canonical_site_id: 1 },
+      { id: 8, canonical_site_id: 1 },
+      { id: 9, canonical_site_id: 1 },
+    ])
+    expect(out.map(r => r.id)).toEqual([1])
+  })
+
+  it('preserves source order of first occurrence', () => {
+    const out = canonicalizeAndDedupe([
+      { id: 10, canonical_site_id: null },
+      { id: 5, canonical_site_id: 1 },
+      { id: 8, canonical_site_id: 1 },
+      { id: 11, canonical_site_id: null },
+    ])
+    expect(out.map(r => r.id)).toEqual([10, 1, 11])
+  })
+
+  it('prevents the "cohort stores raw id, pull resolves canonical" targeting miss', () => {
+    // A legacy non-canonical row (id=5, canonical=1) matches criteria. If we
+    // stored id=5 in the cohort, a plugin polling from the duplicate site
+    // would resolve to canonical=1 and never match.
+    const stored = canonicalizeAndDedupe([{ id: 5, canonical_site_id: 1 }]).map(r => r.id)
+    const resolvedSiteIdAtPollTime = 1 // (canonical_site_id ?? id) from pull endpoint
+    expect(stored.includes(resolvedSiteIdAtPollTime)).toBe(true)
   })
 })
 
