@@ -103,6 +103,25 @@ function formatCountdown(target: string | null | undefined, verb: 'Closes' | 'Ex
 const surveyCloseCountdown = computed(() => formatCountdown((survey.value?.definition as any)?.closes_at, 'Closes'))
 const discountExpiryCountdown = computed(() => formatCountdown((promotion.value as any)?.expires_at, 'Expires'))
 
+// Urgency badge for "only N spots left" — only shown when the survey has a
+// `max_completions` cap. `urgent` flips under ~20% remaining or 10 absolute,
+// whichever is smaller, so single-digit caps don't look like false alarms.
+const spotsRemainingBadge = computed<{ text: string; urgent: boolean; exhausted: boolean } | null>(() => {
+  const s = survey.value as any
+  if (!s || s.max_completions == null || s.spots_remaining == null) return null
+  const remaining: number = s.spots_remaining
+  const total: number = s.max_completions
+  if (remaining <= 0) return { text: 'All spots taken', urgent: false, exhausted: true }
+  const urgentThreshold = Math.max(1, Math.min(10, Math.ceil(total * 0.2)))
+  const urgent = remaining <= urgentThreshold
+  return {
+    text: remaining === 1 ? 'Only 1 spot left' : `Only ${remaining} spots left`,
+    urgent,
+    exhausted: false,
+  }
+})
+const spotsExhausted = computed(() => spotsRemainingBadge.value?.exhausted === true)
+
 // Readiness check: for requires_auth surveys we need a logged-in user with a selected site
 const authGateReady = computed(() => {
   if (!requiresAuth.value) return true
@@ -676,6 +695,25 @@ useHead({
         </div>
       </div>
 
+      <!-- Spots exhausted — friendly "you just missed it" state. Respondents
+           with an existing draft can still resume and finish (we won't block
+           them mid-way), so fall through to the welcome screen in that case. -->
+      <div v-else-if="spotsExhausted && !draftResponse" class="py-16">
+        <div class="card bg-base-200 border border-base-300 max-w-xl mx-auto">
+          <div class="card-body text-center">
+            <h1 class="text-3xl mb-2" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em;">
+              Just missed it
+            </h1>
+            <p class="text-base-content/70 mb-2">
+              This survey was limited to {{ (survey as any)?.max_completions }} respondents and we've hit the cap.
+            </p>
+            <p class="text-sm text-base-content/50">
+              Thanks for your interest — watch for future surveys.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Welcome screen -->
       <div v-else-if="!hasStarted" class="survey-welcome">
         <h1 class="survey-welcome__title">{{ survey?.title }}</h1>
@@ -703,6 +741,19 @@ useHead({
               <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
             {{ surveyCloseCountdown.text }}
+          </span>
+          <span
+            v-if="spotsRemainingBadge && !spotsRemainingBadge.exhausted"
+            class="survey-welcome__chip survey-welcome__chip--countdown"
+            :class="{ 'survey-welcome__chip--urgent': spotsRemainingBadge.urgent }"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            {{ spotsRemainingBadge.text }}
           </span>
           <span v-if="draftResponse" class="survey-welcome__chip survey-welcome__chip--progress">
             {{ draftProgressText }} so far

@@ -66,6 +66,22 @@ export default defineEventHandler(async (event) => {
       respondentEmail = body.respondent_email
     }
 
+    // If a completion cap is set and this post would create a completed
+    // response, refuse once the cap has been reached. Drafts (completed=false)
+    // are allowed — only finalizations consume a spot.
+    // NOTE: this is a read-then-write, so concurrent submissions can overshoot
+    // by a handful. Acceptable for "first N get the shared promo" use cases —
+    // if exact enforcement matters (e.g. unique single-use codes), switch to
+    // a conditional INSERT that checks the count inside the same statement.
+    const willComplete = body.completed ?? true
+    if (willComplete && survey.max_completions != null) {
+      const completed = await surveyRepo.getResponseCount(surveyId)
+      if (completed >= survey.max_completions) {
+        setResponseStatus(event, 409)
+        return { error: 'This survey has reached its completion limit', code: 'spots_exhausted' }
+      }
+    }
+
     const response = await surveyRepo.addResponse({
       survey_id: surveyId,
       user_id: userId,

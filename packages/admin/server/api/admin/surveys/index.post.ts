@@ -36,6 +36,15 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 409, message: 'A survey with this slug already exists' })
   }
 
+  let maxCompletions: number | null = null
+  if (body.max_completions !== undefined && body.max_completions !== null && body.max_completions !== '') {
+    const n = Number(body.max_completions)
+    if (!Number.isInteger(n) || n < 1) {
+      throw createError({ statusCode: 400, message: 'max_completions must be a positive integer' })
+    }
+    maxCompletions = n
+  }
+
   const now = new Date().toISOString()
   const created = await db.insert(surveys).values({
     slug: body.slug,
@@ -45,6 +54,7 @@ export default defineEventHandler(async (event) => {
     status: body.status || 'draft',
     promotion: body.promotion ?? null,
     requires_auth: !!body.requires_auth,
+    max_completions: maxCompletions,
     createdAt: now,
     updatedAt: now,
   }).returning().get()

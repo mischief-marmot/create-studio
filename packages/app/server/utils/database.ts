@@ -1143,6 +1143,7 @@ export class SurveyRepository {
     status?: string
     promotion?: Record<string, any>
     requires_auth?: boolean
+    max_completions?: number | null
   }) {
     const now = new Date().toISOString()
 
@@ -1154,6 +1155,7 @@ export class SurveyRepository {
       status: data.status || 'draft',
       promotion: data.promotion || null,
       requires_auth: data.requires_auth ?? false,
+      max_completions: data.max_completions ?? null,
       createdAt: now,
       updatedAt: now,
     }).returning().get()
@@ -1274,6 +1276,7 @@ export class SurveyRepository {
     status?: string
     promotion?: Record<string, any> | null
     requires_auth?: boolean
+    max_completions?: number | null
   }) {
     const now = new Date().toISOString()
     await db.update(schema.surveys)
