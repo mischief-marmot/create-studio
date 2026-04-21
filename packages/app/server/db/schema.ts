@@ -120,7 +120,10 @@ export const broadcasts = sqliteTable('Broadcasts', {
   target_tiers: text('target_tiers', { mode: 'json' }).$type<string[]>().default(['all']),
   target_create_version_min: text('target_create_version_min'),
   target_create_version_max: text('target_create_version_max'),
-  targeting: text('targeting', { mode: 'json' }).$type<Record<string, any>>(),
+  targeting: text('targeting', { mode: 'json' }).$type<{
+    cohort_site_ids?: number[]
+  } & Record<string, any>>(),
+  campaign_key: text('campaign_key'),
   published_at: text('published_at'),
   expires_at: text('expires_at'),
   createdAt: text('createdAt'),
@@ -131,6 +134,7 @@ export const broadcasts = sqliteTable('Broadcasts', {
   index('idx_broadcasts_published_at').on(table.published_at),
   index('idx_broadcasts_expires_at').on(table.expires_at),
   index('idx_broadcasts_priority').on(table.priority),
+  index('idx_broadcasts_campaign_key').on(table.campaign_key),
 ])
 
 // FeedbackReports table (error reports submitted from plugin admin UI)

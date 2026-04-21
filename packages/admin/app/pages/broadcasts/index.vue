@@ -403,6 +403,102 @@
                 />
               </div>
             </div>
+
+            <!-- Campaign key -->
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Campaign key</span>
+              </label>
+              <input
+                v-model="form.campaign_key"
+                type="text"
+                class="input input-bordered w-full"
+                placeholder="e.g. survey-2026-q2"
+              />
+              <span class="text-xs text-base-content/60 mt-1">
+                Group broadcasts together. When a cohort is built, sites already assigned to another broadcast with the same campaign_key are excluded.
+              </span>
+            </div>
+
+            <!-- Cohort builder (only when editing a broadcast with a campaign_key) -->
+            <div v-if="editingBroadcast && form.campaign_key" class="form-control p-4 border border-base-300 rounded-lg bg-base-200">
+              <div class="flex items-center justify-between mb-3">
+                <span class="font-semibold">Cohort</span>
+                <span v-if="currentCohortSize > 0" class="badge badge-primary badge-sm">
+                  {{ currentCohortSize }} sites assigned
+                </span>
+                <span v-else class="text-xs text-base-content/60">no cohort yet</span>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="label py-1"><span class="label-text text-sm">Min create version</span></label>
+                  <input v-model="cohortForm.version_min" type="text" class="input input-sm input-bordered w-full" placeholder="2.0.0" />
+                </div>
+                <div>
+                  <label class="label py-1"><span class="label-text text-sm">Max create version</span></label>
+                  <input v-model="cohortForm.version_max" type="text" class="input input-sm input-bordered w-full" />
+                </div>
+                <div class="col-span-2">
+                  <label class="label py-1"><span class="label-text text-sm">Tiers</span></label>
+                  <div class="flex flex-wrap gap-3">
+                    <label v-for="t in cohortTiers" :key="t" class="label cursor-pointer gap-2 py-0">
+                      <input type="checkbox" :value="t" v-model="cohortForm.tiers" class="checkbox checkbox-xs" />
+                      <span class="label-text text-sm">{{ t }}</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label class="label py-1"><span class="label-text text-sm">Limit</span></label>
+                  <input v-model.number="cohortForm.limit" type="number" min="1" max="5000" class="input input-sm input-bordered w-full" />
+                </div>
+                <div>
+                  <label class="label py-1"><span class="label-text text-sm">Order</span></label>
+                  <select v-model="cohortForm.order" class="select select-sm select-bordered w-full">
+                    <option value="oldest">Oldest first</option>
+                    <option value="newest">Newest first</option>
+                    <option value="alphabetical">Alphabetical</option>
+                    <option value="random_seeded">Random (seeded)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="flex gap-2 mt-3">
+                <button type="button" class="btn btn-sm" :disabled="cohortBusy" @click="previewCohort">
+                  <span v-if="cohortBusy" class="loading loading-spinner loading-xs"></span>
+                  Preview
+                </button>
+                <button type="button" class="btn btn-sm btn-primary" :disabled="cohortBusy" @click="saveCohort">
+                  <span v-if="cohortBusy" class="loading loading-spinner loading-xs"></span>
+                  {{ currentCohortSize > 0 ? 'Rebuild cohort' : 'Build cohort' }}
+                </button>
+              </div>
+              <div v-if="cohortPreview" class="mt-3 text-xs">
+                <div class="font-medium mb-1">
+                  <template v-if="cohortPreview.persisted">Built</template>
+                  <template v-else>Would build</template>
+                  {{ cohortPreview.cohort_size }} sites
+                  <span class="text-base-content/60">
+                    ({{ cohortPreview.total_eligible }} eligible, {{ cohortPreview.excluded_count }} excluded by peer campaigns)
+                  </span>
+                </div>
+                <div v-if="cohortPreview.cohort_size === 0" role="alert" class="alert alert-warning alert-sm p-2 my-2 text-xs">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                  <span>
+                    <strong>0 sites matched.</strong>
+                    <template v-if="cohortPreview.persisted">
+                      Nobody will see this broadcast. Adjust your filters and rebuild, or clear the campaign_key to fall back to tier/version targeting.
+                    </template>
+                    <template v-else>
+                      Adjust your filters before building — a cohort with 0 sites delivers to nobody.
+                    </template>
+                  </span>
+                </div>
+                <ul v-if="cohortPreview.sample_sites.length" class="text-base-content/70 list-disc list-inside">
+                  <li v-for="s in cohortPreview.sample_sites" :key="s.id">
+                    #{{ s.id }} {{ s.url }} — {{ s.tier }} / v{{ s.create_version || '—' }}
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
 
           <div class="modal-action">
@@ -461,6 +557,8 @@ interface Broadcast {
   target_tiers: string | string[]
   target_create_version_min: string | null
   target_create_version_max: string | null
+  targeting: { cohort_site_ids?: number[] } & Record<string, any> | null
+  campaign_key: string | null
   published_at: string | null
   expires_at: string | null
   createdAt: string
@@ -486,6 +584,7 @@ interface BroadcastForm {
   target_tiers: string[]
   target_create_version_min: string
   target_create_version_max: string
+  campaign_key: string
   published_at: string
   expires_at: string
 }
@@ -546,11 +645,72 @@ const defaultForm = (): BroadcastForm => ({
   target_tiers: ['all'],
   target_create_version_min: '',
   target_create_version_max: '',
+  campaign_key: '',
   published_at: '',
   expires_at: '',
 })
 
 const form = ref<BroadcastForm>(defaultForm())
+
+// Cohort builder state (used when editing a broadcast with a campaign_key)
+const cohortTiers = ['free', 'free-plus', 'pro', 'trial']
+const cohortForm = ref({
+  version_min: '',
+  version_max: '',
+  tiers: ['pro'] as string[],
+  limit: 500,
+  order: 'oldest' as 'oldest' | 'newest' | 'alphabetical' | 'random_seeded',
+})
+const cohortBusy = ref(false)
+const cohortPreview = ref<null | {
+  cohort_size: number
+  total_eligible: number
+  excluded_count: number
+  sample_sites: Array<{ id: number; url: string | null; create_version: string | null; tier: string }>
+  persisted?: boolean
+}>(null)
+const currentCohortSize = computed(() => {
+  const t = editingBroadcast.value?.targeting
+  return Array.isArray(t?.cohort_site_ids) ? t!.cohort_site_ids!.length : 0
+})
+
+const callCohort = async (dryRun: boolean) => {
+  if (!editingBroadcast.value) return null
+  cohortBusy.value = true
+  try {
+    return await $fetch<{
+      cohort_size: number
+      total_eligible: number
+      excluded_count: number
+      sample_sites: Array<{ id: number; url: string | null; create_version: string | null; tier: string }>
+      persisted: boolean
+    }>(
+      `/api/admin/broadcasts/${editingBroadcast.value.id}/cohort`,
+      {
+        method: 'POST',
+        body: {
+          version_min: cohortForm.value.version_min || undefined,
+          version_max: cohortForm.value.version_max || undefined,
+          tiers: cohortForm.value.tiers,
+          limit: cohortForm.value.limit,
+          order: cohortForm.value.order,
+          dry_run: dryRun,
+        },
+      },
+    )
+  } finally {
+    cohortBusy.value = false
+  }
+}
+
+const previewCohort = async () => {
+  cohortPreview.value = await callCohort(true)
+}
+
+const saveCohort = async () => {
+  cohortPreview.value = await callCohort(false)
+  await fetchBroadcasts()
+}
 
 // Computed pagination values
 const startIndex = computed(() => (pagination.value.page - 1) * pagination.value.limit)
@@ -660,9 +820,11 @@ const openEditModal = (broadcast: Broadcast) => {
     target_tiers: parseTiers(broadcast.target_tiers),
     target_create_version_min: broadcast.target_create_version_min || '',
     target_create_version_max: broadcast.target_create_version_max || '',
+    campaign_key: broadcast.campaign_key || '',
     published_at: broadcast.published_at ? toDatetimeLocal(broadcast.published_at) : '',
     expires_at: broadcast.expires_at ? toDatetimeLocal(broadcast.expires_at) : '',
   }
+  cohortPreview.value = null
   createModal.value?.showModal()
 }
 
@@ -692,6 +854,7 @@ const saveBroadcast = async () => {
       cta_text: form.value.cta_text || null,
       target_create_version_min: form.value.target_create_version_min || null,
       target_create_version_max: form.value.target_create_version_max || null,
+      campaign_key: form.value.campaign_key || null,
     }
 
     if (editingBroadcast.value) {
