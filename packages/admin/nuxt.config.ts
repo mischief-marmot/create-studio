@@ -24,6 +24,11 @@ export default defineNuxtConfig({
   // Override nitro settings for admin
   nitro: {
     preset: "cloudflare_durable",
+    cloudflare: {
+      dev: {
+        persistDir: '../../.wrangler/state/v3',
+      },
+    },
   },
 
   vite: {

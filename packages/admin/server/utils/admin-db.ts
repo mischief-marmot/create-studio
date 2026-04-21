@@ -32,11 +32,11 @@ let localAppDbInstance: ReturnType<typeof drizzleSqlite> | null = null
 
 /**
  * Find the miniflare D1 SQLite file that contains the app's tables.
- * NuxtHub uses miniflare D1 in local dev, which stores data at
- * .wrangler/state/v3/d1/miniflare-D1DatabaseObject/<hash>.sqlite
+ * Both packages share a single persist dir at the repo root
+ * (see `nitro.cloudflare.dev.persistDir` in each nuxt.config.ts).
  */
-function findMiniflareD1Path(appDir: string): string | null {
-  const d1Dir = join(appDir, '.wrangler/state/v3/d1/miniflare-D1DatabaseObject')
+function findMiniflareD1Path(repoRoot: string): string | null {
+  const d1Dir = join(repoRoot, '.wrangler/state/v3/d1/miniflare-D1DatabaseObject')
   try {
     const files = readdirSync(d1Dir).filter(f => f.endsWith('.sqlite'))
     for (const file of files) {
@@ -56,23 +56,18 @@ function findMiniflareD1Path(appDir: string): string | null {
   return null
 }
 
-/**
- * Get the local app Drizzle instance pointing at the main app's SQLite DB (cached singleton)
- *
- * Connects to the miniflare D1 database that NuxtHub uses in local dev.
- * Falls back to the legacy .data/db/sqlite.db path if miniflare is not found.
- */
 function getLocalAppDb(): ReturnType<typeof drizzleSqlite> {
   if (!localAppDbInstance) {
     const __filename = fileURLToPath(import.meta.url)
     const __dirname = dirname(__filename)
-    const appDir = join(__dirname, '../../../app')
+    const repoRoot = join(__dirname, '../../../..')
 
-    // Prefer the miniflare D1 database (what NuxtHub actually uses in local dev)
-    const miniflareDbPath = findMiniflareD1Path(appDir)
-    const appDbPath = miniflareDbPath || join(appDir, '.data/db/sqlite.db')
+    const miniflareDbPath = findMiniflareD1Path(repoRoot)
+    if (!miniflareDbPath) {
+      throw new Error(`Could not find miniflare D1 at ${join(repoRoot, '.wrangler/state/v3/d1/miniflare-D1DatabaseObject')}. Start the app dev server first so miniflare creates the DB.`)
+    }
 
-    const sqlite = new Database(appDbPath)
+    const sqlite = new Database(miniflareDbPath)
     localAppDbInstance = drizzleSqlite(sqlite, { schema })
   }
   return localAppDbInstance

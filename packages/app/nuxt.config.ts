@@ -36,7 +36,10 @@ export default defineNuxtConfig({
         routes: {
           exclude: ['/assets/*']
         }
-      }
+      },
+      dev: {
+        persistDir: '../../.wrangler/state/v3',
+      },
     },
     compatibilityFlags: ['nodejs_compat'],
     alias: {
@@ -168,6 +171,7 @@ export default defineNuxtConfig({
     db: {
       applyMigrationsDuringBuild: false,
       dialect: 'sqlite',
+      driver: 'd1',
     },
     cache: true,
     // DB_ANALYTICS (analytics D1 database) is configured via wrangler.jsonc binding,
@@ -194,7 +198,7 @@ export default defineNuxtConfig({
         },
         {
           rel: 'stylesheet',
-          href: 'https://cdn.fontshare.com/css?f[]=satoshi@300,400,500,700&display=swap',
+          href: 'https://api.fontshare.com/css?f[]=satoshi@300,400,500,700&display=swap',
         },
       ],
     },
