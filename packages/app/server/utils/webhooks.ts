@@ -91,6 +91,9 @@ export async function sendWebhook(siteUrl: string, payload: WebhookPayload): Pro
       'X-Studio-Timestamp': timestamp,
     },
     body,
+    // Cap slow/dead hosts so a single unresponsive site can't monopolize
+    // the queue worker's CPU budget.
+    signal: AbortSignal.timeout(10_000),
   })
 
   if (!response.ok) {
@@ -99,66 +102,6 @@ export async function sendWebhook(siteUrl: string, payload: WebhookPayload): Pro
   } else {
     logger.debug(`Webhook delivered successfully to ${url}`)
   }
-}
-
-/**
- * Generic retry with exponential backoff.
- *
- * Extracted as a pure utility so it can be tested directly without
- * Nuxt runtime dependencies.
- */
-export async function retryWithBackoff(
-  fn: () => Promise<void>,
-  options: {
-    maxRetries?: number
-    baseDelayMs?: number
-    onRetry?: (attempt: number, delay: number, error: Error) => void
-    onGiveUp?: (attempts: number, error: Error) => void
-  } = {},
-): Promise<void> {
-  const { maxRetries = 3, baseDelayMs = 2000, onRetry, onGiveUp } = options
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      await fn()
-      return
-    } catch (err: any) {
-      if (attempt === maxRetries) {
-        onGiveUp?.(attempt + 1, err)
-        return
-      }
-      const delay = baseDelayMs * Math.pow(2, attempt)
-      onRetry?.(attempt + 1, delay, err)
-      await new Promise((resolve) => setTimeout(resolve, delay))
-    }
-  }
-}
-
-/**
- * Send a webhook with retry logic and exponential backoff.
- *
- * Retries up to 3 times with delays of 2s, 4s, 8s.
- * Designed to be used with waitUntil() for background execution.
- */
-export async function sendWebhookWithRetry(
-  siteUrl: string,
-  payload: WebhookPayload,
-  maxRetries = 3,
-): Promise<void> {
-  const logger = useLogger('Webhooks', useRuntimeConfig().debug)
-
-  await retryWithBackoff(
-    () => sendWebhook(siteUrl, payload),
-    {
-      maxRetries,
-      onRetry: (attempt, delay) => {
-        logger.warn(`Webhook attempt ${attempt} failed, retrying in ${delay}ms...`)
-      },
-      onGiveUp: (attempts, err) => {
-        logger.error(`Webhook delivery to ${siteUrl} failed after ${attempts} attempts: ${err.message}`)
-      },
-    },
-  )
 }
 
 /**

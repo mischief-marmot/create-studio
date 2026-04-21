@@ -11,6 +11,7 @@ import { SiteRepository, SubscriptionRepository } from '~~/server/utils/database
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { verifyAnyJWT, getTokenType } from '~~/server/utils/auth'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
+import { supersedePendingWebhooksForSite } from '~~/server/utils/message-queue'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
@@ -83,6 +84,15 @@ export default defineEventHandler(async (event) => {
     } catch (err) {
       logger.debug('Failed to get active paid count', { error: err })
     }
+
+    // The plugin has just pulled authoritative state — any queued push
+    // webhooks for this site are now obsolete. Run in the background so we
+    // don't delay the response.
+    const supersede = supersedePendingWebhooksForSite(siteId).catch((err) => {
+      logger.warn('Failed to supersede pending webhooks', { siteId, err })
+    })
+    const ctx = (event.context.cloudflare as any)?.context
+    if (ctx?.waitUntil) ctx.waitUntil(supersede)
 
     return {
       connected: true,

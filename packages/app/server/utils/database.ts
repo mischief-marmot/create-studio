@@ -523,6 +523,24 @@ export class SubscriptionRepository {
     return this.getBySiteId(siteId)
   }
 
+  /**
+   * Find an existing Stripe customer id previously linked to any of this
+   * user's sites. Used to avoid rediscovering via Stripe's email lookup,
+   * which is vulnerable to collisions with legacy/unrelated customers.
+   */
+  async getAnyStripeCustomerIdForUser(userId: number): Promise<string | null> {
+    const row = await db.select({ id: schema.subscriptions.stripe_customer_id })
+      .from(schema.subscriptions)
+      .innerJoin(schema.siteUsers, eq(schema.subscriptions.site_id, schema.siteUsers.site_id))
+      .where(and(
+        eq(schema.siteUsers.user_id, userId),
+        isNotNull(schema.subscriptions.stripe_customer_id),
+      ))
+      .limit(1)
+      .get()
+    return row?.id ?? null
+  }
+
   async getActivePaidCountByUser(userId: number): Promise<number> {
     const result = await db.select({ count: sql<number>`count(*)` })
       .from(schema.subscriptions)
@@ -583,7 +601,7 @@ export class SubscriptionRepository {
     return true
   }
 
-  /** Write the trial-expired state to DB and fire a webhook to the WP site. */
+  /** Write the trial-expired state to DB and enqueue a webhook to the WP site. */
   private async _expireTrial(siteId: number, siteUrl?: string): Promise<void> {
     await this.update(siteId, {
       status: 'expired',
@@ -593,11 +611,12 @@ export class SubscriptionRepository {
 
     const url = siteUrl ?? (await new SiteRepository().findById(siteId))?.url
     if (url) {
-      const { sendWebhook } = await import('./webhooks')
-      sendWebhook(url, {
-        type: 'subscription_change',
-        data: { tier: 'free', is_trialing: false, trial_days_remaining: 0 },
-      }).catch(() => {})
+      const { enqueueSubscriptionChange } = await import('./message-queue')
+      await enqueueSubscriptionChange(siteId, url, {
+        tier: 'free',
+        is_trialing: false,
+        trial_days_remaining: 0,
+      })
     }
   }
 

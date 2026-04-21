@@ -55,6 +55,8 @@ export default defineNuxtConfig({
     scheduledTasks: {
       // Daily analytics rollup at 2am UTC (matches wrangler.jsonc cron trigger)
       '0 2 * * *': ['analytics:rollup'],
+      // Drain the message queue every minute (matches wrangler.jsonc cron trigger)
+      '* * * * *': ['message-queue:drain'],
     },
     routeRules: {
       "/embed/**": {

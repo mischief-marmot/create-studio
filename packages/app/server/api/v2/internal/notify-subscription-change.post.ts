@@ -9,18 +9,14 @@
  */
 
 import { SiteRepository } from '~~/server/utils/database'
-import { sendWebhook } from '~~/server/utils/webhooks'
+import { enqueueSubscriptionChange } from '~~/server/utils/message-queue'
+import { requireAdminApiKey } from '~~/server/utils/admin-auth'
 import { useLogger } from '@create-studio/shared/utils/logger'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-  const logger = useLogger('InternalWebhook', config.debug)
+  const logger = useLogger('InternalWebhook', useRuntimeConfig().debug)
 
-  // Require admin API key
-  const adminApiKey = getHeader(event, 'X-Admin-Api-Key')
-  if (!adminApiKey || !config.adminApiKey || adminApiKey !== config.adminApiKey) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
+  requireAdminApiKey(event)
 
   const body = await readBody(event)
   const { siteId, tier, is_trialing, trial_days_remaining, trial_end } = body
@@ -47,12 +43,7 @@ export default defineEventHandler(async (event) => {
   if (trial_days_remaining !== undefined) webhookData.trial_days_remaining = trial_days_remaining
   if (trial_end !== undefined) webhookData.trial_end = trial_end
 
-  try {
-    await sendWebhook(site.url, { type: 'subscription_change', data: webhookData })
-  } catch (err) {
-    logger.warn(`Webhook delivery failed for site ${siteId}:`, err)
-    return { success: true, webhookSent: false, message: 'Tier updated but webhook delivery failed' }
-  }
+  const messageId = await enqueueSubscriptionChange(siteId, site.url, webhookData, event)
 
-  return { success: true, webhookSent: true }
+  return { success: true, enqueued: true, messageId }
 })
