@@ -136,7 +136,7 @@
               <label class="block text-xs font-medium text-base-content/60 uppercase tracking-wider mb-2">Completion Limit</label>
               <div class="flex items-center gap-3">
                 <input
-                  v-model="form.max_completions"
+                  v-model.number="form.max_completions"
                   type="number"
                   min="1"
                   step="1"
@@ -268,7 +268,7 @@ const form = ref({
   description: '',
   status: 'draft',
   requires_auth: false,
-  max_completions: '' as string | number,
+  max_completions: null as number | null,
   promotion: '',
   definition: '',
 })
@@ -298,17 +298,14 @@ const slugError = computed<string | null>(() => {
   return null
 })
 const maxCompletionsError = computed<string | null>(() => {
-  const raw = form.value.max_completions
-  if (raw === '' || raw === null || raw === undefined) return null
-  const n = Number(raw)
+  const n = form.value.max_completions
+  if (n === null) return null
   if (!Number.isInteger(n) || n < 1) return 'Must be a whole number 1 or greater'
   return null
 })
 const spotsLeft = computed<number | null>(() => {
-  const raw = form.value.max_completions
-  if (raw === '' || raw === null || raw === undefined) return null
-  const n = Number(raw)
-  if (!Number.isInteger(n) || n < 1) return null
+  const n = form.value.max_completions
+  if (n === null || !Number.isInteger(n) || n < 1) return null
   if (completedSoFar.value === null) return null
   return Math.max(0, n - completedSoFar.value)
 })
@@ -378,7 +375,7 @@ async function fetchSurvey() {
       description: res.survey.description || '',
       status: res.survey.status || 'draft',
       requires_auth: !!res.survey.requires_auth,
-      max_completions: res.survey.max_completions ?? '',
+      max_completions: res.survey.max_completions ?? null,
       promotion: formatJson(res.survey.promotion),
       definition: formatJson(res.survey.definition),
     }
@@ -415,9 +412,7 @@ async function save() {
     }
     const promotionTrim = form.value.promotion.trim()
     body.promotion = promotionTrim ? JSON.parse(promotionTrim) : null
-    body.max_completions = form.value.max_completions === '' || form.value.max_completions === null
-      ? null
-      : Number(form.value.max_completions)
+    body.max_completions = form.value.max_completions ?? null
 
     const res = await $fetch<{ survey: Survey }>(`/api/admin/surveys/${surveyId}`, {
       method: 'PATCH',

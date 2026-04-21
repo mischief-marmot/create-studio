@@ -9,7 +9,21 @@ definePageMeta({
 const route = useRoute()
 const slug = route.params.slug as string
 
-const { data: surveyData, error: fetchError } = useLazyFetch(`/api/v2/surveys/${slug}`)
+interface SurveyFetchResponse {
+  success?: boolean
+  authenticated?: boolean
+  survey?: {
+    id: number
+    slug: string
+    title: string
+    description: string | null
+    definition: Record<string, any>
+    requires_auth: boolean
+    max_completions: number | null
+    spots_remaining: number | null
+  }
+}
+const { data: surveyData, error: fetchError } = useLazyFetch<SurveyFetchResponse>(`/api/v2/surveys/${slug}`)
 
 const { user, loggedIn } = useAuth()
 const { sites, selectedSiteId, loadSites, selectSite } = useSiteContext()
@@ -103,20 +117,19 @@ function formatCountdown(target: string | null | undefined, verb: 'Closes' | 'Ex
 const surveyCloseCountdown = computed(() => formatCountdown((survey.value?.definition as any)?.closes_at, 'Closes'))
 const discountExpiryCountdown = computed(() => formatCountdown((promotion.value as any)?.expires_at, 'Expires'))
 
-// Urgency badge for "only N spots left" — only shown when the survey has a
-// `max_completions` cap. `urgent` flips under ~20% remaining or 10 absolute,
-// whichever is smaller, so single-digit caps don't look like false alarms.
+// `urgent` flips under ~20% remaining or 10 absolute, whichever is smaller,
+// so tiny caps don't look like false alarms and huge caps don't scream "hurry!"
+// with 200 spots still open.
 const spotsRemainingBadge = computed<{ text: string; urgent: boolean; exhausted: boolean } | null>(() => {
-  const s = survey.value as any
+  const s = survey.value
   if (!s || s.max_completions == null || s.spots_remaining == null) return null
-  const remaining: number = s.spots_remaining
-  const total: number = s.max_completions
+  const remaining = s.spots_remaining
+  const total = s.max_completions
   if (remaining <= 0) return { text: 'All spots taken', urgent: false, exhausted: true }
   const urgentThreshold = Math.max(1, Math.min(10, Math.ceil(total * 0.2)))
-  const urgent = remaining <= urgentThreshold
   return {
     text: remaining === 1 ? 'Only 1 spot left' : `Only ${remaining} spots left`,
-    urgent,
+    urgent: remaining <= urgentThreshold,
     exhausted: false,
   }
 })
@@ -705,7 +718,7 @@ useHead({
               Just missed it
             </h1>
             <p class="text-base-content/70 mb-2">
-              This survey was limited to {{ (survey as any)?.max_completions }} respondents and we've hit the cap.
+              This survey was limited to {{ survey?.max_completions }} respondents and we've hit the cap.
             </p>
             <p class="text-sm text-base-content/50">
               Thanks for your interest — watch for future surveys.

@@ -1306,4 +1306,16 @@ export class SurveyRepository {
       .get()
     return result?.count ?? 0
   }
+
+  async isCapReached(surveyId: number, maxCompletions: number | null | undefined) {
+    if (maxCompletions == null) return false
+    const completed = await this.getResponseCount(surveyId)
+    return completed >= maxCompletions
+  }
 }
+
+export const SURVEY_CAP_EXHAUSTED_CODE = 'spots_exhausted'
+export const SURVEY_CAP_EXHAUSTED_ERROR = {
+  error: 'This survey has reached its completion limit',
+  code: SURVEY_CAP_EXHAUSTED_CODE,
+} as const

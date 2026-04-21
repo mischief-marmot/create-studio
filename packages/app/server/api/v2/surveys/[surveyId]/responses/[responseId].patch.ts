@@ -73,19 +73,15 @@ export default defineEventHandler(async (event) => {
       updates.respondent_email = body.respondent_email
     }
 
-    // Enforce the completion cap at finalization time. Only block the
-    // transition from draft → completed — re-saving an already-completed
-    // response is fine and shouldn't double-count.
+    // Only block the transition from draft → completed; re-saving an
+    // already-completed response must not count twice.
     if (
       updates.completed === true
       && !existing.completed
-      && survey.max_completions != null
+      && await surveyRepo.isCapReached(surveyId, survey.max_completions)
     ) {
-      const completed = await surveyRepo.getResponseCount(surveyId)
-      if (completed >= survey.max_completions) {
-        setResponseStatus(event, 409)
-        return { error: 'This survey has reached its completion limit', code: 'spots_exhausted' }
-      }
+      setResponseStatus(event, 409)
+      return SURVEY_CAP_EXHAUSTED_ERROR
     }
 
     const updated = await surveyRepo.updateResponse(responseId, updates)

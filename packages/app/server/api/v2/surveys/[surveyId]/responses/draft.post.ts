@@ -63,15 +63,12 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // If the survey has a completion cap and it's already been hit, don't let
-    // a new respondent start a draft they'll never be able to finalize.
-    // (Returning-users with an existing draft are already handled above.)
-    if (survey.max_completions != null) {
-      const completed = await surveyRepo.getResponseCount(surveyId)
-      if (completed >= survey.max_completions) {
-        setResponseStatus(event, 409)
-        return { error: 'This survey has reached its completion limit', code: 'spots_exhausted' }
-      }
+    // Block new drafts once the cap is hit so a respondent doesn't start
+    // something they'll never be able to finalize. Returning users with an
+    // existing draft are already handled above and can still resume.
+    if (await surveyRepo.isCapReached(surveyId, survey.max_completions)) {
+      setResponseStatus(event, 409)
+      return SURVEY_CAP_EXHAUSTED_ERROR
     }
 
     const created = await surveyRepo.addResponse({

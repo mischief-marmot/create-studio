@@ -38,9 +38,6 @@ export default defineEventHandler(async (event) => {
     authenticated = !!session?.user?.id
   }
 
-  // When a completion cap is set, compute the live remaining count so the
-  // public page can render urgency messaging ("only 13 spots left!") and
-  // switch into a closed state once the cap is hit.
   let max_completions: number | null = null
   let spots_remaining: number | null = null
   if (survey.max_completions != null) {
