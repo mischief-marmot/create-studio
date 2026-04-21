@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const body = await readBody(event)
-    const { title, body: bodyText, type, status, priority, url, path, cta_text, target_tiers, target_create_version_min, target_create_version_max, targeting, published_at, expires_at } = body
+    const { title, body: bodyText, type, status, priority, url, path, cta_text, target_tiers, target_create_version_min, target_create_version_max, targeting, published_at, expires_at, campaign_key } = body
 
     if (!title || typeof title !== 'string') {
       throw createError({
@@ -68,6 +68,7 @@ export default defineEventHandler(async (event) => {
       target_create_version_min: target_create_version_min || null,
       target_create_version_max: target_create_version_max || null,
       targeting: targeting || null,
+      campaign_key: campaign_key || null,
       published_at: published_at || null,
       expires_at: expires_at || null,
       createdAt: now,

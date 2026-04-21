@@ -62,6 +62,7 @@ export default defineEventHandler(async (event) => {
       'title', 'body', 'type', 'status', 'priority', 'url', 'path',
       'cta_text', 'target_tiers', 'target_create_version_min',
       'target_create_version_max', 'targeting', 'published_at', 'expires_at',
+      'campaign_key',
     ] as const
 
     const updates: Record<string, any> = {}
