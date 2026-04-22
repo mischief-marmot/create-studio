@@ -22,7 +22,7 @@ function isCapReached(maxCompletions: number | null, completed: number): boolean
   return completed >= maxCompletions
 }
 
-/** Mirrors the `spotsRemainingBadge` computed in packages/app/app/pages/survey/[slug].vue */
+/** Mirrors the `spotsRemainingBadge` computed in packages/app/app/pages/surveys/[slug].vue */
 function computeSpotsBadge(maxCompletions: number | null, spotsRemaining: number | null): { text: string; urgent: boolean; exhausted: boolean } | null {
   if (maxCompletions == null || spotsRemaining == null) return null
   if (spotsRemaining <= 0) return { text: 'All spots taken', urgent: false, exhausted: true }

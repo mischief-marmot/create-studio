@@ -287,7 +287,7 @@ const deleteError = ref<string | null>(null)
 const runtimeConfig = useRuntimeConfig()
 const previewUrl = computed(() => {
   const base = (runtimeConfig.public?.mainAppUrl as string) || 'https://create.studio'
-  return `${base.replace(/\/$/, '')}/survey/${form.value.slug}`
+  return `${base.replace(/\/$/, '')}/surveys/${form.value.slug}`
 })
 
 const SLUG_RE = /^[a-z0-9-]+$/
