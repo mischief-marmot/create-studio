@@ -574,7 +574,7 @@ useHead({
 </script>
 
 <template>
-  <div class="min-h-screen bg-base-100">
+  <div class="bg-base-100 min-h-screen">
     <!-- Sticky top progress bar — spans full viewport width -->
     <ClientOnly>
       <div
@@ -605,15 +605,15 @@ useHead({
       </div>
     </ClientOnly>
 
-    <div class="mx-auto max-w-3xl px-4 py-4">
+    <div class="max-w-3xl px-4 py-4 mx-auto">
       <!-- Loading -->
       <div v-if="!surveyData && !fetchError" class="flex justify-center py-20">
         <span class="loading loading-spinner loading-lg" />
       </div>
 
       <!-- Error: survey not found -->
-      <div v-else-if="fetchError || !survey" class="text-center py-20">
-        <h1 class="text-3xl font-bold mb-4">Survey Not Available</h1>
+      <div v-else-if="fetchError || !survey" class="py-20 text-center">
+        <h1 class="mb-4 text-3xl font-bold">Survey Not Available</h1>
         <p class="text-base-content/70">This survey is no longer active or doesn't exist.</p>
       </div>
 
@@ -674,14 +674,14 @@ useHead({
 
       <!-- Auth gate: needs login -->
       <div v-else-if="authGateBlocker === 'needs_login'" class="py-16">
-        <div class="card bg-base-200 border border-base-300 max-w-xl mx-auto">
+        <div class="card bg-base-200 border-base-300 max-w-xl mx-auto border">
           <div class="card-body">
-            <h1 class="text-3xl mb-2" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em;">
+            <h1 class="mb-2 text-3xl" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em;">
               {{ survey?.title }}
             </h1>
             <p v-if="survey?.description" class="text-base-content/70 mb-6">{{ survey.description }}</p>
-            <div class="bg-base-100 rounded-xl p-4 mb-6 border border-base-300">
-              <p class="text-sm text-base-content/80">
+            <div class="bg-base-100 rounded-xl border-base-300 p-4 mb-6 border">
+              <p class="text-base-content/80 text-sm">
                 <strong>Sign in required.</strong> This survey is for current Create Studio users, so we can connect your feedback to your site.
               </p>
             </div>
@@ -695,9 +695,9 @@ useHead({
 
       <!-- Auth gate: no sites -->
       <div v-else-if="authGateBlocker === 'no_sites'" class="py-16">
-        <div class="card bg-base-200 border border-base-300 max-w-xl mx-auto">
+        <div class="card bg-base-200 border-base-300 max-w-xl mx-auto border">
           <div class="card-body">
-            <h1 class="text-3xl mb-2" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em;">
+            <h1 class="mb-2 text-3xl" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em;">
               {{ survey?.title }}
             </h1>
             <p class="text-base-content/70 mb-6">
@@ -712,15 +712,15 @@ useHead({
            with an existing draft can still resume and finish (we won't block
            them mid-way), so fall through to the welcome screen in that case. -->
       <div v-else-if="spotsExhausted && !draftResponse" class="py-16">
-        <div class="card bg-base-200 border border-base-300 max-w-xl mx-auto">
+        <div class="card bg-base-200 border-base-300 max-w-xl mx-auto border">
           <div class="card-body text-center">
-            <h1 class="text-3xl mb-2" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em;">
+            <h1 class="mb-2 text-3xl" style="font-family: 'Instrument Serif', serif; font-weight: 400; letter-spacing: -0.02em;">
               Just missed it
             </h1>
             <p class="text-base-content/70 mb-2">
               This survey was limited to {{ survey?.max_completions }} respondents and we've hit the cap.
             </p>
-            <p class="text-sm text-base-content/50">
+            <p class="text-base-content/50 text-sm">
               Thanks for your interest — watch for future surveys.
             </p>
           </div>
@@ -768,7 +768,7 @@ useHead({
             </svg>
             {{ spotsRemainingBadge.text }}
           </span>
-          <span v-if="draftResponse" class="survey-welcome__chip survey-welcome__chip--progress">
+          <span v-if="draftResponse && draftProgressText.length" class="survey-welcome__chip survey-welcome__chip--progress">
             {{ draftProgressText }} so far
           </span>
         </div>
