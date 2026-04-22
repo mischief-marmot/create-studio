@@ -106,7 +106,7 @@ export default defineEventHandler(async (event) => {
       customer_email: session.user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}/admin/settings?success=true`,
-      cancel_url: `${baseUrl}/survey/${survey.slug}?canceled=true`,
+      cancel_url: `${baseUrl}/surveys/${survey.slug}?canceled=true`,
       discounts: [{ promotion_code: promotionCodeId! }],
       payment_method_collection: 'always',
       metadata: {

@@ -150,7 +150,7 @@ const authGateBlocker = computed<'needs_login' | 'no_sites' | 'needs_site_select
   return null
 })
 
-const loginHref = computed(() => `/auth/login?redirect=${encodeURIComponent(`/survey/${slug}`)}`)
+const loginHref = computed(() => `/auth/login?redirect=${encodeURIComponent(`/surveys/${slug}`)}`)
 
 const SECONDS_PER_QUESTION = 15
 const estimatedMinutesRemaining = computed(() => {
@@ -687,7 +687,7 @@ useHead({
             </div>
             <div class="flex gap-2">
               <NuxtLink :to="loginHref" class="btn btn-primary">Log in to continue</NuxtLink>
-              <NuxtLink :to="`/auth/register?redirect=${encodeURIComponent(`/survey/${slug}`)}`" class="btn btn-ghost">Create an account</NuxtLink>
+              <NuxtLink :to="`/auth/register?redirect=${encodeURIComponent(`/surveys/${slug}`)}`" class="btn btn-ghost">Create an account</NuxtLink>
             </div>
           </div>
         </div>
