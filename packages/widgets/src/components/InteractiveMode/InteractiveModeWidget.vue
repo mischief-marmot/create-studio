@@ -232,8 +232,11 @@ function openModal() {
   // FreePlus (non-Pro) opens the standalone interactive page in a new tab instead of
   // mounting an iframe modal. This prevents ad-rendering issues inside iframes and
   // creates upgrade pressure since the reader leaves the publisher's page.
+  // `noopener` is intentionally omitted so the standalone page can call
+  // window.opener.focus() to switch back to the publisher's tab. Both tabs are Create-
+  // controlled (widget on publisher's site opens Studio's page) so the trust is fine.
   if (!inDomRendering.value) {
-    window.open(interactiveUrl.value, '_blank', 'noopener')
+    window.open(interactiveUrl.value, '_blank')
     return
   }
 

@@ -1,6 +1,15 @@
 <template>
     <div class="h-dvh flex flex-col w-full relative">
         <button
+            v-if="canReturnToPost"
+            type="button"
+            class="btn btn-sm btn-ghost bg-base-100/80 hover:bg-base-100 fixed top-3 left-3 z-50 backdrop-blur-sm shadow gap-2"
+            @click="returnToPost"
+        >
+            <ArrowLeftIcon class="w-4 h-4" />
+            Back to post
+        </button>
+        <button
             type="button"
             aria-label="Close"
             class="btn btn-circle btn-sm btn-ghost bg-base-100/80 hover:bg-base-100 fixed top-3 right-3 z-50 backdrop-blur-sm shadow"
@@ -30,12 +39,16 @@
 <script setup lang="ts">
 import { parseCreationKey } from '@create-studio/shared';
 import { onMounted, ref } from 'vue';
-import { XMarkIcon } from '@heroicons/vue/20/solid';
+import { XMarkIcon, ArrowLeftIcon } from '@heroicons/vue/20/solid';
 
 const { loadAds } = useRuntimeConfig().public;
 
 // Track if adhesion mobile wrapper exists
 const hasAdhesionWrapper = ref(false);
+
+// "Back to post" is only shown when this tab was script-opened from a still-open publisher
+// tab; window.opener is set (we don't pass 'noopener' on window.open) and not closed.
+const canReturnToPost = ref(false);
 
 // window.close() only works for script-opened tabs (the FreePlus new-tab flow); direct
 // visitors fall through to a referrer redirect, but never history.back() (would surprise
@@ -47,6 +60,15 @@ function handleClose() {
         setTimeout(() => {
             window.location.href = document.referrer;
         }, 100);
+    }
+}
+
+// Switch browser focus back to the publisher's tab without closing the IM tab.
+function returnToPost() {
+    try {
+        window.opener?.focus();
+    } catch {
+        // Cross-origin focus() is allowed, but be defensive in case the opener is gone.
     }
 }
 
@@ -104,6 +126,14 @@ const disableRatingSubmission = route.query.disableRatingSubmission === 'true';
 
 onMounted(async () => {
     if (!creationInfo) return;
+
+    // Enable "Back to post" only when the opener tab is still around. Reading .closed on a
+    // cross-origin opener is allowed by spec.
+    try {
+        canReturnToPost.value = !!(window.opener && !window.opener.closed);
+    } catch {
+        canReturnToPost.value = false;
+    }
 
     // Check if adhesion mobile wrapper exists (only relevant when ads are enabled)
     if (loadAds) {
