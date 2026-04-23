@@ -7,22 +7,20 @@
   >
     <div class="cs-interactive-mode-sticky-text">
       <strong>{{ displayTitle }}</strong>
-      <span>
-        {{ displaySubtitle }}
-        <NewTabHint v-if="opensInNewTab" />
-      </span>
+      <span>{{ displaySubtitle }}</span>
     </div>
-    <button class="cs-interactive-mode-sticky-btn" @click="$emit('activate')">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="width:14px;height:14px;min-width:14px;display:inline-block;vertical-align:middle;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      {{ displayButtonText }}
-      <ArrowTopRightOnSquareIcon v-if="opensInNewTab" class="cs:w-4 cs:h-4 cs:ml-1 cs:inline-block" />
-    </button>
+    <div class="cs-interactive-mode-sticky-action">
+      <button class="cs-interactive-mode-sticky-btn" @click="$emit('activate')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="width:14px;height:14px;min-width:14px;display:inline-block;vertical-align:middle;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        {{ displayButtonText }}
+      </button>
+      <NewTabHint v-if="opensInNewTab" class="cs-interactive-mode-sticky-hint" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
 import NewTabHint from './NewTabHint.vue'
 
 const props = defineProps<{
