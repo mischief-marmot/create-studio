@@ -650,6 +650,22 @@ export class SharedStorageManager {
   }
 
   /**
+   * Merge an incoming snapshot into storage using the same timestamp-based rules as
+   * the postMessage sync, then persist. Intended for cross-origin hydration — e.g.,
+   * the Interactive Mode new-tab flow passes publisher-side state via URL param.
+   */
+  hydrateFromSnapshot(
+    snapshot: { preferences?: Partial<UserPreferences>; state?: Record<string, CreationState> }
+  ): void {
+    this.mergeStorage({
+      id: this.storage.id,
+      preferences: (snapshot.preferences ?? {}) as UserPreferences,
+      state: snapshot.state ?? {}
+    })
+    this.saveStorage()
+  }
+
+  /**
    * Re-read from localStorage to pick up changes made by other
    * SharedStorageManager instances in the same tab.
    */

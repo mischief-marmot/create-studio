@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseCreationKey } from '@create-studio/shared';
+import { parseCreationKey, SharedStorageManager, decodeStateSnapshot } from '@create-studio/shared';
 import { onMounted, ref } from 'vue';
 import { XMarkIcon, ArrowLeftIcon } from '@heroicons/vue/20/solid';
 
@@ -126,6 +126,22 @@ const disableRatingSubmission = route.query.disableRatingSubmission === 'true';
 
 onMounted(async () => {
     if (!creationInfo) return;
+
+    // Hydrate state passed from the publisher's page via ?cs_state=... (FreePlus flow).
+    // localStorage is origin-scoped, so this URL param is how servings/units/checklist
+    // carry over. Run before widget mount so InteractiveExperience's SharedStorageManager
+    // reads the hydrated data on construction. Then strip the param so a refresh doesn't
+    // re-apply stale state and the URL stays shareable-clean.
+    const stateParam = route.query.cs_state;
+    if (typeof stateParam === 'string' && stateParam) {
+        const snapshot = decodeStateSnapshot<{ preferences?: Record<string, unknown>; state?: Record<string, unknown> }>(stateParam);
+        if (snapshot) {
+            new SharedStorageManager().hydrateFromSnapshot(snapshot as any);
+        }
+        const cleanQuery = { ...route.query };
+        delete cleanQuery.cs_state;
+        window.history.replaceState({}, '', route.path + (Object.keys(cleanQuery).length ? '?' + new URLSearchParams(cleanQuery as Record<string, string>).toString() : ''));
+    }
 
     // Enable "Back to post" only when the opener tab is still around. Reading .closed on a
     // cross-origin opener is allowed by spec.

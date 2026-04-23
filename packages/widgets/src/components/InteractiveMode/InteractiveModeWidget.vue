@@ -97,6 +97,7 @@ import { XMarkIcon, ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/shared-storage-manager'
 import { createCreationKey, normalizeDomain } from '@create-studio/shared/utils/domain'
+import { encodeStateSnapshot } from '@create-studio/shared/utils/state-snapshot'
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { useAnalytics } from '../../composables/useAnalytics'
 import InteractiveExperience from '../InteractiveExperience.vue'
@@ -210,6 +211,23 @@ const interactiveUrl = computed(() => {
   return `${baseUrl.value}/creations/${creationKey.value}/interactive`
 })
 
+// Bundle the publisher-side state (current creation's servings, checklist, step, timers
+// + unit preference) into the URL so the standalone page on create.studio can hydrate it.
+// localStorage is origin-scoped, so this is the only way to carry state across tabs.
+function buildInteractiveUrlWithState(): string {
+  storageManager.syncFromStorage()
+  const state = storageManager.getCreationState(creationKey.value)
+  const units = storageManager.getPreferences().units
+  if (!state && !units) return interactiveUrl.value
+  const snapshot = {
+    state: state ? { [creationKey.value]: state } : {},
+    preferences: units ? { units } : {}
+  }
+  const encoded = encodeURIComponent(encodeStateSnapshot(snapshot))
+  const sep = interactiveUrl.value.includes('?') ? '&' : '?'
+  return `${interactiveUrl.value}${sep}cs_state=${encoded}`
+}
+
 // Analytics for tracking CTA activations
 const analytics = useAnalytics({
   domain: domain.value,
@@ -246,7 +264,7 @@ function openModal() {
       interactiveWindow.focus()
       return
     }
-    interactiveWindow = window.open(interactiveUrl.value, '_blank')
+    interactiveWindow = window.open(buildInteractiveUrlWithState(), '_blank')
     return
   }
 
