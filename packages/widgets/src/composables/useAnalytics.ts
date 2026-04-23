@@ -4,6 +4,7 @@
  */
 
 import { ref, onBeforeUnmount } from 'vue'
+import type { CtaVariant } from '../components/InteractiveMode/types'
 
 export interface AnalyticsEvent {
   type: 'im_session_start' | 'im_session_complete' | 'timer_start' | 'timer_stop' | 'timer_complete' | 'rating_screen_shown' | 'rating_submitted' | 'page_view' | 'cta_activated' | 'cta_rendered'
@@ -148,7 +149,7 @@ export function useAnalytics(config: AnalyticsConfig) {
   /**
    * Track CTA render (which variant was shown to the user)
    */
-  function trackCtaRendered(variant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip') {
+  function trackCtaRendered(variant: CtaVariant) {
     trackEvent('cta_rendered', { variant })
     // Flush immediately so the render is captured even if the visitor bounces
     // before the 15s auto-send tick.
@@ -158,7 +159,7 @@ export function useAnalytics(config: AnalyticsConfig) {
   /**
    * Track CTA activation (which variant was used to enter interactive mode)
    */
-  function trackCtaActivated(variant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip') {
+  function trackCtaActivated(variant: CtaVariant) {
     trackEvent('cta_activated', { variant })
   }
 

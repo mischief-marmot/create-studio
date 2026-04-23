@@ -9,7 +9,7 @@
       <strong>{{ displayTitle }}</strong>
       <span>
         {{ displaySubtitle }}
-        <span v-if="opensInNewTab" style="opacity:0.7;font-style:italic;">(opens in new tab)</span>
+        <NewTabHint v-if="opensInNewTab" />
       </span>
     </div>
     <button class="cs-interactive-mode-sticky-btn" @click="$emit('activate')">
@@ -23,6 +23,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
+import NewTabHint from './NewTabHint.vue'
 
 const props = defineProps<{
   title?: string

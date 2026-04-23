@@ -10,7 +10,7 @@
       </div>
       <div class="cs-interactive-mode-banner-sub">
         {{ displaySubtitle }}
-        <span v-if="opensInNewTab" style="opacity:0.7;font-style:italic;">(opens in new tab)</span>
+        <NewTabHint v-if="opensInNewTab" />
       </div>
     </div>
     <div class="cs-interactive-mode-banner-arrow">
@@ -22,6 +22,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
+import NewTabHint from './NewTabHint.vue'
 
 const props = defineProps<{
   title?: string

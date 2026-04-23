@@ -214,8 +214,8 @@ const features = [
     icon: ClockIcon
   },
   {
-    name: 'Ad-supported experience',
-    description: `<strong>Create 2.0 Free+ plan</strong>: Interactive Mode opens on create.studio in a new tab, where Create shows ads while your site ads keep running on your own page. <br/><strong>Create 2.0 Pro plan</strong>: Interactive Mode stays in-page on your site&mdash;readers never leave&mdash;with support for your own ad network, custom button text, or the ability to disable it entirely.`,
+    name: 'Where Interactive Mode opens',
+    description: `<strong>Create 2.0 Free+ plan</strong>: Interactive Mode opens in a new tab on create.studio&mdash;readers leave your page. <br/><strong>Create 2.0 Pro plan</strong>: Interactive Mode stays in-page on your site&mdash;readers never leave&mdash;with custom button text, CTA styles, or the ability to disable it entirely.`,
     icon: ComputerDesktopIcon
   },
 ]

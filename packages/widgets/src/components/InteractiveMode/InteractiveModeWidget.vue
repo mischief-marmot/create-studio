@@ -103,13 +103,14 @@ import InteractiveExperience from '../InteractiveExperience.vue'
 import InteractiveModeBanner from './InteractiveModeBanner.vue'
 import InteractiveModeSticky from './InteractiveModeSticky.vue'
 import InteractiveModeTooltip from './InteractiveModeTooltip.vue'
+import type { CtaVariant } from './types'
 
 interface Props {
   config: {
     creationId: string
     creationName?: string
     buttonText?: string
-    ctaVariant?: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip'
+    ctaVariant?: CtaVariant
     ctaTitle?: string
     ctaSubtitle?: string
     siteUrl?: string
@@ -138,7 +139,7 @@ const inDomRendering = computed(() => {
 })
 
 // CTA variant from config (Pro tier feature, defaults to 'button')
-const ctaVariant = computed(() => {
+const ctaVariant = computed<CtaVariant>(() => {
   return props.config.ctaVariant || globalConfig?.ctaVariant || 'button'
 })
 
@@ -225,7 +226,7 @@ function openModal() {
     globalConfig: globalConfig
   })
 
-  analytics.trackCtaActivated(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
+  analytics.trackCtaActivated(ctaVariant.value)
   analytics.sendBatch()
 
   // FreePlus (non-Pro) opens the standalone interactive page in a new tab instead of
@@ -340,7 +341,7 @@ onMounted(() => {
         for (const entry of entries) {
           if (entry.isIntersecting && !fired) {
             fired = true
-            analytics.trackCtaRendered(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
+            analytics.trackCtaRendered(ctaVariant.value)
             impressionObserver.disconnect()
           }
         }

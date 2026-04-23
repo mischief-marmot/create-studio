@@ -6,10 +6,7 @@
             class="btn btn-circle btn-sm btn-ghost bg-base-100/80 hover:bg-base-100 fixed top-3 right-3 z-50 backdrop-blur-sm shadow"
             @click="handleClose"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+            <XMarkIcon class="w-5 h-5" />
         </button>
         <div
             v-if="creationInfo"
@@ -33,28 +30,28 @@
 <script setup lang="ts">
 import { parseCreationKey } from '@create-studio/shared';
 import { onMounted, ref } from 'vue';
+import { XMarkIcon } from '@heroicons/vue/20/solid';
 
 const { loadAds } = useRuntimeConfig().public;
 
 // Track if adhesion mobile wrapper exists
 const hasAdhesionWrapper = ref(false);
 
-// Close handler: if this tab was opened via window.open() (the FreePlus new-tab flow),
-// window.close() returns the user to the publisher's page. If it wasn't opened by script
-// (direct URL visit or iframe), fall back to history back / referrer.
+// In iframe: ask parent to close. In the FreePlus new-tab flow: window.close() succeeds
+// because the tab was script-opened. On a direct visit window.close() is a no-op — we
+// intentionally don't fall back to history.back() there (would surprise search-referred
+// visitors), only to a known referrer.
 function handleClose() {
     if (window.parent !== window) {
         window.parent.postMessage({ type: 'CREATE_STUDIO_CLOSE_MODAL' }, '*');
         return;
     }
     window.close();
-    setTimeout(() => {
-        if (document.referrer) {
+    if (document.referrer) {
+        setTimeout(() => {
             window.location.href = document.referrer;
-        } else {
-            window.history.back();
-        }
-    }, 100);
+        }, 100);
+    }
 }
 
 if (loadAds) {

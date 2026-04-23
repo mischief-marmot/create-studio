@@ -2,7 +2,7 @@
   <div v-if="!dismissed" class="cs-interactive-mode-tooltip">
     <span class="cs-interactive-mode-tooltip-text">
       {{ displayTitle }}
-      <span v-if="opensInNewTab" style="opacity:0.7;font-style:italic;font-size:0.85em;">(opens in new tab)</span>
+      <NewTabHint v-if="opensInNewTab" />
     </span>
     <button class="cs-interactive-mode-tooltip-try" @click="$emit('activate')">
       {{ displayButtonText }}
@@ -15,6 +15,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
+import NewTabHint from './NewTabHint.vue'
 
 const props = defineProps<{
   title?: string
