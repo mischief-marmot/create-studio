@@ -143,6 +143,9 @@ export function scheduleImmediateDelivery(event: H3Event, messageId: number): vo
  * processOne calls with attempt = row.attempts + 1, starting at 1).
  *   failure #1 → wait 1m, #2 → 5m, #3 → 30m, #4 → 2h, #5 → 6h, #6 → 12h,
  *   #7+ → 24h. After max_attempts the message is marked dead.
+ *
+ * Keep https://create.studio/docs/webhooks in sync if this schedule changes —
+ * publishers rely on it to know how long a WAF block will burn through retries.
  */
 export function computeBackoffMs(attempt: number): number {
   const schedule = [

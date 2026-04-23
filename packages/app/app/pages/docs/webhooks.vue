@@ -112,6 +112,12 @@ useHead({
             validated by the plugin's signature check, so allowlisting at the edge does not
             weaken security.
           </p>
+          <p>
+            <strong>Important:</strong> the User-Agent is a routing/identification signal
+            only — anyone can send a request with that header. Don't treat UA matching as
+            authentication. The <code>X-Studio-Signature</code> check inside the plugin is
+            the actual security boundary; the allowlist just decides what reaches it.
+          </p>
 
           <h2>Security model</h2>
           <p>
