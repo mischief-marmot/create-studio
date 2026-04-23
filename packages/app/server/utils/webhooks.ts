@@ -12,6 +12,12 @@ interface WebhookPayload {
   data: Record<string, unknown>
 }
 
+// Identifies Studio outbound webhook traffic so publishers can allowlist it
+// in WAF/bot rules (Studio runs on Cloudflare Workers — without a UA, default
+// managed rules on the publisher side often return 403).
+// See: https://create.studio/docs/webhooks
+export const STUDIO_WEBHOOK_USER_AGENT = 'Create-Studio-Webhook/1.0 (+https://create.studio/docs/webhooks)'
+
 /**
  * Convert a PEM-encoded private key to an ArrayBuffer for Web Crypto API.
  */
@@ -87,6 +93,7 @@ export async function sendWebhook(siteUrl: string, payload: WebhookPayload): Pro
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'User-Agent': STUDIO_WEBHOOK_USER_AGENT,
       'X-Studio-Signature': signature,
       'X-Studio-Timestamp': timestamp,
     },
@@ -136,6 +143,7 @@ export async function sendWebhookWithResponse<T = Record<string, unknown>>(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'User-Agent': STUDIO_WEBHOOK_USER_AGENT,
       'X-Studio-Signature': signature,
       'X-Studio-Timestamp': timestamp,
     },
