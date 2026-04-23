@@ -86,9 +86,9 @@
                           <SparklesIcon class="text-primary size-5" />
                         </div>
                         <div class="flex-1">
-                          <p class="text-base-content mb-1 font-medium">Upgrade to Pro to customize Interactive Mode</p>
+                          <p class="text-base-content mb-1 font-medium">Upgrade to Pro to keep readers on your site</p>
                           <p class="text-base-content/60 mb-4 text-sm">
-                            Pro subscribers can disable Interactive Mode or customize the button text.
+                            On Pro, Interactive Mode stays in-page&mdash;no new tab. Pro subscribers can also disable Interactive Mode or customize the button text.
                           </p>
                           <NuxtLink to="/admin/upgrade" class="btn btn-primary btn-sm">
                             Upgrade to Pro
@@ -411,6 +411,12 @@
                       <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
+                      Keep readers on your site (no new tab)
+                    </li>
+                    <li v-if="tier === 'pro'" class="flex items-center gap-2">
+                      <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
                       Use your own ad network in Interactive Mode
                     </li>
                     <li v-if="tier === 'pro'" class="flex items-center gap-2">
@@ -429,7 +435,7 @@
                       <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
-                      Interactive Mode{{ tier !== 'pro' ? ' with Create ads' : '' }}
+                      Interactive Mode{{ tier !== 'pro' ? ' — opens on create.studio' : ' — stays in-page' }}
                     </li>
                     <li v-if="tier !== 'free'" class="flex items-center gap-2">
                       <svg class="text-primary shrink-0 w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

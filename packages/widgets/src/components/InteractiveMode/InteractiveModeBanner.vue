@@ -4,8 +4,14 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     </div>
     <div class="cs-interactive-mode-banner-text">
-      <div class="cs-interactive-mode-banner-title">{{ displayTitle }}</div>
-      <div class="cs-interactive-mode-banner-sub">{{ displaySubtitle }}</div>
+      <div class="cs-interactive-mode-banner-title">
+        {{ displayTitle }}
+        <ArrowTopRightOnSquareIcon v-if="opensInNewTab" class="cs:w-4 cs:h-4 cs:ml-1 cs:inline-block" />
+      </div>
+      <div class="cs-interactive-mode-banner-sub">
+        {{ displaySubtitle }}
+        <span v-if="opensInNewTab" style="opacity:0.7;font-style:italic;">(opens in new tab)</span>
+      </div>
     </div>
     <div class="cs-interactive-mode-banner-arrow">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -15,10 +21,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
 
 const props = defineProps<{
   title?: string
   subtitle?: string
+  opensInNewTab?: boolean
 }>()
 
 defineEmits<{

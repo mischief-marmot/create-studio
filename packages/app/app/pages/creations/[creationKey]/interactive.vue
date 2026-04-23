@@ -1,5 +1,16 @@
 <template>
-    <div class="h-dvh flex flex-col w-full">
+    <div class="h-dvh flex flex-col w-full relative">
+        <button
+            type="button"
+            aria-label="Close"
+            class="btn btn-circle btn-sm btn-ghost bg-base-100/80 hover:bg-base-100 fixed top-3 right-3 z-50 backdrop-blur-sm shadow"
+            @click="handleClose"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+        </button>
         <div
             v-if="creationInfo"
             :id="`interactive-widget-${creationInfo.creationId}`"
@@ -27,6 +38,24 @@ const { loadAds } = useRuntimeConfig().public;
 
 // Track if adhesion mobile wrapper exists
 const hasAdhesionWrapper = ref(false);
+
+// Close handler: if this tab was opened via window.open() (the FreePlus new-tab flow),
+// window.close() returns the user to the publisher's page. If it wasn't opened by script
+// (direct URL visit or iframe), fall back to history back / referrer.
+function handleClose() {
+    if (window.parent !== window) {
+        window.parent.postMessage({ type: 'CREATE_STUDIO_CLOSE_MODAL' }, '*');
+        return;
+    }
+    window.close();
+    setTimeout(() => {
+        if (document.referrer) {
+            window.location.href = document.referrer;
+        } else {
+            window.history.back();
+        }
+    }, 100);
+}
 
 if (loadAds) {
     useScript({
@@ -148,7 +177,7 @@ onMounted(async () => {
             creationId: creationInfo.creationId,
             domain: creationInfo.domain,
             baseUrl: window.location.origin,
-            hideAttribution: true,
+            hideAttribution: false,
             disableRatingSubmission
         });
         targetElement.style.height = '100%'

@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest'
 
 /** Replicates the gating logic from site-config.post.ts */
 function computeSiteConfig(subscriptionTier: string) {
-  let renderMode: 'iframe' | 'in-dom' = 'iframe'
+  let renderMode: 'new-tab' | 'in-dom' = 'new-tab'
   let showInteractiveMode = true
 
   if (subscriptionTier === 'free') {
@@ -44,8 +44,8 @@ describe('Three-Tier Feature Gating', () => {
       expect(config.showInteractiveMode).toBe(false)
     })
 
-    it('should use iframe render mode', () => {
-      expect(config.renderMode).toBe('iframe')
+    it('should use new-tab render mode', () => {
+      expect(config.renderMode).toBe('new-tab')
     })
 
     it('should disable in-DOM rendering', () => {
@@ -76,8 +76,8 @@ describe('Three-Tier Feature Gating', () => {
       expect(config.showInteractiveMode).toBe(true)
     })
 
-    it('should use iframe render mode', () => {
-      expect(config.renderMode).toBe('iframe')
+    it('should use new-tab render mode', () => {
+      expect(config.renderMode).toBe('new-tab')
     })
 
     it('should disable in-DOM rendering', () => {
@@ -108,8 +108,8 @@ describe('Three-Tier Feature Gating', () => {
       expect(config.showInteractiveMode).toBe(true)
     })
 
-    it('should use iframe render mode', () => {
-      expect(config.renderMode).toBe('iframe')
+    it('should use new-tab render mode', () => {
+      expect(config.renderMode).toBe('new-tab')
     })
 
     it('should disable in-DOM rendering', () => {

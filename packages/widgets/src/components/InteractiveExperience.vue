@@ -11,8 +11,8 @@
 
         <!-- Show spinning logo while loading -->
         <div v-if="!isHydrated || isLoadingCreation || !dataReady" class="cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:items-center cs:justify-center cs:absolute cs:inset-0">
-            <!-- Show Create logo when in iframe, site favicon when in-DOM -->
-            <LogoSolo v-if="isInIframe" class="cs:size-24 animate-spin-slow" />
+            <!-- Show Create logo when in iframe or standalone on Studio domain, site favicon when in-DOM on publisher's site -->
+            <LogoSolo v-if="useStudioBranding" class="cs:size-24 animate-spin-slow" />
             <img v-else :src="siteFaviconUrl" class="cs:size-24 cs:animate-pulse" />
         </div>
 
@@ -27,8 +27,8 @@
 
             <!-- Skeleton overlay during initial positioning -->
             <div v-if="isLoadingPersistence" class="cs:absolute cs:inset-0 cs:z-50 cs:md:rounded-xl cs:overflow-hidden cs:flex cs:items-center cs:justify-center">
-                <!-- Show Create logo when in iframe, site favicon when in-DOM -->
-                <LogoSolo v-if="isInIframe" class="cs:size-24 animate-spin-slow" />
+                <!-- Show Create logo when in iframe or standalone on Studio domain, site favicon when in-DOM on publisher's site -->
+                <LogoSolo v-if="useStudioBranding" class="cs:size-24 animate-spin-slow" />
                 <img v-else :src="siteFaviconUrl" class="cs:size-24 cs:animate-pulse" />
             </div>
 
@@ -435,12 +435,35 @@ const isInIframe = computed(() => {
     return window.self !== window.top
 })
 
+// Detect if hosted on the Create Studio domain itself (standalone /interactive page).
+// In the FreePlus new-tab flow the widget is rendered on create.studio, not the publisher's
+// site — so we want Create Studio branding, not the publisher's favicon.
+// We compare window.location.hostname to the hostname of `baseUrl` (the Studio origin the
+// SDK was initialized with) since `baseUrl` is always the Studio origin regardless of
+// render mode. A hostname match means the widget is running on the Studio.
+const isOnStudioDomain = computed(() => {
+    if (typeof window === 'undefined') return false
+    try {
+        const baseUrl = finalBaseUrl.value
+        if (!baseUrl) return false
+        const baseHost = new URL(baseUrl).hostname
+        return !!baseHost && window.location.hostname === baseHost
+    } catch {
+        return false
+    }
+})
+
+// Use Create Studio branding when rendered in an iframe or standalone on the Studio domain.
+// Pro in-DOM mode (publisher's site, not iframe, not Studio domain) falls through to the
+// site favicon for seamless publisher branding.
+const useStudioBranding = computed(() => isInIframe.value || isOnStudioDomain.value)
+
 // Site favicon URL - use parent site's favicon when available
 const siteFaviconUrl = ref('')
 
 // Find the site's favicon
 const findSiteFavicon = () => {
-    if (typeof window === 'undefined' || isInIframe.value) return ''
+    if (typeof window === 'undefined' || useStudioBranding.value) return ''
 
     // 1. Look for <link rel="icon"> tag
     const appleIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement
