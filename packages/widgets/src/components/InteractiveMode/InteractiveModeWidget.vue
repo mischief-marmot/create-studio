@@ -233,7 +233,7 @@ function openModal() {
   // mounting an iframe modal. This prevents ad-rendering issues inside iframes and
   // creates upgrade pressure since the reader leaves the publisher's page.
   if (!inDomRendering.value) {
-    window.open(interactiveUrl.value, '_blank', 'noopener,noreferrer')
+    window.open(interactiveUrl.value, '_blank', 'noopener')
     return
   }
 

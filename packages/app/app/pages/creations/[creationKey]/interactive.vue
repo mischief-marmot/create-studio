@@ -37,15 +37,11 @@ const { loadAds } = useRuntimeConfig().public;
 // Track if adhesion mobile wrapper exists
 const hasAdhesionWrapper = ref(false);
 
-// In iframe: ask parent to close. In the FreePlus new-tab flow: window.close() succeeds
-// because the tab was script-opened. On a direct visit window.close() is a no-op — we
-// intentionally don't fall back to history.back() there (would surprise search-referred
-// visitors), only to a known referrer.
+// This page is always top-level — FreePlus reaches it via window.open(), Pro never embeds
+// it. window.close() succeeds for script-opened tabs; on a direct visit it's a no-op and the
+// button falls through to a referrer redirect if one is available (we intentionally don't
+// history.back() for search-referred visitors with no referrer — would surprise them).
 function handleClose() {
-    if (window.parent !== window) {
-        window.parent.postMessage({ type: 'CREATE_STUDIO_CLOSE_MODAL' }, '*');
-        return;
-    }
     window.close();
     if (document.referrer) {
         setTimeout(() => {
@@ -108,25 +104,6 @@ const disableRatingSubmission = route.query.disableRatingSubmission === 'true';
 
 onMounted(async () => {
     if (!creationInfo) return;
-
-    // Listen for Escape key to close modal (when in iframe)
-    const handleEscKey = (event: KeyboardEvent) => {
-        if (event.key === 'Escape' && window.parent !== window) {
-            console.log('🔑 Escape pressed in iframe, sending close message to parent');
-            window.parent.postMessage({
-                type: 'CREATE_STUDIO_CLOSE_MODAL'
-            }, '*');
-        }
-    };
-    document.addEventListener('keydown', handleEscKey);
-
-    // Notify parent window to hide Grow widget (when in iframe)
-    if (window.parent !== window) {
-        window.parent.postMessage({
-            type: 'CREATE_STUDIO_INTERACTIVE_MOUNTED',
-            action: 'hide-grow-widget'
-        }, '*');
-    }
 
     // Check if adhesion mobile wrapper exists (only relevant when ads are enabled)
     if (loadAds) {
