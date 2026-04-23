@@ -251,7 +251,7 @@
             <!-- Bottom Navigation Controls - Fixed at bottom for both mobile and desktop -->
             <div :class="[ 'cs:flex-shrink-0 cs:bg-base-200 cs:border-t cs:border-base-300 cs:relative', 'cs:md:absolute cs:md:bottom-0 cs:md:left-0 cs:md:right-0 cs:md:w-full' ]">
                 <div v-if="!finalHideAttribution" class="cs:hidden cs:absolute cs:md:block cs:top-1/2 cs:-translate-y-1/2 cs:left-6 cs:text-xs cs:lg:text-sm">
-                    Powered by <a href="{{ finalBaseUrl }}"><LogoSolo class="cs:size-5 cs:md:size-6 cs:inline-block cs:ml-1" /></a>
+                    Powered by <a :href="finalBaseUrl" target="_blank" rel="noopener"><LogoSolo class="cs:size-5 cs:md:size-6 cs:inline-block cs:ml-1" /></a>
                 </div>
                 <!-- Active Timers Panel -->
                 <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
