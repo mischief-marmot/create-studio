@@ -646,7 +646,7 @@
               Coming Soon
             </div>
             <h3 class="mb-2 font-serif text-2xl">Create Free+</h3>
-            <p class="text-base-content mb-6 text-sm">Interactie Mode runs on Create.Studio</p>
+            <p class="text-base-content mb-6 text-sm">Interactive Mode runs on Create.Studio</p>
             <div class="mb-8">
               <span class="text-5xl font-bold">$0</span>
             </div>
