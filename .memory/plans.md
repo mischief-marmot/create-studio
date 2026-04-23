@@ -33,7 +33,7 @@
 | Custom CSS | - | x | x |
 | Customize Interactive Mode settings | - | - | x |
 | Priority support | - | - | x |
-| **Render mode** | iframe | iframe | in-dom |
+| **Render mode** | new-tab | new-tab | in-dom |
 
 ## Technical Reference
 
