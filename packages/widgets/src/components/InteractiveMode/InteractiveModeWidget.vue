@@ -159,6 +159,10 @@ const modalContainer = ref<HTMLElement | null>(null)
 const interactiveButton = ref<HTMLElement | null>(null)
 const rootEl = ref<HTMLElement | null>(null)
 
+// Cached reference to the FreePlus standalone tab so repeat clicks refocus the existing
+// tab instead of opening a duplicate. Lost if the publisher's page reloads — acceptable.
+let interactiveWindow: Window | null = null
+
 // Mobile detection
 const isMobile = ref(false)
 
@@ -236,7 +240,13 @@ function openModal() {
   // window.opener.focus() to switch back to the publisher's tab. Both tabs are Create-
   // controlled (widget on publisher's site opens Studio's page) so the trust is fine.
   if (!inDomRendering.value) {
-    window.open(interactiveUrl.value, '_blank')
+    // If the tab we opened previously is still alive, refocus it instead of spawning a
+    // duplicate — this preserves the reader's place (timers, checked ingredients, etc.).
+    if (interactiveWindow && !interactiveWindow.closed) {
+      interactiveWindow.focus()
+      return
+    }
+    interactiveWindow = window.open(interactiveUrl.value, '_blank')
     return
   }
 
