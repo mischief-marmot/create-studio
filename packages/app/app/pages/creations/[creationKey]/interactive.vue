@@ -37,13 +37,13 @@ const { loadAds } = useRuntimeConfig().public;
 // Track if adhesion mobile wrapper exists
 const hasAdhesionWrapper = ref(false);
 
-// This page is always top-level — FreePlus reaches it via window.open(), Pro never embeds
-// it. window.close() succeeds for script-opened tabs; on a direct visit it's a no-op and the
-// button falls through to a referrer redirect if one is available (we intentionally don't
-// history.back() for search-referred visitors with no referrer — would surprise them).
+// window.close() only works for script-opened tabs (the FreePlus new-tab flow); direct
+// visitors fall through to a referrer redirect, but never history.back() (would surprise
+// search-referred visitors).
 function handleClose() {
     window.close();
     if (document.referrer) {
+        // Delay so window.close() can land first; if it succeeded, this never runs.
         setTimeout(() => {
             window.location.href = document.referrer;
         }, 100);

@@ -345,6 +345,7 @@ import LogoSolo from './Logo/Solo.vue';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { SharedStorageManager } from '@create-studio/shared';
+import { isOnStudioDomain as hostMatchesStudio } from '@create-studio/shared/utils/domain';
 import { useSharedTimerManager } from '../composables/useSharedTimerManager';
 import { getInitialState as getInitialReviewState } from '../composables/useReviewStorage';
 import { useReviewSubmission } from '../composables/useReviewSubmission';
@@ -435,23 +436,10 @@ const isInIframe = computed(() => {
     return window.self !== window.top
 })
 
-// Detect if hosted on the Create Studio domain itself (standalone /interactive page).
-// In the FreePlus new-tab flow the widget is rendered on create.studio, not the publisher's
-// site — so we want Create Studio branding, not the publisher's favicon.
-// We compare window.location.hostname to the hostname of `baseUrl` (the Studio origin the
-// SDK was initialized with) since `baseUrl` is always the Studio origin regardless of
-// render mode. A hostname match means the widget is running on the Studio.
-const isOnStudioDomain = computed(() => {
-    if (typeof window === 'undefined') return false
-    try {
-        const baseUrl = finalBaseUrl.value
-        if (!baseUrl) return false
-        const baseHost = new URL(baseUrl).hostname
-        return !!baseHost && window.location.hostname === baseHost
-    } catch {
-        return false
-    }
-})
+// Detect if hosted on the Create Studio domain (standalone /interactive page, FreePlus
+// new-tab flow). baseUrl is always the Studio origin regardless of render mode, so a
+// hostname match means we're running on the Studio and should use Studio branding.
+const isOnStudioDomain = computed(() => hostMatchesStudio(finalBaseUrl.value))
 
 // Use Create Studio branding when rendered in an iframe or standalone on the Studio domain.
 // Pro in-DOM mode (publisher's site, not iframe, not Studio domain) falls through to the
