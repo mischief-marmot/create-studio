@@ -265,6 +265,15 @@ function openModal() {
       return
     }
     interactiveWindow = window.open(buildInteractiveUrlWithState(), '_blank')
+    // Register the new tab for bidirectional storage sync during the session. The URL
+    // param hydration handles initial state; linkWindow keeps them in sync after that.
+    if (interactiveWindow) {
+      try {
+        storageManager.linkWindow(interactiveWindow, new URL(baseUrl.value).origin)
+      } catch {
+        // Silent — bad baseUrl
+      }
+    }
     return
   }
 

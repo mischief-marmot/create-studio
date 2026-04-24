@@ -825,6 +825,18 @@ onMounted(async () => {
     // Force re-read from localStorage to pick up checkbox state changes made while modal was closed
     storageManager.syncFromStorage();
 
+    // Standalone-on-Studio (FreePlus new-tab flow): link window.opener for bidirectional
+    // storage sync. Widget on the publisher's side already did the inverse on window.open.
+    if (isOnStudioDomain.value && typeof window !== 'undefined' && window.opener && document.referrer) {
+      try {
+        if (!window.opener.closed) {
+          storageManager.linkWindow(window.opener, new URL(document.referrer).origin);
+        }
+      } catch {
+        // Silent — opener gone or unparseable referrer
+      }
+    }
+
     // Update reactive creation state
     refreshCreationState();
     const creationState = currentCreationState.value;
