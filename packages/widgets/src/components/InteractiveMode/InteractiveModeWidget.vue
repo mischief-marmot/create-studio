@@ -374,7 +374,10 @@ function handleVisibilityChange() {
 onMounted(() => {
   // Track CTA render impression only once the CTA is actually visible to the
   // user — mount time can fire while it's still below the fold. Fires once.
-  if (rootEl.value) {
+  // Observe the enclosing recipe card section instead of our own wrapper: sticky-bar
+  // uses position:fixed so the wrapper collapses to 0 area and never intersects.
+  const impressionTarget = rootEl.value?.closest('section[id^="mv-creation-"]') ?? rootEl.value
+  if (impressionTarget) {
     let fired = false
     const impressionObserver = new IntersectionObserver(
       (entries) => {
@@ -388,7 +391,7 @@ onMounted(() => {
       },
       { threshold: 0 }
     )
-    impressionObserver.observe(rootEl.value)
+    impressionObserver.observe(impressionTarget)
     onBeforeUnmount(() => impressionObserver.disconnect())
   }
 
