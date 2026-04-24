@@ -107,7 +107,15 @@ function mapClientEvent(
 
 export default defineEventHandler(async (event) => {
   try {
-    const body = await readBody<SessionData>(event)
+    // Client sends JSON but with Content-Type: text/plain to skip the CORS
+    // preflight. Parse manually so Content-Type doesn't matter.
+    const raw = await readRawBody(event)
+    let body: SessionData
+    try {
+      body = JSON.parse(raw || '{}') as SessionData
+    } catch {
+      throw createError({ statusCode: 400, statusMessage: 'Invalid JSON body' })
+    }
 
     // Validate required fields
     if (!body.userId || !body.sessionId || !body.domain || !body.creationId) {

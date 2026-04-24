@@ -20,10 +20,9 @@ function loadWidgetCSS() {
   if (!scriptTag) return
   const scriptSrc = scriptTag.src
   const baseUrl = new URL(scriptSrc).origin
-  const debug = scriptTag.hasAttribute('data-create-studio-debug')
-  // Add cache-busting parameter for development
-  const cacheBust = new Date().getTime()
-  link.href = `${baseUrl}/embed/entry.css${debug ? '?v=' + cacheBust : ''}`
+  // Edge cache is invalidated on each widget deploy via the upload-widget
+  // purge_cache call — no per-request cache-busting needed.
+  link.href = `${baseUrl}/embed/entry.css`
   document.head.appendChild(link)
 }
 

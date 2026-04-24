@@ -179,12 +179,12 @@ export function useAnalytics(config: AnalyticsConfig) {
     }
 
     try {
-      // Use fetch with keepalive (works on page unload, avoids sendBeacon's
-      // forced credentials:include which breaks cross-origin CORS)
+      // text/plain keeps this a CORS-safe "simple request" so browsers skip
+      // the OPTIONS preflight. keepalive lets it complete on page unload.
       await fetch(analyticsEndpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'text/plain'
         },
         body: JSON.stringify(sessionData),
         credentials: 'omit',

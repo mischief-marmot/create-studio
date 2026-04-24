@@ -77,19 +77,25 @@ export class ConfigManager {
     }
 
     try {
-      const payload: any = {}
-      if (this.baseConfig.siteUrl) payload.siteUrl = this.baseConfig.siteUrl
-      
-      const headers: any = {
-        'Content-Type': 'application/json'
-      }
-      if (this.apiKey) headers['Authorization'] = `Bearer ${this.apiKey}`
+      let response: Response
 
-      const response = await fetch(`${this.baseUrl}/api/v2/site-config`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(payload)
-      })
+      if (this.baseConfig.siteUrl && !this.apiKey) {
+        // Simple GET request — no CORS preflight, cacheable at edge.
+        const siteKey = btoa(this.baseConfig.siteUrl)
+        response = await fetch(`${this.baseUrl}/api/v2/site-config/${siteKey}`)
+      } else {
+        // apiKey path still needs POST with Authorization header (preflight required).
+        const payload: any = {}
+        if (this.baseConfig.siteUrl) payload.siteUrl = this.baseConfig.siteUrl
+        const headers: any = { 'Content-Type': 'application/json' }
+        if (this.apiKey) headers['Authorization'] = `Bearer ${this.apiKey}`
+
+        response = await fetch(`${this.baseUrl}/api/v2/site-config`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+        })
+      }
 
       if (!response.ok) {
         throw new Error(`Site config API returned ${response.status}`)
