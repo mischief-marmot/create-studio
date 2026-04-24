@@ -150,6 +150,9 @@ export function useAnalytics(config: AnalyticsConfig) {
    */
   function trackCtaRendered(variant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip') {
     trackEvent('cta_rendered', { variant })
+    // Flush immediately so the render is captured even if the visitor bounces
+    // before the 15s auto-send tick.
+    sendBatch()
   }
 
   /**
