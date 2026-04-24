@@ -52,7 +52,11 @@ export default defineNuxtConfig({
     },
     experimental: {
       openAPI: true,
-      websocket: true,
+      // Keep websocket off: no defineWebSocketHandler calls in the app, and
+      // turning it on makes nuxt-auth-utils install a per-request session
+      // hydrator that set-cookies every response (leaks session on cacheable
+      // endpoints and wastes ~200 bytes per response everywhere else).
+      websocket: false,
       tasks: true,
     },
     scheduledTasks: {

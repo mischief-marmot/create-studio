@@ -1,5 +1,5 @@
 <template>
-  <div class="cs-interactive-mode"
+  <div ref="rootEl" class="cs-interactive-mode"
     :class="[inDomRendering ? 'cs-interactive-mode-pro' : 'cs-interactive-mode-free']"
   >
     <!-- Button variant (default) -->
@@ -158,6 +158,7 @@ const scrollPosition = ref(0)
 const viewportWidth = ref(window.innerWidth)
 const modalContainer = ref<HTMLElement | null>(null)
 const interactiveButton = ref<HTMLElement | null>(null)
+const rootEl = ref<HTMLElement | null>(null)
 
 // Mobile detection
 const isMobile = ref(false)
@@ -343,8 +344,25 @@ function handleVisibilityChange() {
 }
 
 onMounted(() => {
-  // Track CTA render impression
-  analytics.trackCtaRendered(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
+  // Track CTA render impression only once the CTA is actually visible to the
+  // user — mount time can fire while it's still below the fold. Fires once.
+  if (rootEl.value) {
+    let fired = false
+    const impressionObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && !fired) {
+            fired = true
+            analytics.trackCtaRendered(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
+            impressionObserver.disconnect()
+          }
+        }
+      },
+      { threshold: 0 }
+    )
+    impressionObserver.observe(rootEl.value)
+    onBeforeUnmount(() => impressionObserver.disconnect())
+  }
 
   // Detect if device is mobile/tablet
   isMobile.value = window.matchMedia('(max-width: 768px)').matches
