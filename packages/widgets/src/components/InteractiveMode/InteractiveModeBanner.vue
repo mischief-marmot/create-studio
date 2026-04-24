@@ -1,5 +1,5 @@
 <template>
-  <div class="cs-interactive-mode-banner ezoic-no-insert adthrive-no-insert" data-nosnippet @click="$emit('activate')">
+  <div ref="rootEl" class="cs-interactive-mode-banner ezoic-no-insert adthrive-no-insert" data-nosnippet @click="$emit('activate')">
     <div class="cs-interactive-mode-banner-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     </div>
@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
 import NewTabHint from './NewTabHint.vue'
 
@@ -30,10 +30,34 @@ const props = defineProps<{
   opensInNewTab?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   activate: []
+  rendered: []
 }>()
 
 const displayTitle = computed(() => props.title || 'Cook step-by-step')
 const displaySubtitle = computed(() => props.subtitle || 'Full screen with timers & ingredient lists')
+
+const rootEl = ref<HTMLElement | null>(null)
+
+// Fire 'rendered' once the banner is actually in viewport (mount time can be below
+// the fold). Parent wires this to analytics.trackCtaRendered.
+onMounted(() => {
+  if (!rootEl.value) return
+  let fired = false
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && !fired) {
+          fired = true
+          emit('rendered')
+          observer.disconnect()
+        }
+      }
+    },
+    { threshold: 0 }
+  )
+  observer.observe(rootEl.value)
+  onBeforeUnmount(() => observer.disconnect())
+})
 </script>

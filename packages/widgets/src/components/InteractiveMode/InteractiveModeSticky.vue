@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import NewTabHint from './NewTabHint.vue'
 
 const props = defineProps<{
@@ -30,8 +30,9 @@ const props = defineProps<{
   opensInNewTab?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   activate: []
+  rendered: []
 }>()
 
 const displayTitle = computed(() => props.title || 'Ready to cook?')
@@ -42,6 +43,16 @@ const stickyEl = ref<HTMLElement | null>(null)
 const visible = ref(false)
 const cardRect = ref<{ left: number; width: number } | null>(null)
 const bottomOffset = ref(0)
+
+// Emit 'rendered' the first time the sticky bar actually becomes visible to the user
+// (i.e. they've scrolled to the instructions section). Fires once.
+let impressionFired = false
+watch(visible, (v) => {
+  if (v && !impressionFired) {
+    impressionFired = true
+    emit('rendered')
+  }
+})
 
 let observer: IntersectionObserver | null = null
 let resizeObserver: ResizeObserver | null = null

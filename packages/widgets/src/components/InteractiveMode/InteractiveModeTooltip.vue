@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!dismissed" class="cs-interactive-mode-tooltip">
+  <div v-if="!dismissed" ref="rootEl" class="cs-interactive-mode-tooltip">
     <span class="cs-interactive-mode-tooltip-text">
       {{ displayTitle }}
       <NewTabHint v-if="opensInNewTab" />
@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
 import NewTabHint from './NewTabHint.vue'
 
@@ -23,16 +23,42 @@ const props = defineProps<{
   opensInNewTab?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   activate: []
+  rendered: []
 }>()
 
 const displayTitle = computed(() => props.title || 'Try hands-free cooking mode')
 const displayButtonText = computed(() => props.buttonText || 'Try it')
 
 const dismissed = ref(false)
+const rootEl = ref<HTMLElement | null>(null)
 
 function dismiss() {
   dismissed.value = true
 }
+
+// Tooltip uses v-if on dismissed, so observe only after the ref is attached.
+let observer: IntersectionObserver | null = null
+let fired = false
+watch(rootEl, async (el) => {
+  if (!el || fired) return
+  await nextTick()
+  observer?.disconnect()
+  observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && !fired) {
+          fired = true
+          emit('rendered')
+          observer?.disconnect()
+        }
+      }
+    },
+    { threshold: 0 }
+  )
+  observer.observe(el)
+}, { immediate: true })
+
+onBeforeUnmount(() => observer?.disconnect())
 </script>

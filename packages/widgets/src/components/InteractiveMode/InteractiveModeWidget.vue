@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootEl" class="cs-interactive-mode"
+  <div class="cs-interactive-mode"
     :class="[inDomRendering ? 'cs-interactive-mode-pro' : 'cs-interactive-mode-free']"
   >
     <!-- Button variant (default) -->
@@ -24,6 +24,7 @@
       :subtitle="ctaSubtitle"
       :opens-in-new-tab="!inDomRendering"
       @activate="openModal"
+      @rendered="handleCtaRendered"
     />
 
     <!-- Sticky Bar variant -->
@@ -34,6 +35,7 @@
       :button-text="buttonText"
       :opens-in-new-tab="!inDomRendering"
       @activate="openModal"
+      @rendered="handleCtaRendered"
     />
 
     <!-- Tooltip variant -->
@@ -43,6 +45,7 @@
       :button-text="props.config.buttonText"
       :opens-in-new-tab="!inDomRendering"
       @activate="openModal"
+      @rendered="handleCtaRendered"
     />
 
     <Teleport :to="teleportTarget">
@@ -158,11 +161,20 @@ const scrollPosition = ref(0)
 const viewportWidth = ref(window.innerWidth)
 const modalContainer = ref<HTMLElement | null>(null)
 const interactiveButton = ref<HTMLElement | null>(null)
-const rootEl = ref<HTMLElement | null>(null)
 
 // Cached reference to the FreePlus standalone tab so repeat clicks refocus the existing
 // tab instead of opening a duplicate. Lost if the publisher's page reloads — acceptable.
 let interactiveWindow: Window | null = null
+
+// CTA impression tracking fires once, regardless of which variant emits. Each variant
+// owns its own "am I actually visible" detection (IntersectionObserver on its root,
+// or in sticky's case the existing observer on .mv-create-instructions).
+let ctaRenderedFired = false
+function handleCtaRendered() {
+  if (ctaRenderedFired) return
+  ctaRenderedFired = true
+  analytics.trackCtaRendered(ctaVariant.value)
+}
 
 // Mobile detection
 const isMobile = ref(false)
@@ -372,27 +384,22 @@ function handleVisibilityChange() {
 }
 
 onMounted(() => {
-  // Track CTA render impression only once the CTA is actually visible to the
-  // user — mount time can fire while it's still below the fold. Fires once.
-  // Observe the enclosing recipe card section instead of our own wrapper: sticky-bar
-  // uses position:fixed so the wrapper collapses to 0 area and never intersects.
-  const impressionTarget = rootEl.value?.closest('section[id^="mv-creation-"]') ?? rootEl.value
-  if (impressionTarget) {
-    let fired = false
-    const impressionObserver = new IntersectionObserver(
+  // Inline-button variant doesn't go through a child component, so observe the button
+  // element directly. Other variants emit @rendered when they become visible.
+  if (ctaVariant.value === 'button' && interactiveButton.value) {
+    const buttonObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && !fired) {
-            fired = true
-            analytics.trackCtaRendered(ctaVariant.value)
-            impressionObserver.disconnect()
+          if (entry.isIntersecting) {
+            handleCtaRendered()
+            buttonObserver.disconnect()
           }
         }
       },
       { threshold: 0 }
     )
-    impressionObserver.observe(impressionTarget)
-    onBeforeUnmount(() => impressionObserver.disconnect())
+    buttonObserver.observe(interactiveButton.value)
+    onBeforeUnmount(() => buttonObserver.disconnect())
   }
 
   // Detect if device is mobile/tablet
