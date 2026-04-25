@@ -78,6 +78,66 @@ npm test tests/unit/nutrition-api.test.ts
   ```
 - **Access the database**: Use the `db` instance from `hub:db` to query the database, it is a Drizzle ORM instance.
 
+## Caching at the Edge (Cloudflare)
+
+The Worker is deployed on a **Custom Domain** (`create.studio`), not a Worker Route. On Custom Domains the Worker runs *first* on every request, so:
+
+- **Cache Rules alone do NOT cache Worker responses.** A `set_cache_settings { cache: true }` rule grants eligibility, but the edge cache stays empty until the Worker explicitly writes to it via `caches.default.put()`.
+- **Cache Rules DO let cached entries serve without invoking the Worker.** Once an entry exists in `caches.default`, subsequent requests for the same URL hit the edge first and emit `cf-cache-status: HIT`. Without a Cache Rule on the path, the Worker is invoked even if a cache entry exists.
+- **You need both** for high cache-hit ratios: a Cache Rule on the path *and* `caches.default.put()` inside the Worker.
+
+### Pattern for cacheable Worker routes
+
+See `packages/app/server/routes/embed/[...pathname].get.ts` and `packages/app/server/api/v2/site-config/[siteKey].get.ts` for the canonical pattern:
+
+```ts
+const cacheKey = new Request(getRequestURL(event).toString(), { method: 'GET' })
+
+// 1. Read from edge cache
+const cache = (caches as any).default as Cache | undefined
+if (cache) {
+  const cached = await cache.match(cacheKey)
+  if (cached) {
+    setResponseHeaders(event, Object.fromEntries(cached.headers.entries()))
+    return cached.json()  // or .body for streams
+  }
+}
+
+// 2. Compute the response
+const result = await ...
+
+// 3. Write to edge cache (fire-and-forget via waitUntil)
+const responseToCache = new Response(JSON.stringify(result), {
+  headers: {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'public, max-age=600',
+    'CDN-Cache-Control': 'public, max-age=600',
+    'Access-Control-Allow-Origin': '*',
+  },
+})
+const ctx = (event.context.cloudflare as any)?.context
+ctx?.waitUntil ? ctx.waitUntil(cache.put(cacheKey, responseToCache)) : cache.put(cacheKey, responseToCache).catch(() => {})
+
+return result
+```
+
+### Diagnosing cache failures
+
+- `cf-cache-status` header **missing entirely** → the Cache Rule didn't match the path (check expression and rule order in CF dashboard).
+- `cf-cache-status: DYNAMIC` or `BYPASS` → rule matched but something disqualified caching (most often `Set-Cookie` on the response, or a `Vary: *` header).
+- `cf-cache-status: MISS` on every request → Cache Rule is working but the Worker isn't writing to `caches.default`. Add the put.
+- `cf-cache-status: HIT` → working correctly.
+
+### Cookie leak protection
+
+The `packages/app/server/plugins/cacheable-no-cookies.ts` Nitro plugin strips `set-cookie` from responses on listed prefixes (`/embed/`, `/api/v2/site-config/`). Without it, an h3/nuxt-auth-utils session cookie can be baked into a cached entry and served to every visitor of that entry. Add new cacheable prefixes to the array in that plugin.
+
+The root cause of session cookies leaking onto every response is `nuxt-auth-utils` registering a per-request hydrator when `nitro.experimental.websocket: true`. Keep that flag off unless you actually use WebSockets — see `packages/app/nuxt.config.ts`.
+
+### Cache invalidation
+
+The Worker has `NUXT_CLOUDFLARE_API_TOKEN` + `NUXT_CLOUDFLARE_ZONE_ID` secrets and uses them in `packages/app/server/api/v2/upload-widget.post.ts` to call CF's `purge_cache` API after each widget upload. For new caching code, reuse the same pattern instead of waiting for natural TTL expiry.
+
 ## Development Methodology
 
 ### Test-Driven Development (TDD)
