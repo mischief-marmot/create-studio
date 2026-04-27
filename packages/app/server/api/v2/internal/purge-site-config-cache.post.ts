@@ -1,17 +1,10 @@
 /**
  * POST /api/v2/internal/purge-site-config-cache
- * Internal endpoint called by the admin app to invalidate the
- * /api/v2/site-config/<key> edge cache after admin-side site/setting writes.
  *
- * The admin worker doesn't hold CF API credentials and lives in a different
- * Worker isolate, so it delegates the purge to the main app (which has the
- * zone token and the same caches.default the visitor-facing site-config
- * route writes to).
+ * Admin worker has no CF credentials, so it delegates the site-config edge
+ * cache purge to the main app via this endpoint after admin-side writes.
  *
- * Auth: X-Admin-Api-Key header (shared secret between admin and main app)
- *
- * Body: { siteUrls: string[] } — usually 1 entry; 2 when an admin URL change
- * needs both old and new keys cleared.
+ * Auth: X-Admin-Api-Key. Body: { siteUrls: string[] }.
  */
 
 import { purgeSiteConfigCache } from '~~/server/utils/site-config-cache'

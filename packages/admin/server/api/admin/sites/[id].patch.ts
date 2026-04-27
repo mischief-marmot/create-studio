@@ -136,35 +136,40 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    // Purge the main app's site-config edge cache when fields that flow into
-    // the cached response changed. Admin doesn't hold CF API credentials, so
-    // it delegates to the main app's internal endpoint. Best-effort: a purge
-    // failure shouldn't break the admin write.
+    // Trigger watches every input that buildSiteConfig actually reads:
+    // settings.interactive_mode_* and the Sites row's url (the cache key
+    // itself). If site-config ever starts reading another column (name,
+    // create_version, etc.), widen this condition to match.
     if (hasInteractiveFields || (hasSiteFields && 'url' in body && body.url?.trim() !== site.url)) {
       try {
         const config = useRuntimeConfig()
-        const adminEnv = getAdminEnvironment(event)
-        const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
-        const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
-        if (mainAppUrl) {
-          const purgeTargets: string[] = []
-          if (site.url) purgeTargets.push(site.url)
-          // On URL change, also purge the new key — visitors hitting the new
-          // URL would otherwise miss until the 10-min TTL expires.
-          if ('url' in body && body.url?.trim() && body.url.trim() !== site.url) {
-            purgeTargets.push(body.url.trim())
-          }
-          if (purgeTargets.length > 0) {
-            const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Admin-Api-Key': config.mainAppApiKey || '',
-              },
-              body: JSON.stringify({ siteUrls: purgeTargets }),
-            })
-            if (!response.ok) {
-              console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
+        if (!config.mainAppApiKey) {
+          console.warn('mainAppApiKey not configured — skipping site-config cache purge')
+        } else {
+          const adminEnv = getAdminEnvironment(event)
+          const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+          const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+          if (mainAppUrl) {
+            const purgeTargets: string[] = []
+            if (site.url) purgeTargets.push(site.url)
+            // URL change: also purge the new key so visitors hitting the
+            // new URL don't sit on a stale entry until the 10-min TTL.
+            if ('url' in body && body.url?.trim() && body.url.trim() !== site.url) {
+              purgeTargets.push(body.url.trim())
+            }
+            if (purgeTargets.length > 0) {
+              const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Admin-Api-Key': config.mainAppApiKey,
+                },
+                body: JSON.stringify({ siteUrls: purgeTargets }),
+                signal: AbortSignal.timeout(5000),
+              })
+              if (!response.ok) {
+                console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
+              }
             }
           }
         }
