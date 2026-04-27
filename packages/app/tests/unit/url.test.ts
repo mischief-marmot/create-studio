@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { resolveSiteUrl, normalizeSiteUrl } from '../../server/utils/url'
+import { resolveSiteUrl, normalizeSiteUrl, getApexDomain } from '../../server/utils/url'
 
 /** Build a minimal Response-like for the resolveSiteUrl HEAD path. */
 function mockResponse(status: number, location?: string) {
@@ -175,6 +175,36 @@ describe('resolveSiteUrl', () => {
 
     const result = await resolveSiteUrl('https://www.example.com')
     expect(result).toBe('https://www.example.com/blog')
+  })
+})
+
+describe('getApexDomain', () => {
+  it('strips the www. prefix', () => {
+    expect(getApexDomain('https://www.slimmingeats.com/blog')).toBe('slimmingeats.com')
+  })
+
+  it('returns the host as-is when no www. prefix', () => {
+    expect(getApexDomain('https://slimmingeats.com')).toBe('slimmingeats.com')
+  })
+
+  it('lowercases the hostname', () => {
+    expect(getApexDomain('https://WWW.Example.COM')).toBe('example.com')
+  })
+
+  it('preserves non-www subdomains', () => {
+    expect(getApexDomain('https://blog.example.com')).toBe('blog.example.com')
+  })
+
+  it('ignores path, query, and fragment', () => {
+    expect(getApexDomain('https://example.com/blog?x=1#y')).toBe('example.com')
+  })
+
+  it('returns null for an invalid URL', () => {
+    expect(getApexDomain('not a url')).toBeNull()
+  })
+
+  it('returns null for an empty string', () => {
+    expect(getApexDomain('')).toBeNull()
   })
 })
 

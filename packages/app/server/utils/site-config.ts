@@ -1,6 +1,7 @@
 import { SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
+import { getApexDomain } from '~~/server/utils/url'
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull, like, or } from 'drizzle-orm'
 
 export interface SiteConfigResult {
   success: true
@@ -36,7 +37,32 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
   let ctaSubtitle = ''
 
   try {
-    const siteResult = await db.select().from(schema.sites).where(eq(schema.sites.url, siteUrl)).get()
+    let siteResult = await db.select().from(schema.sites).where(eq(schema.sites.url, siteUrl)).get()
+
+    // Fallback for the iframe interactive flow: creationKey only carries the
+    // apex domain (no protocol, no path), but the row was likely stored with
+    // www and/or a /blog-style subdir. Match by host variants so the gating
+    // still resolves to the right row instead of falling through to defaults.
+    // Read-only path; OK if it occasionally matches a sibling row at the same
+    // apex (worst case is a slightly wrong gate, not data corruption).
+    if (!siteResult) {
+      const apex = getApexDomain(siteUrl)
+      if (apex) {
+        siteResult = await db.select().from(schema.sites)
+          .where(and(
+            or(
+              like(schema.sites.url, `https://${apex}%`),
+              like(schema.sites.url, `http://${apex}%`),
+              like(schema.sites.url, `https://www.${apex}%`),
+              like(schema.sites.url, `http://www.${apex}%`),
+            ),
+            isNull(schema.sites.canonical_site_id),
+          ))
+          .orderBy(schema.sites.id)
+          .limit(1)
+          .get()
+      }
+    }
 
     if (siteResult) {
       const subscriptionRepo = new SubscriptionRepository()

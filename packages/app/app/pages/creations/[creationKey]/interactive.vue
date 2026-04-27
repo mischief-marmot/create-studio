@@ -134,9 +134,20 @@ onMounted(async () => {
 
     await waitForSDK();
 
+    // creationInfo.domain is the apex (no protocol, no path). The SDK
+    // base64-encodes whatever we pass as siteUrl when calling
+    // /api/v2/site-config/<key> — so a bare domain produces a key the
+    // server rejects with "Invalid siteUrl". Mirror InteractiveExperience's
+    // protocol logic so site-config can decode and look up the row.
+    const domain = creationInfo.domain;
+    let siteUrl: string;
+    if (domain === 'localhost') siteUrl = 'http://localhost:8074';
+    else if (domain.endsWith('.test')) siteUrl = `http://${domain}`;
+    else siteUrl = `${window.location.protocol}//${domain}`;
+
     // Initialize the SDK
     await window.CreateStudio.init({
-        siteUrl: creationInfo.domain,
+        siteUrl,
         baseUrl: window.location.origin,
         debug: true
     });

@@ -225,6 +225,27 @@ export async function resolveSiteUrl(
 }
 
 /**
+ * Extracts the apex domain (lowercased, www. stripped) from a site URL.
+ *
+ * Used by buildSiteConfig as a fallback when an exact-URL DB match misses —
+ * the iframe interactive flow only knows the domain from the creationKey
+ * (no protocol, no path), and stored Sites.url commonly includes a path
+ * like /blog. Apex matching lets the gating still find the row.
+ *
+ * Returns null on parse failure. Other subdomains are preserved verbatim
+ * (only `www.` is stripped) since `blog.example.com` and `shop.example.com`
+ * are typically distinct WordPress installs.
+ */
+export function getApexDomain(siteUrl: string): string | null {
+  try {
+    const host = new URL(siteUrl).hostname.toLowerCase()
+    return host.startsWith('www.') ? host.slice(4) : host
+  } catch {
+    return null
+  }
+}
+
+/**
  * Validates that a URL looks like a WordPress site.
  * Does not make network requests - just validates format.
  *
