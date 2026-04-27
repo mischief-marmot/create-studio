@@ -117,6 +117,6 @@ describe('shouldPurgeOnSubscriptionUpdate', () => {
     // 'tier' in updates returns true even if updates.tier === undefined.
     // Worth pinning — this is the same drift trap the admin handler avoids
     // by using `'X' in body`, and we rely on the same semantics here.
-    expect(shouldPurgeOnSubscriptionUpdate({ tier: undefined as any })).toBe(true)
+    expect(shouldPurgeOnSubscriptionUpdate({ tier: undefined })).toBe(true)
   })
 })

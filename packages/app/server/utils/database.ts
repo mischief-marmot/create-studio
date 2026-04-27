@@ -552,8 +552,12 @@ export class SubscriptionRepository {
       }
     } catch (purgeError) {
       // Don't let cache invalidation failures break a subscription write,
-      // but make incidents diagnosable in production logs.
-      console.warn('Failed to purge site-config cache after subscription write:', { siteId, purgeError })
+      // but make incidents diagnosable. String() coerces both Error and
+      // opaque thrown values to a scannable payload field in CF logs.
+      console.warn('site-config cache purge failed after subscription write', {
+        siteId,
+        error: purgeError instanceof Error ? purgeError.message : String(purgeError),
+      })
     }
   }
 
