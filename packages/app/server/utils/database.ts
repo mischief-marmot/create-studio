@@ -7,7 +7,9 @@
  */
 
 import { eq, and, or, isNull, isNotNull, sql } from 'drizzle-orm'
+import type { H3Event } from 'h3'
 import type { SiteUser, SiteSettings, VersionLogEntry } from '../db/schema'
+import { purgeSiteConfigCache } from './site-config-cache'
 
 // Re-export types from schema for convenience
 export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry, Survey, NewSurvey, SurveyResponse, NewSurveyResponse } from '../db/schema'
@@ -474,7 +476,7 @@ export class SubscriptionRepository {
       .get()
   }
 
-  async create(data: CreateSubscriptionData) {
+  async create(data: CreateSubscriptionData, event?: H3Event) {
     const now = new Date().toISOString()
 
     const result = await db.insert(schema.subscriptions).values({
@@ -498,6 +500,9 @@ export class SubscriptionRepository {
       throw new Error('Failed to create subscription')
     }
 
+    // New subscription = state change for buildSiteConfig (no row → tier).
+    await this.purgeConfigCacheForSite(data.site_id, event)
+
     return result
   }
 
@@ -513,14 +518,38 @@ export class SubscriptionRepository {
     trial_end: string | null
     metadata: Record<string, any> | null
     trial_extensions: Record<string, string> | null
-  }>) {
+  }>, event?: H3Event) {
     const now = new Date().toISOString()
 
     await db.update(schema.subscriptions)
       .set({ ...updates, updatedAt: now })
       .where(eq(schema.subscriptions.site_id, siteId))
 
+    // tier and status are the inputs to getActiveTier(), which feeds
+    // buildSiteConfig. Other columns (period dates, metadata, etc.) don't
+    // affect the cached response. Purge only when a relevant field shifted.
+    if ('tier' in updates || 'status' in updates) {
+      await this.purgeConfigCacheForSite(siteId, event)
+    }
+
     return this.getBySiteId(siteId)
+  }
+
+  /** Look up the canonical site URL and purge the site-config edge cache.
+   *  Best-effort: any failure is swallowed inside purgeSiteConfigCache so
+   *  cache invalidation never aborts a successful subscription write. */
+  private async purgeConfigCacheForSite(siteId: number, event?: H3Event) {
+    try {
+      const site = await db.select({ url: schema.sites.url })
+        .from(schema.sites)
+        .where(eq(schema.sites.id, siteId))
+        .get()
+      if (site?.url) {
+        await purgeSiteConfigCache(event, site.url)
+      }
+    } catch {
+      // Don't let cache invalidation failures break a subscription write.
+    }
   }
 
   /**
