@@ -126,15 +126,33 @@ describe('resolveSiteUrl', () => {
     expect(result).toBe('not-a-url')
   })
 
-  // TODO Phase 2: validate the final hostname is the same site (or a known
-  // alias) — Phase 1 trusts whatever the redirect chain lands on.
-  it('returns the redirected URL even when it lands on an unrelated host (no host-equality check in Phase 1)', async () => {
+  it('refuses a redirect that lands on a different apex (no parked-domain hijack)', async () => {
     ;(globalThis.fetch as any)
       .mockResolvedValueOnce(mockResponse(301, 'https://parking.example.net/sale'))
       .mockResolvedValueOnce(mockResponse(200))
 
     const result = await resolveSiteUrl('https://example.com')
-    expect(result).toBe('https://parking.example.net/sale')
+    expect(result).toBe('https://example.com')
+  })
+
+  it('accepts a redirect that stays on the same apex (apex → www → /path)', async () => {
+    ;(globalThis.fetch as any)
+      .mockResolvedValueOnce(mockResponse(301, 'https://www.example.com/blog/'))
+      .mockResolvedValueOnce(mockResponse(200))
+
+    const result = await resolveSiteUrl('https://example.com')
+    expect(result).toBe('https://www.example.com/blog')
+  })
+
+  it('accepts a redirect that goes through an off-apex intermediate but lands back on the input apex', async () => {
+    // URL shorteners / staging hops are common; only the terminal apex matters.
+    ;(globalThis.fetch as any)
+      .mockResolvedValueOnce(mockResponse(301, 'https://shortlink.io/abc'))
+      .mockResolvedValueOnce(mockResponse(301, 'https://example.com/blog'))
+      .mockResolvedValueOnce(mockResponse(200))
+
+    const result = await resolveSiteUrl('https://example.com')
+    expect(result).toBe('https://example.com/blog')
   })
 
   it('passes allowedDomains through to normalization', async () => {

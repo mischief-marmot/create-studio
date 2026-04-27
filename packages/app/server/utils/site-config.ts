@@ -49,6 +49,10 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
       const apex = getApexDomain(siteUrl)
       if (apex) {
         const patterns = buildApexHostMatchPatterns(apex)
+        // Fires only on cache miss + exact-match miss, so the LIKE-driven
+        // table scan (idx_sites_url is BINARY-collated and won't be used by
+        // SQLite for LIKE) is fine at current Sites table size.
+        //
         // TODO: when multiple sites share an apex (e.g. example.com/blog and
         // example.com/shop as separate canonical rows), orderBy(id).limit(1)
         // arbitrarily picks the oldest. Becomes load-bearing as more

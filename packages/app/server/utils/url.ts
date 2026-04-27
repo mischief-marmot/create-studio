@@ -133,29 +133,23 @@ export function normalizeSiteUrl(input: string, options?: { allowedDomains?: str
 const MAX_REDIRECTS = 5
 
 /**
- * Walks the HTTP redirect chain from `inputUrl` manually with HEAD requests,
- * validating each hop's hostname against `isPrivateOrReservedHost` BEFORE
- * issuing the next request. This prevents SSRF where an attacker-controlled
- * domain serves a 301 to an internal address (RFC1918, link-local, metadata
- * endpoints) that the Worker would otherwise probe under `redirect: 'follow'`.
+ * Walks the HTTP redirect chain from `inputUrl` with manual HEAD requests,
+ * returning the final URL the chain lands on (normalized for storage).
  *
- * Catches drift the connect form can't see from a string alone:
- *   - http→https upgrades the host enforces
- *   - apex→www redirects
- *   - apex→subdirectory redirects (e.g. example.com → example.com/blog)
+ * Catches drift the connect form can't see from a string: http→https,
+ * apex→www, apex→/blog. Caller should pass an already-normalized input.
  *
- * Intermediate hops are allowed to be http (the chain commonly hops through
- * http on the way to https). Only the final URL is validated against
- * `normalizeSiteUrl` for storage — which enforces https for non-local hosts.
+ * SSRF defenses: hostname is validated against isPrivateOrReservedHost
+ * pre-flight and on every redirect target before the next fetch; non-http(s)
+ * schemes are rejected; redirect cap of 5; same-apex check on the final URL
+ * to prevent parked-domain hijacks.
  *
  * Falls back to the input URL on any failure (network, timeout, redirect cap,
- * mid-chain validation rejecting a hop, final URL rejected by normalization).
- * Caller should pass an already-normalized input.
+ * cross-apex final, normalization rejection).
  *
- * Known limitation: some WP/nginx setups return 405 to HEAD. Those land here
- * as a non-3xx terminal status, so we silently store the un-resolved input
- * URL — same outcome as before this function existed. A GET fallback on 405
- * is Phase 2 if it bites real customers.
+ * Known limitation: WP/nginx setups returning 405 to HEAD land here as a
+ * non-3xx terminal — we silently store the un-resolved input URL (same as
+ * before this function existed). GET fallback on 405 is Phase 2 if needed.
  */
 export async function resolveSiteUrl(
   inputUrl: string,
@@ -180,6 +174,21 @@ export async function resolveSiteUrl(
     return inputUrl
   }
 
+  // Same-apex guard. Closes the parked-domain hijack window: if an attacker
+  // controls a domain and 301s to parking.example.net, we'd otherwise store
+  // the parking URL as canonical. Intermediate hops can leave the apex (URL
+  // shorteners, etc.); only the terminal URL must end up on the same apex
+  // as the input. Edge case: a customer genuinely moving from oldname.com
+  // to newname.com gets rejected and has to re-connect with the new domain
+  // — acceptable trade for closing the hijack.
+  const inputApex = getApexDomain(inputUrl)
+  const finalize = (url: string): string => {
+    const normalized = normalizeSiteUrl(url, { allowedDomains })
+    if (!normalized) return inputUrl
+    if (inputApex && getApexDomain(normalized) !== inputApex) return inputUrl
+    return normalized
+  }
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -193,15 +202,12 @@ export async function resolveSiteUrl(
 
       const isRedirect = response.status >= 300 && response.status < 400
       if (!isRedirect) {
-        // Terminal response. Validate the URL we landed on for storage.
-        const normalized = normalizeSiteUrl(currentUrl, { allowedDomains })
-        return normalized || inputUrl
+        return finalize(currentUrl)
       }
 
       const location = response.headers.get('location')
       if (!location) {
-        const normalized = normalizeSiteUrl(currentUrl, { allowedDomains })
-        return normalized || inputUrl
+        return finalize(currentUrl)
       }
 
       let nextUrl: string
@@ -278,6 +284,9 @@ export function buildApexHostMatchPatterns(apex: string): {
   prefix: string[]
 } {
   const hosts = [apex, `www.${apex}`]
+  // http variants included defensively. normalizeSiteUrl enforces https for
+  // non-local hosts at connect, but legacy rows from before redirect-following
+  // landed may still be http://. Cheap to query, harmless if no rows match.
   const protocols = ['https://', 'http://']
   const exact: string[] = []
   const prefix: string[] = []
