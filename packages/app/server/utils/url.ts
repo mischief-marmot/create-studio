@@ -131,6 +131,41 @@ export function normalizeSiteUrl(input: string, options?: { allowedDomains?: str
 }
 
 /**
+ * Follows redirects from `inputUrl` and returns the normalized final URL.
+ *
+ * Catches drift the connect form can't see from a string alone:
+ *   - http→https upgrades the host enforces
+ *   - apex→www redirects
+ *   - apex→subdirectory redirects (e.g. example.com → example.com/blog)
+ *
+ * Falls back to the input URL on any failure (network, timeout, normalization
+ * rejecting the result). Caller should pass an already-normalized input.
+ */
+export async function resolveSiteUrl(
+  inputUrl: string,
+  options?: { allowedDomains?: string[]; timeoutMs?: number },
+): Promise<string> {
+  const timeoutMs = options?.timeoutMs ?? 10000
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    const response = await fetch(inputUrl, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: controller.signal,
+    })
+    const finalUrl = response.url
+    if (!finalUrl) return inputUrl
+    const normalized = normalizeSiteUrl(finalUrl, { allowedDomains: options?.allowedDomains })
+    return normalized || inputUrl
+  } catch {
+    return inputUrl
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+/**
  * Validates that a URL looks like a WordPress site.
  * Does not make network requests - just validates format.
  *
