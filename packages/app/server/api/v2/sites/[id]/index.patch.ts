@@ -215,7 +215,13 @@ export default defineEventHandler(async (event) => {
       // The await here only blocks on the in-DC `cache.delete`. The global
       // CF zone purge runs under `ctx.waitUntil` inside purgeSiteConfigCache
       // (fire-and-forget), so we won't see a global-purge failure here.
-      await Promise.all(purgeTargets.map(u => purgeSiteConfigCache(event, u)))
+      // Best-effort: a purge failure shouldn't 500 the PATCH after the DB
+      // write succeeded.
+      try {
+        await Promise.all(purgeTargets.map(u => purgeSiteConfigCache(event, u)))
+      } catch (purgeError) {
+        logger.warn('Failed to purge site-config cache after PATCH:', purgeError)
+      }
     }
 
     setResponseStatus(event, 200)

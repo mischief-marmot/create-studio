@@ -124,8 +124,14 @@ export default defineEventHandler(async (event) => {
     // Plugin-side toggle of interactive_mode_* needs the same edge-cache
     // purge as the customer-facing PATCH and the admin PATCH — otherwise
     // visitors see stale showInteractiveMode for up to the 10-min TTL.
+    // Best-effort: a purge failure (CF API down, etc.) shouldn't 500 the
+    // plugin sync after the DB write succeeded.
     if (hasSettingsFields && existingSite.url) {
-      await purgeSiteConfigCache(event, existingSite.url)
+      try {
+        await purgeSiteConfigCache(event, existingSite.url)
+      } catch (purgeError) {
+        logger.warn('Failed to purge site-config cache after plugin POST:', purgeError)
+      }
     }
 
     // Return response

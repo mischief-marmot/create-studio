@@ -1,4 +1,8 @@
 import { describe, it, expect } from 'vitest'
+import {
+  MAX_PURGE_TARGETS,
+  validateSiteUrls,
+} from '../../server/utils/site-url-validation'
 
 /**
  * Tests for POST /api/v2/internal/purge-site-config-cache.
@@ -9,33 +13,13 @@ import { describe, it, expect } from 'vitest'
  * mock h3 events, the Workers Cache global, and global $fetch, which is a
  * poor cost/value ratio for the thin orchestration logic.
  *
- * What IS exercised: the request-validation logic (a pure function) that
- * decides which inputs we accept before delegating to those utilities.
+ * What IS exercised: the request-validation logic, imported from the
+ * handler itself so tests catch drift instead of testing a stale copy.
  */
-
-const MAX_PURGE_TARGETS = 10
-
-// Mirrors the filter the handler runs on the body. Kept in sync by hand —
-// if the production filter changes, update this and the test will catch
-// behavioral drift.
-function isValidHttpUrl(s: string): boolean {
-  try {
-    const u = new URL(s)
-    return u.protocol === 'https:' || u.protocol === 'http:'
-  } catch {
-    return false
-  }
-}
-function validateAndFilter(input: unknown): string[] {
-  if (!Array.isArray(input)) return []
-  return input.filter(
-    (u): u is string => typeof u === 'string' && u.length > 0 && isValidHttpUrl(u),
-  )
-}
 
 describe('purge-site-config-cache — body validation', () => {
   it('keeps non-empty http and https URLs', () => {
-    const result = validateAndFilter([
+    const result = validateSiteUrls([
       'https://example.com',
       'http://localhost:3000',
       'https://example.com/blog',
@@ -48,7 +32,7 @@ describe('purge-site-config-cache — body validation', () => {
   })
 
   it('drops non-string and empty entries', () => {
-    const result = validateAndFilter([
+    const result = validateSiteUrls([
       'https://example.com',
       '',
       null,
@@ -60,7 +44,7 @@ describe('purge-site-config-cache — body validation', () => {
   })
 
   it('drops malformed URLs (no scheme, garbage strings)', () => {
-    const result = validateAndFilter([
+    const result = validateSiteUrls([
       'https://example.com',
       'example.com',
       'not a url',
@@ -71,7 +55,7 @@ describe('purge-site-config-cache — body validation', () => {
   })
 
   it('drops non-http(s) schemes', () => {
-    const result = validateAndFilter([
+    const result = validateSiteUrls([
       'https://example.com',
       'file:///etc/passwd',
       'ftp://example.com',
@@ -81,10 +65,10 @@ describe('purge-site-config-cache — body validation', () => {
   })
 
   it('returns empty array for non-array input', () => {
-    expect(validateAndFilter(undefined)).toEqual([])
-    expect(validateAndFilter(null)).toEqual([])
-    expect(validateAndFilter('https://example.com')).toEqual([])
-    expect(validateAndFilter({ siteUrls: 'x' })).toEqual([])
+    expect(validateSiteUrls(undefined)).toEqual([])
+    expect(validateSiteUrls(null)).toEqual([])
+    expect(validateSiteUrls('https://example.com')).toEqual([])
+    expect(validateSiteUrls({ siteUrls: 'x' })).toEqual([])
   })
 })
 
@@ -93,11 +77,18 @@ describe('purge-site-config-cache — abuse cap', () => {
     expect(MAX_PURGE_TARGETS).toBe(10)
   })
 
-  it('an array that exceeds the cap should be rejected by the handler', () => {
-    // Pure assertion that the cap value catches realistic abuse sizes.
-    // The handler enforces `length > MAX_PURGE_TARGETS → 400`.
+  it('passes an array exactly at the cap through validation unchanged', () => {
+    const atCap = Array.from({ length: MAX_PURGE_TARGETS }, (_, i) => `https://site-${i}.com`)
+    expect(validateSiteUrls(atCap)).toHaveLength(MAX_PURGE_TARGETS)
+  })
+
+  it('lets oversized arrays through validation — the handler enforces the cap separately with a 400', () => {
+    // validateSiteUrls is pure filtering (shape, scheme, non-empty); the
+    // size cap is checked after, in the handler. This pin documents that
+    // split so a future refactor doesn't accidentally double-enforce or
+    // drop the cap.
     const oversized = Array.from({ length: 50 }, (_, i) => `https://site-${i}.com`)
-    expect(oversized.length > MAX_PURGE_TARGETS).toBe(true)
+    expect(validateSiteUrls(oversized)).toHaveLength(50)
   })
 })
 
