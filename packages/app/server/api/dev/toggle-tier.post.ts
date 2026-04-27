@@ -94,9 +94,6 @@ export default defineEventHandler(async (event) => {
       // Fire-and-forget
     }
 
-    const { purgeSiteStatusCache } = await import('~~/server/utils/site-status-cache')
-    await purgeSiteStatusCache(event, siteId)
-
     return {
       success: true,
       tier,

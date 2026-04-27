@@ -198,11 +198,6 @@ export default defineEventHandler(async (event) => {
     // Return updated site
     const updatedSite = await siteRepo.findById(siteId)
 
-    // Site name/url and interactive_mode_* settings flow into the status
-    // response, so bust the 24h status cache.
-    const { purgeSiteStatusCache } = await import('~~/server/utils/site-status-cache')
-    await purgeSiteStatusCache(event, siteId)
-
     setResponseStatus(event, 200)
     logger.debug('Site updated successfully', updatedSite)
     return {

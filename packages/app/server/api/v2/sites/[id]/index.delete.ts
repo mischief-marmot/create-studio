@@ -71,9 +71,6 @@ export default defineEventHandler(async (event) => {
 
     logger.info('Removed site connection', { userId, siteId, url: site.url })
 
-    const { purgeSiteStatusCache } = await import('~~/server/utils/site-status-cache')
-    await purgeSiteStatusCache(event, siteId)
-
     return {
       success: true
     }

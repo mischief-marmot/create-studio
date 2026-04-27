@@ -12,7 +12,6 @@ import { sendErrorResponse } from '~~/server/utils/errors'
 import { verifyAnyJWT, getTokenType } from '~~/server/utils/auth'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
 import { supersedePendingWebhooksForSite } from '~~/server/utils/message-queue'
-import { getCachedSiteStatus, cacheSiteStatus } from '~~/server/utils/site-status-cache'
 
 export default defineEventHandler(async (event) => {
   const { debug } = useRuntimeConfig()
@@ -43,17 +42,6 @@ export default defineEventHandler(async (event) => {
     })
 
     logger.debug('Checking site status', { siteId, tokenType })
-
-    // Edge cache lookup — invalidated on subscription/site mutations via
-    // purgeSiteStatusCache(). Plugin tolerates short-lived staleness because
-    // explicit busts cover all user-visible state changes (Stripe, trial
-    // transitions, connect/disconnect).
-    const runtimeConfig = useRuntimeConfig()
-    const isProduction = !runtimeConfig.debug
-    if (isProduction) {
-      const cached = await getCachedSiteStatus(siteId, runtimeConfig.public.rootUrl)
-      if (cached) return cached
-    }
 
     const siteRepo = new SiteRepository()
     const site = await siteRepo.findById(siteId)
@@ -106,7 +94,7 @@ export default defineEventHandler(async (event) => {
     const ctx = (event.context.cloudflare as any)?.context
     if (ctx?.waitUntil) ctx.waitUntil(supersede)
 
-    const result = {
+    return {
       connected: true,
       site_id: siteId,
       subscription_tier: subscriptionTier,
@@ -120,12 +108,6 @@ export default defineEventHandler(async (event) => {
       trial_extensions: trialInfo.extensions || {},
       trial_eligible: trialEligibility.eligible,
     }
-
-    if (isProduction) {
-      cacheSiteStatus(event, siteId, runtimeConfig.public.rootUrl, result)
-    }
-
-    return result
   }
   catch (error: any) {
     logger.error('Error checking site status:', error)

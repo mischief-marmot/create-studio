@@ -371,8 +371,6 @@ export async function handleWebhookEvent(event: Stripe.Event, h3Event?: H3Event)
           await subscriptionRepo.update(subscription.site_id, {
             status: 'active',
           })
-          const { purgeSiteStatusCache } = await import('./site-status-cache')
-          await purgeSiteStatusCache(h3Event, subscription.site_id)
         }
       }
 
@@ -393,8 +391,6 @@ export async function handleWebhookEvent(event: Stripe.Event, h3Event?: H3Event)
           await subscriptionRepo.update(subscription.site_id, {
             status: 'past_due',
           })
-          const { purgeSiteStatusCache } = await import('./site-status-cache')
-          await purgeSiteStatusCache(h3Event, subscription.site_id)
         }
       }
 
