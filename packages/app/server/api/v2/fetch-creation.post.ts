@@ -1,4 +1,5 @@
 import { transformCreationToHowTo } from '~~/server/utils/creationTransformer'
+import { findCanonicalSiteUrl } from '~~/server/utils/canonical-site-url'
 import type { HowTo } from '~~/types/schema-org'
 import { useLogger } from '@create-studio/shared/utils/logger'
 
@@ -79,14 +80,20 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<FetchCreationBody>(event)
   checkpoints.readBody = performance.now()
 
-  const { site_url, creation_id, cache_bust = false } = body
+  const { site_url: rawSiteUrl, creation_id, cache_bust = false } = body
 
-  if (!site_url || !creation_id) {
+  if (!rawSiteUrl || !creation_id) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Missing required parameters: site_url and creation_id'
     })
   }
+
+  // The widget computes site_url from the apex domain (e.g. slimmingeats.com)
+  // but WP often lives in a subdir (e.g. /blog). Resolve to the canonical
+  // Sites.url so the WP REST call hits the right path. Falls through to the
+  // request URL when the site isn't connected — preserves prior behavior.
+  const site_url = await findCanonicalSiteUrl(rawSiteUrl) ?? rawSiteUrl
 
   const isProduction = !config.debug
 
