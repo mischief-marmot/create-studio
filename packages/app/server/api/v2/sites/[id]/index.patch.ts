@@ -210,10 +210,9 @@ export default defineEventHandler(async (event) => {
     // whenever any is touched is correct, not over-eager.
     const needsConfigPurge = hasProFields || (url !== undefined && url !== existingSite.url)
     if (needsConfigPurge && existingSite.url) {
-      await purgeSiteConfigCache(event, existingSite.url)
-      if (url && url !== existingSite.url) {
-        await purgeSiteConfigCache(event, url)
-      }
+      const purgeTargets = [existingSite.url]
+      if (url && url !== existingSite.url) purgeTargets.push(url)
+      await Promise.all(purgeTargets.map(u => purgeSiteConfigCache(event, u)))
     }
 
     setResponseStatus(event, 200)

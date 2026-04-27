@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { resolveSiteUrl, normalizeSiteUrl, getApexDomain } from '../../server/utils/url'
+import {
+  resolveSiteUrl,
+  normalizeSiteUrl,
+  getApexDomain,
+  buildApexHostMatchPatterns,
+} from '../../server/utils/url'
 
 /** Build a minimal Response-like for the resolveSiteUrl HEAD path. */
 function mockResponse(status: number, location?: string) {
@@ -82,6 +87,18 @@ describe('resolveSiteUrl', () => {
     const result = await resolveSiteUrl('https://example.com')
     expect(result).toBe('https://example.com')
     expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('refuses to fetch when the initial URL hostname is a private IP (defense in depth)', async () => {
+    const result = await resolveSiteUrl('http://10.0.0.1/')
+    expect(result).toBe('http://10.0.0.1/')
+    expect(globalThis.fetch).not.toHaveBeenCalled()
+  })
+
+  it('refuses to fetch when the initial URL is a non-http(s) scheme', async () => {
+    const result = await resolveSiteUrl('file:///etc/passwd')
+    expect(result).toBe('file:///etc/passwd')
+    expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
   it('refuses to follow a redirect to a non-http(s) scheme', async () => {
@@ -205,6 +222,63 @@ describe('getApexDomain', () => {
 
   it('returns null for an empty string', () => {
     expect(getApexDomain('')).toBeNull()
+  })
+})
+
+/**
+ * Pattern shape the buildSiteConfig apex fallback uses for SQL LIKE matching.
+ * The anchoring on `/` is load-bearing: without it, `LIKE 'https://example.com%'`
+ * would match `https://example.com.evil.com/...`, letting an attacker-controlled
+ * site's row be returned for a victim domain's apex query.
+ */
+describe('buildApexHostMatchPatterns', () => {
+  const patterns = buildApexHostMatchPatterns('example.com')
+
+  it('produces exact patterns for apex + www over http and https', () => {
+    expect(patterns.exact).toEqual([
+      'https://example.com',
+      'http://example.com',
+      'https://www.example.com',
+      'http://www.example.com',
+    ])
+  })
+
+  it('produces prefix patterns terminated with / (so LIKE only extends into path)', () => {
+    expect(patterns.prefix).toEqual([
+      'https://example.com/',
+      'http://example.com/',
+      'https://www.example.com/',
+      'http://www.example.com/',
+    ])
+  })
+
+  // Each prefix pattern terminates with /; SQL LIKE 'pattern%' is equivalent
+  // to JS startsWith(pattern). These tests pin the spoof-prevention guarantee.
+  it('a path-suffix URL on the apex matches its prefix pattern', () => {
+    expect('https://example.com/blog'.startsWith(patterns.prefix[0])).toBe(true)
+  })
+
+  it('a path-suffix URL on www.apex matches its prefix pattern', () => {
+    expect('https://www.example.com/blog'.startsWith(patterns.prefix[2])).toBe(true)
+  })
+
+  it('a same-prefix-different-host URL does NOT match the prefix pattern (anti-spoof)', () => {
+    // `example.com.evil.com` starts with `example.com.` (note the dot, not /)
+    expect('https://example.com.evil.com/path'.startsWith(patterns.prefix[0])).toBe(false)
+  })
+
+  it('a same-prefix-different-host URL is not equal to the exact pattern (anti-spoof)', () => {
+    // exact is used with SQL eq(), i.e. full-string equality — not prefix.
+    expect('https://example.com.evil.com/path').not.toBe(patterns.exact[0])
+  })
+
+  it('a longer-hostname spoof on www variant does NOT match', () => {
+    expect('https://www.example.com.evil.com/path'.startsWith(patterns.prefix[2])).toBe(false)
+  })
+
+  it('an unrelated subdomain does NOT match (only apex and www)', () => {
+    expect('https://blog.example.com'.startsWith(patterns.prefix[0])).toBe(false)
+    expect('https://blog.example.com'.startsWith(patterns.exact[0])).toBe(false)
   })
 })
 

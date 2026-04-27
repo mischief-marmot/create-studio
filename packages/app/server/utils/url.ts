@@ -163,6 +163,23 @@ export async function resolveSiteUrl(
 ): Promise<string> {
   const timeoutMs = options?.timeoutMs ?? 5000
   const allowedDomains = options?.allowedDomains
+
+  // Defense in depth: callers today pass an already-normalized input, but a
+  // future caller from a different context shouldn't silently bypass the
+  // private/reserved-host guard the redirect chain enforces on every hop.
+  let initialParsed: URL
+  try {
+    initialParsed = new URL(inputUrl)
+  } catch {
+    return inputUrl
+  }
+  if (initialParsed.protocol !== 'http:' && initialParsed.protocol !== 'https:') {
+    return inputUrl
+  }
+  if (isPrivateOrReservedHost(initialParsed.hostname.toLowerCase(), allowedDomains ?? [])) {
+    return inputUrl
+  }
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -242,6 +259,38 @@ export function getApexDomain(siteUrl: string): string | null {
     return host.startsWith('www.') ? host.slice(4) : host
   } catch {
     return null
+  }
+}
+
+/**
+ * Builds the URL match patterns the buildSiteConfig apex fallback uses for
+ * SQL LIKE lookup. Splits into `exact` (no path) and `prefix` (terminated
+ * with `/`, so `LIKE pattern%` only extends into the path).
+ *
+ * The trailing-slash anchor is load-bearing: without it,
+ * `LIKE 'https://example.com%'` would match `https://example.com.evil.com/x`
+ * — letting an attacker-controlled row be returned for a victim apex query.
+ * `LIKE 'https://example.com/%'` requires a `/` immediately after the apex,
+ * so a `.evil.com` extension can't sneak in.
+ */
+export function buildApexHostMatchPatterns(apex: string): {
+  exact: string[]
+  prefix: string[]
+} {
+  const hosts = [apex, `www.${apex}`]
+  const protocols = ['https://', 'http://']
+  const exact: string[] = []
+  const prefix: string[] = []
+  for (const host of hosts) {
+    for (const proto of protocols) {
+      exact.push(`${proto}${host}`)
+      prefix.push(`${proto}${host}/`)
+    }
+  }
+  // Order matters for stable test assertions: apex×https, apex×http, www×https, www×http
+  return {
+    exact: [exact[0], exact[1], exact[2], exact[3]],
+    prefix: [prefix[0], prefix[1], prefix[2], prefix[3]],
   }
 }
 

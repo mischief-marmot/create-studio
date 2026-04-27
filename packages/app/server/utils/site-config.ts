@@ -1,5 +1,5 @@
 import { SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
-import { getApexDomain } from '~~/server/utils/url'
+import { getApexDomain, buildApexHostMatchPatterns } from '~~/server/utils/url'
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { and, eq, isNull, like, or } from 'drizzle-orm'
 
@@ -48,13 +48,15 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
     if (!siteResult) {
       const apex = getApexDomain(siteUrl)
       if (apex) {
+        const patterns = buildApexHostMatchPatterns(apex)
         siteResult = await db.select().from(schema.sites)
           .where(and(
             or(
-              like(schema.sites.url, `https://${apex}%`),
-              like(schema.sites.url, `http://${apex}%`),
-              like(schema.sites.url, `https://www.${apex}%`),
-              like(schema.sites.url, `http://www.${apex}%`),
+              // Exact equality — handles apex/www with no path.
+              ...patterns.exact.map(u => eq(schema.sites.url, u)),
+              // /-anchored prefix — required to prevent example.com from
+              // matching example.com.evil.com. See buildApexHostMatchPatterns.
+              ...patterns.prefix.map(p => like(schema.sites.url, `${p}%`)),
             ),
             isNull(schema.sites.canonical_site_id),
           ))
