@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   buildSiteConfigCacheUrl,
   buildSiteConfigCacheKey,
+  shouldPurgeOnSubscriptionUpdate,
 } from '../../server/utils/site-config-cache'
 
 /**
@@ -66,5 +67,56 @@ describe('buildSiteConfigCacheKey', () => {
   it('returns a GET Request (cache.match in CF only matches on GET keys)', () => {
     const key = buildSiteConfigCacheKey(ROOT, 'https://example.com')
     expect(key.method).toBe('GET')
+  })
+})
+
+/**
+ * The predicate gates whether SubscriptionRepository.update bothers paying
+ * for a cache purge. tier and status are the only columns getActiveTier
+ * (and therefore buildSiteConfig) reads from a subscription row; period
+ * dates, metadata, customer/sub IDs, and trial_extensions don't affect
+ * the cached response.
+ *
+ * If buildSiteConfig ever starts reading another subscription column, this
+ * predicate must be widened in lockstep — these tests pin the contract.
+ */
+describe('shouldPurgeOnSubscriptionUpdate', () => {
+  it('fires on tier change', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({ tier: 'pro' })).toBe(true)
+  })
+
+  it('fires on status change', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({ status: 'active' })).toBe(true)
+  })
+
+  it('fires when both tier and status are present', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({ tier: 'free', status: 'canceled' })).toBe(true)
+  })
+
+  it('does NOT fire on period_end-only update (Stripe period rollover)', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({ current_period_end: '2026-05-01' })).toBe(false)
+  })
+
+  it('does NOT fire on stripe_subscription_id-only update', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({ stripe_subscription_id: 'sub_123' })).toBe(false)
+  })
+
+  it('does NOT fire on trial_extensions-only update (extension recorded but tier unchanged)', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({ trial_extensions: { day1: '2026-04-28' } })).toBe(false)
+  })
+
+  it('does NOT fire on metadata-only update', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({ metadata: { trial_cohort: 'a' } })).toBe(false)
+  })
+
+  it('does NOT fire on empty patch', () => {
+    expect(shouldPurgeOnSubscriptionUpdate({})).toBe(false)
+  })
+
+  it('treats explicitly-undefined fields as present (in-operator semantics)', () => {
+    // 'tier' in updates returns true even if updates.tier === undefined.
+    // Worth pinning — this is the same drift trap the admin handler avoids
+    // by using `'X' in body`, and we rely on the same semantics here.
+    expect(shouldPurgeOnSubscriptionUpdate({ tier: undefined })).toBe(true)
   })
 })

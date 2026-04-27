@@ -63,6 +63,20 @@ export async function purgeSiteConfigCache(
   if (ctx?.waitUntil) {
     ctx.waitUntil(purge())
   } else {
+    // No H3Event (e.g. called from a background path): still fire-and-forget
+    // — the global purge runs in the background, the awaiting caller only
+    // blocks on the in-DC `cache.delete` above (~ms).
     purge().catch(() => {})
   }
+}
+
+/** Returns true if a subscription `update()` patch touches a field
+ *  buildSiteConfig actually reads. tier and status feed getActiveTier;
+ *  other columns (period dates, metadata, trial_extensions, customer/
+ *  subscription IDs) don't affect the cached response. Pure helper so
+ *  the trigger is unit-testable without a DB. */
+export function shouldPurgeOnSubscriptionUpdate(
+  updates: Record<string, unknown>,
+): boolean {
+  return 'tier' in updates || 'status' in updates
 }
