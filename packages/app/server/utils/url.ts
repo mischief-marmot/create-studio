@@ -281,17 +281,14 @@ export function buildApexHostMatchPatterns(apex: string): {
   const protocols = ['https://', 'http://']
   const exact: string[] = []
   const prefix: string[] = []
+  // Loop order produces: apex×https, apex×http, www×https, www×http — used by tests.
   for (const host of hosts) {
     for (const proto of protocols) {
       exact.push(`${proto}${host}`)
       prefix.push(`${proto}${host}/`)
     }
   }
-  // Order matters for stable test assertions: apex×https, apex×http, www×https, www×http
-  return {
-    exact: [exact[0], exact[1], exact[2], exact[3]],
-    prefix: [prefix[0], prefix[1], prefix[2], prefix[3]],
-  }
+  return { exact, prefix }
 }
 
 /**

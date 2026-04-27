@@ -212,6 +212,9 @@ export default defineEventHandler(async (event) => {
     if (needsConfigPurge && existingSite.url) {
       const purgeTargets = [existingSite.url]
       if (url && url !== existingSite.url) purgeTargets.push(url)
+      // The await here only blocks on the in-DC `cache.delete`. The global
+      // CF zone purge runs under `ctx.waitUntil` inside purgeSiteConfigCache
+      // (fire-and-forget), so we won't see a global-purge failure here.
       await Promise.all(purgeTargets.map(u => purgeSiteConfigCache(event, u)))
     }
 

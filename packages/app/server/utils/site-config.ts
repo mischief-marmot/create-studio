@@ -49,6 +49,11 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
       const apex = getApexDomain(siteUrl)
       if (apex) {
         const patterns = buildApexHostMatchPatterns(apex)
+        // TODO: when multiple sites share an apex (e.g. example.com/blog and
+        // example.com/shop as separate canonical rows), orderBy(id).limit(1)
+        // arbitrarily picks the oldest. Becomes load-bearing as more
+        // customers run subdir installs side-by-side. Revisit with a
+        // path-aware match if it bites.
         siteResult = await db.select().from(schema.sites)
           .where(and(
             or(
