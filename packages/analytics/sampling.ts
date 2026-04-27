@@ -10,7 +10,6 @@ export const SAMPLING_RATES: Record<AnalyticsEventType, number> = {
   page_view: 1.0,
   timer_start: 1.0,
   timer_complete: 1.0,
-  api_call: 0.05,
   trial_started: 1.0,
   trial_converted: 1.0,
 }

@@ -399,6 +399,9 @@ export async function getInteractiveTimeSeries(
 // ---------------------------------------------------------------------------
 // 5. API Usage Metrics
 // ---------------------------------------------------------------------------
+// Reads historical `api_call_count` rows from daily_summaries. New rows stopped
+// being written on 2026-04-27 when v1/v2 API call sampling was removed; this
+// query is retained so the admin tab can keep surfacing pre-2026-04-27 data.
 
 export async function getApiUsageMetrics(
   db: DrizzleD1Database,

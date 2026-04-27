@@ -7,7 +7,7 @@ import {
 } from '../../sampling'
 import type { AnalyticsEventType } from '../../types'
 
-// All 12 event types defined in the AnalyticsEvent union
+// All event types defined in the AnalyticsEvent union
 const ALL_EVENT_TYPES: AnalyticsEventType[] = [
   'cta_rendered',
   'cta_activated',
@@ -18,15 +18,14 @@ const ALL_EVENT_TYPES: AnalyticsEventType[] = [
   'page_view',
   'timer_start',
   'timer_complete',
-  'api_call',
   'trial_started',
   'trial_converted',
 ]
 
 describe('sampling', () => {
   describe('SAMPLING_RATES', () => {
-    it('should define a sampling rate for all 12 event types', () => {
-      expect(Object.keys(SAMPLING_RATES)).toHaveLength(12)
+    it('should define a sampling rate for every event type', () => {
+      expect(Object.keys(SAMPLING_RATES)).toHaveLength(ALL_EVENT_TYPES.length)
       for (const eventType of ALL_EVENT_TYPES) {
         expect(SAMPLING_RATES).toHaveProperty(eventType)
         expect(typeof SAMPLING_RATES[eventType]).toBe('number')
@@ -61,10 +60,6 @@ describe('sampling', () => {
       expect(SAMPLING_RATES.timer_start).toBe(0.1)
       expect(SAMPLING_RATES.timer_complete).toBe(0.1)
     })
-
-    it('should set 0.1% for api_call', () => {
-      expect(SAMPLING_RATES.api_call).toBe(0.001)
-    })
   })
 
   describe('COUNTER_EVENTS', () => {
@@ -87,7 +82,6 @@ describe('sampling', () => {
       expect(COUNTER_EVENTS).not.toContain('page_view')
       expect(COUNTER_EVENTS).not.toContain('timer_start')
       expect(COUNTER_EVENTS).not.toContain('timer_complete')
-      expect(COUNTER_EVENTS).not.toContain('api_call')
     })
   })
 
@@ -136,14 +130,5 @@ describe('sampling', () => {
       }
     })
 
-    it('should have a very low acceptance rate for api_call (0.1%)', () => {
-      let trueCount = 0
-      const trials = 10000
-      for (let i = 0; i < trials; i++) {
-        if (shouldSample('api_call')) trueCount++
-      }
-      // With 0.1% rate over 10000 trials, expect roughly 10 (allow 0 to 50)
-      expect(trueCount, 'api_call should rarely be sampled').toBeLessThan(50)
-    })
   })
 })

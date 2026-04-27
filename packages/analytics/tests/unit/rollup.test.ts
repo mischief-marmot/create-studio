@@ -222,7 +222,7 @@ describe('rollup', () => {
       const mockSummaries: AggregatedSummary[] = [
         { date: '2026-03-11', domain: 'example.com', metric: 'cta_rendered_count', dimensions: null, value: 10, sample_rate: 1.0 },
         { date: '2026-03-11', domain: 'blog.test', metric: 'page_view_count', dimensions: null, value: 100, sample_rate: 0.1 },
-        { date: '2026-03-11', domain: null, metric: 'api_call_count', dimensions: null, value: 5000, sample_rate: 0.001 },
+        { date: '2026-03-11', domain: null, metric: 'trial_started_count', dimensions: null, value: 5, sample_rate: 1.0 },
       ]
 
       const domainMap = new Map([['example.com', 1], ['blog.test', 2]])
@@ -408,21 +408,6 @@ describe('rollup', () => {
       expect(avgSummary.metric).toBe('rating_average')
       expect(avgSummary.value).toBeGreaterThanOrEqual(1)
       expect(avgSummary.value).toBeLessThanOrEqual(5)
-    })
-
-    it('API aggregator should produce api_call_count with version dimensions', () => {
-      const apiSummary: AggregatedSummary = {
-        date: '2026-03-11',
-        domain: null,
-        metric: 'api_call_count',
-        dimensions: JSON.stringify({ version: 'v1' }),
-        value: 5000,
-        sample_rate: 0.001,
-      }
-
-      expect(apiSummary.domain).toBeNull()
-      expect(apiSummary.metric).toBe('api_call_count')
-      expect(JSON.parse(apiSummary.dimensions!)).toHaveProperty('version')
     })
 
     it('Trial aggregator should produce global trial_*_count metrics', () => {

@@ -300,41 +300,6 @@ export async function aggregateTimerMetrics(
 }
 
 // ---------------------------------------------------------------------------
-// API metrics: count api_call per version (extrapolated by sample_rate)
-// ---------------------------------------------------------------------------
-export async function aggregateApiMetrics(
-  db: DrizzleD1Database,
-  date: string,
-  startTs: number,
-  endTs: number,
-): Promise<AggregatedSummary[]> {
-  const rows = await db
-    .select({
-      sample_rate: events.sample_rate,
-      version: sql<string>`json_extract(${events.body}, '$.version')`.as('version'),
-      count: count(),
-    })
-    .from(events)
-    .where(
-      and(
-        eq(events.type, 'api_call'),
-        gte(events.created_at, startTs),
-        lte(events.created_at, endTs),
-      ),
-    )
-    .groupBy(events.sample_rate, sql`json_extract(${events.body}, '$.version')`)
-
-  return rows.map((row) => ({
-    date,
-    domain: null, // API calls are global, not per-domain
-    metric: 'api_call_count',
-    dimensions: row.version ? JSON.stringify({ version: row.version }) : null,
-    value: row.count,
-    sample_rate: row.sample_rate,
-  }))
-}
-
-// ---------------------------------------------------------------------------
 // Trial metrics: count trial_started / trial_converted per day (global)
 // ---------------------------------------------------------------------------
 export async function aggregateTrialMetrics(
@@ -384,7 +349,6 @@ export async function runAllAggregators(
     aggregateRatingMetrics(db, date, startTs, endTs),
     aggregatePageViewMetrics(db, date, startTs, endTs),
     aggregateTimerMetrics(db, date, startTs, endTs),
-    aggregateApiMetrics(db, date, startTs, endTs),
     aggregateTrialMetrics(db, date, startTs, endTs),
   ])
 

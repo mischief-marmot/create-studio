@@ -432,7 +432,7 @@
             </h2>
 
             <div class="bg-info/5 border border-info/20 rounded-lg px-4 py-3 mb-6">
-              <p class="text-sm text-info">Tracking v1 usage to determine when it can be deprecated</p>
+              <p class="text-sm text-info">Historical view — v1/v2 API call sampling stopped on 2026-04-27. Numbers reflect data captured before that date.</p>
             </div>
 
             <div class="grid grid-cols-3 gap-6 mb-8">
