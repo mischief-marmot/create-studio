@@ -68,7 +68,7 @@ describe('resolveSiteUrl', () => {
     expect(result).toBe('https://example.com')
   })
 
-  it('does not follow non-WP-looking redirects to an unrelated host blindly', async () => {
+  it('returns the redirected URL even when it lands on an unrelated host (no WP-detection in Phase 1)', async () => {
     ;(globalThis.fetch as any).mockResolvedValue({
       url: 'https://parking.example.net/sale',
       ok: true,
