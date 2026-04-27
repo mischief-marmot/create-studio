@@ -202,6 +202,11 @@ export default defineEventHandler(async (event) => {
     // response served to widget visitors. Without this purge, edge entries
     // serve the pre-toggle config for up to the 10-min TTL. Also purge on
     // url changes since the cache key is keyed on the URL.
+    //
+    // hasProFields is a tight match for the inputs to buildSiteConfig
+    // (interactive_mode_enabled + button_text + cta_variant/title/subtitle) —
+    // every one of those round-trips into the cached response, so purging
+    // whenever any is touched is correct, not over-eager.
     const needsConfigPurge = hasProFields || (url !== undefined && url !== existingSite.url)
     if (needsConfigPurge && existingSite.url) {
       const { purgeSiteConfigCache } = await import('~~/server/utils/site-config-cache')

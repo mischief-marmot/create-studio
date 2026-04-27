@@ -1,4 +1,5 @@
 import { buildSiteConfig } from '~~/server/utils/site-config'
+import { buildSiteConfigCacheKey } from '~~/server/utils/site-config-cache'
 
 // Edge cache TTL — 10 minutes; site config changes are infrequent.
 // This route is a CORS simple request (GET, no custom headers) so browsers
@@ -26,8 +27,9 @@ export default defineEventHandler(async (event) => {
 
   const runtimeConfig = useRuntimeConfig()
   const isProduction = !runtimeConfig.debug
-  const requestUrl = getRequestURL(event).toString()
-  const cacheKey = new Request(requestUrl, { method: 'GET' })
+  // Shared with site-config.post.ts and purgeSiteConfigCache. Keeping all key
+  // construction in one place — drift here silently breaks invalidation.
+  const cacheKey = buildSiteConfigCacheKey(runtimeConfig.public.rootUrl, siteUrl)
 
   // Edge cache lookup — returns the previously stored response if fresh.
   // The POST handler shares this cache key, so warm entries from one path

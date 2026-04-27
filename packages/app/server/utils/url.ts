@@ -130,34 +130,88 @@ export function normalizeSiteUrl(input: string, options?: { allowedDomains?: str
   }
 }
 
+const MAX_REDIRECTS = 5
+
 /**
- * Follows redirects from `inputUrl` and returns the normalized final URL.
+ * Walks the HTTP redirect chain from `inputUrl` manually with HEAD requests,
+ * validating each hop's hostname against `isPrivateOrReservedHost` BEFORE
+ * issuing the next request. This prevents SSRF where an attacker-controlled
+ * domain serves a 301 to an internal address (RFC1918, link-local, metadata
+ * endpoints) that the Worker would otherwise probe under `redirect: 'follow'`.
  *
  * Catches drift the connect form can't see from a string alone:
  *   - http→https upgrades the host enforces
  *   - apex→www redirects
  *   - apex→subdirectory redirects (e.g. example.com → example.com/blog)
  *
- * Falls back to the input URL on any failure (network, timeout, normalization
- * rejecting the result). Caller should pass an already-normalized input.
+ * Intermediate hops are allowed to be http (the chain commonly hops through
+ * http on the way to https). Only the final URL is validated against
+ * `normalizeSiteUrl` for storage — which enforces https for non-local hosts.
+ *
+ * Falls back to the input URL on any failure (network, timeout, redirect cap,
+ * mid-chain validation rejecting a hop, final URL rejected by normalization).
+ * Caller should pass an already-normalized input.
  */
 export async function resolveSiteUrl(
   inputUrl: string,
   options?: { allowedDomains?: string[]; timeoutMs?: number },
 ): Promise<string> {
-  const timeoutMs = options?.timeoutMs ?? 10000
+  const timeoutMs = options?.timeoutMs ?? 5000
+  const allowedDomains = options?.allowedDomains
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   try {
-    const response = await fetch(inputUrl, {
-      method: 'GET',
-      redirect: 'follow',
-      signal: controller.signal,
-    })
-    const finalUrl = response.url
-    if (!finalUrl) return inputUrl
-    const normalized = normalizeSiteUrl(finalUrl, { allowedDomains: options?.allowedDomains })
-    return normalized || inputUrl
+    let currentUrl = inputUrl
+    for (let i = 0; i < MAX_REDIRECTS; i++) {
+      const response = await fetch(currentUrl, {
+        method: 'HEAD',
+        redirect: 'manual',
+        signal: controller.signal,
+      })
+
+      const isRedirect = response.status >= 300 && response.status < 400
+      if (!isRedirect) {
+        // Terminal response. Validate the URL we landed on for storage.
+        const normalized = normalizeSiteUrl(currentUrl, { allowedDomains })
+        return normalized || inputUrl
+      }
+
+      const location = response.headers.get('location')
+      if (!location) {
+        const normalized = normalizeSiteUrl(currentUrl, { allowedDomains })
+        return normalized || inputUrl
+      }
+
+      let nextUrl: string
+      try {
+        nextUrl = new URL(location, currentUrl).toString()
+      } catch {
+        return inputUrl
+      }
+
+      // Mid-chain SSRF defense. Re-validate the next hop's hostname against
+      // private/reserved ranges before fetching it. http→https intermediates
+      // are allowed (real chains commonly look like
+      // https://apex → http://www.host/path → https://www.host/path).
+      let nextParsed: URL
+      try {
+        nextParsed = new URL(nextUrl)
+      } catch {
+        return inputUrl
+      }
+      if (
+        nextParsed.protocol !== 'http:' && nextParsed.protocol !== 'https:'
+      ) {
+        return inputUrl
+      }
+      if (isPrivateOrReservedHost(nextParsed.hostname.toLowerCase(), allowedDomains ?? [])) {
+        return inputUrl
+      }
+
+      currentUrl = nextUrl
+    }
+    // Hit the redirect cap — caller intent is unclear; refuse to store.
+    return inputUrl
   } catch {
     return inputUrl
   } finally {

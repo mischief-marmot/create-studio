@@ -1,15 +1,16 @@
 import type { H3Event } from 'h3'
 import { useLogger } from '@create-studio/shared/utils/logger'
 
-/** Build the cache URL the GET + POST site-config handlers use as their key.
- *  Must match the key construction in
- *  `server/api/v2/site-config/[siteKey].get.ts` and `site-config.post.ts`. */
-function buildConfigCacheUrl(rootUrl: string, siteUrl: string): string {
+/** Single source of truth for the site-config edge cache key. The GET handler,
+ *  POST handler, and this purge utility must agree byte-for-byte; encoding
+ *  drift here silently breaks invalidation and visitors keep seeing stale
+ *  config until the 10-min TTL expires. */
+export function buildSiteConfigCacheUrl(rootUrl: string, siteUrl: string): string {
   return `${rootUrl}/api/v2/site-config/${btoa(siteUrl)}`
 }
 
-function buildConfigCacheKey(rootUrl: string, siteUrl: string): Request {
-  return new Request(buildConfigCacheUrl(rootUrl, siteUrl), { method: 'GET' })
+export function buildSiteConfigCacheKey(rootUrl: string, siteUrl: string): Request {
+  return new Request(buildSiteConfigCacheUrl(rootUrl, siteUrl), { method: 'GET' })
 }
 
 /** Purge a site's config response from both `caches.default` and (globally)
@@ -24,13 +25,13 @@ export async function purgeSiteConfigCache(
   const runtimeConfig = useRuntimeConfig()
   const logger = useLogger('SiteConfigCache', runtimeConfig.debug)
   const rootUrl = runtimeConfig.public.rootUrl
-  const url = buildConfigCacheUrl(rootUrl, siteUrl)
+  const url = buildSiteConfigCacheUrl(rootUrl, siteUrl)
 
   // 1. Same-DC instant invalidate
   try {
     const cache = (caches as any).default as Cache | undefined
     if (cache) {
-      await cache.delete(buildConfigCacheKey(rootUrl, siteUrl))
+      await cache.delete(buildSiteConfigCacheKey(rootUrl, siteUrl))
     }
   } catch {
     // Cache API unavailable — fall through to global purge
