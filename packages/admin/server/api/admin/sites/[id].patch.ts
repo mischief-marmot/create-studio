@@ -54,7 +54,16 @@ export default defineEventHandler(async (event) => {
 
     let hasUpdates = false
     const hasSiteFields = 'name' in body || 'url' in body
-    const hasInteractiveFields = 'interactive_mode_enabled' in body || 'interactive_mode_button_text' in body
+    // List every interactive_mode_* field buildSiteConfig reads, even ones
+    // the admin form doesn't expose today. Keeps the cache-purge trigger
+    // correct if the form expands later — otherwise a new field added here
+    // without touching the trigger silently re-introduces the stale-cache bug.
+    const hasInteractiveFields =
+      'interactive_mode_enabled' in body
+      || 'interactive_mode_button_text' in body
+      || 'interactive_mode_cta_variant' in body
+      || 'interactive_mode_cta_title' in body
+      || 'interactive_mode_cta_subtitle' in body
 
     // Update Sites table fields (name, url)
     if (hasSiteFields) {
@@ -140,7 +149,8 @@ export default defineEventHandler(async (event) => {
     // settings.interactive_mode_* and the Sites row's url (the cache key
     // itself). If site-config ever starts reading another column (name,
     // create_version, etc.), widen this condition to match.
-    if (hasInteractiveFields || (hasSiteFields && 'url' in body && body.url?.trim() !== site.url)) {
+    const trimmedUrl = typeof body.url === 'string' ? body.url.trim() : undefined
+    if (hasInteractiveFields || (hasSiteFields && 'url' in body && trimmedUrl !== site.url)) {
       try {
         const config = useRuntimeConfig()
         if (!config.mainAppApiKey) {
@@ -154,8 +164,8 @@ export default defineEventHandler(async (event) => {
             if (site.url) purgeTargets.push(site.url)
             // URL change: also purge the new key so visitors hitting the
             // new URL don't sit on a stale entry until the 10-min TTL.
-            if ('url' in body && body.url?.trim() && body.url.trim() !== site.url) {
-              purgeTargets.push(body.url.trim())
+            if (trimmedUrl && trimmedUrl !== site.url) {
+              purgeTargets.push(trimmedUrl)
             }
             if (purgeTargets.length > 0) {
               const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {

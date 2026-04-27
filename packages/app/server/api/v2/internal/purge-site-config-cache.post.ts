@@ -10,6 +10,10 @@
 import { purgeSiteConfigCache } from '~~/server/utils/site-config-cache'
 import { requireAdminApiKey } from '~~/server/utils/admin-auth'
 
+// Caps CF zone-API call amplification from a single authenticated request.
+// Real callers (admin PATCH) only send 1–2 URLs; anything bigger is abuse.
+const MAX_PURGE_TARGETS = 10
+
 export default defineEventHandler(async (event) => {
   requireAdminApiKey(event)
 
@@ -18,6 +22,9 @@ export default defineEventHandler(async (event) => {
 
   if (siteUrls.length === 0) {
     throw createError({ statusCode: 400, message: 'siteUrls must be a non-empty string array' })
+  }
+  if (siteUrls.length > MAX_PURGE_TARGETS) {
+    throw createError({ statusCode: 400, message: `siteUrls cannot exceed ${MAX_PURGE_TARGETS} entries` })
   }
 
   await Promise.all(siteUrls.map(u => purgeSiteConfigCache(event, u)))
