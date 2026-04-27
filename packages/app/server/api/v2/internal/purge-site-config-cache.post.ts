@@ -14,14 +14,26 @@ import { requireAdminApiKey } from '~~/server/utils/admin-auth'
 // Real callers (admin PATCH) only send 1–2 URLs; anything bigger is abuse.
 const MAX_PURGE_TARGETS = 10
 
+function isValidHttpUrl(s: string): boolean {
+  try {
+    const u = new URL(s)
+    return u.protocol === 'https:' || u.protocol === 'http:'
+  } catch {
+    return false
+  }
+}
+
 export default defineEventHandler(async (event) => {
   requireAdminApiKey(event)
 
   const body = await readBody<{ siteUrls?: unknown }>(event)
-  const siteUrls = Array.isArray(body?.siteUrls) ? body.siteUrls.filter((u): u is string => typeof u === 'string' && u.length > 0) : []
+  const raw = body?.siteUrls
+  const siteUrls: string[] = Array.isArray(raw)
+    ? raw.filter((u): u is string => typeof u === 'string' && u.length > 0 && isValidHttpUrl(u))
+    : []
 
   if (siteUrls.length === 0) {
-    throw createError({ statusCode: 400, message: 'siteUrls must be a non-empty string array' })
+    throw createError({ statusCode: 400, message: 'siteUrls must be a non-empty array of http(s) URLs' })
   }
   if (siteUrls.length > MAX_PURGE_TARGETS) {
     throw createError({ statusCode: 400, message: `siteUrls cannot exceed ${MAX_PURGE_TARGETS} entries` })

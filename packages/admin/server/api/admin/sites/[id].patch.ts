@@ -159,8 +159,12 @@ export default defineEventHandler(async (event) => {
           const adminEnv = getAdminEnvironment(event)
           const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
           const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
-          if (mainAppUrl) {
+          if (!mainAppUrl) {
+            console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping site-config cache purge')
+          } else {
             const purgeTargets: string[] = []
+            // Always include the current URL: it's the cache key for the
+            // entry holding the interactive_mode_* values we just wrote.
             if (site.url) purgeTargets.push(site.url)
             // URL change: also purge the new key so visitors hitting the
             // new URL don't sit on a stale entry until the 10-min TTL.
