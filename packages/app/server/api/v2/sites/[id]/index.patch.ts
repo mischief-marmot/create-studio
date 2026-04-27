@@ -198,6 +198,19 @@ export default defineEventHandler(async (event) => {
     // Return updated site
     const updatedSite = await siteRepo.findById(siteId)
 
+    // interactive_mode_* settings drive the /api/v2/site-config/<key>
+    // response served to widget visitors. Without this purge, edge entries
+    // serve the pre-toggle config for up to the 10-min TTL. Also purge on
+    // url changes since the cache key is keyed on the URL.
+    const needsConfigPurge = hasProFields || (url !== undefined && url !== existingSite.url)
+    if (needsConfigPurge && existingSite.url) {
+      const { purgeSiteConfigCache } = await import('~~/server/utils/site-config-cache')
+      await purgeSiteConfigCache(event, existingSite.url)
+      if (url && url !== existingSite.url) {
+        await purgeSiteConfigCache(event, url)
+      }
+    }
+
     setResponseStatus(event, 200)
     logger.debug('Site updated successfully', updatedSite)
     return {
