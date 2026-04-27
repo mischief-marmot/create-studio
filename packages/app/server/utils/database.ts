@@ -9,7 +9,7 @@
 import { eq, and, or, isNull, isNotNull, sql } from 'drizzle-orm'
 import type { H3Event } from 'h3'
 import type { SiteUser, SiteSettings, VersionLogEntry } from '../db/schema'
-import { purgeSiteConfigCache } from './site-config-cache'
+import { purgeSiteConfigCache, shouldPurgeOnSubscriptionUpdate } from './site-config-cache'
 
 // Re-export types from schema for convenience
 export type { User, NewUser, Site, NewSite, SiteUser, NewSiteUser, Subscription, NewSubscription, LinkSession, NewLinkSession, SiteMeta, NewSiteMeta, SiteSettings, VersionLogEntry, Survey, NewSurvey, SurveyResponse, NewSurveyResponse } from '../db/schema'
@@ -528,7 +528,7 @@ export class SubscriptionRepository {
     // tier and status are the inputs to getActiveTier(), which feeds
     // buildSiteConfig. Other columns (period dates, metadata, etc.) don't
     // affect the cached response. Purge only when a relevant field shifted.
-    if ('tier' in updates || 'status' in updates) {
+    if (shouldPurgeOnSubscriptionUpdate(updates)) {
       await this.purgeConfigCacheForSite(siteId, event)
     }
 
@@ -536,8 +536,11 @@ export class SubscriptionRepository {
   }
 
   /** Look up the canonical site URL and purge the site-config edge cache.
-   *  Best-effort: any failure is swallowed inside purgeSiteConfigCache so
-   *  cache invalidation never aborts a successful subscription write. */
+   *  Best-effort: any failure is logged but doesn't abort the subscription
+   *  write — cache invalidation is correctness-improving but not load-bearing
+   *  for the DB transaction. Three sequential queries (UPDATE → SELECT
+   *  sites.url → purge → SELECT subscription on return) which is fine at
+   *  subscription-write frequency. */
   private async purgeConfigCacheForSite(siteId: number, event?: H3Event) {
     try {
       const site = await db.select({ url: schema.sites.url })
@@ -547,8 +550,10 @@ export class SubscriptionRepository {
       if (site?.url) {
         await purgeSiteConfigCache(event, site.url)
       }
-    } catch {
-      // Don't let cache invalidation failures break a subscription write.
+    } catch (purgeError) {
+      // Don't let cache invalidation failures break a subscription write,
+      // but make incidents diagnosable in production logs.
+      console.warn('Failed to purge site-config cache after subscription write:', { siteId, purgeError })
     }
   }
 
