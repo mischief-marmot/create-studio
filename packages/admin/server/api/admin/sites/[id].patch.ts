@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { useAdminDb, sites, siteMeta } from "~~/server/utils/admin-db"
 import type { SiteSettings } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
+import { getAdminEnvironment } from '~~/server/utils/admin-env'
 
 /**
  * PATCH /api/admin/sites/[id]
@@ -53,7 +54,16 @@ export default defineEventHandler(async (event) => {
 
     let hasUpdates = false
     const hasSiteFields = 'name' in body || 'url' in body
-    const hasInteractiveFields = 'interactive_mode_enabled' in body || 'interactive_mode_button_text' in body
+    // List every interactive_mode_* field buildSiteConfig reads, even ones
+    // the admin form doesn't expose today. Keeps the cache-purge trigger
+    // correct if the form expands later — otherwise a new field added here
+    // without touching the trigger silently re-introduces the stale-cache bug.
+    const hasInteractiveFields =
+      'interactive_mode_enabled' in body
+      || 'interactive_mode_button_text' in body
+      || 'interactive_mode_cta_variant' in body
+      || 'interactive_mode_cta_title' in body
+      || 'interactive_mode_cta_subtitle' in body
 
     // Update Sites table fields (name, url)
     if (hasSiteFields) {
@@ -133,6 +143,49 @@ export default defineEventHandler(async (event) => {
         statusCode: 400,
         message: 'No fields to update',
       })
+    }
+
+    // Trigger watches every input that buildSiteConfig actually reads:
+    // settings.interactive_mode_* and the Sites row's url (the cache key
+    // itself). If site-config ever starts reading another column (name,
+    // create_version, etc.), widen this condition to match.
+    const trimmedUrl = typeof body.url === 'string' ? body.url.trim() : undefined
+    if (hasInteractiveFields || (hasSiteFields && 'url' in body && trimmedUrl !== site.url)) {
+      try {
+        const config = useRuntimeConfig()
+        if (!config.mainAppApiKey) {
+          console.warn('mainAppApiKey not configured — skipping site-config cache purge')
+        } else {
+          const adminEnv = getAdminEnvironment(event)
+          const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+          const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+          if (mainAppUrl) {
+            const purgeTargets: string[] = []
+            if (site.url) purgeTargets.push(site.url)
+            // URL change: also purge the new key so visitors hitting the
+            // new URL don't sit on a stale entry until the 10-min TTL.
+            if (trimmedUrl && trimmedUrl !== site.url) {
+              purgeTargets.push(trimmedUrl)
+            }
+            if (purgeTargets.length > 0) {
+              const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Admin-Api-Key': config.mainAppApiKey,
+                },
+                body: JSON.stringify({ siteUrls: purgeTargets }),
+                signal: AbortSignal.timeout(5000),
+              })
+              if (!response.ok) {
+                console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
+              }
+            }
+          }
+        }
+      } catch (purgeError) {
+        console.warn('Failed to purge site-config cache:', purgeError)
+      }
     }
 
     // Audit log
