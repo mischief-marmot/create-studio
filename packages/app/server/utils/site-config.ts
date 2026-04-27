@@ -101,7 +101,10 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
     logger.error(`Error looking up site subscription for ${siteUrl}:`, error)
   }
 
-  if (subscriptionTier === 'pro') {
+  // Trial users preview the Pro experience, so they get in-DOM rendering
+  // too. Other Pro-only features (CTA customization, custom styling) stay
+  // gated on tier === 'pro' since trial users can't save those settings.
+  if (subscriptionTier === 'pro' || subscriptionTier === 'trial') {
     renderMode = 'in-dom'
   }
 
