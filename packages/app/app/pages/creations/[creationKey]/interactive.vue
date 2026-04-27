@@ -134,9 +134,18 @@ onMounted(async () => {
 
     await waitForSDK();
 
+    // SDK base64-encodes siteUrl as the /api/v2/site-config/<key> param;
+    // a bare domain produces a key the server rejects. Add a protocol.
+    // 8074 is the WP plugin docker-stack's port for `create.test`.
+    const domain = creationInfo.domain;
+    let siteUrl: string;
+    if (domain === 'localhost') siteUrl = 'http://localhost:8074';
+    else if (domain.endsWith('.test')) siteUrl = `http://${domain}`;
+    else siteUrl = `${window.location.protocol}//${domain}`;
+
     // Initialize the SDK
     await window.CreateStudio.init({
-        siteUrl: creationInfo.domain,
+        siteUrl,
         baseUrl: window.location.origin,
         debug: true
     });

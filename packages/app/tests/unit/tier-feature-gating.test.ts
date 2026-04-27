@@ -16,7 +16,7 @@ function computeSiteConfig(subscriptionTier: string) {
     showInteractiveMode = false
   }
 
-  if (subscriptionTier === 'pro') {
+  if (subscriptionTier === 'pro' || subscriptionTier === 'trial') {
     renderMode = 'in-dom'
   }
 
@@ -101,22 +101,22 @@ describe('Three-Tier Feature Gating', () => {
     })
   })
 
-  describe('Trial tier (same features as Free+)', () => {
+  describe('Trial tier (Free+ features + Pro in-DOM rendering)', () => {
     const config = computeSiteConfig('trial')
 
     it('should enable interactive mode', () => {
       expect(config.showInteractiveMode).toBe(true)
     })
 
-    it('should use iframe render mode', () => {
-      expect(config.renderMode).toBe('iframe')
+    it('should use in-dom render mode (so trial users preview the Pro experience)', () => {
+      expect(config.renderMode).toBe('in-dom')
     })
 
-    it('should disable in-DOM rendering', () => {
-      expect(config.features.inDomRendering).toBe(false)
+    it('should enable in-DOM rendering', () => {
+      expect(config.features.inDomRendering).toBe(true)
     })
 
-    it('should disable custom styling', () => {
+    it('should disable custom styling (Pro-only — trial cannot save settings)', () => {
       expect(config.features.customStyling).toBe(false)
     })
 

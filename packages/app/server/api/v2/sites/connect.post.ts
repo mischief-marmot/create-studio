@@ -21,7 +21,7 @@ import { SiteRepository, SiteUserRepository, UserRepository } from '~~/server/ut
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { rateLimitMiddleware } from '~~/server/utils/rateLimiter'
 import { generateSiteToken } from '~~/server/utils/auth'
-import { normalizeSiteUrl, isValidWordPressSiteUrl, parseAllowedTestDomains } from '~~/server/utils/url'
+import { normalizeSiteUrl, isValidWordPressSiteUrl, parseAllowedTestDomains, resolveSiteUrl } from '~~/server/utils/url'
 
 const CALLBACK_TIMEOUT = 15000 // 15 seconds
 
@@ -98,12 +98,18 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Follow redirects so the row stores the URL the WP plugin actually
+    // serves from (catches http→https, apex→www, apex→/blog). Without this,
+    // /api/v2/site-config/<siteKey> misses the row when the widget queries
+    // with the canonical URL but we stored the input URL.
+    const resolvedUrl = await resolveSiteUrl(normalizedUrl, { allowedDomains })
+
     const siteRepo = new SiteRepository()
     const siteUserRepo = new SiteUserRepository()
     const userRepo = new UserRepository()
 
     // Find or create canonical site
-    const site = await siteRepo.findOrCreateCanonicalSite(normalizedUrl, userId)
+    const site = await siteRepo.findOrCreateCanonicalSite(resolvedUrl, userId)
     logger.debug('Found/created site', { siteId: site.id, url: site.url })
 
     // Generate site JWT

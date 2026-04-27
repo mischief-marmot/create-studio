@@ -1,6 +1,7 @@
 import { SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
+import { getApexDomain, buildApexHostMatchPatterns } from '~~/server/utils/url'
 import { useLogger } from '@create-studio/shared/utils/logger'
-import { eq } from 'drizzle-orm'
+import { and, eq, isNull, like, or } from 'drizzle-orm'
 
 export interface SiteConfigResult {
   success: true
@@ -36,7 +37,43 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
   let ctaSubtitle = ''
 
   try {
-    const siteResult = await db.select().from(schema.sites).where(eq(schema.sites.url, siteUrl)).get()
+    let siteResult = await db.select().from(schema.sites).where(eq(schema.sites.url, siteUrl)).get()
+
+    // Fallback for the iframe interactive flow: creationKey only carries the
+    // apex domain (no protocol, no path), but the row was likely stored with
+    // www and/or a /blog-style subdir. Match by host variants so the gating
+    // still resolves to the right row instead of falling through to defaults.
+    // Read-only path; OK if it occasionally matches a sibling row at the same
+    // apex (worst case is a slightly wrong gate, not data corruption).
+    if (!siteResult) {
+      const apex = getApexDomain(siteUrl)
+      if (apex) {
+        const patterns = buildApexHostMatchPatterns(apex)
+        // Fires only on cache miss + exact-match miss, so the LIKE-driven
+        // table scan (idx_sites_url is BINARY-collated and won't be used by
+        // SQLite for LIKE) is fine at current Sites table size.
+        //
+        // TODO: when multiple sites share an apex (e.g. example.com/blog and
+        // example.com/shop as separate canonical rows), orderBy(id).limit(1)
+        // arbitrarily picks the oldest. Becomes load-bearing as more
+        // customers run subdir installs side-by-side. Revisit with a
+        // path-aware match if it bites.
+        siteResult = await db.select().from(schema.sites)
+          .where(and(
+            or(
+              // Exact equality — handles apex/www with no path.
+              ...patterns.exact.map(u => eq(schema.sites.url, u)),
+              // /-anchored prefix — required to prevent example.com from
+              // matching example.com.evil.com. See buildApexHostMatchPatterns.
+              ...patterns.prefix.map(p => like(schema.sites.url, `${p}%`)),
+            ),
+            isNull(schema.sites.canonical_site_id),
+          ))
+          .orderBy(schema.sites.id)
+          .limit(1)
+          .get()
+      }
+    }
 
     if (siteResult) {
       const subscriptionRepo = new SubscriptionRepository()
@@ -73,7 +110,10 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
     logger.error(`Error looking up site subscription for ${siteUrl}:`, error)
   }
 
-  if (subscriptionTier === 'pro') {
+  // Trial users preview the Pro experience, so they get in-DOM rendering
+  // too. Other Pro-only features (CTA customization, custom styling) stay
+  // gated on tier === 'pro' since trial users can't save those settings.
+  if (subscriptionTier === 'pro' || subscriptionTier === 'trial') {
     renderMode = 'in-dom'
   }
 

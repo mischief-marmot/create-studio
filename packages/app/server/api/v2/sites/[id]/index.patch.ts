@@ -9,6 +9,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
+import { purgeSiteConfigCache } from '~~/server/utils/site-config-cache'
 
 export default defineEventHandler(async (event) => {
   const {debug} = useRuntimeConfig()
@@ -197,6 +198,25 @@ export default defineEventHandler(async (event) => {
 
     // Return updated site
     const updatedSite = await siteRepo.findById(siteId)
+
+    // interactive_mode_* settings drive the /api/v2/site-config/<key>
+    // response served to widget visitors. Without this purge, edge entries
+    // serve the pre-toggle config for up to the 10-min TTL. Also purge on
+    // url changes since the cache key is keyed on the URL.
+    //
+    // hasProFields is a tight match for the inputs to buildSiteConfig
+    // (interactive_mode_enabled + button_text + cta_variant/title/subtitle) —
+    // every one of those round-trips into the cached response, so purging
+    // whenever any is touched is correct, not over-eager.
+    const needsConfigPurge = hasProFields || (url !== undefined && url !== existingSite.url)
+    if (needsConfigPurge && existingSite.url) {
+      const purgeTargets = [existingSite.url]
+      if (url && url !== existingSite.url) purgeTargets.push(url)
+      // The await here only blocks on the in-DC `cache.delete`. The global
+      // CF zone purge runs under `ctx.waitUntil` inside purgeSiteConfigCache
+      // (fire-and-forget), so we won't see a global-purge failure here.
+      await Promise.all(purgeTargets.map(u => purgeSiteConfigCache(event, u)))
+    }
 
     setResponseStatus(event, 200)
     logger.debug('Site updated successfully', updatedSite)
