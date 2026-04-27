@@ -12,7 +12,7 @@ export interface SiteConfigResult {
     ctaSubtitle: string
     baseUrl: string
     subscriptionTier: string
-    renderMode: 'iframe' | 'in-dom'
+    renderMode: 'new-tab' | 'in-dom'
     features: {
       inDomRendering: boolean
       customStyling: boolean
@@ -28,10 +28,10 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
   const logger = useLogger('SiteConfig')
 
   let subscriptionTier = 'free'
-  let renderMode: 'iframe' | 'in-dom' = 'iframe'
+  let renderMode: 'new-tab' | 'in-dom' = 'new-tab'
   let showInteractiveMode = true
   let buttonText = 'Try Interactive Mode!'
-  let ctaVariant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip' = 'inline-banner'
+  let ctaVariant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip' = 'sticky-bar'
   let ctaTitle = ''
   let ctaSubtitle = ''
 

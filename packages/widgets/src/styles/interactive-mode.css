@@ -236,6 +236,21 @@
     opacity: 1;
   }
 
+  & .cs-interactive-mode-sticky-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  & .cs-interactive-mode-sticky-hint {
+    color: var(--color-base-100, #fff);
+    font-size: 11px;
+    line-height: 1.2;
+    text-align: center;
+  }
+
   & .cs-interactive-mode-sticky-btn {
     padding: 10px 18px;
     background-color: var(--color-base-100, #fff);

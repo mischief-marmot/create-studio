@@ -9,24 +9,30 @@
       <strong>{{ displayTitle }}</strong>
       <span>{{ displaySubtitle }}</span>
     </div>
-    <button class="cs-interactive-mode-sticky-btn" @click="$emit('activate')">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="width:14px;height:14px;min-width:14px;display:inline-block;vertical-align:middle;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      {{ displayButtonText }}
-    </button>
+    <div class="cs-interactive-mode-sticky-action">
+      <button class="cs-interactive-mode-sticky-btn" @click="$emit('activate')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="width:14px;height:14px;min-width:14px;display:inline-block;vertical-align:middle;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        {{ displayButtonText }}
+      </button>
+      <NewTabHint v-if="opensInNewTab" class="cs-interactive-mode-sticky-hint" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import NewTabHint from './NewTabHint.vue'
 
 const props = defineProps<{
   title?: string
   subtitle?: string
   buttonText?: string
+  opensInNewTab?: boolean
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   activate: []
+  rendered: []
 }>()
 
 const displayTitle = computed(() => props.title || 'Ready to cook?')
@@ -37,6 +43,16 @@ const stickyEl = ref<HTMLElement | null>(null)
 const visible = ref(false)
 const cardRect = ref<{ left: number; width: number } | null>(null)
 const bottomOffset = ref(0)
+
+// Emit 'rendered' the first time the sticky bar actually becomes visible to the user
+// (i.e. they've scrolled to the instructions section). Fires once.
+let impressionFired = false
+watch(visible, (v) => {
+  if (v && !impressionFired) {
+    impressionFired = true
+    emit('rendered')
+  }
+})
 
 let observer: IntersectionObserver | null = null
 let resizeObserver: ResizeObserver | null = null

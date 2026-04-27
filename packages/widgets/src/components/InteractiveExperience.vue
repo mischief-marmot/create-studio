@@ -11,8 +11,8 @@
 
         <!-- Show spinning logo while loading -->
         <div v-if="!isHydrated || isLoadingCreation || !dataReady" class="cs:w-full cs:h-full cs:bg-base-100 cs:flex cs:items-center cs:justify-center cs:absolute cs:inset-0">
-            <!-- Show Create logo when in iframe, site favicon when in-DOM -->
-            <LogoSolo v-if="isInIframe" class="cs:size-24 animate-spin-slow" />
+            <!-- Show Create logo when in iframe or standalone on Studio domain, site favicon when in-DOM on publisher's site -->
+            <LogoSolo v-if="useStudioBranding" class="cs:size-24 animate-spin-slow" />
             <img v-else :src="siteFaviconUrl" class="cs:size-24 cs:animate-pulse" />
         </div>
 
@@ -27,8 +27,8 @@
 
             <!-- Skeleton overlay during initial positioning -->
             <div v-if="isLoadingPersistence" class="cs:absolute cs:inset-0 cs:z-50 cs:md:rounded-xl cs:overflow-hidden cs:flex cs:items-center cs:justify-center">
-                <!-- Show Create logo when in iframe, site favicon when in-DOM -->
-                <LogoSolo v-if="isInIframe" class="cs:size-24 animate-spin-slow" />
+                <!-- Show Create logo when in iframe or standalone on Studio domain, site favicon when in-DOM on publisher's site -->
+                <LogoSolo v-if="useStudioBranding" class="cs:size-24 animate-spin-slow" />
                 <img v-else :src="siteFaviconUrl" class="cs:size-24 cs:animate-pulse" />
             </div>
 
@@ -251,7 +251,7 @@
             <!-- Bottom Navigation Controls - Fixed at bottom for both mobile and desktop -->
             <div :class="[ 'cs:flex-shrink-0 cs:bg-base-200 cs:border-t cs:border-base-300 cs:relative', 'cs:md:absolute cs:md:bottom-0 cs:md:left-0 cs:md:right-0 cs:md:w-full' ]">
                 <div v-if="!finalHideAttribution" class="cs:hidden cs:absolute cs:md:block cs:top-1/2 cs:-translate-y-1/2 cs:left-6 cs:text-xs cs:lg:text-sm">
-                    Powered by <a href="{{ finalBaseUrl }}"><LogoSolo class="cs:size-5 cs:md:size-6 cs:inline-block cs:ml-1" /></a>
+                    Powered by <a :href="finalBaseUrl" target="_blank" rel="noopener"><LogoSolo class="cs:size-5 cs:md:size-6 cs:inline-block cs:ml-1" /></a>
                 </div>
                 <!-- Active Timers Panel -->
                 <ActiveTimers v-if="showActiveTimers" @close="showActiveTimers = false" />
@@ -345,6 +345,7 @@ import LogoSolo from './Logo/Solo.vue';
 import { QueueListIcon } from '@heroicons/vue/24/outline';
 import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, MinusIcon, PlusIcon, XMarkIcon } from '@heroicons/vue/20/solid';
 import { SharedStorageManager } from '@create-studio/shared';
+import { isOnStudioDomain as hostMatchesStudio } from '@create-studio/shared/utils/domain';
 import { useSharedTimerManager } from '../composables/useSharedTimerManager';
 import { getInitialState as getInitialReviewState } from '../composables/useReviewStorage';
 import { useReviewSubmission } from '../composables/useReviewSubmission';
@@ -435,12 +436,22 @@ const isInIframe = computed(() => {
     return window.self !== window.top
 })
 
+// Detect if hosted on the Create Studio domain (standalone /interactive page, FreePlus
+// new-tab flow). baseUrl is always the Studio origin regardless of render mode, so a
+// hostname match means we're running on the Studio and should use Studio branding.
+const isOnStudioDomain = computed(() => hostMatchesStudio(finalBaseUrl.value))
+
+// Use Create Studio branding when rendered in an iframe or standalone on the Studio domain.
+// Pro in-DOM mode (publisher's site, not iframe, not Studio domain) falls through to the
+// site favicon for seamless publisher branding.
+const useStudioBranding = computed(() => isInIframe.value || isOnStudioDomain.value)
+
 // Site favicon URL - use parent site's favicon when available
 const siteFaviconUrl = ref('')
 
 // Find the site's favicon
 const findSiteFavicon = () => {
-    if (typeof window === 'undefined' || isInIframe.value) return ''
+    if (typeof window === 'undefined' || useStudioBranding.value) return ''
 
     // 1. Look for <link rel="icon"> tag
     const appleIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement
@@ -813,6 +824,18 @@ onMounted(async () => {
 
     // Force re-read from localStorage to pick up checkbox state changes made while modal was closed
     storageManager.syncFromStorage();
+
+    // Standalone-on-Studio (FreePlus new-tab flow): link window.opener for bidirectional
+    // storage sync. Widget on the publisher's side already did the inverse on window.open.
+    if (isOnStudioDomain.value && typeof window !== 'undefined' && window.opener && document.referrer) {
+      try {
+        if (!window.opener.closed) {
+          storageManager.linkWindow(window.opener, new URL(document.referrer).origin);
+        }
+      } catch {
+        // Silent — opener gone or unparseable referrer
+      }
+    }
 
     // Update reactive creation state
     refreshCreationState();

@@ -61,7 +61,7 @@ export function parseCreationKey(creationKey: string): { domain: string; creatio
 /**
  * Checks if the current domain matches a creation key's domain
  * Useful for validating creation access
- * 
+ *
  * @param creationKey - Base64-encoded creation key
  * @param currentDomain - Current domain to check against (defaults to window.location.hostname)
  * @returns Boolean indicating if domains match
@@ -69,9 +69,30 @@ export function parseCreationKey(creationKey: string): { domain: string; creatio
 export function isCreationKeyValid(creationKey: string, currentDomain?: string): boolean {
   const parsed = parseCreationKey(creationKey)
   if (!parsed) return false
-  
+
   const domain = currentDomain || (typeof window !== 'undefined' ? window.location.hostname : '')
   const normalizedCurrent = normalizeDomain(domain)
-  
+
   return parsed.domain === normalizedCurrent
+}
+
+/**
+ * Checks if a hostname matches the hostname of the Studio baseUrl.
+ * Used to switch the Interactive Mode page between publisher branding (Pro in-DOM) and
+ * Studio branding (FreePlus new-tab flow or iframe). baseUrl is always the Studio origin.
+ *
+ * @param baseUrl - The Studio origin the SDK was initialized with
+ * @param hostname - The current hostname (defaults to window.location.hostname)
+ * @returns True when the hostname matches the baseUrl hostname
+ */
+export function isOnStudioDomain(baseUrl: string | null | undefined, hostname?: string): boolean {
+  if (!baseUrl) return false
+  const currentHost = hostname ?? (typeof window !== 'undefined' ? window.location.hostname : '')
+  if (!currentHost) return false
+  try {
+    const baseHost = new URL(baseUrl).hostname
+    return !!baseHost && currentHost === baseHost
+  } catch {
+    return false
+  }
 }

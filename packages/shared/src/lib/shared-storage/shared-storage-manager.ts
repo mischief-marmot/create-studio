@@ -60,9 +60,48 @@ export class SharedStorageManager {
   private storage: CreateStudioStorage
   private currentCreationKey: string | null = null
 
+  // Cross-tab windows we sync with (registered via linkWindow). Messages are posted to
+  // these with their specific origin, and inbound messages from these origins are trusted.
+  private linkedWindows: Array<{ win: Window; origin: string }> = []
+  private trustedOrigins: Set<string> = new Set()
+
   constructor() {
     this.storage = this.loadStorage()
     this.setupStorageSync()
+  }
+
+  /**
+   * Register a cross-tab window (e.g. window.opener, or a Window returned from
+   * window.open) for two-way storage sync. Origin is used both for outbound posts
+   * (as targetOrigin) and as the inbound event.origin allowlist. Immediately sends a
+   * STORAGE_REQUEST so the remote flushes its current state back for timestamp merge.
+   */
+  linkWindow(win: Window | null, targetOrigin: string): void {
+    if (!win || !targetOrigin) return
+    try {
+      if (win.closed) return
+    } catch {
+      return
+    }
+    if (this.linkedWindows.some((l) => l.win === win)) return
+    this.linkedWindows.push({ win, origin: targetOrigin })
+    this.trustedOrigins.add(targetOrigin)
+    try {
+      win.postMessage({ type: 'CREATE_STUDIO_STORAGE_REQUEST' }, targetOrigin)
+    } catch {
+      // Silent — bad origin or window gone
+    }
+  }
+
+  /** Remove a previously-linked window. Cleans the trusted-origin allowlist. */
+  unlinkWindow(win: Window): void {
+    const removed = this.linkedWindows.filter((l) => l.win === win).map((l) => l.origin)
+    this.linkedWindows = this.linkedWindows.filter((l) => l.win !== win)
+    for (const origin of removed) {
+      if (!this.linkedWindows.some((l) => l.origin === origin)) {
+        this.trustedOrigins.delete(origin)
+      }
+    }
   }
 
   /**
@@ -90,17 +129,26 @@ export class SharedStorageManager {
 
     // Cross-origin sync via postMessage
     window.addEventListener('message', (event) => {
-      // Handle storage sync messages - merge based on timestamps
-      if (event.data?.type === 'CREATE_STUDIO_STORAGE_SYNC' && event.data?.storage) {
+      const type = event.data?.type
+      const isStorageMsg = type === 'CREATE_STUDIO_STORAGE_SYNC' || type === 'CREATE_STUDIO_STORAGE_REQUEST'
+      if (!isStorageMsg) return
+
+      // Origin allowlist: accept from same origin, explicitly-linked cross-tab windows,
+      // or — for the legacy iframe flow — the parent window by object identity.
+      const sameOrigin = event.origin === window.location.origin
+      const linked = this.trustedOrigins.has(event.origin)
+      const parentFallback = isInIframe && event.source === window.parent
+      if (!sameOrigin && !linked && !parentFallback) return
+
+      if (type === 'CREATE_STUDIO_STORAGE_SYNC' && event.data?.storage) {
         try {
           this.mergeStorage(event.data.storage)
-        } catch (error) {
+        } catch {
           // Silent fail
         }
       }
 
-      // Handle storage request messages
-      if (event.data?.type === 'CREATE_STUDIO_STORAGE_REQUEST') {
+      if (type === 'CREATE_STUDIO_STORAGE_REQUEST') {
         this.broadcastStorage(event.source as Window)
       }
     })
@@ -155,7 +203,7 @@ export class SharedStorageManager {
   }
 
   /**
-   * Broadcast storage to other windows (parent or iframes)
+   * Broadcast storage to other windows (parent, iframes, linked cross-tab windows)
    */
   private broadcastStorage(target?: Window): void {
     const message = {
@@ -164,21 +212,36 @@ export class SharedStorageManager {
     }
 
     if (target) {
-      // Send to specific window
-      target.postMessage(message, '*')
-    } else {
-      // Send to parent if we're in iframe
-      if (window.parent !== window) {
-        window.parent.postMessage(message, '*')
-      }
+      // Send to specific window — match on linkedWindows to use a real origin if known
+      const linked = this.linkedWindows.find((l) => l.win === target)
+      target.postMessage(message, linked ? linked.origin : '*')
+      return
+    }
 
-      // Send to all iframes
-      const iframes = document.querySelectorAll('iframe')
-      iframes.forEach(iframe => {
-        if (iframe.contentWindow) {
-          iframe.contentWindow.postMessage(message, '*')
-        }
-      })
+    // Send to parent if we're in iframe (legacy)
+    if (window.parent !== window) {
+      window.parent.postMessage(message, '*')
+    }
+
+    // Send to all iframes (legacy)
+    const iframes = document.querySelectorAll('iframe')
+    iframes.forEach((iframe) => {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage(message, '*')
+      }
+    })
+
+    // Send to linked cross-tab windows (origin-scoped). Drop closed ones in place.
+    this.linkedWindows = this.linkedWindows.filter((l) => {
+      try { if (l.win.closed) return false } catch { return false }
+      return true
+    })
+    for (const { win, origin } of this.linkedWindows) {
+      try {
+        win.postMessage(message, origin)
+      } catch {
+        // Silent — remote gone
+      }
     }
   }
 
@@ -647,6 +710,22 @@ export class SharedStorageManager {
    */
   syncFromStorage(): void {
     this.refreshFromStorage()
+  }
+
+  /**
+   * Merge an incoming snapshot into storage using the same timestamp-based rules as
+   * the postMessage sync, then persist. Intended for cross-origin hydration — e.g.,
+   * the Interactive Mode new-tab flow passes publisher-side state via URL param.
+   */
+  hydrateFromSnapshot(
+    snapshot: { preferences?: Partial<UserPreferences>; state?: Record<string, CreationState> }
+  ): void {
+    this.mergeStorage({
+      id: this.storage.id,
+      preferences: (snapshot.preferences ?? {}) as UserPreferences,
+      state: snapshot.state ?? {}
+    })
+    this.saveStorage()
   }
 
   /**

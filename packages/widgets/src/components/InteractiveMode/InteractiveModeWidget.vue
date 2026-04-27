@@ -1,5 +1,5 @@
 <template>
-  <div ref="rootEl" class="cs-interactive-mode"
+  <div class="cs-interactive-mode"
     :class="[inDomRendering ? 'cs-interactive-mode-pro' : 'cs-interactive-mode-free']"
   >
     <!-- Button variant (default) -->
@@ -11,6 +11,10 @@
       @click="openModal"
     >
       {{ buttonText }}
+      <ArrowTopRightOnSquareIcon
+        v-if="!inDomRendering"
+        class="cs:w-4 cs:h-4 cs:inline-block cs:ml-1"
+      />
     </button>
 
     <!-- Inline Banner variant -->
@@ -18,7 +22,9 @@
       v-else-if="ctaVariant === 'inline-banner'"
       :title="ctaTitle"
       :subtitle="ctaSubtitle"
+      :opens-in-new-tab="!inDomRendering"
       @activate="openModal"
+      @rendered="handleCtaRendered"
     />
 
     <!-- Sticky Bar variant -->
@@ -27,7 +33,9 @@
       :title="ctaTitle"
       :subtitle="ctaSubtitle"
       :button-text="buttonText"
+      :opens-in-new-tab="!inDomRendering"
       @activate="openModal"
+      @rendered="handleCtaRendered"
     />
 
     <!-- Tooltip variant -->
@@ -35,7 +43,9 @@
       v-else-if="ctaVariant === 'tooltip'"
       :title="ctaTitle"
       :button-text="props.config.buttonText"
+      :opens-in-new-tab="!inDomRendering"
       @activate="openModal"
+      @rendered="handleCtaRendered"
     />
 
     <Teleport :to="teleportTarget">
@@ -62,16 +72,7 @@
             :id="`create-studio-modal-${config.creationId}`"
             class="cs:w-full cs:h-full cs:mx-auto"
           >
-            <iframe
-              v-if="!inDomRendering"
-              :src="iframeSrc"
-              class="cs:w-full cs:h-full cs:shadow-xl"
-              :title="`${config.creationName} - Interactive Mode`"
-              frameborder="0"
-              allow="camera; microphone; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            />
             <InteractiveExperience
-              v-else
               :creation-id="config.creationId"
               :domain="domain"
               :base-url="baseUrl"
@@ -95,23 +96,25 @@
 </template>
  
 <script setup lang="ts">
-import { XMarkIcon } from '@heroicons/vue/20/solid'
+import { XMarkIcon, ArrowTopRightOnSquareIcon } from '@heroicons/vue/20/solid'
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { SharedStorageManager } from '@create-studio/shared/lib/shared-storage/shared-storage-manager'
 import { createCreationKey, normalizeDomain } from '@create-studio/shared/utils/domain'
+import { encodeStateSnapshot } from '@create-studio/shared/utils/state-snapshot'
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { useAnalytics } from '../../composables/useAnalytics'
 import InteractiveExperience from '../InteractiveExperience.vue'
 import InteractiveModeBanner from './InteractiveModeBanner.vue'
 import InteractiveModeSticky from './InteractiveModeSticky.vue'
 import InteractiveModeTooltip from './InteractiveModeTooltip.vue'
+import type { CtaVariant } from './types'
 
 interface Props {
   config: {
     creationId: string
     creationName?: string
     buttonText?: string
-    ctaVariant?: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip'
+    ctaVariant?: CtaVariant
     ctaTitle?: string
     ctaSubtitle?: string
     siteUrl?: string
@@ -140,7 +143,7 @@ const inDomRendering = computed(() => {
 })
 
 // CTA variant from config (Pro tier feature, defaults to 'button')
-const ctaVariant = computed(() => {
+const ctaVariant = computed<CtaVariant>(() => {
   return props.config.ctaVariant || globalConfig?.ctaVariant || 'button'
 })
 
@@ -158,7 +161,20 @@ const scrollPosition = ref(0)
 const viewportWidth = ref(window.innerWidth)
 const modalContainer = ref<HTMLElement | null>(null)
 const interactiveButton = ref<HTMLElement | null>(null)
-const rootEl = ref<HTMLElement | null>(null)
+
+// Cached reference to the FreePlus standalone tab so repeat clicks refocus the existing
+// tab instead of opening a duplicate. Lost if the publisher's page reloads — acceptable.
+let interactiveWindow: Window | null = null
+
+// CTA impression tracking fires once, regardless of which variant emits. Each variant
+// owns its own "am I actually visible" detection (IntersectionObserver on its root,
+// or in sticky's case the existing observer on .mv-create-instructions).
+let ctaRenderedFired = false
+function handleCtaRendered() {
+  if (ctaRenderedFired) return
+  ctaRenderedFired = true
+  analytics.trackCtaRendered(ctaVariant.value)
+}
 
 // Mobile detection
 const isMobile = ref(false)
@@ -202,10 +218,27 @@ const baseUrl = computed(() => {
   return props.config.embedUrl || globalConfig?._meta?.baseUrl || window.location.origin
 })
 
-const iframeSrc = computed(() => {
+const interactiveUrl = computed(() => {
   logger.debug('Props', props.config)
   return `${baseUrl.value}/creations/${creationKey.value}/interactive`
 })
+
+// Bundle the publisher-side state (current creation's servings, checklist, step, timers
+// + unit preference) into the URL so the standalone page on create.studio can hydrate it.
+// localStorage is origin-scoped, so this is the only way to carry state across tabs.
+function buildInteractiveUrlWithState(): string {
+  storageManager.syncFromStorage()
+  const state = storageManager.getCreationState(creationKey.value)
+  const units = storageManager.getPreferences().units
+  if (!state && !units) return interactiveUrl.value
+  const snapshot = {
+    state: state ? { [creationKey.value]: state } : {},
+    preferences: units ? { units } : {}
+  }
+  const encoded = encodeURIComponent(encodeStateSnapshot(snapshot))
+  const sep = interactiveUrl.value.includes('?') ? '&' : '?'
+  return `${interactiveUrl.value}${sep}cs_state=${encoded}`
+}
 
 // Analytics for tracking CTA activations
 const analytics = useAnalytics({
@@ -222,13 +255,39 @@ function openModal() {
     inDomRendering: inDomRendering.value,
     creationId: props.config.creationId,
     creationKey: creationKey.value,
-    iframeSrc: iframeSrc.value,
+    interactiveUrl: interactiveUrl.value,
     baseUrl: baseUrl.value,
     globalConfig: globalConfig
   })
 
-  analytics.trackCtaActivated(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
+  analytics.trackCtaActivated(ctaVariant.value)
   analytics.sendBatch()
+
+  // FreePlus (non-Pro) opens the standalone interactive page in a new tab instead of
+  // mounting an iframe modal. This prevents ad-rendering issues inside iframes and
+  // creates upgrade pressure since the reader leaves the publisher's page.
+  // `noopener` is intentionally omitted so the standalone page can call
+  // window.opener.focus() to switch back to the publisher's tab. Both tabs are Create-
+  // controlled (widget on publisher's site opens Studio's page) so the trust is fine.
+  if (!inDomRendering.value) {
+    // If the tab we opened previously is still alive, refocus it instead of spawning a
+    // duplicate — this preserves the reader's place (timers, checked ingredients, etc.).
+    if (interactiveWindow && !interactiveWindow.closed) {
+      interactiveWindow.focus()
+      return
+    }
+    interactiveWindow = window.open(buildInteractiveUrlWithState(), '_blank')
+    // Register the new tab for bidirectional storage sync during the session. The URL
+    // param hydration handles initial state; linkWindow keeps them in sync after that.
+    if (interactiveWindow) {
+      try {
+        storageManager.linkWindow(interactiveWindow, new URL(baseUrl.value).origin)
+      } catch {
+        // Silent — bad baseUrl
+      }
+    }
+    return
+  }
 
   showModal.value = true
 
@@ -260,7 +319,7 @@ function openModal() {
   if (globalConfig?._meta?.debug) {
     logger.debug('Create Studio Interactive mode opened for creation:', props.config.creationId)
     logger.debug('Creation key:', creationKey.value)
-    logger.debug('iframe src:', iframeSrc.value)
+    logger.debug('interactive url:', interactiveUrl.value)
     logger.debug('Mobile mode:', isMobile.value)
     logger.debug('Viewport width:', viewportWidth)
   }
@@ -288,17 +347,6 @@ function closeModal() {
   // Restore body overflow
   document.body.style.overflow = ''
 
-  // Notify iframe to show Grow widget again (if using iframe mode)
-  if (!inDomRendering.value) {
-    const iframe = document.querySelector(`#create-studio-modal-${props.config.creationId} iframe`) as HTMLIFrameElement
-    if (iframe?.contentWindow) {
-      iframe.contentWindow.postMessage({
-        type: 'CREATE_STUDIO_INTERACTIVE_UNMOUNTED',
-        action: 'show-grow-widget'
-      }, '*')
-    }
-  }
-
   // Show Grow widget directly (when using in-DOM rendering)
   enableGrowWidget()
 }
@@ -320,14 +368,6 @@ function handleEscKey(event: KeyboardEvent) {
   }
 }
 
-// Listen for messages from iframe requesting to close
-function handleIframeCloseRequest(event: MessageEvent) {
-  if (event.data?.type === 'CREATE_STUDIO_CLOSE_MODAL') {
-    logger.info('📨 Received close request from iframe')
-    closeModal()
-  }
-}
-
 function handleResize() {
   viewportWidth.value = window.innerWidth
   // Update scroll position if modal is open to maintain alignment
@@ -344,24 +384,22 @@ function handleVisibilityChange() {
 }
 
 onMounted(() => {
-  // Track CTA render impression only once the CTA is actually visible to the
-  // user — mount time can fire while it's still below the fold. Fires once.
-  if (rootEl.value) {
-    let fired = false
-    const impressionObserver = new IntersectionObserver(
+  // Inline-button variant doesn't go through a child component, so observe the button
+  // element directly. Other variants emit @rendered when they become visible.
+  if (ctaVariant.value === 'button' && interactiveButton.value) {
+    const buttonObserver = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && !fired) {
-            fired = true
-            analytics.trackCtaRendered(ctaVariant.value as 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip')
-            impressionObserver.disconnect()
+          if (entry.isIntersecting) {
+            handleCtaRendered()
+            buttonObserver.disconnect()
           }
         }
       },
       { threshold: 0 }
     )
-    impressionObserver.observe(rootEl.value)
-    onBeforeUnmount(() => impressionObserver.disconnect())
+    buttonObserver.observe(interactiveButton.value)
+    onBeforeUnmount(() => buttonObserver.disconnect())
   }
 
   // Detect if device is mobile/tablet
@@ -382,8 +420,6 @@ onMounted(() => {
 
   // Add message listener for notification permission requests from iframe
   window.addEventListener('message', handleNotificationPermissionRequest)
-  window.addEventListener('message', handleGrowWidgetToggle)
-  window.addEventListener('message', handleIframeCloseRequest)
 
   // Find the Create card to teleport into
   const button = document.querySelector('.cs-interactive-mode-btn')
@@ -461,35 +497,11 @@ async function handleNotificationPermissionRequest(event: MessageEvent) {
   }
 }
 
-// Handle Grow widget toggle request from iframe
-function handleGrowWidgetToggle(event: MessageEvent) {
-  // Only process our specific message type
-  if (event.data?.type !== 'CREATE_STUDIO_INTERACTIVE_MOUNTED') {
-    return
-  }
-
-  logger.info('📨 Received Grow widget toggle request from iframe')
-
-  const growRoot = document.getElementById('grow-me-root')
-
-  if (growRoot) {
-    if (event.data.action === 'hide-grow-widget') {
-      logger.info('🙈 Hiding Grow widget')
-      growRoot.style.display = 'none'
-    } else if (event.data.action === 'show-grow-widget') {
-      logger.info('👁️ Showing Grow widget')
-      growRoot.style.display = ''
-    }
-  }
-}
-
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleEscKey)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   window.removeEventListener('resize', handleResize)
   window.removeEventListener('message', handleNotificationPermissionRequest)
-  window.removeEventListener('message', handleGrowWidgetToggle)
-  window.removeEventListener('message', handleIframeCloseRequest)
 })
 </script>
 

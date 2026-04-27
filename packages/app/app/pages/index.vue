@@ -247,7 +247,7 @@
               <tr v-for="feature in comparisonFeatures" :key="feature.name" class="hover:bg-base-100/50">
                 <td class="text-base-content px-4 py-4">{{ feature.name }}</td>
                 <td class="bg-base-100 px-4 py-4 text-center">
-                  <span v-if="feature.create === 'Free+'" class="text-base-content font-medium inline-flex items-center gap-1">
+                  <span v-if="feature.create === 'Free+'" class="text-base-content inline-flex items-center gap-1 font-medium">
                     Free+
                     <button @click="openWaitlistModal" class="tooltip tooltip-top cursor-pointer" data-tip="Coming soon — get notified!">
                       <BellAlertIcon class="size-5 text-primary" />
@@ -290,7 +290,7 @@
               <div class="border-primary/20 pt-4 mt-4 space-y-3 border-t">
                 <div v-for="feature in comparisonFeatures" :key="feature.name" class="flex items-start justify-between gap-3 py-2">
                   <span class="text-base-content text-sm">{{ feature.name }}</span>
-                  <span v-if="feature.create === 'Free+'" class="text-base-content flex-shrink-0 text-sm font-semibold inline-flex items-center gap-1">
+                  <span v-if="feature.create === 'Free+'" class="text-base-content inline-flex items-center flex-shrink-0 gap-1 text-sm font-semibold">
                     Free+
                     <button @click="openWaitlistModal" class="tooltip tooltip-left cursor-pointer" data-tip="Coming soon!">
                       <BellAlertIcon class="size-5 text-primary" />
@@ -599,11 +599,10 @@
         <div class="lg:grid-cols-3 grid gap-6">
           <!-- Create 2.0 Free Plan -->
           <div class="bg-base-100/50 border-base-300 rounded-2xl p-8 border">
-            <h3 class="mb-2 font-serif text-2xl">Create 2.0 Free</h3>
+            <h3 class="mb-2 font-serif text-2xl">Create Free</h3>
             <p class="text-base-content/70 mb-6 text-sm">Free forever</p>
             <div class="mb-8">
               <span class="text-5xl font-bold">$0</span>
-              <span class="text-base-content ml-2">forever</span>
             </div>
             <p class="text-base-content mb-8 text-sm">The original Create plugin with core recipe functionality. Completely free, not ad-supported, but does not include new features, updates, or support.</p>
             <div class="mb-8 space-y-3">
@@ -646,12 +645,12 @@
             <div class="-top-4 left-1/2 badge badge-accent absolute px-4 py-3 text-sm font-bold -translate-x-1/2">
               Coming Soon
             </div>
-            <h3 class="mb-2 font-serif text-2xl">Create 2.0 Free+</h3>
-            <p class="text-base-content mb-6 text-sm">Ad-supported — Coming Soon</p>
+            <h3 class="mb-2 font-serif text-2xl">Create Free+</h3>
+            <p class="text-base-content mb-6 text-sm">Interactive Mode runs on Create.Studio</p>
             <div class="mb-8">
               <span class="text-5xl font-bold">$0</span>
             </div>
-            <p class="text-base-content mb-8 text-sm">Support, updates, and all the new features including Interactive Mode with Create's ads (your ads run everywhere else).</p>
+            <p class="text-base-content mb-8 text-sm">Everything in Free, plus Interactive Mode and premium features. Interactive Mode opens in a new tab on create.studio.</p>
             <div class="mb-8 space-y-3">
               <p class="text-sm font-semibold">What's included</p>
               <ul class="space-y-2">
@@ -713,7 +712,7 @@
             <div class="-top-4 left-1/2 bg-gradient-to-r from-primary to-primary/80 text-primary-content absolute px-4 py-1 text-sm font-bold -translate-x-1/2 rounded-lg">
               Recommended
             </div>
-            <h3 class="mb-2 font-serif text-4xl">Create 2.0 Pro</h3>
+            <h3 class="mb-2 font-serif text-4xl">Create Pro</h3>
             <p class="text-base-content/70 mb-4 text-sm">Maximize revenue</p>
 
             <!-- Billing Toggle -->
@@ -738,7 +737,7 @@
               <p class="text-base-content/60 mt-2 text-xs">{{ proPricing[proBillingPeriod].note }}</p>
               <p class="text-primary mt-3 text-sm font-medium">Start with a 14-day free trial</p>
             </div>
-            <p class="text-base-content mb-8 text-sm">Everything in Create 2.0 Free, plus full customization and premium features to maximize your revenue.</p>
+            <p class="text-base-content mb-8 text-sm">Everything in Create Free, plus full customization and premium features to maximize your revenue. Interactive Mode stays in-page on your site.</p>
             <div class="mb-8 space-y-3">
               <p class="text-sm font-semibold">Pro features</p>
               <ul class="space-y-2">

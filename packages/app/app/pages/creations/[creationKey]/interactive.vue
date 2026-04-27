@@ -1,5 +1,22 @@
 <template>
-    <div class="h-dvh flex flex-col w-full">
+    <div class="h-dvh flex flex-col w-full relative">
+        <button
+            v-if="canReturnToPost"
+            type="button"
+            class="btn btn-sm btn-ghost bg-base-100/80 hover:bg-base-100 fixed top-3 left-3 z-50 backdrop-blur-sm shadow gap-2"
+            @click="returnToPost"
+        >
+            <ArrowLeftIcon class="w-4 h-4" />
+            Back to post
+        </button>
+        <button
+            type="button"
+            aria-label="Close"
+            class="btn btn-circle btn-sm btn-ghost bg-base-100/80 hover:bg-base-100 fixed top-3 right-3 z-50 backdrop-blur-sm shadow"
+            @click="handleClose"
+        >
+            <XMarkIcon class="w-5 h-5" />
+        </button>
         <div
             v-if="creationInfo"
             :id="`interactive-widget-${creationInfo.creationId}`"
@@ -20,13 +37,40 @@
 </template>
 
 <script setup lang="ts">
-import { parseCreationKey } from '@create-studio/shared';
+import { parseCreationKey, SharedStorageManager, decodeStateSnapshot } from '@create-studio/shared';
 import { onMounted, ref } from 'vue';
+import { XMarkIcon, ArrowLeftIcon } from '@heroicons/vue/20/solid';
 
 const { loadAds } = useRuntimeConfig().public;
 
 // Track if adhesion mobile wrapper exists
 const hasAdhesionWrapper = ref(false);
+
+// "Back to post" is only shown when this tab was script-opened from a still-open publisher
+// tab; window.opener is set (we don't pass 'noopener' on window.open) and not closed.
+const canReturnToPost = ref(false);
+
+// window.close() only works for script-opened tabs (the FreePlus new-tab flow); direct
+// visitors fall through to a referrer redirect, but never history.back() (would surprise
+// search-referred visitors).
+function handleClose() {
+    window.close();
+    if (document.referrer) {
+        // Delay so window.close() can land first; if it succeeded, this never runs.
+        setTimeout(() => {
+            window.location.href = document.referrer;
+        }, 100);
+    }
+}
+
+// Switch browser focus back to the publisher's tab without closing the IM tab.
+function returnToPost() {
+    try {
+        window.opener?.focus();
+    } catch {
+        // Cross-origin focus() is allowed, but be defensive in case the opener is gone.
+    }
+}
 
 if (loadAds) {
     useScript({
@@ -83,23 +127,28 @@ const disableRatingSubmission = route.query.disableRatingSubmission === 'true';
 onMounted(async () => {
     if (!creationInfo) return;
 
-    // Listen for Escape key to close modal (when in iframe)
-    const handleEscKey = (event: KeyboardEvent) => {
-        if (event.key === 'Escape' && window.parent !== window) {
-            console.log('🔑 Escape pressed in iframe, sending close message to parent');
-            window.parent.postMessage({
-                type: 'CREATE_STUDIO_CLOSE_MODAL'
-            }, '*');
+    // Hydrate state passed from the publisher's page via ?cs_state=... (FreePlus flow).
+    // localStorage is origin-scoped, so this URL param is how servings/units/checklist
+    // carry over. Run before widget mount so InteractiveExperience's SharedStorageManager
+    // reads the hydrated data on construction. Then strip the param so a refresh doesn't
+    // re-apply stale state and the URL stays shareable-clean.
+    const stateParam = route.query.cs_state;
+    if (typeof stateParam === 'string' && stateParam) {
+        const snapshot = decodeStateSnapshot<{ preferences?: Record<string, unknown>; state?: Record<string, unknown> }>(stateParam);
+        if (snapshot) {
+            new SharedStorageManager().hydrateFromSnapshot(snapshot as any);
         }
-    };
-    document.addEventListener('keydown', handleEscKey);
+        const cleanQuery = { ...route.query };
+        delete cleanQuery.cs_state;
+        window.history.replaceState({}, '', route.path + (Object.keys(cleanQuery).length ? '?' + new URLSearchParams(cleanQuery as Record<string, string>).toString() : ''));
+    }
 
-    // Notify parent window to hide Grow widget (when in iframe)
-    if (window.parent !== window) {
-        window.parent.postMessage({
-            type: 'CREATE_STUDIO_INTERACTIVE_MOUNTED',
-            action: 'hide-grow-widget'
-        }, '*');
+    // Enable "Back to post" only when the opener tab is still around. Reading .closed on a
+    // cross-origin opener is allowed by spec.
+    try {
+        canReturnToPost.value = !!(window.opener && !window.opener.closed);
+    } catch {
+        canReturnToPost.value = false;
     }
 
     // Check if adhesion mobile wrapper exists (only relevant when ads are enabled)
@@ -148,7 +197,7 @@ onMounted(async () => {
             creationId: creationInfo.creationId,
             domain: creationInfo.domain,
             baseUrl: window.location.origin,
-            hideAttribution: true,
+            hideAttribution: false,
             disableRatingSubmission
         });
         targetElement.style.height = '100%'
