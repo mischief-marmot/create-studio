@@ -9,6 +9,7 @@
 import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
+import { purgeSiteConfigCache } from '~~/server/utils/site-config-cache'
 
 export default defineEventHandler(async (event) => {
   const {debug} = useRuntimeConfig()
@@ -209,7 +210,6 @@ export default defineEventHandler(async (event) => {
     // whenever any is touched is correct, not over-eager.
     const needsConfigPurge = hasProFields || (url !== undefined && url !== existingSite.url)
     if (needsConfigPurge && existingSite.url) {
-      const { purgeSiteConfigCache } = await import('~~/server/utils/site-config-cache')
       await purgeSiteConfigCache(event, existingSite.url)
       if (url && url !== existingSite.url) {
         await purgeSiteConfigCache(event, url)

@@ -151,6 +151,11 @@ const MAX_REDIRECTS = 5
  * Falls back to the input URL on any failure (network, timeout, redirect cap,
  * mid-chain validation rejecting a hop, final URL rejected by normalization).
  * Caller should pass an already-normalized input.
+ *
+ * Known limitation: some WP/nginx setups return 405 to HEAD. Those land here
+ * as a non-3xx terminal status, so we silently store the un-resolved input
+ * URL — same outcome as before this function existed. A GET fallback on 405
+ * is Phase 2 if it bites real customers.
  */
 export async function resolveSiteUrl(
   inputUrl: string,

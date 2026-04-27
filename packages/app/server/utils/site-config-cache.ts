@@ -19,7 +19,7 @@ export function buildSiteConfigCacheKey(rootUrl: string, siteUrl: string): Reque
  *  fields change — without it, edge entries serve the pre-toggle config for
  *  up to 10 minutes. */
 export async function purgeSiteConfigCache(
-  event: H3Event | undefined,
+  event: H3Event,
   siteUrl: string,
 ): Promise<void> {
   const runtimeConfig = useRuntimeConfig()
@@ -59,7 +59,7 @@ export async function purgeSiteConfigCache(
     }
   }
 
-  const ctx = event ? (event.context.cloudflare as any)?.context : undefined
+  const ctx = (event.context.cloudflare as any)?.context
   if (ctx?.waitUntil) {
     ctx.waitUntil(purge())
   } else {
