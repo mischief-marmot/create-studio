@@ -130,7 +130,7 @@ export default defineEventHandler(async (event) => {
         if (item?.current_period_end) {
           localUpdate.current_period_end = new Date(item.current_period_end * 1000).toISOString()
         }
-        await subscriptionRepo.update(siteId, localUpdate)
+        await subscriptionRepo.update(siteId, localUpdate, event)
 
         logger.debug('Converted trial to paid for site', siteId)
 

@@ -48,7 +48,7 @@ export default defineEventHandler(async (event) => {
         status: 'trialing',
         tier: 'pro',
         trial_end: new Date(Date.now() + 14 * 86400 * 1000).toISOString(),
-      })
+      }, event)
     } else {
       // Cycle the tier: free → trial → free-plus → pro → free
       const currentTier = subscription.status === 'trialing' ? 'trial' : subscription.tier
@@ -60,7 +60,7 @@ export default defineEventHandler(async (event) => {
         tier: newTier === 'trial' ? 'pro' : newTier,
         status: newStatus,
         ...(newTier === 'trial' ? { trial_end: new Date(Date.now() + 14 * 86400 * 1000).toISOString() } : {}),
-      })
+      }, event)
     }
 
     // Notify the WordPress site of the tier change via webhook.

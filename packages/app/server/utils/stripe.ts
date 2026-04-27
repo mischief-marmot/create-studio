@@ -298,12 +298,12 @@ export async function handleWebhookEvent(event: Stripe.Event, h3Event?: H3Event)
       }
 
       if (existing) {
-        await subscriptionRepo.update(siteId, subscriptionData)
+        await subscriptionRepo.update(siteId, subscriptionData, h3Event)
       } else {
         await subscriptionRepo.create({
           site_id: siteId,
           ...subscriptionData,
-        })
+        }, h3Event)
       }
 
       // Compute effective tier and trial info for webhook
@@ -343,7 +343,7 @@ export async function handleWebhookEvent(event: Stripe.Event, h3Event?: H3Event)
         await subscriptionRepo.update(siteId, {
           status: 'canceled',
           tier: 'free',
-        })
+        }, h3Event)
 
         const siteRepo = new SiteRepository()
         const site = await siteRepo.findById(siteId)
@@ -370,7 +370,7 @@ export async function handleWebhookEvent(event: Stripe.Event, h3Event?: H3Event)
         if (subscription && subscription.status !== 'trialing') {
           await subscriptionRepo.update(subscription.site_id, {
             status: 'active',
-          })
+          }, h3Event)
         }
       }
 
@@ -390,7 +390,7 @@ export async function handleWebhookEvent(event: Stripe.Event, h3Event?: H3Event)
         if (subscription) {
           await subscriptionRepo.update(subscription.site_id, {
             status: 'past_due',
-          })
+          }, h3Event)
         }
       }
 

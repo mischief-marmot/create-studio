@@ -1,63 +1,74 @@
 import { describe, it, expect } from 'vitest'
+import {
+  MAX_PURGE_TARGETS,
+  validateSiteUrls,
+} from '../../server/utils/site-url-validation'
 
 /**
- * Contract tests for POST /api/v2/internal/purge-site-config-cache
- * (matches the lightweight spec-style pattern in beta-plugin-upload.test.ts).
+ * Tests for POST /api/v2/internal/purge-site-config-cache.
  *
- * Full handler-execution tests would need to mock h3 events, the auth util,
- * and Workers caches.default — high-cost relative to the orchestration
- * logic. These pin the contract: header name, status codes, body shape,
- * and the cap that prevents abuse.
+ * Auth (requireAdminApiKey) and the actual purge call (purgeSiteConfigCache,
+ * which reaches caches.default + the CF zone API) live in shared utilities
+ * and aren't exercised here — full handler-execution tests would need to
+ * mock h3 events, the Workers Cache global, and global $fetch, which is a
+ * poor cost/value ratio for the thin orchestration logic.
+ *
+ * What IS exercised: the request-validation logic, imported from the
+ * handler itself so tests catch drift instead of testing a stale copy.
  */
 
-const MAX_PURGE_TARGETS = 10
-
-describe('purge-site-config-cache — auth contract', () => {
-  it('uses the X-Admin-Api-Key header (matches notify-subscription-change pattern)', () => {
-    expect('X-Admin-Api-Key').toBe('X-Admin-Api-Key')
-  })
-
-  it('rejects with 401 when the key is missing or wrong', () => {
-    const errorResponse = { statusCode: 401, statusMessage: 'Unauthorized' }
-    expect(errorResponse.statusCode).toBe(401)
-  })
-})
-
 describe('purge-site-config-cache — body validation', () => {
-  // Mirrors the filter inside the handler: typeof === 'string' && length > 0.
-  function validateAndFilter(input: unknown): string[] {
-    if (!Array.isArray(input)) return []
-    return input.filter((u): u is string => typeof u === 'string' && u.length > 0)
-  }
+  it('keeps non-empty http and https URLs', () => {
+    const result = validateSiteUrls([
+      'https://example.com',
+      'http://localhost:3000',
+      'https://example.com/blog',
+    ])
+    expect(result).toEqual([
+      'https://example.com',
+      'http://localhost:3000',
+      'https://example.com/blog',
+    ])
+  })
 
-  it('keeps only non-empty strings', () => {
-    const result = validateAndFilter([
+  it('drops non-string and empty entries', () => {
+    const result = validateSiteUrls([
       'https://example.com',
       '',
       null,
+      undefined,
       123,
-      'https://example.com/blog',
+      'https://valid.com',
     ])
-    expect(result).toEqual(['https://example.com', 'https://example.com/blog'])
+    expect(result).toEqual(['https://example.com', 'https://valid.com'])
+  })
+
+  it('drops malformed URLs (no scheme, garbage strings)', () => {
+    const result = validateSiteUrls([
+      'https://example.com',
+      'example.com',
+      'not a url',
+      '/just/a/path',
+      'DROP TABLE sites',
+    ])
+    expect(result).toEqual(['https://example.com'])
+  })
+
+  it('drops non-http(s) schemes', () => {
+    const result = validateSiteUrls([
+      'https://example.com',
+      'file:///etc/passwd',
+      'ftp://example.com',
+      'javascript:alert(1)',
+    ])
+    expect(result).toEqual(['https://example.com'])
   })
 
   it('returns empty array for non-array input', () => {
-    expect(validateAndFilter(undefined)).toEqual([])
-    expect(validateAndFilter(null)).toEqual([])
-    expect(validateAndFilter('https://example.com')).toEqual([])
-    expect(validateAndFilter({ siteUrls: 'x' })).toEqual([])
-  })
-
-  it('rejects empty siteUrls with 400 (after filtering)', () => {
-    // Endpoint throws when filtered length === 0
-    const filtered = validateAndFilter([])
-    expect(filtered.length).toBe(0)
-    // Handler responds with 400 here; this test pins the contract intent.
-    const errorResponse = {
-      statusCode: 400,
-      message: 'siteUrls must be a non-empty string array',
-    }
-    expect(errorResponse.statusCode).toBe(400)
+    expect(validateSiteUrls(undefined)).toEqual([])
+    expect(validateSiteUrls(null)).toEqual([])
+    expect(validateSiteUrls('https://example.com')).toEqual([])
+    expect(validateSiteUrls({ siteUrls: 'x' })).toEqual([])
   })
 })
 
@@ -66,28 +77,18 @@ describe('purge-site-config-cache — abuse cap', () => {
     expect(MAX_PURGE_TARGETS).toBe(10)
   })
 
-  it('rejects oversized arrays with 400', () => {
-    const oversized = Array.from({ length: 50 }, (_, i) => `https://site-${i}.com`)
-    expect(oversized.length).toBeGreaterThan(MAX_PURGE_TARGETS)
-    const errorResponse = {
-      statusCode: 400,
-      message: 'siteUrls cannot exceed 10 entries',
-    }
-    expect(errorResponse.statusCode).toBe(400)
-  })
-
-  it('accepts arrays at the cap', () => {
+  it('passes an array exactly at the cap through validation unchanged', () => {
     const atCap = Array.from({ length: MAX_PURGE_TARGETS }, (_, i) => `https://site-${i}.com`)
-    expect(atCap.length).toBe(MAX_PURGE_TARGETS)
+    expect(validateSiteUrls(atCap)).toHaveLength(MAX_PURGE_TARGETS)
   })
-})
 
-describe('purge-site-config-cache — response shape', () => {
-  it('returns { success: true, purged: N }', () => {
-    const response = { success: true, purged: 2 }
-    expect(response).toHaveProperty('success', true)
-    expect(response).toHaveProperty('purged')
-    expect(typeof response.purged).toBe('number')
+  it('lets oversized arrays through validation — the handler enforces the cap separately with a 400', () => {
+    // validateSiteUrls is pure filtering (shape, scheme, non-empty); the
+    // size cap is checked after, in the handler. This pin documents that
+    // split so a future refactor doesn't accidentally double-enforce or
+    // drop the cap.
+    const oversized = Array.from({ length: 50 }, (_, i) => `https://site-${i}.com`)
+    expect(validateSiteUrls(oversized)).toHaveLength(50)
   })
 })
 
