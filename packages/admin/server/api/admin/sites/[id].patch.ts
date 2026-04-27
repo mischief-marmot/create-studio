@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { useAdminDb, sites, siteMeta } from "~~/server/utils/admin-db"
 import type { SiteSettings } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
+import { getAdminEnvironment } from '~~/server/utils/admin-env'
 
 /**
  * PATCH /api/admin/sites/[id]
@@ -133,6 +134,43 @@ export default defineEventHandler(async (event) => {
         statusCode: 400,
         message: 'No fields to update',
       })
+    }
+
+    // Purge the main app's site-config edge cache when fields that flow into
+    // the cached response changed. Admin doesn't hold CF API credentials, so
+    // it delegates to the main app's internal endpoint. Best-effort: a purge
+    // failure shouldn't break the admin write.
+    if (hasInteractiveFields || (hasSiteFields && 'url' in body && body.url?.trim() !== site.url)) {
+      try {
+        const config = useRuntimeConfig()
+        const adminEnv = getAdminEnvironment(event)
+        const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+        const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+        if (mainAppUrl) {
+          const purgeTargets: string[] = []
+          if (site.url) purgeTargets.push(site.url)
+          // On URL change, also purge the new key — visitors hitting the new
+          // URL would otherwise miss until the 10-min TTL expires.
+          if ('url' in body && body.url?.trim() && body.url.trim() !== site.url) {
+            purgeTargets.push(body.url.trim())
+          }
+          if (purgeTargets.length > 0) {
+            const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Admin-Api-Key': config.mainAppApiKey || '',
+              },
+              body: JSON.stringify({ siteUrls: purgeTargets }),
+            })
+            if (!response.ok) {
+              console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
+            }
+          }
+        }
+      } catch (purgeError) {
+        console.warn('Failed to purge site-config cache:', purgeError)
+      }
     }
 
     // Audit log
