@@ -10,7 +10,7 @@ import type {
 
 describe('types', () => {
   describe('AnalyticsEventType', () => {
-    it('should accept all 12 valid event type strings', () => {
+    it('should accept all valid event type strings', () => {
       const validTypes: AnalyticsEventType[] = [
         'cta_rendered',
         'cta_activated',
@@ -21,11 +21,10 @@ describe('types', () => {
         'page_view',
         'timer_start',
         'timer_complete',
-        'api_call',
         'trial_started',
         'trial_converted',
       ]
-      expect(validTypes).toHaveLength(12)
+      expect(validTypes).toHaveLength(11)
     })
   })
 
@@ -76,12 +75,6 @@ describe('types', () => {
       }>()
     })
 
-    it('should extract correct body for api_call', () => {
-      expectTypeOf<EventBody<'api_call'>>().toEqualTypeOf<{
-        version: 'v1' | 'v2'
-      }>()
-    })
-
     it('should extract correct body for trial_started', () => {
       expectTypeOf<EventBody<'trial_started'>>().toEqualTypeOf<{
         user_id: string
@@ -122,11 +115,11 @@ describe('types', () => {
     it('should allow null domain and session_id', () => {
       const event: StoredEvent = {
         id: 1,
-        type: 'api_call',
-        body: '{"version":"v1"}',
+        type: 'page_view',
+        body: '{"creation_id":"abc","page_number":1,"total_pages":3}',
         domain: null,
         session_id: null,
-        sample_rate: 0.001,
+        sample_rate: 0.1,
         created_at: 1710000000,
       }
 

@@ -8,7 +8,6 @@ export type AnalyticsEvent =
   | { type: 'page_view'; body: { creation_id: string; page_number: number; total_pages: number } }
   | { type: 'timer_start'; body: { creation_id: string; timer_id?: string } }
   | { type: 'timer_complete'; body: { creation_id: string; timer_id?: string } }
-  | { type: 'api_call'; body: { version: 'v1' | 'v2' } }
   | { type: 'trial_started'; body: { user_id: string; plan?: string; source?: string } }
   | { type: 'trial_converted'; body: { user_id: string; plan: string } }
 

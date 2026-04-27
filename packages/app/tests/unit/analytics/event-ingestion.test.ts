@@ -372,14 +372,10 @@ describe('Analytics Event Ingestion', () => {
       expect(SAMPLING_RATES['timer_complete']).toBe(0.1)
     })
 
-    it('has 0.1% sampling rate for api_call', () => {
-      expect(SAMPLING_RATES['api_call']).toBe(0.001)
-    })
-
     it('getSampleRate returns the correct rate for each event type', () => {
       expect(getSampleRate('cta_rendered')).toBe(1.0)
       expect(getSampleRate('page_view')).toBe(0.1)
-      expect(getSampleRate('api_call')).toBe(0.001)
+      expect(getSampleRate('timer_start')).toBe(0.1)
     })
 
     it('shouldSample respects Math.random for sub-1.0 rates', () => {
