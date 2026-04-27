@@ -56,6 +56,9 @@ export default defineEventHandler(async (event) => {
       await siteUserRepo.unverifyAllForSite(siteId)
       logger.info('Unverified all site connections', { siteId, url: site.url })
 
+      const { purgeSiteStatusCache } = await import('~~/server/utils/site-status-cache')
+      await purgeSiteStatusCache(event, siteId)
+
       return {
         success: true,
         message: 'Site disconnected successfully'
@@ -100,6 +103,9 @@ export default defineEventHandler(async (event) => {
     await siteUserRepo.unverify(userId, siteId)
 
     logger.info('Unverified site connection for user', { userId, siteId, url: site.url })
+
+    const { purgeSiteStatusCache } = await import('~~/server/utils/site-status-cache')
+    await purgeSiteStatusCache(event, siteId)
 
     return {
       success: true,

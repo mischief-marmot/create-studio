@@ -103,6 +103,11 @@ export async function enqueueSubscriptionChange(
 
   if (event) scheduleImmediateDelivery(event, id)
 
+  // Bust the 24h status cache so the plugin sees the new state on its next
+  // poll instead of waiting for the natural TTL.
+  const { purgeSiteStatusCache } = await import('./site-status-cache')
+  await purgeSiteStatusCache(event, siteId)
+
   return id
 }
 

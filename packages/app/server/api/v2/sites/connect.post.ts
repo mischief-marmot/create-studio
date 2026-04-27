@@ -167,6 +167,10 @@ export default defineEventHandler(async (event) => {
 
       logger.info('Site connected successfully', { userId, siteId: site.id, url: site.url })
 
+      // Status response now reflects new connection state
+      const { purgeSiteStatusCache } = await import('~~/server/utils/site-status-cache')
+      await purgeSiteStatusCache(event, site.id)
+
       return {
         success: true,
         return_url,

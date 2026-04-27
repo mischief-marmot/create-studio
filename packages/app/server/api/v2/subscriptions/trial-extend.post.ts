@@ -88,6 +88,10 @@ export default defineEventHandler(async (event) => {
 
     logger.debug('Trial extended for site', siteId, { step, newTrialEnd, daysRemaining })
 
+    // Bust the 24h status cache so the plugin sees the new trial end immediately
+    const { purgeSiteStatusCache } = await import('~~/server/utils/site-status-cache')
+    await purgeSiteStatusCache(event, siteId)
+
     return {
       success: true,
       new_trial_end: newTrialEnd,
