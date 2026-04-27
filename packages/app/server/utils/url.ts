@@ -255,14 +255,22 @@ export async function resolveSiteUrl(
  * (no protocol, no path), and stored Sites.url commonly includes a path
  * like /blog. Apex matching lets the gating still find the row.
  *
- * Returns null on parse failure. Other subdomains are preserved verbatim
- * (only `www.` is stripped) since `blog.example.com` and `shop.example.com`
- * are typically distinct WordPress installs.
+ * Returns null on parse failure or when the host contains any character that
+ * can't appear in a registered DNS domain (`[a-z0-9.-]` only). The
+ * char-class restriction defends the apex-fallback's `LIKE` query against
+ * SQL wildcard injection — `_` is a valid hostname char per the WHATWG URL
+ * spec but matches any single char in LIKE, so an attacker-crafted siteKey
+ * decoding to `https://example_com` could otherwise hit unrelated rows.
+ *
+ * Other subdomains are preserved verbatim (only `www.` is stripped) since
+ * `blog.example.com` and `shop.example.com` are typically distinct WP installs.
  */
 export function getApexDomain(siteUrl: string): string | null {
   try {
     const host = new URL(siteUrl).hostname.toLowerCase()
-    return host.startsWith('www.') ? host.slice(4) : host
+    const apex = host.startsWith('www.') ? host.slice(4) : host
+    if (!/^[a-z0-9.-]+$/.test(apex)) return null
+    return apex
   } catch {
     return null
   }

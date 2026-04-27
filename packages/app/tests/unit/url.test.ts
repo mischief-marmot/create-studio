@@ -241,6 +241,20 @@ describe('getApexDomain', () => {
   it('returns null for an empty string', () => {
     expect(getApexDomain('')).toBeNull()
   })
+
+  // The apex feeds straight into a SQL LIKE pattern in buildSiteConfig.
+  // Any char that LIKE treats as a metacharacter (`_`, `%`) — even though
+  // the WHATWG URL parser allows it in hostnames — would let an
+  // attacker-crafted siteKey match unrelated rows. Reject up front.
+  it('returns null when the apex contains an underscore (anti-injection)', () => {
+    // new URL() accepts `_` in hostnames per WHATWG URL, but real
+    // HTTP-serving domains don't have it. Reject so it can't reach the
+    // LIKE pattern as a single-char wildcard. We reject any `_` in the
+    // returned apex — including inside subdomains — for the same reason.
+    expect(getApexDomain('https://example_com')).toBeNull()
+    expect(getApexDomain('https://www.example_com')).toBeNull()
+    expect(getApexDomain('https://blog_one.example.com')).toBeNull()
+  })
 })
 
 /**
