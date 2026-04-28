@@ -106,6 +106,78 @@ export async function enqueueSubscriptionChange(
   return id
 }
 
+/** The webhook payload's settings field set. Exported so callers can detect
+ *  "any interactive_mode_* in body" without listing keys themselves. */
+export const INTERACTIVE_SETTINGS_KEYS = [
+  'interactive_mode_enabled',
+  'interactive_mode_button_text',
+  'interactive_mode_cta_variant',
+  'interactive_mode_cta_title',
+  'interactive_mode_cta_subtitle',
+] as const
+
+/** Coerce body input to the webhook payload shape. Loops over
+ *  INTERACTIVE_SETTINGS_KEYS so the constant is the single source of truth.
+ *  Free-text fields (button_text / cta_title / cta_subtitle) coerce
+ *  null/non-string to '' — plugin treats '' as "clear this option".
+ *  cta_variant is an enum, so non-strings are skipped instead of coerced
+ *  (sending '' for an enum has ambiguous plugin semantics). */
+export function normalizeInteractiveSettingsForWebhook(
+  input: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const key of INTERACTIVE_SETTINGS_KEYS) {
+    if (input[key] === undefined) continue
+    const v = input[key]
+    if (key === 'interactive_mode_enabled') {
+      out[key] = !!v
+    } else if (key === 'interactive_mode_cta_variant') {
+      // Skip non-strings: omit lets the plugin keep the existing enum value.
+      if (typeof v === 'string') out[key] = v.trim()
+    } else {
+      out[key] = typeof v === 'string' ? v.trim() : ''
+    }
+  }
+  return out
+}
+
+/** Pure builder for the enqueue args; lets tests pin the payload shape. */
+export function buildSettingsUpdateEnqueueArgs(
+  siteId: number,
+  siteUrl: string,
+  rawSettings: Record<string, unknown>,
+): { type: MessageType; payload: Record<string, unknown>; options: EnqueueOptions } {
+  return {
+    type: 'wordpress_webhook',
+    payload: {
+      siteUrl,
+      payload: {
+        type: 'settings_update',
+        data: { settings: normalizeInteractiveSettingsForWebhook(rawSettings) },
+      },
+    },
+    options: { siteId },
+  }
+}
+
+/** Enqueue a settings_update webhook. Returns null (no row written) when
+ *  the input has no recognized settings — protects every caller from
+ *  persisting no-op queue rows. Same delivery semantics as
+ *  enqueueSubscriptionChange otherwise. */
+export async function enqueueSettingsUpdate(
+  siteId: number,
+  siteUrl: string,
+  rawSettings: Record<string, unknown>,
+  event?: H3Event,
+): Promise<number | null> {
+  const args = buildSettingsUpdateEnqueueArgs(siteId, siteUrl, rawSettings)
+  const settings = (args.payload.payload as { data: { settings: Record<string, unknown> } }).data.settings
+  if (Object.keys(settings).length === 0) return null
+  const id = await enqueue(args.type, args.payload, args.options)
+  if (event) scheduleImmediateDelivery(event, id)
+  return id
+}
+
 /**
  * Attempt to deliver a specific queued message out-of-band, piggy-backing on
  * the current request's Cloudflare execution context. Used to close the gap

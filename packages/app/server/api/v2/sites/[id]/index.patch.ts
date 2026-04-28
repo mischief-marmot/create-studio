@@ -10,6 +10,7 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { purgeSiteConfigCache } from '~~/server/utils/site-config-cache'
+import { enqueueSettingsUpdate, INTERACTIVE_SETTINGS_KEYS } from '~~/server/utils/message-queue'
 
 export default defineEventHandler(async (event) => {
   const {debug} = useRuntimeConfig()
@@ -34,9 +35,12 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { name, url, interactive_mode_enabled, interactive_mode_button_text, interactive_mode_cta_variant, interactive_mode_cta_title, interactive_mode_cta_subtitle } = body
 
-    // Validate input - at least one field must be provided
+    // Validate input - at least one field must be provided. The interactive
+    // field set is derived from INTERACTIVE_SETTINGS_KEYS so adding a new
+    // entry to that constant auto-extends the gate here and inside
+    // normalizeInteractiveSettingsForWebhook.
     const hasGeneralFields = name !== undefined || url !== undefined
-    const hasProFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined || interactive_mode_cta_variant !== undefined || interactive_mode_cta_title !== undefined || interactive_mode_cta_subtitle !== undefined
+    const hasProFields = INTERACTIVE_SETTINGS_KEYS.some(k => body[k] !== undefined)
 
     if (!hasGeneralFields && !hasProFields) {
       setResponseStatus(event, 400)
@@ -165,34 +169,19 @@ export default defineEventHandler(async (event) => {
       await siteMetaRepo.updateSettings(siteId, metaSettings)
     }
 
-    // Send settings_update webhook to WordPress plugin for pro field changes
+    // Push pro-field changes to the plugin. enqueueSettingsUpdate handles
+    // coercion (only fields present in the input get sent) — pass raw.
     if (hasProFields && existingSite.url) {
-      const webhookSettings: Record<string, unknown> = {}
-      if (interactive_mode_enabled !== undefined) {
-        webhookSettings.interactive_mode_enabled = !!interactive_mode_enabled
-      }
-      if (interactive_mode_button_text !== undefined) {
-        webhookSettings.interactive_mode_button_text = interactive_mode_button_text || ''
-      }
-      if (interactive_mode_cta_variant !== undefined) {
-        webhookSettings.interactive_mode_cta_variant = interactive_mode_cta_variant
-      }
-      if (interactive_mode_cta_title !== undefined) {
-        webhookSettings.interactive_mode_cta_title = interactive_mode_cta_title || ''
-      }
-      if (interactive_mode_cta_subtitle !== undefined) {
-        webhookSettings.interactive_mode_cta_subtitle = interactive_mode_cta_subtitle || ''
-      }
-
       try {
-        const { sendWebhook } = await import('~~/server/utils/webhooks')
-        await sendWebhook(existingSite.url, {
-          type: 'settings_update',
-          data: { settings: webhookSettings },
-        })
+        await enqueueSettingsUpdate(siteId, existingSite.url, {
+          interactive_mode_enabled,
+          interactive_mode_button_text,
+          interactive_mode_cta_variant,
+          interactive_mode_cta_title,
+          interactive_mode_cta_subtitle,
+        }, event)
       } catch (webhookError) {
-        // Don't fail the request if webhook dispatch fails
-        logger.warn('Failed to send settings_update webhook', webhookError)
+        logger.warn('Failed to enqueue settings_update webhook', webhookError)
       }
     }
 

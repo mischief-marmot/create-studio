@@ -54,16 +54,10 @@ export default defineEventHandler(async (event) => {
 
     let hasUpdates = false
     const hasSiteFields = 'name' in body || 'url' in body
-    // List every interactive_mode_* field buildSiteConfig reads, even ones
-    // the admin form doesn't expose today. Keeps the cache-purge trigger
-    // correct if the form expands later — otherwise a new field added here
-    // without touching the trigger silently re-introduces the stale-cache bug.
-    const hasInteractiveFields =
-      'interactive_mode_enabled' in body
-      || 'interactive_mode_button_text' in body
-      || 'interactive_mode_cta_variant' in body
-      || 'interactive_mode_cta_title' in body
-      || 'interactive_mode_cta_subtitle' in body
+    // Prefix-derived so a future interactive_mode_* field auto-flows
+    // through detection, the cache purge, and the webhook dispatch
+    // without touching this file.
+    const hasInteractiveFields = Object.keys(body).some(k => k.startsWith('interactive_mode_'))
 
     // Update Sites table fields (name, url)
     if (hasSiteFields) {
@@ -156,6 +150,43 @@ export default defineEventHandler(async (event) => {
       // visitors hitting the new URL don't sit on a stale entry until TTL.
       const purgeTargets = [site.url, trimmedUrl && trimmedUrl !== site.url ? trimmedUrl : null]
       await purgeSiteConfigCache(event, purgeTargets, { siteId })
+    }
+
+    // Delegate settings_update webhook to main app (admin has no signing keys).
+    if (hasInteractiveFields && site.url) {
+      try {
+        const config = useRuntimeConfig()
+        if (!config.mainAppApiKey) {
+          console.warn('mainAppApiKey not configured — skipping settings_update webhook')
+        } else {
+          const adminEnv = getAdminEnvironment(event)
+          const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+          const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+          if (!mainAppUrl) {
+            console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping settings_update webhook')
+          } else {
+            // Prefix-filter so every interactive_mode_* in body propagates
+            // automatically. Endpoint normalizes via the shared helper.
+            const rawSettings = Object.fromEntries(
+              Object.entries(body).filter(([k]) => k.startsWith('interactive_mode_')),
+            )
+            const response = await fetch(`${mainAppUrl}/api/v2/internal/dispatch-settings-webhook`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Admin-Api-Key': config.mainAppApiKey,
+              },
+              body: JSON.stringify({ siteId, siteUrl: site.url, settings: rawSettings }),
+              signal: AbortSignal.timeout(5000),
+            })
+            if (!response.ok) {
+              console.warn(`settings_update webhook dispatch failed: ${response.status} ${response.statusText}`)
+            }
+          }
+        }
+      } catch (webhookError) {
+        console.warn('Failed to dispatch settings_update webhook:', webhookError)
+      }
     }
 
     // Audit log
