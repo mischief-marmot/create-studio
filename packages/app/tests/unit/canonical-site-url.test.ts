@@ -1,58 +1,83 @@
-import { describe, it, expect } from 'vitest'
-import { getApexDomain, buildApexHostMatchPatterns } from '../../server/utils/url'
+import { describe, it, expect, vi } from 'vitest'
+import { resolveCanonicalSiteUrl } from '../../server/utils/canonical-site-url'
 
-/**
- * findCanonicalSiteUrl combines an exact-URL lookup with an apex-fallback
- * LIKE search. The full handler can't be unit-tested without mocking the
- * Drizzle global `db`, but the lookup logic is built from two pure helpers
- * (getApexDomain + buildApexHostMatchPatterns) that ARE unit-tested
- * individually. This file pins the contract: which input URLs would reach
- * each lookup branch, and that the apex variants stay anchored.
- *
- * Drift hazard: if a future change widens or tightens the fallback patterns,
- * the corresponding tests in url.test.ts catch it. These tests document
- * the fetch-creation use case so future readers know why the helper exists.
- */
-describe('findCanonicalSiteUrl — input shape contract', () => {
-  it('a request from the widget at apex would trigger the apex fallback', () => {
-    // Widget computes site_url as `${protocol}//${normalizeDomain(siteUrl)}`,
-    // which strips www. and any path. So fetch-creation often receives a
-    // bare-apex URL like https://slimmingeats.com.
-    const widgetSiteUrl = 'https://slimmingeats.com'
-    expect(getApexDomain(widgetSiteUrl)).toBe('slimmingeats.com')
+/** Tests the pure orchestration; the wrapping findCanonicalSiteUrl that does
+ *  the actual Drizzle calls is integration-territory and not covered here. */
+describe('resolveCanonicalSiteUrl', () => {
+  it('returns the exact-match URL and skips the apex query', async () => {
+    const exact = vi.fn(async () => ({ url: 'https://example.com/blog' }))
+    const apex = vi.fn(async () => ({ url: 'should-not-be-called' }))
+
+    const result = await resolveCanonicalSiteUrl('https://example.com/blog', exact, apex)
+
+    expect(result).toBe('https://example.com/blog')
+    expect(exact).toHaveBeenCalledWith('https://example.com/blog')
+    expect(apex).not.toHaveBeenCalled()
   })
 
-  it('a request matching Sites.url exactly would skip the fallback', () => {
-    // When Sites.url is stored exactly as the widget computes (no /blog
-    // subdir, no www.), exact-match returns the row and the apex fallback
-    // never fires.
-    const url = 'https://example.com'
-    expect(getApexDomain(url)).toBe('example.com')
+  it('falls back to apex query when exact misses', async () => {
+    const exact = vi.fn(async () => null)
+    const apex = vi.fn(async () => ({ url: 'https://www.slimmingeats.com/blog' }))
+
+    const result = await resolveCanonicalSiteUrl('https://slimmingeats.com', exact, apex)
+
+    expect(result).toBe('https://www.slimmingeats.com/blog')
+    expect(exact).toHaveBeenCalledWith('https://slimmingeats.com')
+    expect(apex).toHaveBeenCalledWith('slimmingeats.com')
   })
 
-  it('apex fallback for slimmingeats.com would match the stored /blog row', () => {
-    // Stored row: https://www.slimmingeats.com/blog
-    // Widget request: https://slimmingeats.com
-    // Expected: prefix pattern `https://www.slimmingeats.com/` matches.
-    const patterns = buildApexHostMatchPatterns('slimmingeats.com')
-    const stored = 'https://www.slimmingeats.com/blog'
-    const matched = patterns.prefix.some(p => stored.startsWith(p))
-    expect(matched).toBe(true)
+  it('returns null when both exact and apex miss', async () => {
+    const exact = vi.fn(async () => null)
+    const apex = vi.fn(async () => null)
+
+    const result = await resolveCanonicalSiteUrl('https://unknown.com', exact, apex)
+
+    expect(result).toBeNull()
+    expect(exact).toHaveBeenCalledTimes(1)
+    expect(apex).toHaveBeenCalledTimes(1)
   })
 
-  it('apex fallback would NOT match a different apex with the same prefix', () => {
-    // Anti-spoof: a row at https://slimmingeats.com.evil.com/blog must not
-    // be returned for a slimmingeats.com query.
-    const patterns = buildApexHostMatchPatterns('slimmingeats.com')
-    const spoofed = 'https://slimmingeats.com.evil.com/blog'
-    const matched = patterns.prefix.some(p => spoofed.startsWith(p))
-    expect(matched).toBe(false)
+  it('returns null and skips apex query when input is unparseable', async () => {
+    // getApexDomain returns null for non-DNS-clean inputs (anti-injection).
+    const exact = vi.fn(async () => null)
+    const apex = vi.fn(async () => ({ url: 'should-not-be-called' }))
+
+    const result = await resolveCanonicalSiteUrl('not a url', exact, apex)
+
+    expect(result).toBeNull()
+    expect(exact).toHaveBeenCalledTimes(1)
+    expect(apex).not.toHaveBeenCalled()
   })
 
-  it('returns null path for an unparseable input', () => {
-    // findCanonicalSiteUrl should return null when getApexDomain returns
-    // null (i.e. URL parse failure or non-DNS chars).
-    expect(getApexDomain('not a url')).toBeNull()
-    expect(getApexDomain('https://example_com')).toBeNull()
+  it('returns null when exact returns a row but with null url', async () => {
+    // Sites.url is nullable in the schema; defend against that edge.
+    const exact = vi.fn(async () => ({ url: null }))
+    const apex = vi.fn(async () => ({ url: 'https://www.example.com/blog' }))
+
+    const result = await resolveCanonicalSiteUrl('https://example.com', exact, apex)
+
+    // Falls through to apex since exact returned null url.
+    expect(result).toBe('https://www.example.com/blog')
+    expect(apex).toHaveBeenCalled()
+  })
+
+  it('passes the apex (www. stripped) to the apex query, not the full host', async () => {
+    const exact = vi.fn(async () => null)
+    const apex = vi.fn(async () => null)
+
+    await resolveCanonicalSiteUrl('https://www.example.com', exact, apex)
+
+    expect(apex).toHaveBeenCalledWith('example.com')
+  })
+
+  it('rejects an apex with LIKE metacharacters before reaching the apex query', async () => {
+    // getApexDomain refuses non-DNS chars (anti SQL-LIKE-injection).
+    const exact = vi.fn(async () => null)
+    const apex = vi.fn(async () => ({ url: 'should-not-be-called' }))
+
+    const result = await resolveCanonicalSiteUrl('https://example_com', exact, apex)
+
+    expect(result).toBeNull()
+    expect(apex).not.toHaveBeenCalled()
   })
 })
