@@ -1,4 +1,5 @@
 import { transformCreationToHowTo } from '~~/server/utils/creationTransformer'
+import { findCanonicalSiteUrl } from '~~/server/utils/canonical-site-url'
 import type { HowTo } from '~~/types/schema-org'
 import { useLogger } from '@create-studio/shared/utils/logger'
 
@@ -149,8 +150,10 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  // No cache - fetch fresh data from WordPress API
-  const url = `${site_url}/wp-json/mv-create/v1/creations/${creation_id}`
+  // No cache — resolve canonical site URL before the WP REST call.
+  // Lazy on purpose: cache hits skip this DB round trip entirely.
+  const wpSiteUrl = await findCanonicalSiteUrl(site_url) ?? site_url
+  const url = `${wpSiteUrl}/wp-json/mv-create/v1/creations/${creation_id}`
 
   try {
     logger.info(`🌐 Fetching from WordPress API: ${url}`)
@@ -158,9 +161,10 @@ export default defineEventHandler(async (event) => {
     const response = await $fetch<WPCreationResponse>(url)
     checkpoints.wpFetchEnd = performance.now()
 
-    // Transform the response to HowTo format
+    // Transform the response to HowTo format. wpSiteUrl is canonical so
+    // any absolute URLs the transformer emits point at the right host.
     checkpoints.transformStart = performance.now()
-    const transformedData = await transformCreationToHowTo(response, site_url)
+    const transformedData = await transformCreationToHowTo(response, wpSiteUrl)
     checkpoints.transformEnd = performance.now()
 
     // Cache the transformed data in KV
@@ -249,12 +253,15 @@ async function validateAndRefreshCacheInBackground(
   config: any
 ) {
   try {
-    const url = `${siteUrl}/wp-json/mv-create/v1/creations/${creationId}`
+    // Resolve canonical URL for the WP call. Lookup runs in the background,
+    // not on the cache-hit response path, so it doesn't add latency.
+    const wpSiteUrl = await findCanonicalSiteUrl(siteUrl) ?? siteUrl
+    const url = `${wpSiteUrl}/wp-json/mv-create/v1/creations/${creationId}`
     const response = await $fetch<WPCreationResponse>(url)
 
     // Check if cache is stale
     if (response.modified !== cachedCreation.modified) {
-      const transformedData = await transformCreationToHowTo(response, siteUrl)
+      const transformedData = await transformCreationToHowTo(response, wpSiteUrl)
 
       const wrappedData: CachedCreation = {
         data: transformedData,
