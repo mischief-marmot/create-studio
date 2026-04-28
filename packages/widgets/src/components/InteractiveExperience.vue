@@ -258,24 +258,24 @@
 
                 <!-- Supplies Dropdown Panel (only shows after slide 0) -->
                 <div v-if="showSupplies && currentSlide > 0"
-                    class="cs:absolute cs:bottom-[120%] cs:left-0 cs:right-0 cs:mx-auto cs:bg-base-200 cs:border-[0.25px] cs:border-base-100/60 cs:shadow-xl cs:overflow-y-auto cs:max-w-[90%] cs:sm:max-w-lg cs:rounded-2xl cs:z-50">
-                    <div class="cs:p-4">
-                        <div class="cs:flex cs:items-center cs:justify-between cs:mb-3">
-                            <h3 class="cs:font-semibold cs:text-base cs:text-base-content">
-                                {{ suppliesLabel }}
-                                <span v-if="servingsMultiplier !== 1" class="cs:text-sm cs:font-normal cs:text-base-content/80">
-                                    ({{ servingsMultiplier }}x)
-                                </span>
-                            </h3>
-                            <button @click="showSupplies = false" class="cs:p-1 cs:cursor-pointer cs:w-auto! cs:rounded-full!">
-                                <XMarkIcon class="cs:w-5 cs:h-5" />
-                            </button>
-                        </div>
+                    class="cs:absolute cs:bottom-[120%] cs:left-0 cs:right-0 cs:mx-auto cs:bg-base-200 cs:border-[0.25px] cs:border-base-100/60 cs:shadow-xl cs:max-w-[90%] cs:sm:max-w-lg cs:rounded-2xl cs:z-50 cs:flex cs:flex-col cs:max-h-[min(60vh,500px)]">
+                    <div class="cs:flex cs:items-center cs:justify-between cs:px-4 cs:pt-4 cs:pb-2 cs:flex-shrink-0 cs:border-b cs:border-base-100/40">
+                        <h3 class="cs:font-semibold cs:text-base cs:text-base-content">
+                            {{ suppliesLabel }}
+                            <span v-if="servingsMultiplier !== 1" class="cs:text-sm cs:font-normal cs:text-base-content/80">
+                                ({{ servingsMultiplier }}x)
+                            </span>
+                        </h3>
+                        <button @click="showSupplies = false" class="cs:p-1 cs:cursor-pointer cs:w-auto! cs:rounded-full!">
+                            <XMarkIcon class="cs:w-5 cs:h-5" />
+                        </button>
+                    </div>
+                    <div class="cs:overflow-y-auto cs:px-4 cs:py-3 cs:flex-1 cs:overscroll-contain">
                         <!-- Render grouped ingredients if available -->
                         <template v-if="adjustedIngredientsGroups">
                             <div v-for="(ingredients, groupName) in adjustedIngredientsGroups" :key="groupName" class="cs:mb-3 last:cs:mb-0">
                                 <h4 v-if="groupName && groupName !== 'mv-has-no-group'" class="cs:text-sm cs:font-semibold cs:text-base-content cs:mb-1">{{ groupName }}</h4>
-                                <ul class="cs-interactive-supplies-list-style cs:space-y-1 cs:md:pb-6">
+                                <ul class="cs-interactive-supplies-list-style cs:space-y-1">
                                     <li v-for="(supply, idx) in ingredients" :key="`${groupName}-${idx}`"
                                     class="cs:flex cs:items-center cs:space-x-2"
                                     >
