@@ -165,7 +165,10 @@ export default defineNuxtConfig({
     },
   },
   content: {
-    // Database auto-configured by NuxtHub when registered after @nuxt/content
+    database: {
+      type: 'd1',
+      bindingName: 'DB',
+    },
     build: {
       markdown: {
         // Disable syntax highlighting (Shiki is ~1MB+)
