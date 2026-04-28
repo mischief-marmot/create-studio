@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
   computeBackoffMs,
   normalizeInteractiveSettingsForWebhook,
+  buildSettingsUpdateEnqueueArgs,
+  INTERACTIVE_SETTINGS_KEYS,
 } from '~~/server/utils/message-queue'
 
 describe('computeBackoffMs', () => {
@@ -58,12 +60,24 @@ describe('normalizeInteractiveSettingsForWebhook', () => {
     })
   })
 
-  it('passes interactive_mode_cta_variant through verbatim (validated upstream)', () => {
+  it('passes a valid interactive_mode_cta_variant through verbatim', () => {
     expect(normalizeInteractiveSettingsForWebhook({
       interactive_mode_cta_variant: 'sticky-bar',
     })).toEqual({
       interactive_mode_cta_variant: 'sticky-bar',
     })
+  })
+
+  it('coerces null/non-string interactive_mode_cta_variant to empty string', () => {
+    // Same coercion as other string fields — plugin gets '' (clear/use
+    // default) instead of a JSON null it might mishandle.
+    expect(normalizeInteractiveSettingsForWebhook({
+      interactive_mode_cta_variant: null,
+    })).toEqual({ interactive_mode_cta_variant: '' })
+
+    expect(normalizeInteractiveSettingsForWebhook({
+      interactive_mode_cta_variant: 42 as any,
+    })).toEqual({ interactive_mode_cta_variant: '' })
   })
 
   it('skips fields whose value is undefined (so callers can spread the destructured body)', () => {
@@ -91,5 +105,63 @@ describe('normalizeInteractiveSettingsForWebhook', () => {
     })).toEqual({
       interactive_mode_enabled: true,
     })
+  })
+})
+
+/** Pure builder for the enqueue arguments — tests pin the persisted MessageQueue
+ *  payload shape that the drain worker eventually delivers to WP. */
+describe('buildSettingsUpdateEnqueueArgs', () => {
+  it('produces a wordpress_webhook envelope with normalized settings', () => {
+    const args = buildSettingsUpdateEnqueueArgs(571, 'https://example.com', {
+      interactive_mode_enabled: true,
+      interactive_mode_cta_variant: 'sticky-bar',
+    })
+    expect(args).toEqual({
+      type: 'wordpress_webhook',
+      payload: {
+        siteUrl: 'https://example.com',
+        payload: {
+          type: 'settings_update',
+          data: {
+            settings: {
+              interactive_mode_enabled: true,
+              interactive_mode_cta_variant: 'sticky-bar',
+            },
+          },
+        },
+      },
+      options: { siteId: 571 },
+    })
+  })
+
+  it('attaches site_id via options so supersedePendingWebhooksForSite can find this row', () => {
+    const args = buildSettingsUpdateEnqueueArgs(42, 'https://example.com', {})
+    expect(args.options).toEqual({ siteId: 42 })
+  })
+
+  it('strips undefined settings before persisting (avoids spurious `clear` ops on plugin)', () => {
+    const args = buildSettingsUpdateEnqueueArgs(1, 'https://example.com', {
+      interactive_mode_enabled: undefined,
+      interactive_mode_button_text: undefined,
+    })
+    expect(args.payload).toEqual({
+      siteUrl: 'https://example.com',
+      payload: {
+        type: 'settings_update',
+        data: { settings: {} },
+      },
+    })
+  })
+})
+
+describe('INTERACTIVE_SETTINGS_KEYS', () => {
+  it('lists every field the webhook normalizer handles', () => {
+    expect(INTERACTIVE_SETTINGS_KEYS).toEqual([
+      'interactive_mode_enabled',
+      'interactive_mode_button_text',
+      'interactive_mode_cta_variant',
+      'interactive_mode_cta_title',
+      'interactive_mode_cta_subtitle',
+    ])
   })
 })

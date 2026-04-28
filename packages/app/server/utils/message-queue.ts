@@ -106,10 +106,19 @@ export async function enqueueSubscriptionChange(
   return id
 }
 
+/** The webhook payload's settings field set. Exported so callers can detect
+ *  "any interactive_mode_* in body" without listing keys themselves. */
+export const INTERACTIVE_SETTINGS_KEYS = [
+  'interactive_mode_enabled',
+  'interactive_mode_button_text',
+  'interactive_mode_cta_variant',
+  'interactive_mode_cta_title',
+  'interactive_mode_cta_subtitle',
+] as const
+
 /** Coerce a partial settings input to the webhook payload shape: only keys
- *  with a defined value are included; nullish/non-string string fields
- *  become '' (plugin treats '' as "clear this option"; JSON null may be
- *  mishandled). Single source of truth — admin and customer PATCH share it. */
+ *  with a defined value are included; nullish/non-string strings become ''
+ *  (plugin treats '' as "clear this option"; JSON null may be mishandled). */
 export function normalizeInteractiveSettingsForWebhook(
   input: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -119,6 +128,7 @@ export function normalizeInteractiveSettingsForWebhook(
   }
   for (const key of [
     'interactive_mode_button_text',
+    'interactive_mode_cta_variant',
     'interactive_mode_cta_title',
     'interactive_mode_cta_subtitle',
   ] as const) {
@@ -127,10 +137,27 @@ export function normalizeInteractiveSettingsForWebhook(
       out[key] = typeof v === 'string' ? v.trim() : ''
     }
   }
-  if (input.interactive_mode_cta_variant !== undefined) {
-    out.interactive_mode_cta_variant = input.interactive_mode_cta_variant
-  }
   return out
+}
+
+/** Build the enqueue args for a settings_update webhook. Pure function so
+ *  tests can pin the persisted payload shape without mocking the DB. */
+export function buildSettingsUpdateEnqueueArgs(
+  siteId: number,
+  siteUrl: string,
+  rawSettings: Record<string, unknown>,
+): { type: MessageType; payload: Record<string, unknown>; options: EnqueueOptions } {
+  return {
+    type: 'wordpress_webhook',
+    payload: {
+      siteUrl,
+      payload: {
+        type: 'settings_update',
+        data: { settings: normalizeInteractiveSettingsForWebhook(rawSettings) },
+      },
+    },
+    options: { siteId },
+  }
 }
 
 /** Enqueue a settings_update webhook. Caller passes raw settings; the
@@ -142,18 +169,9 @@ export async function enqueueSettingsUpdate(
   rawSettings: Record<string, unknown>,
   event?: H3Event,
 ): Promise<number> {
-  const settings = normalizeInteractiveSettingsForWebhook(rawSettings)
-  const id = await enqueue(
-    'wordpress_webhook',
-    {
-      siteUrl,
-      payload: { type: 'settings_update', data: { settings } },
-    },
-    { siteId },
-  )
-
+  const args = buildSettingsUpdateEnqueueArgs(siteId, siteUrl, rawSettings)
+  const id = await enqueue(args.type, args.payload, args.options)
   if (event) scheduleImmediateDelivery(event, id)
-
   return id
 }
 
