@@ -164,4 +164,17 @@ describe('INTERACTIVE_SETTINGS_KEYS', () => {
       'interactive_mode_cta_subtitle',
     ])
   })
+
+  it('every key listed is actually processed by normalizeInteractiveSettingsForWebhook', () => {
+    // Catches drift: if a key gets added to the constant but the normalizer
+    // doesn't handle it, this test fails. Before the round-5 refactor the
+    // normalizer had its own hardcoded list and would silently drop new keys.
+    const input = Object.fromEntries(
+      INTERACTIVE_SETTINGS_KEYS.map(k => [k, k === 'interactive_mode_enabled' ? true : 'value']),
+    )
+    const out = normalizeInteractiveSettingsForWebhook(input)
+    for (const key of INTERACTIVE_SETTINGS_KEYS) {
+      expect(key in out, `${key} must be in normalize output`).toBe(true)
+    }
+  })
 })

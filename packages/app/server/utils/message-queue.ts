@@ -118,21 +118,18 @@ export const INTERACTIVE_SETTINGS_KEYS = [
 
 /** Coerce a partial settings input to the webhook payload shape: only keys
  *  with a defined value are included; nullish/non-string strings become ''
- *  (plugin treats '' as "clear this option"; JSON null may be mishandled). */
+ *  (plugin treats '' as "clear this option"; JSON null may be mishandled).
+ *  Loops over INTERACTIVE_SETTINGS_KEYS so the constant stays the single
+ *  source of truth — adding a key there auto-extends this normalizer. */
 export function normalizeInteractiveSettingsForWebhook(
   input: Record<string, unknown>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
-  if (input.interactive_mode_enabled !== undefined) {
-    out.interactive_mode_enabled = !!input.interactive_mode_enabled
-  }
-  for (const key of [
-    'interactive_mode_button_text',
-    'interactive_mode_cta_variant',
-    'interactive_mode_cta_title',
-    'interactive_mode_cta_subtitle',
-  ] as const) {
-    if (input[key] !== undefined) {
+  for (const key of INTERACTIVE_SETTINGS_KEYS) {
+    if (input[key] === undefined) continue
+    if (key === 'interactive_mode_enabled') {
+      out[key] = !!input[key]
+    } else {
       const v = input[key]
       out[key] = typeof v === 'string' ? v.trim() : ''
     }
