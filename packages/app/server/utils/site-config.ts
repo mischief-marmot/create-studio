@@ -32,7 +32,10 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
   let renderMode: 'iframe' | 'in-dom' = 'iframe'
   let showInteractiveMode = true
   let buttonText = 'Try Interactive Mode!'
-  let ctaVariant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip' = 'inline-banner'
+  // Default CTA variant for every tier and for Pro sites without an explicit
+  // setting. Sticky-bar is the most discoverable option on mobile and the
+  // current product default; per-site overrides come from SiteMeta.settings.
+  let ctaVariant: 'button' | 'inline-banner' | 'sticky-bar' | 'tooltip' = 'sticky-bar'
   let ctaTitle = ''
   let ctaSubtitle = ''
 
@@ -94,7 +97,11 @@ export async function buildSiteConfig(siteUrl: string, rootUrl: string): Promise
         if (settings.interactive_mode_button_text) {
           buttonText = settings.interactive_mode_button_text
         }
-        ctaVariant = settings.interactive_mode_cta_variant || 'button'
+        // Fall through to the global default (sticky-bar) when no setting
+        // — keeps Pro and free callers unified on a single source of truth.
+        if (settings.interactive_mode_cta_variant) {
+          ctaVariant = settings.interactive_mode_cta_variant
+        }
         if (settings.interactive_mode_cta_title) {
           ctaTitle = settings.interactive_mode_cta_title
         }
