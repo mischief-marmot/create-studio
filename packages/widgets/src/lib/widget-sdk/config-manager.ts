@@ -102,8 +102,14 @@ export class ConfigManager {
       }
 
       const result = await response.json()
-      this.logger.debug('📋 Site config loaded:', result)
       this.siteConfig = result.config || result
+
+      // Promote the server's canonical Sites.url so getSiteUrl() and
+      // downstream WP-REST calls use the resolved form (e.g.
+      // https://slimmingeats.com → https://www.slimmingeats.com/blog).
+      if (typeof result.siteUrl === 'string' && result.siteUrl.length > 0) {
+        this.baseConfig.siteUrl = result.siteUrl
+      }
 
       this.logger.debug('📋 Site config loaded:', this.siteConfig)
     } catch (error) {

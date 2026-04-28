@@ -348,6 +348,7 @@ import { SharedStorageManager } from '@create-studio/shared';
 import { useSharedTimerManager } from '../composables/useSharedTimerManager';
 import { getInitialState as getInitialReviewState } from '../composables/useReviewStorage';
 import { useReviewSubmission } from '../composables/useReviewSubmission';
+import { resolveSiteUrl } from '../lib/site-url';
 import TimerWarningModal from './TimerWarningModal.vue';
 import IngredientText from './IngredientText.vue';
 import StepText from './StepText.vue';
@@ -359,6 +360,10 @@ import { getInitialSystem, preferenceToSystem, type UnitConversionConfig, type M
 interface Props {
   creationId?: string
   domain?: string
+  // Canonical Sites.url from the site-config response. When provided, it's
+  // used verbatim for WP REST calls instead of being reconstructed from
+  // `domain` (which loses subdir paths like /blog).
+  siteUrl?: string
   baseUrl?: string
   hideAttribution?: boolean
   cacheBust?: boolean
@@ -374,6 +379,7 @@ interface Props {
   config?: {
     creationId: string
     domain: string
+    siteUrl?: string
     baseUrl?: string
     hideAttribution?: boolean
     cacheBust?: boolean
@@ -400,14 +406,11 @@ const finalCreationId = computed(() => props.config?.creationId || props.creatio
 const finalDomain = computed(() => props.config?.domain || props.domain || '')
 const finalBaseUrl = computed(() => props.config?.baseUrl || props.baseUrl || '')
 const finalHideAttribution = computed(() => props.config?.hideAttribution ?? props.hideAttribution ?? false)
-const finalSiteUrl = computed(() => {
-    const domain = finalDomain.value
-    if (domain === 'localhost') return 'http://localhost:8074'
-    // .test domains are local dev environments that don't support HTTPS
-    if (domain.endsWith('.test')) return `http://${domain}`
-    const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:'
-    return `${protocol}//${domain}`
-})
+const finalSiteUrl = computed(() => resolveSiteUrl(
+    props.config?.siteUrl || props.siteUrl,
+    finalDomain.value,
+    typeof window !== 'undefined' ? window.location.protocol : undefined,
+))
 const finalCacheBust = computed(() => props.config?.cacheBust ?? props.cacheBust ?? false)
 const finalDisableRatingSubmission = computed(() => props.config?.disableRatingSubmission ?? props.disableRatingSubmission ?? false)
 
