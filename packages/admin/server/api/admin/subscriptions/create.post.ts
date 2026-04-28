@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { useAdminDb, subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import { getAdminEnvironment } from '~~/server/utils/admin-env'
+import { purgeSiteConfigCache } from '~~/server/utils/purge-site-config-cache'
 
 /**
  * POST /api/admin/subscriptions/create
@@ -128,6 +129,9 @@ export default defineEventHandler(async (event) => {
     } catch (webhookError) {
       console.warn('Failed to notify site of tier change:', webhookError)
     }
+
+    // Purge site-config edge cache — new subscription row always sets tier + status
+    await purgeSiteConfigCache(event, [siteResult[0]?.url], { siteId })
 
     return {
       success: true,

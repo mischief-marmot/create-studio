@@ -1,8 +1,9 @@
 import { eq } from 'drizzle-orm'
-import { useAdminDb, subscriptions } from "~~/server/utils/admin-db"
+import { useAdminDb, subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import { getAdminStripeClient } from '~~/server/utils/stripe'
 import { getAdminEnvironment } from '~~/server/utils/admin-env'
+import { purgeSiteConfigCache } from '~~/server/utils/purge-site-config-cache'
 
 /**
  * POST /api/admin/subscriptions/[id]/link-stripe
@@ -46,6 +47,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const current = existing[0]
+
+  // Look up site URL for cache purge after the write
+  const siteResult = await db.select({ url: sites.url }).from(sites).where(eq(sites.id, current.site_id)).limit(1)
+  const siteUrl = siteResult[0]?.url
 
   // Check if another subscription is already linked to this Stripe ID
   const conflict = await db
@@ -130,6 +135,9 @@ export default defineEventHandler(async (event) => {
   } catch (auditError) {
     console.warn('Failed to create audit log:', auditError)
   }
+
+  // Purge site-config edge cache — tier becomes 'pro' and status syncs from Stripe
+  await purgeSiteConfigCache(event, [siteUrl], { siteId: current.site_id })
 
   // Notify the WordPress site of any tier/status change
   try {

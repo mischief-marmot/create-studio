@@ -3,6 +3,7 @@ import { useAdminDb, subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import { getAdminEnvironment } from '~~/server/utils/admin-env'
 import { getAdminStripeClient } from '~~/server/utils/stripe'
+import { purgeSiteConfigCache } from '~~/server/utils/purge-site-config-cache'
 
 /**
  * POST /api/admin/subscriptions/[id]/modify-tier
@@ -60,6 +61,10 @@ export default defineEventHandler(async (event) => {
 
     const currentSubscription = subscriptionResult[0]
     const hasStripeSubscription = !!currentSubscription.stripe_subscription_id
+
+    // Look up site URL for cache purge after the tier write
+    const siteResult = await db.select({ url: sites.url }).from(sites).where(eq(sites.id, currentSubscription.site_id)).limit(1)
+    const siteUrl = siteResult[0]?.url
 
     // Check if tier is already set
     if (currentSubscription.tier === tier) {
@@ -138,6 +143,9 @@ export default defineEventHandler(async (event) => {
     } catch (auditError) {
       console.warn('Failed to create audit log:', auditError)
     }
+
+    // Purge site-config edge cache — tier always changes in this handler
+    await purgeSiteConfigCache(event, [siteUrl], { siteId: currentSubscription.site_id })
 
     // Notify the WordPress site of the tier change via the main app's webhook dispatcher
     try {

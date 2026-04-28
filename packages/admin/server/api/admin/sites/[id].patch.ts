@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { useAdminDb, sites, siteMeta } from "~~/server/utils/admin-db"
 import type { SiteSettings } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
-import { getAdminEnvironment } from '~~/server/utils/admin-env'
+import { purgeSiteConfigCache } from '~~/server/utils/purge-site-config-cache'
 
 /**
  * PATCH /api/admin/sites/[id]
@@ -151,45 +151,11 @@ export default defineEventHandler(async (event) => {
     // create_version, etc.), widen this condition to match.
     const trimmedUrl = typeof body.url === 'string' ? body.url.trim() : undefined
     if (hasInteractiveFields || (hasSiteFields && 'url' in body && trimmedUrl !== site.url)) {
-      try {
-        const config = useRuntimeConfig()
-        if (!config.mainAppApiKey) {
-          console.warn('mainAppApiKey not configured — skipping site-config cache purge')
-        } else {
-          const adminEnv = getAdminEnvironment(event)
-          const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
-          const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
-          if (!mainAppUrl) {
-            console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping site-config cache purge')
-          } else {
-            const purgeTargets: string[] = []
-            // Always include the current URL: it's the cache key for the
-            // entry holding the interactive_mode_* values we just wrote.
-            if (site.url) purgeTargets.push(site.url)
-            // URL change: also purge the new key so visitors hitting the
-            // new URL don't sit on a stale entry until the 10-min TTL.
-            if (trimmedUrl && trimmedUrl !== site.url) {
-              purgeTargets.push(trimmedUrl)
-            }
-            if (purgeTargets.length > 0) {
-              const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'X-Admin-Api-Key': config.mainAppApiKey,
-                },
-                body: JSON.stringify({ siteUrls: purgeTargets }),
-                signal: AbortSignal.timeout(5000),
-              })
-              if (!response.ok) {
-                console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
-              }
-            }
-          }
-        }
-      } catch (purgeError) {
-        console.warn('Failed to purge site-config cache:', purgeError)
-      }
+      // Always include the current URL (cache key for the entry holding the
+      // values we just wrote). On URL change, also purge the new key so
+      // visitors hitting the new URL don't sit on a stale entry until TTL.
+      const purgeTargets = [site.url, trimmedUrl && trimmedUrl !== site.url ? trimmedUrl : null]
+      await purgeSiteConfigCache(event, purgeTargets, { siteId })
     }
 
     // Audit log

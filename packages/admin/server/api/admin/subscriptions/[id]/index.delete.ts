@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
-import { useAdminDb, subscriptions } from "~~/server/utils/admin-db"
+import { useAdminDb, subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
+import { purgeSiteConfigCache } from '~~/server/utils/purge-site-config-cache'
 
 /**
  * DELETE /api/admin/subscriptions/[id]
@@ -47,6 +48,10 @@ export default defineEventHandler(async (event) => {
 
     const currentSubscription = subscriptionResult[0]
 
+    // Look up site URL now (before delete) for cache purge after
+    const siteResult = await db.select({ url: sites.url }).from(sites).where(eq(sites.id, currentSubscription.site_id)).limit(1)
+    const siteUrl = siteResult[0]?.url
+
     // SAFETY CHECK: Do not allow deletion of Stripe-connected subscriptions
     if (currentSubscription.stripe_subscription_id || currentSubscription.stripe_customer_id) {
       throw createError({
@@ -84,6 +89,9 @@ export default defineEventHandler(async (event) => {
     } catch (auditError) {
       console.warn('Failed to create audit log:', auditError)
     }
+
+    // Purge site-config edge cache — deleted subscription leaves a stale entry
+    await purgeSiteConfigCache(event, [siteUrl], { siteId: currentSubscription.site_id })
 
     return {
       success: true,
