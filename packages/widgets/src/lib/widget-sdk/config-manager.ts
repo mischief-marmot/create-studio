@@ -102,14 +102,11 @@ export class ConfigManager {
       }
 
       const result = await response.json()
-      this.logger.debug('📋 Site config loaded:', result)
       this.siteConfig = result.config || result
 
-      // The server returns the canonical Sites.url alongside the config —
-      // the apex-fallback lookup may have resolved an aliased input (e.g.
-      // https://slimmingeats.com → https://www.slimmingeats.com/blog) to
-      // the row's stored URL. Promote it to baseConfig so getSiteUrl() and
-      // every downstream WP-REST call uses the canonical form.
+      // Promote the server's canonical Sites.url so getSiteUrl() and
+      // downstream WP-REST calls use the resolved form (e.g.
+      // https://slimmingeats.com → https://www.slimmingeats.com/blog).
       if (typeof result.siteUrl === 'string' && result.siteUrl.length > 0) {
         this.baseConfig.siteUrl = result.siteUrl
       }

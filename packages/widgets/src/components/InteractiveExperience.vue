@@ -348,6 +348,7 @@ import { SharedStorageManager } from '@create-studio/shared';
 import { useSharedTimerManager } from '../composables/useSharedTimerManager';
 import { getInitialState as getInitialReviewState } from '../composables/useReviewStorage';
 import { useReviewSubmission } from '../composables/useReviewSubmission';
+import { resolveSiteUrl } from '../lib/site-url';
 import TimerWarningModal from './TimerWarningModal.vue';
 import IngredientText from './IngredientText.vue';
 import StepText from './StepText.vue';
@@ -405,19 +406,11 @@ const finalCreationId = computed(() => props.config?.creationId || props.creatio
 const finalDomain = computed(() => props.config?.domain || props.domain || '')
 const finalBaseUrl = computed(() => props.config?.baseUrl || props.baseUrl || '')
 const finalHideAttribution = computed(() => props.config?.hideAttribution ?? props.hideAttribution ?? false)
-const finalSiteUrl = computed(() => {
-    // Prefer the canonical URL from site-config when available — covers
-    // subdir-installed WP sites where `domain` alone (apex-only) loses the
-    // /blog path the WP REST API actually lives at.
-    const explicit = props.config?.siteUrl || props.siteUrl
-    if (explicit) return explicit
-    const domain = finalDomain.value
-    if (domain === 'localhost') return 'http://localhost:8074'
-    // .test domains are local dev environments that don't support HTTPS
-    if (domain.endsWith('.test')) return `http://${domain}`
-    const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:'
-    return `${protocol}//${domain}`
-})
+const finalSiteUrl = computed(() => resolveSiteUrl(
+    props.config?.siteUrl || props.siteUrl,
+    finalDomain.value,
+    typeof window !== 'undefined' ? window.location.protocol : undefined,
+))
 const finalCacheBust = computed(() => props.config?.cacheBust ?? props.cacheBust ?? false)
 const finalDisableRatingSubmission = computed(() => props.config?.disableRatingSubmission ?? props.disableRatingSubmission ?? false)
 
