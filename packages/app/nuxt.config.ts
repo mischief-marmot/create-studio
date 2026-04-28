@@ -144,7 +144,7 @@ export default defineNuxtConfig({
     "@nuxt/image",
     "@nuxt/test-utils/module",
     "@pinia/nuxt",
-    "@nuxt/content",  // Must be before @nuxthub/core for database auto-config
+    "@nuxt/content",
     "@nuxthub/core",
     "@nuxt/scripts",
     "@nuxt/fonts",
@@ -165,7 +165,10 @@ export default defineNuxtConfig({
     },
   },
   content: {
-    // Database auto-configured by NuxtHub when registered after @nuxt/content
+    database: {
+      type: 'd1',
+      bindingName: 'DB',
+    },
     build: {
       markdown: {
         // Disable syntax highlighting (Shiki is ~1MB+)
