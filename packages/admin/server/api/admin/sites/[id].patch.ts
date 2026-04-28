@@ -54,16 +54,10 @@ export default defineEventHandler(async (event) => {
 
     let hasUpdates = false
     const hasSiteFields = 'name' in body || 'url' in body
-    // List every interactive_mode_* field buildSiteConfig reads, even ones
-    // the admin form doesn't expose today. Keeps the cache-purge trigger
-    // correct if the form expands later — otherwise a new field added here
-    // without touching the trigger silently re-introduces the stale-cache bug.
-    const hasInteractiveFields =
-      'interactive_mode_enabled' in body
-      || 'interactive_mode_button_text' in body
-      || 'interactive_mode_cta_variant' in body
-      || 'interactive_mode_cta_title' in body
-      || 'interactive_mode_cta_subtitle' in body
+    // Prefix-derived so a future interactive_mode_* field auto-flows
+    // through detection, the cache purge, and the webhook dispatch
+    // without touching this file.
+    const hasInteractiveFields = Object.keys(body).some(k => k.startsWith('interactive_mode_'))
 
     // Update Sites table fields (name, url)
     if (hasSiteFields) {
@@ -205,17 +199,11 @@ export default defineEventHandler(async (event) => {
           if (!mainAppUrl) {
             console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping settings_update webhook')
           } else {
-            // Forward every interactive_mode_* field the body might contain.
-            // Endpoint normalizes via the shared helper (skips undefined
-            // values) so admin and customer PATCH stay in lockstep without
-            // requiring this list to be updated when the form gains a field.
-            const rawSettings = {
-              interactive_mode_enabled: body.interactive_mode_enabled,
-              interactive_mode_button_text: body.interactive_mode_button_text,
-              interactive_mode_cta_variant: body.interactive_mode_cta_variant,
-              interactive_mode_cta_title: body.interactive_mode_cta_title,
-              interactive_mode_cta_subtitle: body.interactive_mode_cta_subtitle,
-            }
+            // Prefix-filter so every interactive_mode_* in body propagates
+            // automatically. Endpoint normalizes via the shared helper.
+            const rawSettings = Object.fromEntries(
+              Object.entries(body).filter(([k]) => k.startsWith('interactive_mode_')),
+            )
             const response = await fetch(`${mainAppUrl}/api/v2/internal/dispatch-settings-webhook`, {
               method: 'POST',
               headers: {

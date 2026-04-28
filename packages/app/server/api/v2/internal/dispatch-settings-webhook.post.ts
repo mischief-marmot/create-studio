@@ -1,6 +1,9 @@
 /** Admin delegation entry for settings_update — admin has no webhook keys. */
 
-import { enqueueSettingsUpdate } from '~~/server/utils/message-queue'
+import {
+  enqueueSettingsUpdate,
+  normalizeInteractiveSettingsForWebhook,
+} from '~~/server/utils/message-queue'
 import { requireAdminApiKey } from '~~/server/utils/admin-auth'
 
 export default defineEventHandler(async (event) => {
@@ -20,6 +23,13 @@ export default defineEventHandler(async (event) => {
   }
   if (!body?.settings || typeof body.settings !== 'object' || Array.isArray(body.settings)) {
     throw createError({ statusCode: 400, message: 'settings must be a plain object' })
+  }
+
+  // Skip the DB write + delivery if no recognized fields are present —
+  // avoids enqueueing a no-op webhook (admin sends raw body subsets that
+  // may pre-filter to nothing useful).
+  if (Object.keys(normalizeInteractiveSettingsForWebhook(body.settings)).length === 0) {
+    return { success: true, messageId: null, skipped: 'no recognized settings' }
   }
 
   const messageId = await enqueueSettingsUpdate(
