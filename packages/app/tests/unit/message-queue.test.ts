@@ -37,6 +37,15 @@ describe('normalizeInteractiveSettingsForWebhook', () => {
       .toEqual({ interactive_mode_enabled: true })
   })
 
+  it('coerces explicit null interactive_mode_enabled to false (not skipped)', () => {
+    // Intentional: null is a "value" the caller chose to send, not the
+    // absence of one. Coerce defensively rather than silently no-op'ing
+    // — a buggy caller gets explicit `false` (visible to the plugin)
+    // instead of "no change" (silent ignore that's hard to debug).
+    expect(normalizeInteractiveSettingsForWebhook({ interactive_mode_enabled: null }))
+      .toEqual({ interactive_mode_enabled: false })
+  })
+
   it('trims string fields and replaces null/non-string with empty string', () => {
     expect(normalizeInteractiveSettingsForWebhook({
       interactive_mode_button_text: '  Try It  ',

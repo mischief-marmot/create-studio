@@ -35,7 +35,11 @@ export default defineEventHandler(async (event) => {
     const body = await readBody(event)
     const { name, url, interactive_mode_enabled, interactive_mode_button_text, interactive_mode_cta_variant, interactive_mode_cta_title, interactive_mode_cta_subtitle } = body
 
-    // Validate input - at least one field must be provided
+    // Validate input - at least one field must be provided.
+    // hasProFields tracks the same 5 interactive_mode_* fields as
+    // admin PATCH's `hasInteractiveFields`. Different name, identical set —
+    // both gate the settings_update webhook dispatch. If you add a field
+    // to one, add it to the other.
     const hasGeneralFields = name !== undefined || url !== undefined
     const hasProFields = interactive_mode_enabled !== undefined || interactive_mode_button_text !== undefined || interactive_mode_cta_variant !== undefined || interactive_mode_cta_title !== undefined || interactive_mode_cta_subtitle !== undefined
 
