@@ -129,6 +129,39 @@ export default defineEventHandler(async (event) => {
       console.warn('Failed to notify site of tier change:', webhookError)
     }
 
+    // Purge site-config edge cache — new subscription row always sets tier + status
+    try {
+      const config = useRuntimeConfig()
+      if (!config.mainAppApiKey) {
+        console.warn('mainAppApiKey not configured — skipping site-config cache purge')
+      } else {
+        const adminEnv = getAdminEnvironment(event)
+        const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+        const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+        if (!mainAppUrl) {
+          console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping site-config cache purge')
+        } else {
+          const siteUrl = siteResult[0]?.url
+          if (siteUrl) {
+            const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Admin-Api-Key': config.mainAppApiKey,
+              },
+              body: JSON.stringify({ siteUrls: [siteUrl] }),
+              signal: AbortSignal.timeout(5000),
+            })
+            if (!response.ok) {
+              console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
+            }
+          }
+        }
+      }
+    } catch (purgeError) {
+      console.warn('Failed to purge site-config cache:', purgeError)
+    }
+
     return {
       success: true,
       message: 'Subscription created successfully',

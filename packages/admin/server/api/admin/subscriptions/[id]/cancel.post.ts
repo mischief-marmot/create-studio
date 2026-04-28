@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm'
-import { useAdminDb, subscriptions } from "~~/server/utils/admin-db"
+import { useAdminDb, subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
 import { getAdminStripeClient } from '~~/server/utils/stripe'
+import { getAdminEnvironment } from '~~/server/utils/admin-env'
 
 /**
  * POST /api/admin/subscriptions/[id]/cancel
@@ -51,6 +52,10 @@ export default defineEventHandler(async (event) => {
 
     const currentSubscription = subscriptionResult[0]
     const hasStripeSubscription = !!currentSubscription.stripe_subscription_id
+
+    // Look up site URL for cache purge (only PATH 2 needs it, but look up now before writes)
+    const siteResult = await db.select({ url: sites.url }).from(sites).where(eq(sites.id, currentSubscription.site_id)).limit(1)
+    const siteUrl = siteResult[0]?.url
 
     // Check if already canceled
     if (currentSubscription.status === 'canceled') {
@@ -138,6 +143,40 @@ export default defineEventHandler(async (event) => {
       })
     } catch (auditError) {
       console.warn('Failed to create audit log:', auditError)
+    }
+
+    // Purge cache only for PATH 2 (no Stripe) — tier and status changed to free directly.
+    // PATH 1 (Stripe) only sets cancel_at_period_end; tier/status are unchanged until
+    // Stripe webhooks fire, which go through SubscriptionRepository and purge there.
+    if (!hasStripeSubscription) {
+      try {
+        const config = useRuntimeConfig()
+        if (!config.mainAppApiKey) {
+          console.warn('mainAppApiKey not configured — skipping site-config cache purge')
+        } else {
+          const adminEnv = getAdminEnvironment(event)
+          const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+          const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+          if (!mainAppUrl) {
+            console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping site-config cache purge')
+          } else if (siteUrl) {
+            const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Admin-Api-Key': config.mainAppApiKey,
+              },
+              body: JSON.stringify({ siteUrls: [siteUrl] }),
+              signal: AbortSignal.timeout(5000),
+            })
+            if (!response.ok) {
+              console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
+            }
+          }
+        }
+      } catch (purgeError) {
+        console.warn('Failed to purge site-config cache:', purgeError)
+      }
     }
 
     return {

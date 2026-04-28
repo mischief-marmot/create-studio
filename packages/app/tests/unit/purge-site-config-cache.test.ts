@@ -161,3 +161,51 @@ describe('admin PATCH purge trigger contract', () => {
     })).toBe(false)
   })
 })
+
+describe('admin subscription purge trigger contract', () => {
+  // Mirrors the trigger conditions across admin subscription write handlers.
+  // Operations that change tier or status (or create/delete the row) must
+  // trigger a purge; operations that only touch metadata (period dates,
+  // cancel_at_period_end on Stripe subscriptions) must not.
+  function shouldTrigger(args: {
+    operation: 'create' | 'delete' | 'modify-tier' | 'cancel' | 'link-stripe'
+    hasStripeSubscription?: boolean
+  }): boolean {
+    const { operation, hasStripeSubscription = false } = args
+    switch (operation) {
+      case 'create':    return true   // always sets tier + status
+      case 'delete':    return true   // row gone; cached config is stale
+      case 'modify-tier': return true // handler throws if tier unchanged, so always changes
+      case 'link-stripe': return true // sets tier='pro' + syncs Stripe status
+      case 'cancel':
+        // PATH 1 (Stripe): only sets cancel_at_period_end — tier/status unchanged
+        //   until Stripe webhooks fire (which go through SubscriptionRepository).
+        // PATH 2 (no Stripe): sets tier='free' + status='free' immediately.
+        return !hasStripeSubscription
+    }
+  }
+
+  it('fires on subscription create (tier + status always written)', () => {
+    expect(shouldTrigger({ operation: 'create' })).toBe(true)
+  })
+
+  it('fires on subscription delete (cached config becomes stale)', () => {
+    expect(shouldTrigger({ operation: 'delete' })).toBe(true)
+  })
+
+  it('fires on modify-tier (tier always changes — same-tier is rejected by the handler)', () => {
+    expect(shouldTrigger({ operation: 'modify-tier' })).toBe(true)
+  })
+
+  it('fires on link-stripe (tier becomes pro, status synced from Stripe)', () => {
+    expect(shouldTrigger({ operation: 'link-stripe' })).toBe(true)
+  })
+
+  it('fires on cancel without Stripe (immediate downgrade: tier + status set to free)', () => {
+    expect(shouldTrigger({ operation: 'cancel', hasStripeSubscription: false })).toBe(true)
+  })
+
+  it('does NOT fire on cancel with Stripe (only sets cancel_at_period_end; tier/status unchanged)', () => {
+    expect(shouldTrigger({ operation: 'cancel', hasStripeSubscription: true })).toBe(false)
+  })
+})
