@@ -60,10 +60,14 @@ export default defineNuxtConfig({
       tasks: true,
     },
     scheduledTasks: {
+      // Task names are derived from file paths under server/tasks/ (slashes → colons).
+      // Flat files keep the hyphen — do NOT use the colon-style meta.name here, or
+      // Nitro will warn "Scheduled task X is not defined!" at build and silently
+      // emit an empty scheduledTasks virtual, so the cron handler runs nothing.
       // Daily analytics rollup at 2am UTC (matches wrangler.jsonc cron trigger)
-      '0 2 * * *': ['analytics:rollup'],
+      '0 2 * * *': ['analytics-rollup'],
       // Drain the message queue every minute (matches wrangler.jsonc cron trigger)
-      '* * * * *': ['message-queue:drain'],
+      '* * * * *': ['message-queue-drain'],
     },
     routeRules: {
       "/embed/**": {
