@@ -205,11 +205,16 @@ export default defineEventHandler(async (event) => {
           if (!mainAppUrl) {
             console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping settings_update webhook')
           } else {
-            // Pass raw fields; the main-app endpoint normalizes via the
-            // shared helper so admin and customer PATCH can't drift.
+            // Forward every interactive_mode_* field the body might contain.
+            // Endpoint normalizes via the shared helper (skips undefined
+            // values) so admin and customer PATCH stay in lockstep without
+            // requiring this list to be updated when the form gains a field.
             const rawSettings = {
               interactive_mode_enabled: body.interactive_mode_enabled,
               interactive_mode_button_text: body.interactive_mode_button_text,
+              interactive_mode_cta_variant: body.interactive_mode_cta_variant,
+              interactive_mode_cta_title: body.interactive_mode_cta_title,
+              interactive_mode_cta_subtitle: body.interactive_mode_cta_subtitle,
             }
             const response = await fetch(`${mainAppUrl}/api/v2/internal/dispatch-settings-webhook`, {
               method: 'POST',

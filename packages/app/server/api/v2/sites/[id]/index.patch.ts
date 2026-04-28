@@ -10,6 +10,7 @@ import { useLogger } from '@create-studio/shared/utils/logger'
 import { SiteRepository, SubscriptionRepository, SiteMetaRepository } from '~~/server/utils/database'
 import { sendErrorResponse } from '~~/server/utils/errors'
 import { purgeSiteConfigCache } from '~~/server/utils/site-config-cache'
+import { enqueueSettingsUpdate } from '~~/server/utils/message-queue'
 
 export default defineEventHandler(async (event) => {
   const {debug} = useRuntimeConfig()
@@ -169,7 +170,6 @@ export default defineEventHandler(async (event) => {
     // coercion (only fields present in the input get sent) — pass raw.
     if (hasProFields && existingSite.url) {
       try {
-        const { enqueueSettingsUpdate } = await import('~~/server/utils/message-queue')
         await enqueueSettingsUpdate(siteId, existingSite.url, {
           interactive_mode_enabled,
           interactive_mode_button_text,
