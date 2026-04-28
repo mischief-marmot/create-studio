@@ -106,23 +106,43 @@ export async function enqueueSubscriptionChange(
   return id
 }
 
-/**
- * Shortcut for the settings_update webhook envelope. Use this anywhere
- * Studio writes to SiteMeta.settings — admin PATCH and customer PATCH
- * both need to push the new values to the plugin so its local options
- * update and its gate stops reading stale state.
- *
- * Same delivery semantics as enqueueSubscriptionChange: persisted in the
- * queue (so the drain worker's exponential-backoff retries cover any
- * transient failures), with optional immediate delivery via waitUntil
- * when an H3Event is available.
- */
+/** Coerce a partial settings input to the webhook payload shape: only keys
+ *  with a defined value are included; nullish/non-string string fields
+ *  become '' (plugin treats '' as "clear this option"; JSON null may be
+ *  mishandled). Single source of truth — admin and customer PATCH share it. */
+export function normalizeInteractiveSettingsForWebhook(
+  input: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  if (input.interactive_mode_enabled !== undefined) {
+    out.interactive_mode_enabled = !!input.interactive_mode_enabled
+  }
+  for (const key of [
+    'interactive_mode_button_text',
+    'interactive_mode_cta_title',
+    'interactive_mode_cta_subtitle',
+  ] as const) {
+    if (input[key] !== undefined) {
+      const v = input[key]
+      out[key] = typeof v === 'string' ? v.trim() : ''
+    }
+  }
+  if (input.interactive_mode_cta_variant !== undefined) {
+    out.interactive_mode_cta_variant = input.interactive_mode_cta_variant
+  }
+  return out
+}
+
+/** Enqueue a settings_update webhook. Caller passes raw settings; the
+ *  helper normalizes before sending so every call site gets identical
+ *  coercion. Same delivery semantics as enqueueSubscriptionChange. */
 export async function enqueueSettingsUpdate(
   siteId: number,
   siteUrl: string,
-  settings: Record<string, unknown>,
+  rawSettings: Record<string, unknown>,
   event?: H3Event,
 ): Promise<number> {
+  const settings = normalizeInteractiveSettingsForWebhook(rawSettings)
   const id = await enqueue(
     'wordpress_webhook',
     {

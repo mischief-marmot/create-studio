@@ -192,12 +192,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Push the updated settings to the WP plugin so its local options
-    // (and gate decisions) match what we just wrote to SiteMeta. Admin has
-    // no webhook signing keys, so it delegates to a main-app internal
-    // endpoint that goes through the queue (gets retries for free) and
-    // fires immediately via waitUntil. Same delegation pattern as the
-    // cache purge above.
+    // Delegate settings_update webhook to main app (admin has no signing keys).
     if (hasInteractiveFields && site.url) {
       try {
         const config = useRuntimeConfig()
@@ -210,15 +205,11 @@ export default defineEventHandler(async (event) => {
           if (!mainAppUrl) {
             console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping settings_update webhook')
           } else {
-            // Build the same shape the customer-facing PATCH sends: nulls
-            // become empty strings so the plugin clears the option rather
-            // than receiving a JSON null it might not handle.
-            const webhookSettings: Record<string, unknown> = {}
-            if ('interactive_mode_enabled' in body) {
-              webhookSettings.interactive_mode_enabled = !!body.interactive_mode_enabled
-            }
-            if ('interactive_mode_button_text' in body) {
-              webhookSettings.interactive_mode_button_text = body.interactive_mode_button_text?.trim() || ''
+            // Pass raw fields; the main-app endpoint normalizes via the
+            // shared helper so admin and customer PATCH can't drift.
+            const rawSettings = {
+              interactive_mode_enabled: body.interactive_mode_enabled,
+              interactive_mode_button_text: body.interactive_mode_button_text,
             }
             const response = await fetch(`${mainAppUrl}/api/v2/internal/dispatch-settings-webhook`, {
               method: 'POST',
@@ -226,7 +217,7 @@ export default defineEventHandler(async (event) => {
                 'Content-Type': 'application/json',
                 'X-Admin-Api-Key': config.mainAppApiKey,
               },
-              body: JSON.stringify({ siteId, siteUrl: site.url, settings: webhookSettings }),
+              body: JSON.stringify({ siteId, siteUrl: site.url, settings: rawSettings }),
               signal: AbortSignal.timeout(5000),
             })
             if (!response.ok) {

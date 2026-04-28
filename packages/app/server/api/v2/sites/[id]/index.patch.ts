@@ -165,31 +165,19 @@ export default defineEventHandler(async (event) => {
       await siteMetaRepo.updateSettings(siteId, metaSettings)
     }
 
-    // Send settings_update webhook to WordPress plugin for pro field changes
+    // Push pro-field changes to the plugin. enqueueSettingsUpdate handles
+    // coercion (only fields present in the input get sent) — pass raw.
     if (hasProFields && existingSite.url) {
-      const webhookSettings: Record<string, unknown> = {}
-      if (interactive_mode_enabled !== undefined) {
-        webhookSettings.interactive_mode_enabled = !!interactive_mode_enabled
-      }
-      if (interactive_mode_button_text !== undefined) {
-        webhookSettings.interactive_mode_button_text = interactive_mode_button_text || ''
-      }
-      if (interactive_mode_cta_variant !== undefined) {
-        webhookSettings.interactive_mode_cta_variant = interactive_mode_cta_variant
-      }
-      if (interactive_mode_cta_title !== undefined) {
-        webhookSettings.interactive_mode_cta_title = interactive_mode_cta_title || ''
-      }
-      if (interactive_mode_cta_subtitle !== undefined) {
-        webhookSettings.interactive_mode_cta_subtitle = interactive_mode_cta_subtitle || ''
-      }
-
       try {
         const { enqueueSettingsUpdate } = await import('~~/server/utils/message-queue')
-        await enqueueSettingsUpdate(siteId, existingSite.url, webhookSettings, event)
+        await enqueueSettingsUpdate(siteId, existingSite.url, {
+          interactive_mode_enabled,
+          interactive_mode_button_text,
+          interactive_mode_cta_variant,
+          interactive_mode_cta_title,
+          interactive_mode_cta_subtitle,
+        }, event)
       } catch (webhookError) {
-        // Don't fail the request if webhook dispatch fails — the queue
-        // row (if it landed) will retry on the cron tick.
         logger.warn('Failed to enqueue settings_update webhook', webhookError)
       }
     }
