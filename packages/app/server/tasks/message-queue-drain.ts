@@ -3,11 +3,11 @@ import { processQueue, reclaimStaleProcessing, pruneCompletedOlderThan } from '~
 
 export default defineTask({
   meta: {
-    name: 'message-queue:drain',
+    name: 'message-queue-drain',
     description: 'Process pending messages in the MessageQueue (webhooks, notifications, etc.)',
   },
   async run() {
-    const logger = useLogger('message-queue:drain', useRuntimeConfig().debug)
+    const logger = useLogger('message-queue-drain', useRuntimeConfig().debug)
 
     try {
       const reclaimed = await reclaimStaleProcessing()
