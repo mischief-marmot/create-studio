@@ -3,6 +3,7 @@ import {
   computeBackoffMs,
   normalizeInteractiveSettingsForWebhook,
   buildSettingsUpdateEnqueueArgs,
+  enqueueSettingsUpdate,
   INTERACTIVE_SETTINGS_KEYS,
 } from '~~/server/utils/message-queue'
 
@@ -26,9 +27,6 @@ describe('computeBackoffMs', () => {
   })
 })
 
-/** Shared coercion used by admin PATCH (via the dispatch internal endpoint)
- *  and customer PATCH. Drift between the two would silently send different
- *  shapes to the plugin — these tests pin the exact contract. */
 describe('normalizeInteractiveSettingsForWebhook', () => {
   it('coerces interactive_mode_enabled to a boolean', () => {
     expect(normalizeInteractiveSettingsForWebhook({ interactive_mode_enabled: 1 }))
@@ -68,16 +66,16 @@ describe('normalizeInteractiveSettingsForWebhook', () => {
     })
   })
 
-  it('coerces null/non-string interactive_mode_cta_variant to empty string', () => {
-    // Same coercion as other string fields — plugin gets '' (clear/use
-    // default) instead of a JSON null it might mishandle.
+  it('skips non-string interactive_mode_cta_variant (enum, not free text)', () => {
+    // Sending '' for an enum has ambiguous plugin semantics; omitting the
+    // field lets the plugin keep its existing variant.
     expect(normalizeInteractiveSettingsForWebhook({
       interactive_mode_cta_variant: null,
-    })).toEqual({ interactive_mode_cta_variant: '' })
+    })).toEqual({})
 
     expect(normalizeInteractiveSettingsForWebhook({
       interactive_mode_cta_variant: 42 as any,
-    })).toEqual({ interactive_mode_cta_variant: '' })
+    })).toEqual({})
   })
 
   it('skips fields whose value is undefined (so callers can spread the destructured body)', () => {
@@ -108,8 +106,6 @@ describe('normalizeInteractiveSettingsForWebhook', () => {
   })
 })
 
-/** Pure builder for the enqueue arguments — tests pin the persisted MessageQueue
- *  payload shape that the drain worker eventually delivers to WP. */
 describe('buildSettingsUpdateEnqueueArgs', () => {
   it('produces a wordpress_webhook envelope with normalized settings', () => {
     const args = buildSettingsUpdateEnqueueArgs(571, 'https://example.com', {
@@ -151,6 +147,20 @@ describe('buildSettingsUpdateEnqueueArgs', () => {
         data: { settings: {} },
       },
     })
+  })
+})
+
+describe('enqueueSettingsUpdate — empty-input guard', () => {
+  it('returns null without enqueueing when normalize strips the input to {}', async () => {
+    // Path doesn't touch the DB — verifies the early-return guard
+    // protects every caller from no-op queue rows.
+    expect(await enqueueSettingsUpdate(1, 'https://example.com', {})).toBeNull()
+    expect(await enqueueSettingsUpdate(1, 'https://example.com', {
+      interactive_mode_enabled: undefined,
+    })).toBeNull()
+    expect(await enqueueSettingsUpdate(1, 'https://example.com', {
+      interactive_mode_cta_variant: 42 as any,  // skipped by normalizer
+    })).toBeNull()
   })
 })
 

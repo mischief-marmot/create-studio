@@ -116,29 +116,32 @@ export const INTERACTIVE_SETTINGS_KEYS = [
   'interactive_mode_cta_subtitle',
 ] as const
 
-/** Coerce a partial settings input to the webhook payload shape: only keys
- *  with a defined value are included; nullish/non-string strings become ''
- *  (plugin treats '' as "clear this option"; JSON null may be mishandled).
- *  Loops over INTERACTIVE_SETTINGS_KEYS so the constant stays the single
- *  source of truth — adding a key there auto-extends this normalizer. */
+/** Coerce body input to the webhook payload shape. Loops over
+ *  INTERACTIVE_SETTINGS_KEYS so the constant is the single source of truth.
+ *  Free-text fields (button_text / cta_title / cta_subtitle) coerce
+ *  null/non-string to '' — plugin treats '' as "clear this option".
+ *  cta_variant is an enum, so non-strings are skipped instead of coerced
+ *  (sending '' for an enum has ambiguous plugin semantics). */
 export function normalizeInteractiveSettingsForWebhook(
   input: Record<string, unknown>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {}
   for (const key of INTERACTIVE_SETTINGS_KEYS) {
     if (input[key] === undefined) continue
+    const v = input[key]
     if (key === 'interactive_mode_enabled') {
-      out[key] = !!input[key]
+      out[key] = !!v
+    } else if (key === 'interactive_mode_cta_variant') {
+      // Skip non-strings: omit lets the plugin keep the existing enum value.
+      if (typeof v === 'string') out[key] = v.trim()
     } else {
-      const v = input[key]
       out[key] = typeof v === 'string' ? v.trim() : ''
     }
   }
   return out
 }
 
-/** Build the enqueue args for a settings_update webhook. Pure function so
- *  tests can pin the persisted payload shape without mocking the DB. */
+/** Pure builder for the enqueue args; lets tests pin the payload shape. */
 export function buildSettingsUpdateEnqueueArgs(
   siteId: number,
   siteUrl: string,
@@ -157,16 +160,19 @@ export function buildSettingsUpdateEnqueueArgs(
   }
 }
 
-/** Enqueue a settings_update webhook. Caller passes raw settings; the
- *  helper normalizes before sending so every call site gets identical
- *  coercion. Same delivery semantics as enqueueSubscriptionChange. */
+/** Enqueue a settings_update webhook. Returns null (no row written) when
+ *  the input has no recognized settings — protects every caller from
+ *  persisting no-op queue rows. Same delivery semantics as
+ *  enqueueSubscriptionChange otherwise. */
 export async function enqueueSettingsUpdate(
   siteId: number,
   siteUrl: string,
   rawSettings: Record<string, unknown>,
   event?: H3Event,
-): Promise<number> {
+): Promise<number | null> {
   const args = buildSettingsUpdateEnqueueArgs(siteId, siteUrl, rawSettings)
+  const settings = (args.payload.payload as { data: { settings: Record<string, unknown> } }).data.settings
+  if (Object.keys(settings).length === 0) return null
   const id = await enqueue(args.type, args.payload, args.options)
   if (event) scheduleImmediateDelivery(event, id)
   return id
