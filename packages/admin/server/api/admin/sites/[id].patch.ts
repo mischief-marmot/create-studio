@@ -123,6 +123,49 @@ export default defineEventHandler(async (event) => {
         hasUpdates = true
       }
 
+      if ('interactive_mode_cta_variant' in body) {
+        const ALLOWED_VARIANTS = ['button', 'inline-banner', 'sticky-bar', 'tooltip'] as const
+        const variant = body.interactive_mode_cta_variant
+        if (!ALLOWED_VARIANTS.includes(variant)) {
+          throw createError({
+            statusCode: 400,
+            message: `Invalid CTA variant. Must be one of: ${ALLOWED_VARIANTS.join(', ')}`,
+          })
+        }
+        metaSettings.interactive_mode_cta_variant = variant
+        changes.before.interactive_mode_cta_variant = currentSettings.interactive_mode_cta_variant
+        changes.after.interactive_mode_cta_variant = variant
+        hasUpdates = true
+      }
+
+      if ('interactive_mode_cta_title' in body) {
+        const title = body.interactive_mode_cta_title?.trim() || null
+        if (title && title.length > 50) {
+          throw createError({
+            statusCode: 400,
+            message: 'CTA title must be 50 characters or less',
+          })
+        }
+        metaSettings.interactive_mode_cta_title = title
+        changes.before.interactive_mode_cta_title = currentSettings.interactive_mode_cta_title
+        changes.after.interactive_mode_cta_title = title
+        hasUpdates = true
+      }
+
+      if ('interactive_mode_cta_subtitle' in body) {
+        const subtitle = body.interactive_mode_cta_subtitle?.trim() || null
+        if (subtitle && subtitle.length > 80) {
+          throw createError({
+            statusCode: 400,
+            message: 'CTA subtitle must be 80 characters or less',
+          })
+        }
+        metaSettings.interactive_mode_cta_subtitle = subtitle
+        changes.before.interactive_mode_cta_subtitle = currentSettings.interactive_mode_cta_subtitle
+        changes.after.interactive_mode_cta_subtitle = subtitle
+        hasUpdates = true
+      }
+
       const now = new Date().toISOString()
       if (existingMeta.length > 0) {
         const merged = { ...currentSettings, ...metaSettings }
@@ -220,6 +263,15 @@ export default defineEventHandler(async (event) => {
             if ('interactive_mode_button_text' in body) {
               webhookSettings.interactive_mode_button_text = body.interactive_mode_button_text?.trim() || ''
             }
+            if ('interactive_mode_cta_variant' in body) {
+              webhookSettings.interactive_mode_cta_variant = body.interactive_mode_cta_variant
+            }
+            if ('interactive_mode_cta_title' in body) {
+              webhookSettings.interactive_mode_cta_title = body.interactive_mode_cta_title?.trim() || ''
+            }
+            if ('interactive_mode_cta_subtitle' in body) {
+              webhookSettings.interactive_mode_cta_subtitle = body.interactive_mode_cta_subtitle?.trim() || ''
+            }
             const response = await fetch(`${mainAppUrl}/api/v2/internal/dispatch-settings-webhook`, {
               method: 'POST',
               headers: {
@@ -279,6 +331,9 @@ export default defineEventHandler(async (event) => {
         ...updatedSite[0],
         interactive_mode_enabled: settings?.interactive_mode_enabled ?? true,
         interactive_mode_button_text: settings?.interactive_mode_button_text ?? null,
+        interactive_mode_cta_variant: settings?.interactive_mode_cta_variant ?? null,
+        interactive_mode_cta_title: settings?.interactive_mode_cta_title ?? null,
+        interactive_mode_cta_subtitle: settings?.interactive_mode_cta_subtitle ?? null,
       },
     }
   } catch (error) {
