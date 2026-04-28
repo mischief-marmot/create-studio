@@ -192,6 +192,53 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    // Push the updated settings to the WP plugin so its local options
+    // (and gate decisions) match what we just wrote to SiteMeta. Admin has
+    // no webhook signing keys, so it delegates to a main-app internal
+    // endpoint that goes through the queue (gets retries for free) and
+    // fires immediately via waitUntil. Same delegation pattern as the
+    // cache purge above.
+    if (hasInteractiveFields && site.url) {
+      try {
+        const config = useRuntimeConfig()
+        if (!config.mainAppApiKey) {
+          console.warn('mainAppApiKey not configured — skipping settings_update webhook')
+        } else {
+          const adminEnv = getAdminEnvironment(event)
+          const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
+          const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
+          if (!mainAppUrl) {
+            console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping settings_update webhook')
+          } else {
+            // Build the same shape the customer-facing PATCH sends: nulls
+            // become empty strings so the plugin clears the option rather
+            // than receiving a JSON null it might not handle.
+            const webhookSettings: Record<string, unknown> = {}
+            if ('interactive_mode_enabled' in body) {
+              webhookSettings.interactive_mode_enabled = !!body.interactive_mode_enabled
+            }
+            if ('interactive_mode_button_text' in body) {
+              webhookSettings.interactive_mode_button_text = body.interactive_mode_button_text?.trim() || ''
+            }
+            const response = await fetch(`${mainAppUrl}/api/v2/internal/dispatch-settings-webhook`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Admin-Api-Key': config.mainAppApiKey,
+              },
+              body: JSON.stringify({ siteId, siteUrl: site.url, settings: webhookSettings }),
+              signal: AbortSignal.timeout(5000),
+            })
+            if (!response.ok) {
+              console.warn(`settings_update webhook dispatch failed: ${response.status} ${response.statusText}`)
+            }
+          }
+        }
+      } catch (webhookError) {
+        console.warn('Failed to dispatch settings_update webhook:', webhookError)
+      }
+    }
+
     // Audit log
     try {
       const adminOpsDb = useAdminOpsDb(event)

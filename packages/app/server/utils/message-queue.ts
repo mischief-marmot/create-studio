@@ -107,6 +107,37 @@ export async function enqueueSubscriptionChange(
 }
 
 /**
+ * Shortcut for the settings_update webhook envelope. Use this anywhere
+ * Studio writes to SiteMeta.settings — admin PATCH and customer PATCH
+ * both need to push the new values to the plugin so its local options
+ * update and its gate stops reading stale state.
+ *
+ * Same delivery semantics as enqueueSubscriptionChange: persisted in the
+ * queue (so the drain worker's exponential-backoff retries cover any
+ * transient failures), with optional immediate delivery via waitUntil
+ * when an H3Event is available.
+ */
+export async function enqueueSettingsUpdate(
+  siteId: number,
+  siteUrl: string,
+  settings: Record<string, unknown>,
+  event?: H3Event,
+): Promise<number> {
+  const id = await enqueue(
+    'wordpress_webhook',
+    {
+      siteUrl,
+      payload: { type: 'settings_update', data: { settings } },
+    },
+    { siteId },
+  )
+
+  if (event) scheduleImmediateDelivery(event, id)
+
+  return id
+}
+
+/**
  * Attempt to deliver a specific queued message out-of-band, piggy-backing on
  * the current request's Cloudflare execution context. Used to close the gap
  * between enqueue and the next cron drain tick for latency-sensitive events.

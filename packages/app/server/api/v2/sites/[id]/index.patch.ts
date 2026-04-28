@@ -185,14 +185,12 @@ export default defineEventHandler(async (event) => {
       }
 
       try {
-        const { sendWebhook } = await import('~~/server/utils/webhooks')
-        await sendWebhook(existingSite.url, {
-          type: 'settings_update',
-          data: { settings: webhookSettings },
-        })
+        const { enqueueSettingsUpdate } = await import('~~/server/utils/message-queue')
+        await enqueueSettingsUpdate(siteId, existingSite.url, webhookSettings, event)
       } catch (webhookError) {
-        // Don't fail the request if webhook dispatch fails
-        logger.warn('Failed to send settings_update webhook', webhookError)
+        // Don't fail the request if webhook dispatch fails — the queue
+        // row (if it landed) will retry on the cron tick.
+        logger.warn('Failed to enqueue settings_update webhook', webhookError)
       }
     }
 
