@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { useAdminDb, subscriptions, sites } from "~~/server/utils/admin-db"
 import { useAdminOpsDb, auditLogs, getAuditEnvironment } from '~~/server/utils/admin-ops-db'
-import { getAdminEnvironment } from '~~/server/utils/admin-env'
+import { purgeSiteConfigCache } from '~~/server/utils/purge-site-config-cache'
 
 /**
  * DELETE /api/admin/subscriptions/[id]
@@ -91,34 +91,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Purge site-config edge cache — deleted subscription leaves a stale entry
-    try {
-      const config = useRuntimeConfig()
-      if (!config.mainAppApiKey) {
-        console.warn('mainAppApiKey not configured — skipping site-config cache purge')
-      } else {
-        const adminEnv = getAdminEnvironment(event)
-        const rawMainAppUrl = adminEnv === 'preview' ? config.mainAppPreviewUrl : config.mainAppUrl
-        const mainAppUrl = rawMainAppUrl?.replace(/\/+$/, '')
-        if (!mainAppUrl) {
-          console.warn('mainAppUrl/mainAppPreviewUrl not configured — skipping site-config cache purge')
-        } else if (siteUrl) {
-          const response = await fetch(`${mainAppUrl}/api/v2/internal/purge-site-config-cache`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Admin-Api-Key': config.mainAppApiKey,
-            },
-            body: JSON.stringify({ siteUrls: [siteUrl] }),
-            signal: AbortSignal.timeout(5000),
-          })
-          if (!response.ok) {
-            console.warn(`Site-config cache purge failed: ${response.status} ${response.statusText}`)
-          }
-        }
-      }
-    } catch (purgeError) {
-      console.warn('Failed to purge site-config cache:', purgeError)
-    }
+    await purgeSiteConfigCache(event, [siteUrl], { siteId: currentSubscription.site_id })
 
     return {
       success: true,
