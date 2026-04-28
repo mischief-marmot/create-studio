@@ -359,6 +359,10 @@ import { getInitialSystem, preferenceToSystem, type UnitConversionConfig, type M
 interface Props {
   creationId?: string
   domain?: string
+  // Canonical Sites.url from the site-config response. When provided, it's
+  // used verbatim for WP REST calls instead of being reconstructed from
+  // `domain` (which loses subdir paths like /blog).
+  siteUrl?: string
   baseUrl?: string
   hideAttribution?: boolean
   cacheBust?: boolean
@@ -374,6 +378,7 @@ interface Props {
   config?: {
     creationId: string
     domain: string
+    siteUrl?: string
     baseUrl?: string
     hideAttribution?: boolean
     cacheBust?: boolean
@@ -401,6 +406,11 @@ const finalDomain = computed(() => props.config?.domain || props.domain || '')
 const finalBaseUrl = computed(() => props.config?.baseUrl || props.baseUrl || '')
 const finalHideAttribution = computed(() => props.config?.hideAttribution ?? props.hideAttribution ?? false)
 const finalSiteUrl = computed(() => {
+    // Prefer the canonical URL from site-config when available — covers
+    // subdir-installed WP sites where `domain` alone (apex-only) loses the
+    // /blog path the WP REST API actually lives at.
+    const explicit = props.config?.siteUrl || props.siteUrl
+    if (explicit) return explicit
     const domain = finalDomain.value
     if (domain === 'localhost') return 'http://localhost:8074'
     // .test domains are local dev environments that don't support HTTPS

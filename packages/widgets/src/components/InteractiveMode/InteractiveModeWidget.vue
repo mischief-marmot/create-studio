@@ -74,6 +74,7 @@
               v-else
               :creation-id="config.creationId"
               :domain="domain"
+              :site-url="config.siteUrl"
               :base-url="baseUrl"
               :disable-rating-submission="config.disableRatingSubmission"
               :unit-conversion-config="config.unitConversion"

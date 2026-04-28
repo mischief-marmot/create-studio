@@ -150,12 +150,16 @@ onMounted(async () => {
         debug: true
     });
 
-    // Mount the interactive experience widget directly
+    // Mount the interactive experience widget directly. After init() ran
+    // loadSiteConfig, getSiteUrl() returns the canonical Sites.url from the
+    // server (which may differ from the apex-only `siteUrl` we passed in,
+    // e.g. https://slimmingeats.com → https://www.slimmingeats.com/blog).
     const targetElement = document.getElementById(`interactive-widget-${creationInfo.creationId}`);
     if (targetElement) {
         await window.CreateStudio.mount('interactive-experience', targetElement, {
             creationId: creationInfo.creationId,
             domain: creationInfo.domain,
+            siteUrl: window.CreateStudio.getSiteUrl(),
             baseUrl: window.location.origin,
             hideAttribution: true,
             disableRatingSubmission

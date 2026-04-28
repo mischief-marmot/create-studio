@@ -105,6 +105,15 @@ export class ConfigManager {
       this.logger.debug('📋 Site config loaded:', result)
       this.siteConfig = result.config || result
 
+      // The server returns the canonical Sites.url alongside the config —
+      // the apex-fallback lookup may have resolved an aliased input (e.g.
+      // https://slimmingeats.com → https://www.slimmingeats.com/blog) to
+      // the row's stored URL. Promote it to baseConfig so getSiteUrl() and
+      // every downstream WP-REST call uses the canonical form.
+      if (typeof result.siteUrl === 'string' && result.siteUrl.length > 0) {
+        this.baseConfig.siteUrl = result.siteUrl
+      }
+
       this.logger.debug('📋 Site config loaded:', this.siteConfig)
     } catch (error) {
       this.logger.warn('Failed to load site config, using defaults:', error)
